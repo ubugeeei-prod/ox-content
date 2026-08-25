@@ -62,6 +62,12 @@ import { writeFeedFiles } from "./feeds";
 import { appendTaxonomyPages, injectRelatedPages, toTaxonomyProcessResult } from "./taxonomies";
 import { resolveTeamOptions } from "./team";
 import {
+  appendBlogPages,
+  injectBlogPostMeta,
+  resolveBlogOptions,
+  toBlogProcessResult,
+} from "./blog";
+import {
   decorateVersionedPages,
   prefixRoutePaths,
   resolveSnapshotDir,
@@ -165,6 +171,7 @@ export function resolveSsgOptions(ssg: SsgOptions | boolean | undefined): Resolv
       pageChrome: false,
       notFound: resolveNotFoundOptions(undefined),
       team: resolveTeamOptions(undefined),
+      blog: resolveBlogOptions(undefined),
     };
   }
 
@@ -184,6 +191,7 @@ export function resolveSsgOptions(ssg: SsgOptions | boolean | undefined): Resolv
       pageChrome: false,
       notFound: resolveNotFoundOptions(undefined),
       team: resolveTeamOptions(undefined),
+      blog: resolveBlogOptions(undefined),
       theme: resolveTheme(undefined),
     };
   }
@@ -210,6 +218,7 @@ export function resolveSsgOptions(ssg: SsgOptions | boolean | undefined): Resolv
     pageChrome: resolvePageChromeOption(ssg.pageChrome),
     notFound: resolveNotFoundOptions(ssg.notFound),
     team: resolveTeamOptions(ssg.team),
+    blog: resolveBlogOptions(ssg.blog),
     siteUrl: ssg.siteUrl,
     theme: resolveTheme(ssg.theme),
     navigation: ssg.navigation,
@@ -789,6 +798,15 @@ export async function buildSsg(options: ResolvedOptions, root: string): Promise<
   await generateOgImageAssets(context, collected, generatedFiles, errors);
 
   injectRelatedPages(outputPages, listedPages, context.options.taxonomies);
+  const blog = context.options.blog ?? context.ssgOptions.blog;
+  await injectBlogPostMeta({
+    pages: outputPages,
+    listed: listedPages,
+    options: blog,
+    srcDir: context.srcDir,
+    collections: context.options.collections,
+    base: context.base,
+  });
   const generatedPages = await generateHtmlPages(context, outputPages, collected, errors);
   await appendNotFoundPage(generatedPages, context, collected, errors);
   await appendTaxonomyPages({
@@ -799,6 +817,17 @@ export async function buildSsg(options: ResolvedOptions, root: string): Promise<
     base: context.base,
     errors,
     render: (page) => renderSsgPage(context, toTaxonomyProcessResult(page), collected, listedPages),
+  });
+  await appendBlogPages({
+    generatedPages,
+    listedPages,
+    options: blog,
+    collections: context.options.collections,
+    srcDir: context.srcDir,
+    outDir: context.outDir,
+    base: context.base,
+    errors,
+    render: (page) => renderSsgPage(context, toBlogProcessResult(page), collected, listedPages),
   });
   await applyDocumentationVersions(generatedPages, context, errors);
   await writeGeneratedPages(

@@ -380,6 +380,17 @@ export interface SsgOptions {
   team?: boolean | TeamOptions;
 
   /**
+   * Opt-in blog index, authors, tags, reading time, and archive.
+   *
+   * Off by default. `true` enables defaults. An object enables the feature
+   * and overrides only the fields you set. Top-level `blog` wins when both
+   * are set.
+   *
+   * @default false
+   */
+  blog?: boolean | BlogOptions;
+
+  /**
    * Absolute site URL used when generating social metadata.
    *
    * Set this when pages need absolute Open Graph image URLs. Include the origin
@@ -518,6 +529,10 @@ export interface ResolvedSsgOptions {
    * Present after `resolveSsgOptions`. Omitted in hand-built fixtures means off.
    */
   team?: ResolvedTeamOptions;
+  /**
+   * Present after `resolveSsgOptions`. Omitted in hand-built fixtures means off.
+   */
+  blog?: ResolvedBlogOptions;
   siteUrl?: string;
   theme?: ResolvedThemeConfig;
   navigation?: SsgNavigationGroup[];
@@ -790,6 +805,52 @@ export interface ResolvedFeedsOptions {
 }
 
 /**
+ * One person in the `blog.authors` map.
+ */
+export interface BlogAuthor {
+  /** Display name. Escaped in HTML. */
+  name: string;
+  /** Optional short bio. Escaped in HTML. */
+  bio?: string;
+  /** Profile URL. Only `https:` or a site-relative `/` path is emitted. */
+  url?: string;
+}
+
+/**
+ * Opt-in blog index, authors, tags, reading time, and archive.
+ */
+export interface BlogOptions {
+  /**
+   * Named collection of posts. Defaults to a collection named `blog`, or
+   * the only configured collection. Required when several collections exist
+   * and none is named `blog`.
+   */
+  collection?: string;
+
+  /**
+   * Author records keyed by the frontmatter `author` / `authors` value.
+   * @default {}
+   */
+  authors?: Record<string, BlogAuthor>;
+
+  /**
+   * Posts per index page, newest first.
+   * @default 10
+   */
+  pageSize?: number;
+}
+
+/**
+ * Resolved blog options.
+ */
+export interface ResolvedBlogOptions {
+  enabled: boolean;
+  collection?: string;
+  authors: Record<string, BlogAuthor>;
+  pageSize: number;
+}
+
+/**
  * Opt-in term list pages, per-term pages, and related-page lists.
  */
 export interface TaxonomiesOptions {
@@ -1003,6 +1064,19 @@ export interface OxContentOptions {
    * @default false
    */
   redirects?: boolean | RedirectsOptions | Record<string, string>;
+
+  /**
+   * Write a paginated blog index, tag pages, and yearly/monthly archive,
+   * and inject author / reading-time chrome on posts.
+   *
+   * Off by default. `true` uses the `blog` collection when it exists,
+   * otherwise the only configured collection, with pageSize 10.
+   * An object enables the feature and overrides only the fields you set.
+   * Also accepted as `ssg.blog`; the top-level option wins when both are set.
+   *
+   * @default false
+   */
+  blog?: boolean | BlogOptions;
 
   /**
    * Write RSS, Atom, and/or JSON Feed files from a named collection.
@@ -1411,6 +1485,7 @@ export interface ResolvedOptions {
   permalinks?: ResolvedPermalinksOptions;
   cascade?: ResolvedCascadeOptions;
   redirects?: ResolvedRedirectsOptions;
+  blog?: ResolvedBlogOptions;
   feeds?: ResolvedFeedsOptions;
   taxonomies?: ResolvedTaxonomiesOptions;
   versions?: ResolvedVersionsOptions;

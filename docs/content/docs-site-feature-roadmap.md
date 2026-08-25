@@ -59,7 +59,7 @@ Already tracked elsewhere:
 | Feature                                            | Issue                                                          | Status  |
 | -------------------------------------------------- | -------------------------------------------------------------- | ------- |
 | Taxonomies and related pages                       | [#687](https://github.com/ubugeeei-prod/ox-content/issues/687) | planned |
-| Blog (index, authors, tags, reading time, archive) | [#688](https://github.com/ubugeeei-prod/ox-content/issues/688) | planned |
+| Blog (index, authors, tags, reading time, archive) | [#688](https://github.com/ubugeeei-prod/ox-content/issues/688) | shipped |
 | Documentation versioning                           | [#689](https://github.com/ubugeeei-prod/ox-content/issues/689) | shipped |
 | Generated section index pages                      | [#690](https://github.com/ubugeeei-prod/ox-content/issues/690) | planned |
 | Page resources and image processing                | [#691](https://github.com/ubugeeei-prod/ox-content/issues/691) | planned |
