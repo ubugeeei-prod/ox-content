@@ -5,6 +5,7 @@
 ### Features
 
 - add build-time page-head API and built-in SEO (#821)
+- deduplicate identical page resources by content (#828)
 
 ## [3.0.0-alpha.4] - 2026-08-25
 

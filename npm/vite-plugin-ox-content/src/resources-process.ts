@@ -5,15 +5,20 @@
 import * as fs from "node:fs/promises";
 import * as path from "node:path";
 import {
-  coverCrop,
-  cropImage,
-  decodePng,
-  encodeJpeg,
-  encodePng,
-  isPng,
-  resizeNearest,
-  type RgbaImage,
-} from "./resources-image";
+  createResourceDedupeStore,
+  emitCanonicalResource,
+  hashResourceFile,
+  linkOrCopyAlias,
+  normalizeDedupeExt,
+  rewriteToCanonicalUrl,
+  type ResourceDedupeStore,
+} from "./resources-dedupe";
+import {
+  collectResourceTags,
+  escapeAttribute,
+  replaceAttributeRaw,
+  type ResourceAttrName,
+} from "./resources-html";
 import {
   isInsideRoot,
   parseResourceSrc,
@@ -22,16 +27,20 @@ import {
   type ProcessPageResourcesResult,
   type ResourceTransform,
 } from "./resources";
+import { ensureTransformedCache } from "./resources-write";
 import type { ResolvedResourcesOptions } from "./types";
 
-const IMG_TAG = /<img\b[^>]*>/gi;
-const SRC_ATTR = /\bsrc\s*=\s*(?:"([^"]*)"|'([^']*)')/i;
+const PAGE_EXTS = new Set([".md", ".markdown", ".mdx", ".html", ".htm"]);
 
 export async function processPageResources(
   input: ProcessPageResourcesInput,
 ): Promise<ProcessPageResourcesResult> {
   if (!input.options.enabled) {
     return { html: input.html, files: [], errors: [], fatal: [] };
+  }
+  if (input.options.dedupe && !input.outDir) {
+    const message = "[ox-content] resources.dedupe requires outDir";
+    return { html: input.html, files: [], errors: [message], fatal: [message] };
   }
 
   const bundleRoot = path.dirname(input.inputPath);
@@ -40,83 +49,165 @@ export async function processPageResources(
   const errors: string[] = [];
   const fatal: string[] = [];
   let html = input.html;
+  const store = input.options.dedupe
+    ? (input.dedupeStore ?? createResourceDedupeStore())
+    : undefined;
 
-  const tags = input.html.match(IMG_TAG) ?? [];
-  for (const tag of tags) {
-    const srcMatch = tag.match(SRC_ATTR);
-    const rawSrc = srcMatch?.[1] ?? srcMatch?.[2];
-    if (!rawSrc) {
-      continue;
-    }
-    const src = unescapeHtml(rawSrc);
-    const parsed = parseResourceSrc(src);
-    if (!parsed) {
-      continue;
-    }
-
-    const resolved = resolveBundlePath(parsed.pathname, bundleRoot, input.srcDir);
-    if (!resolved.ok) {
-      const message = `[ox-content] page resource ${JSON.stringify(src)} on ${input.inputPath} is outside the page bundle`;
-      errors.push(message);
-      fatal.push(message);
-      continue;
-    }
-
-    let stat: Awaited<ReturnType<typeof fs.stat>>;
-    try {
-      stat = await fs.stat(resolved.absolute);
-    } catch {
-      const message = `[ox-content] missing page resource ${JSON.stringify(parsed.pathname)} on ${input.inputPath}`;
-      errors.push(message);
-      if (input.options.missing === "error") {
-        fatal.push(message);
+  for (const { tag, refs } of collectResourceTags(input.html)) {
+    let nextTag = tag;
+    for (const ref of refs) {
+      const result = await processResourceRef(input, {
+        bundleRoot,
+        outputDir,
+        ref: ref.attr,
+        src: ref.value,
+        store,
+      });
+      errors.push(...result.errors);
+      fatal.push(...result.fatal);
+      files.push(...result.files);
+      if (result.rewrite) {
+        nextTag = replaceAttributeRaw(nextTag, ref.raw, escapeAttribute(result.rewrite));
       }
-      continue;
     }
-
-    const transformError = validateTransform(parsed.transform, input.options);
-    if (transformError) {
-      const message = `[ox-content] ${transformError} for ${JSON.stringify(src)} on ${input.inputPath}`;
-      errors.push(message);
-      fatal.push(message);
-      continue;
+    if (nextTag !== tag) {
+      html = html.replace(tag, nextTag);
     }
+  }
 
-    const hasTransform = hasPixelOrFormatTransform(parsed.transform);
-    const outputName = hasTransform
-      ? transformedFileName(
-          parsed.pathname,
-          parsed.transform,
-          resourceCacheKey(resolved.absolute, stat.mtimeMs, parsed.transform),
-        )
-      : path.basename(resolved.absolute);
-    const outputFile = path.join(outputDir, outputName);
+  return { html, files, errors, fatal };
+}
 
-    try {
-      if (hasTransform) {
-        await writeTransformedResource({
+async function processResourceRef(
+  input: ProcessPageResourcesInput,
+  ctx: {
+    bundleRoot: string;
+    outputDir: string;
+    ref: ResourceAttrName;
+    src: string;
+    store: ResourceDedupeStore | undefined;
+  },
+): Promise<{ files: string[]; errors: string[]; fatal: string[]; rewrite?: string }> {
+  const parsed = parseResourceSrc(ctx.src);
+  if (!parsed) {
+    return { files: [], errors: [], fatal: [] };
+  }
+
+  const resolved = resolveBundlePath(parsed.pathname, ctx.bundleRoot, input.srcDir);
+  if (!resolved.ok) {
+    if (ctx.ref === "href") {
+      return { files: [], errors: [], fatal: [] };
+    }
+    const message = `[ox-content] page resource ${JSON.stringify(ctx.src)} on ${input.inputPath} is outside the page bundle`;
+    return { files: [], errors: [message], fatal: [message] };
+  }
+
+  let stat: Awaited<ReturnType<typeof fs.stat>>;
+  try {
+    stat = await fs.stat(resolved.absolute);
+  } catch {
+    if (ctx.ref === "href") {
+      return { files: [], errors: [], fatal: [] };
+    }
+    const message = `[ox-content] missing page resource ${JSON.stringify(parsed.pathname)} on ${input.inputPath}`;
+    return {
+      files: [],
+      errors: [message],
+      fatal: input.options.missing === "error" ? [message] : [],
+    };
+  }
+  const hrefToPage =
+    ctx.ref === "href" && PAGE_EXTS.has(path.extname(resolved.absolute).toLowerCase());
+  if (!stat.isFile() || hrefToPage) {
+    return { files: [], errors: [], fatal: [] };
+  }
+
+  const transformError = validateTransform(parsed.transform, input.options);
+  if (transformError) {
+    const message = `[ox-content] ${transformError} for ${JSON.stringify(ctx.src)} on ${input.inputPath}`;
+    return { files: [], errors: [message], fatal: [message] };
+  }
+
+  const hasTransform = hasPixelOrFormatTransform(parsed.transform);
+  const outputName = hasTransform
+    ? transformedFileName(
+        parsed.pathname,
+        parsed.transform,
+        resourceCacheKey(resolved.absolute, stat.mtimeMs, parsed.transform),
+      )
+    : decodedBasename(parsed.pathname) || path.basename(resolved.absolute);
+  const outputFile = path.join(ctx.outputDir, outputName);
+
+  try {
+    const materialized = hasTransform
+      ? await ensureTransformedCache({
           sourcePath: resolved.absolute,
           outputFile,
           cacheDir: input.cacheDir,
           mtimeMs: stat.mtimeMs,
           transform: parsed.transform,
-        });
-      } else {
-        await fs.mkdir(outputDir, { recursive: true });
-        await fs.copyFile(resolved.absolute, outputFile);
-      }
-      files.push(outputFile);
-      const rewritten = tag.replace(rawSrc, escapeAttribute(outputName));
-      html = html.replace(tag, rewritten);
-    } catch (error) {
-      const detail = error instanceof Error ? error.message : String(error);
-      const message = `[ox-content] failed to process page resource ${JSON.stringify(src)} on ${input.inputPath}: ${detail}`;
-      errors.push(message);
-      fatal.push(message);
+        })
+      : resolved.absolute;
+    if (ctx.store && input.outDir) {
+      return await emitDedupedResource({
+        store: ctx.store,
+        materialized,
+        outputFile,
+        src: ctx.src,
+        sourcePath: resolved.absolute,
+        mtimeMs: stat.mtimeMs,
+        transform: parsed.transform,
+        hasTransform,
+        outDir: input.outDir,
+        base: input.base ?? "/",
+      });
     }
+    if (hasTransform) {
+      await fs.mkdir(ctx.outputDir, { recursive: true });
+      await fs.copyFile(materialized, outputFile);
+    } else {
+      await fs.mkdir(ctx.outputDir, { recursive: true });
+      await fs.copyFile(resolved.absolute, outputFile);
+    }
+    return { files: [outputFile], errors: [], fatal: [], rewrite: outputName };
+  } catch (error) {
+    const detail = error instanceof Error ? error.message : String(error);
+    const message = `[ox-content] failed to process page resource ${JSON.stringify(ctx.src)} on ${input.inputPath}: ${detail}`;
+    return { files: [], errors: [message], fatal: [message] };
   }
+}
 
-  return { html, files, errors, fatal };
+async function emitDedupedResource(input: {
+  store: ResourceDedupeStore;
+  materialized: string;
+  outputFile: string;
+  src: string;
+  sourcePath: string;
+  mtimeMs: number;
+  transform: ResourceTransform;
+  hasTransform: boolean;
+  outDir: string;
+  base: string;
+}): Promise<{ files: string[]; errors: string[]; fatal: string[]; rewrite: string }> {
+  const ext = normalizeDedupeExt(path.extname(input.outputFile));
+  const reuseKey = input.hasTransform
+    ? resourceCacheKey(input.sourcePath, input.mtimeMs, input.transform)
+    : `${input.sourcePath}\0${input.mtimeMs}\0copy`;
+  const digest = await hashResourceFile(input.materialized, ext, input.store, reuseKey);
+  const { asset, wrote } = await emitCanonicalResource(input.store, {
+    digest,
+    ext,
+    sourcePath: input.materialized,
+    outDir: input.outDir,
+    base: input.base,
+  });
+  await linkOrCopyAlias(asset.absolutePath, input.outputFile);
+  return {
+    files: wrote ? [asset.absolutePath, input.outputFile] : [input.outputFile],
+    errors: [],
+    fatal: [],
+    rewrite: rewriteToCanonicalUrl(input.src, asset.publicPath),
+  };
 }
 
 function resolveBundlePath(
@@ -124,10 +215,16 @@ function resolveBundlePath(
   bundleRoot: string,
   contentRoot: string,
 ): { ok: true; absolute: string } | { ok: false } {
-  if (path.isAbsolute(pathname) || pathname.includes("\0")) {
+  let decoded: string;
+  try {
+    decoded = decodeURIComponent(pathname);
+  } catch {
+    decoded = pathname;
+  }
+  if (path.isAbsolute(decoded) || decoded.includes("\0")) {
     return { ok: false };
   }
-  const absolute = path.resolve(bundleRoot, pathname);
+  const absolute = path.resolve(bundleRoot, decoded);
   if (!isInsideRoot(bundleRoot, absolute) || !isInsideRoot(contentRoot, absolute)) {
     return { ok: false };
   }
@@ -173,136 +270,10 @@ function outputExtension(pathname: string, format: string | undefined): string {
   return ext === "jpeg" ? "jpg" : ext || "png";
 }
 
-async function writeTransformedResource(input: {
-  sourcePath: string;
-  outputFile: string;
-  cacheDir: string;
-  mtimeMs: number;
-  transform: ResourceTransform;
-}): Promise<void> {
-  const key = resourceCacheKey(input.sourcePath, input.mtimeMs, input.transform);
-  const ext = path.extname(input.outputFile);
-  const cacheFile = path.join(input.cacheDir, `${key}${ext}`);
+function decodedBasename(pathname: string): string {
   try {
-    await fs.copyFile(cacheFile, input.outputFile);
-    return;
+    return path.basename(decodeURIComponent(pathname));
   } catch {
-    // Cache miss — process below.
+    return path.basename(pathname);
   }
-
-  const source = await fs.readFile(input.sourcePath);
-  const output = transformResourceBuffer(source, input.sourcePath, input.transform);
-  if (output.length > 8 * 1024 * 1024) {
-    throw new Error("transform produced an oversized file");
-  }
-  await fs.mkdir(path.dirname(input.outputFile), { recursive: true });
-  await fs.mkdir(input.cacheDir, { recursive: true });
-  await fs.writeFile(cacheFile, output);
-  await fs.writeFile(input.outputFile, output);
-}
-
-function transformResourceBuffer(
-  source: Buffer,
-  sourcePath: string,
-  transform: ResourceTransform,
-): Buffer {
-  const needsPixels = Boolean(transform.width || transform.height || transform.crop);
-  if (!needsPixels && !transform.format) {
-    return source;
-  }
-  if (!needsPixels && transform.format) {
-    if (!isPng(source)) {
-      if (transform.format === formatFromPath(sourcePath)) {
-        return source;
-      }
-      throw new Error(
-        `cannot convert ${path.extname(sourcePath) || "source"} to ${transform.format}`,
-      );
-    }
-    const image = decodePng(source);
-    return encodeFormat(image, transform.format);
-  }
-
-  if (!isPng(source)) {
-    throw new Error("resize/crop requires a PNG source");
-  }
-  const encoded = encodeFormat(
-    applyPixelTransform(decodePng(source), transform),
-    transform.format ?? "png",
-  );
-  return encoded;
-}
-
-function applyPixelTransform(image: RgbaImage, transform: ResourceTransform): RgbaImage {
-  const crop = transform.crop;
-  if (crop && crop !== "center") {
-    const parts = crop.split(",").map((part) => Number(part.trim()));
-    if (parts.length === 4 && parts.every((part) => Number.isFinite(part))) {
-      return cropImage(image, parts[0]!, parts[1]!, parts[2]!, parts[3]!);
-    }
-    throw new Error(`invalid crop ${crop}`);
-  }
-
-  const width = transform.width;
-  const height = transform.height;
-  if (crop === "center") {
-    if (!width || !height) {
-      throw new Error("crop=center requires width and height");
-    }
-    return coverCrop(image, width, height);
-  }
-  if (width && height) {
-    return resizeNearest(image, width, height);
-  }
-  if (width) {
-    return resizeNearest(
-      image,
-      width,
-      Math.max(1, Math.round((image.height * width) / image.width)),
-    );
-  }
-  if (height) {
-    return resizeNearest(
-      image,
-      Math.max(1, Math.round((image.width * height) / image.height)),
-      height,
-    );
-  }
-  return image;
-}
-
-function encodeFormat(image: RgbaImage, format: string): Buffer {
-  if (format === "jpeg") {
-    return encodeJpeg(image);
-  }
-  if (format === "png") {
-    return encodePng(image);
-  }
-  if (format === "webp") {
-    throw new Error("webp encoding requires a webp source without pixel transforms");
-  }
-  throw new Error(`unsupported format ${format}`);
-}
-
-function formatFromPath(filePath: string): string {
-  const ext = path.extname(filePath).slice(1).toLowerCase();
-  return ext === "jpg" ? "jpeg" : ext;
-}
-
-function unescapeHtml(value: string): string {
-  return value
-    .replaceAll("&amp;", "&")
-    .replaceAll("&quot;", '"')
-    .replaceAll("&#39;", "'")
-    .replaceAll("&lt;", "<")
-    .replaceAll("&gt;", ">");
-}
-
-function escapeAttribute(value: string): string {
-  return value
-    .replaceAll("&", "&amp;")
-    .replaceAll('"', "&quot;")
-    .replaceAll("'", "&#39;")
-    .replaceAll("<", "&lt;")
-    .replaceAll(">", "&gt;");
 }

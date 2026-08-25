@@ -36,6 +36,7 @@ oxContent({
     formats: ["png", "jpeg", "webp"],
     widths: [400, 800],
     missing: "error",
+    dedupe: false,
   },
 });
 ```
@@ -46,6 +47,7 @@ oxContent({
 | `formats`   | `string[]`                     | `["png", "jpeg", "webp"]` |
 | `widths`    | `number[]`                     | `[]` (any positive width) |
 | `missing`   | `"error"` / `"warn"`           | `"error"`                 |
+| `dedupe`    | `boolean`                      | `false`                   |
 
 ## Page bundle
 
@@ -109,6 +111,39 @@ project root. The cache key is SHA-256 of:
 A later build with the same key copies the cached bytes instead of
 re-encoding. Changing the source file or any transform param produces a new
 key and a new output filename.
+
+## Content deduplication
+
+`resources.dedupe` is **off by default**. `true` and `{}` do not turn it on.
+Set `dedupe: true` to write identical emitted bytes once:
+
+```ts
+oxContent({
+  resources: { dedupe: true },
+});
+```
+
+The digest is SHA-256 of the **final emitted bytes**, a NUL, and the serving
+extension (`jpg` for JPEG). The canonical file is:
+
+`/assets/content/<sha256>.<ext>`
+
+`base` is prefixed (`/docs/` → `/docs/assets/content/...`). HTML `src`,
+`poster`, and relevant `href` values that point at the resource become that
+URL. Leftover query strings (after consumed transform params) and hash
+fragments stay on the rewritten URL. Remote, `data:`, and `javascript:`
+values are not rewritten.
+
+The first page that produces a digest writes the canonical file. Later pages
+reuse that path and hash. Deduping does not decode images. Large files are
+hashed incrementally.
+
+The original page-output path is kept as an alias: a hard link when the
+filesystem allows, otherwise a copy. A failed link never overwrites a
+shared inode. Names are deterministic across builds.
+
+Same bytes with a different extension stay separate. Different bytes stay
+separate.
 
 ## Missing sources
 

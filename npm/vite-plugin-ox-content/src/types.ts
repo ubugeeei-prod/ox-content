@@ -1500,6 +1500,7 @@ export interface OxContentOptions {
    * source mtime plus transform params. Paths that leave the page
    * directory or `srcDir` are rejected. Missing sources fail the build
    * when `missing` is `"error"` (the default when enabled).
+   * `dedupe` is off unless set; it does not turn on with `true` / `{}`.
    *
    * This is separate from `images`, which only adds figures, captions,
    * and lazy-loading.
@@ -1994,6 +1995,16 @@ export interface ResourcesOptions {
    * @default "error"
    */
   missing?: "error" | "warn";
+
+  /**
+   * Emit identical bytes once as `/assets/content/<sha256>.<ext>` and
+   * rewrite `src`, `poster`, and relevant `href` to that URL.
+   *
+   * Off unless this is `true`. `resources: true` and `{}` leave it off.
+   *
+   * @default false
+   */
+  dedupe?: boolean;
 }
 
 /**
@@ -2004,6 +2015,7 @@ export interface ResolvedResourcesOptions {
   formats: string[];
   widths: number[];
   missing: "error" | "warn";
+  dedupe: boolean;
 }
 
 /**
