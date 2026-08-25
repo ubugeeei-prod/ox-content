@@ -110,12 +110,12 @@ oxContent({
 
 #### SsgOptions
 
-| オプション  | 型        | 既定      | 説明                                        |
-| ----------- | --------- | --------- | ------------------------------------------- |
-| `enabled`   | `boolean` | `true`    | SSG モードのオン / オフ                     |
-| `extension` | `string`  | `'.html'` | 出力ファイル拡張子                          |
-| `clean`     | `boolean` | `false`   | ビルド前に出力ディレクトリを消す            |
-| `bare`      | `boolean` | `false`   | 素の HTML 出力（ナビなし、スタイルなし）    |
+| オプション  | 型        | 既定      | 説明                                     |
+| ----------- | --------- | --------- | ---------------------------------------- |
+| `enabled`   | `boolean` | `true`    | SSG モードのオン / オフ                  |
+| `extension` | `string`  | `'.html'` | 出力ファイル拡張子                       |
+| `clean`     | `boolean` | `false`   | ビルド前に出力ディレクトリを消す         |
+| `bare`      | `boolean` | `false`   | 素の HTML 出力（ナビなし、スタイルなし） |
 
 ### Bare モード（ベンチマーク向け）
 
@@ -335,16 +335,16 @@ oxContent({
 
 #### DocsOptions
 
-| オプション | 型                               | 既定                             | 説明                           |
-| ---------- | -------------------------------- | -------------------------------- | ------------------------------ |
-| `enabled`  | `boolean`                        | `true`                           | docs 生成のオン / オフ         |
-| `src`      | `string[]`                       | `['./src']`                      | 走査するソースディレクトリ     |
-| `out`      | `string`                         | `'docs/api'`                     | 出力ディレクトリ               |
-| `include`  | `string[]`                       | JS/TS ソース glob                | 含めるファイル                 |
-| `exclude`  | `string[]`                       | `['**/*.test.*', '**/*.spec.*']` | 除くファイル                   |
-| `format`   | `'markdown' \| 'json' \| 'html'` | `'markdown'`                     | 出力形式                       |
-| `private`  | `boolean`                        | `false`                          | @private メンバーを含める      |
-| `toc`      | `boolean`                        | `true`                           | 目次を生成する                 |
+| オプション | 型                               | 既定                             | 説明                             |
+| ---------- | -------------------------------- | -------------------------------- | -------------------------------- |
+| `enabled`  | `boolean`                        | `true`                           | docs 生成のオン / オフ           |
+| `src`      | `string[]`                       | `['./src']`                      | 走査するソースディレクトリ       |
+| `out`      | `string`                         | `'docs/api'`                     | 出力ディレクトリ                 |
+| `include`  | `string[]`                       | JS/TS ソース glob                | 含めるファイル                   |
+| `exclude`  | `string[]`                       | `['**/*.test.*', '**/*.spec.*']` | 除くファイル                     |
+| `format`   | `'markdown' \| 'json' \| 'html'` | `'markdown'`                     | 出力形式                         |
+| `private`  | `boolean`                        | `false`                          | @private メンバーを含める        |
+| `toc`      | `boolean`                        | `true`                           | 目次を生成する                   |
 | `groupBy`  | `'file' \| 'category'`           | `'file'`                         | ファイルまたはカテゴリでグループ |
 
 ## docs 生成を切る
@@ -376,13 +376,13 @@ oxContent({
 
 #### SearchOptions
 
-| オプション    | 型        | 既定                        | 説明                                |
-| ------------- | --------- | --------------------------- | ----------------------------------- |
-| `enabled`     | `boolean` | `true`                      | 検索機能のオン / オフ               |
-| `limit`       | `number`  | `10`                        | 検索結果の上限                      |
+| オプション    | 型        | 既定                        | 説明                                     |
+| ------------- | --------- | --------------------------- | ---------------------------------------- |
+| `enabled`     | `boolean` | `true`                      | 検索機能のオン / オフ                    |
+| `limit`       | `number`  | `10`                        | 検索結果の上限                           |
 | `prefix`      | `boolean` | `true`                      | オートコンプリート向けプレフィックス一致 |
-| `placeholder` | `string`  | `'Search documentation...'` | 検索入力のプレースホルダ            |
-| `hotkey`      | `string`  | `'/'`                       | 検索を開くキーボードショートカット  |
+| `placeholder` | `string`  | `'Search documentation...'` | 検索入力のプレースホルダ                 |
+| `hotkey`      | `string`  | `'/'`                       | 検索を開くキーボードショートカット       |
 
 #### 動き方
 
@@ -472,11 +472,11 @@ const page = await queryCollection("docs").path("/docs/getting-started").first()
 
 大きなサイトでは `include` は意図して明示です。
 
-| フィールド | コスト                                               |
-| ---------- | ---------------------------------------------------- |
-| `body`     | 除いた生 Markdown を仮想モジュールに埋め込む。       |
-| `html`     | ネイティブ Markdown 変換を走らせ、HTML を埋め込む。  |
-| `toc`      | ネイティブ Markdown 変換を走らせ、TOC を埋め込む。   |
+| フィールド | コスト                                              |
+| ---------- | --------------------------------------------------- |
+| `body`     | 除いた生 Markdown を仮想モジュールに埋め込む。      |
+| `html`     | ネイティブ Markdown 変換を走らせ、HTML を埋め込む。 |
+| `toc`      | ネイティブ Markdown 変換を走らせ、TOC を埋め込む。  |
 
 シンタックスハイライトや Mermaid 描画のような、ページ単位の完全な JavaScript 後処理では、Markdown モジュールを直接 import してください。コレクションの `html` はクエリペイロード向けに最適化しています。
 

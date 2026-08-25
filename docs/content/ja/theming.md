@@ -141,33 +141,33 @@ JSX 向けに `tsconfig.json` を設定します。
 
 ### 色
 
-| オプション                 | CSS 変数                     | 説明                                                       |
-| -------------------------- | ---------------------------- | ---------------------------------------------------------- |
-| `colors.primary`           | `--octc-color-primary`       | リンクやアクティブ状態の主アクセント                       |
-| `colors.primaryHover`      | `--octc-color-primary-hover` | ホバー時の主色                                             |
-| `colors.background`        | `--octc-color-bg`            | メイン背景色                                               |
-| `colors.backgroundAlt`     | `--octc-color-bg-alt`        | 代替背景（サイドバー、コードブロック）                     |
-| `colors.text`              | `--octc-color-text`          | メイン文字色                                               |
-| `colors.textMuted`         | `--octc-color-text-muted`    | 控えめ / 副次の文字色                                      |
-| `colors.border`            | `--octc-color-border`        | 境界色                                                     |
-| `colors.codeBackground`    | `--octc-color-code-bg`       | コードブロック背景                                         |
-| `colors.codeBackgroundTop` | `--octc-color-code-bg-top`   | コードブロック勾配の上。省略時は `codeBackground` に従う   |
-| `colors.codeText`          | `--octc-color-code-text`     | コードブロック文字色                                       |
+| オプション                 | CSS 変数                     | 説明                                                     |
+| -------------------------- | ---------------------------- | -------------------------------------------------------- |
+| `colors.primary`           | `--octc-color-primary`       | リンクやアクティブ状態の主アクセント                     |
+| `colors.primaryHover`      | `--octc-color-primary-hover` | ホバー時の主色                                           |
+| `colors.background`        | `--octc-color-bg`            | メイン背景色                                             |
+| `colors.backgroundAlt`     | `--octc-color-bg-alt`        | 代替背景（サイドバー、コードブロック）                   |
+| `colors.text`              | `--octc-color-text`          | メイン文字色                                             |
+| `colors.textMuted`         | `--octc-color-text-muted`    | 控えめ / 副次の文字色                                    |
+| `colors.border`            | `--octc-color-border`        | 境界色                                                   |
+| `colors.codeBackground`    | `--octc-color-code-bg`       | コードブロック背景                                       |
+| `colors.codeBackgroundTop` | `--octc-color-code-bg-top`   | コードブロック勾配の上。省略時は `codeBackground` に従う |
+| `colors.codeText`          | `--octc-color-code-text`     | コードブロック文字色                                     |
 
 ### レイアウト
 
-| オプション               | CSS 変数                   | 説明                                   |
-| ------------------------ | -------------------------- | -------------------------------------- |
-| `layout.sidebarWidth`    | `--octc-sidebar-width`     | サイドバー幅（既定: `260px`）          |
-| `layout.headerHeight`    | `--octc-header-height`     | ヘッダー高さ（既定: `60px`）           |
-| `layout.maxContentWidth` | `--octc-max-content-width` | コンテンツ最大幅（既定: `960px`）      |
+| オプション               | CSS 変数                   | 説明                              |
+| ------------------------ | -------------------------- | --------------------------------- |
+| `layout.sidebarWidth`    | `--octc-sidebar-width`     | サイドバー幅（既定: `260px`）     |
+| `layout.headerHeight`    | `--octc-header-height`     | ヘッダー高さ（既定: `60px`）      |
+| `layout.maxContentWidth` | `--octc-max-content-width` | コンテンツ最大幅（既定: `960px`） |
 
 ### フォント
 
-| オプション   | CSS 変数           | 説明                  |
-| ------------ | ------------------ | --------------------- |
+| オプション   | CSS 変数           | 説明                         |
+| ------------ | ------------------ | ---------------------------- |
 | `fonts.sans` | `--octc-font-sans` | サンセリフのフォントスタック |
-| `fonts.mono` | `--octc-font-mono` | 等幅のフォントスタック |
+| `fonts.mono` | `--octc-font-mono` | 等幅のフォントスタック       |
 
 セットしたキーだけが出ます。省略した色、フォント、レイアウトは [既定テーマの値](#既定テーマの値) に落ちるので、アクセント 1 つを上書きするためにパレット全体を書き直す必要はありません。
 
@@ -405,13 +405,13 @@ defineTheme({
 
 それ以外は `{ icon, link, label? }` の配列を渡します。`icon` は次の形式を受け付けます。
 
-| 形式                  | 例                            | 描画                                       |
-| --------------------- | ----------------------------- | ------------------------------------------ |
-| Iconify `prefix:name` | `"mdi:mastodon"`              | Iconify アイコン（任意のセット）、色対応   |
-| Lucide                | `"lucide:rss"`                | Iconify 経由の Lucide アイコン             |
-| 画像 URL              | `"https://example.com/x.svg"` | そのソースの `<img>`                       |
-| ローカルパス          | `"/icons/x.svg"`              | サイト `base` に対して解決した `<img>`     |
-| 絵文字 / テキスト     | `"📡"`                        | そのままインライン描画                     |
+| 形式                  | 例                            | 描画                                     |
+| --------------------- | ----------------------------- | ---------------------------------------- |
+| Iconify `prefix:name` | `"mdi:mastodon"`              | Iconify アイコン（任意のセット）、色対応 |
+| Lucide                | `"lucide:rss"`                | Iconify 経由の Lucide アイコン           |
+| 画像 URL              | `"https://example.com/x.svg"` | そのソースの `<img>`                     |
+| ローカルパス          | `"/icons/x.svg"`              | サイト `base` に対して解決した `<img>`   |
+| 絵文字 / テキスト     | `"📡"`                        | そのままインライン描画                   |
 
 ```ts
 defineTheme({
@@ -429,17 +429,17 @@ defineTheme({
 
 `embed` オプションは、ページレイアウトの決まった位置に生 HTML を注入します。9 箇所すべて任意です。
 
-| フィールド      | 描画先                                                         |
-| --------------- | -------------------------------------------------------------- |
-| `head`          | `<head>` 内（分析、`preconnect`、独自 `<meta>`）               |
-| `headerBefore`  | ヘッダーバーの直前                                             |
-| `headerAfter`   | ヘッダーバーの直後                                             |
-| `sidebarBefore` | サイドバー先頭、ナビの前                                       |
-| `sidebarAfter`  | サイドバー末尾、ナビのあと                                     |
-| `contentBefore` | メインコンテンツの前（記事の上）                               |
-| `contentAfter`  | メインコンテンツのあと（記事の下）                             |
-| `footerBefore`  | フッターの直前                                                 |
-| `footer`        | 既定フッターを丸ごと置き換える                                 |
+| フィールド      | 描画先                                           |
+| --------------- | ------------------------------------------------ |
+| `head`          | `<head>` 内（分析、`preconnect`、独自 `<meta>`） |
+| `headerBefore`  | ヘッダーバーの直前                               |
+| `headerAfter`   | ヘッダーバーの直後                               |
+| `sidebarBefore` | サイドバー先頭、ナビの前                         |
+| `sidebarAfter`  | サイドバー末尾、ナビのあと                       |
+| `contentBefore` | メインコンテンツの前（記事の上）                 |
+| `contentAfter`  | メインコンテンツのあと（記事の下）               |
+| `footerBefore`  | フッターの直前                                   |
+| `footer`        | 既定フッターを丸ごと置き換える                   |
 
 ```ts
 defineTheme({

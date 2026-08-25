@@ -44,13 +44,13 @@ oxContent({
 });
 ```
 
-| オプション   | 型                              | 既定                                 |
-| ------------ | ------------------------------- | ------------------------------------ |
-| `feeds`      | `boolean` / `FeedsOptions`      | `false`                              |
-| `formats`    | `("rss" \| "atom" \| "json")[]` | `["rss", "atom", "json"]`            |
+| オプション   | 型                              | 既定                                  |
+| ------------ | ------------------------------- | ------------------------------------- |
+| `feeds`      | `boolean` / `FeedsOptions`      | `false`                               |
+| `formats`    | `("rss" \| "atom" \| "json")[]` | `["rss", "atom", "json"]`             |
 | `collection` | `string`                        | `content`、なければ最初のコレクション |
-| `limit`      | `number`                        | `20`                                 |
-| `path`       | `string`                        | `/`（サイトルート）                  |
+| `limit`      | `number`                        | `20`                                  |
+| `path`       | `string`                        | `/`（サイトルート）                   |
 
 `path` は生成ファイルのサイト相対ディレクトリです。`/feeds` なら `feeds/feed.xml`、`feeds/atom.xml`、`feeds/feed.json` を書き出します。
 

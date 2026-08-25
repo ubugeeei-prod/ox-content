@@ -23,11 +23,11 @@ export default {
 
 ## 区切り
 
-| 形         | ソース               | 結果                                     |
-| ---------- | -------------------- | ---------------------------------------- |
-| インライン | `$E=mc^2$`           | `<span class="ox-math ox-math-inline">…` |
-| ディスプレイ | `$$E = mc^2$$`     | `<div class="ox-math ox-math-block">…`   |
-| インライン | `Before $$x$$ after` | `<span class="ox-math ox-math-inline">…` |
+| 形           | ソース               | 結果                                     |
+| ------------ | -------------------- | ---------------------------------------- |
+| インライン   | `$E=mc^2$`           | `<span class="ox-math ox-math-inline">…` |
+| ディスプレイ | `$$E = mc^2$$`       | `<div class="ox-math ox-math-block">…`   |
+| インライン   | `Before $$x$$ after` | `<span class="ox-math ox-math-inline">…` |
 
 ディスプレイ区切りがブロックになるのは、段落全体を占めるときだけです。周りに文字がある `$$…$$` はインラインのままなので、Markdown が `<p>` の中に `<div>` を出しません。
 

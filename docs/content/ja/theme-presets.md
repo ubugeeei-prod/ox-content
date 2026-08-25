@@ -101,87 +101,87 @@ theme: [
 
 各スキンはだいたい 6–7 kB の CSS で、**JavaScript はゼロ**、実行時依存もありません。
 
-| パッケージ                                                                                   | 名前         | 説明                                                                                         |
-| -------------------------------------------------------------------------------------------- | ------------ | -------------------------------------------------------------------------------------------- |
-| [`@ox-content/theme-pixel`](https://npmjs.com/package/@ox-content/theme-pixel)               | Pixel        | 厚い 8-bit 面、硬いオフセット影、段階的なモーション                                          |
-| [`@ox-content/theme-liquid-glass`](https://npmjs.com/package/@ox-content/theme-liquid-glass) | Liquid Glass | 屈折するガラスパネル、鏡面エッジ、ホバー時の光の走り                                         |
-| [`@ox-content/theme-blur-glass`](https://npmjs.com/package/@ox-content/theme-blur-glass)     | Blur Glass   | 柔らかい霞から解ける、フロストの backdrop-blur 層                                            |
-| [`@ox-content/theme-analog-film`](https://npmjs.com/package/@ox-content/theme-analog-film)   | Analog Film  | 粒状、ハレーション、スプロケットレール、穏やかなゲートウィーブ                               |
-| [`@ox-content/theme-fluid`](https://npmjs.com/package/@ox-content/theme-fluid)               | Fluid        | コンテンツの後ろで漂い変形する、有機的なブロブ勾配                                           |
-| [`@ox-content/theme-fabric`](https://npmjs.com/package/@ox-content/theme-fabric)             | Fabric       | 織り目、縫い目、柔らかい布の折りたたみ                                                       |
-| [`@ox-content/theme-leather`](https://npmjs.com/package/@ox-content/theme-leather)           | Leather      | 型押しの粒と鞍縫い。触れると沈む                                                             |
-| [`@ox-content/theme-brutalist`](https://npmjs.com/package/@ox-content/theme-brutalist)       | Brutalist    | 生の構造、巨大な文字、叩きつける影                                                           |
-| [`@ox-content/theme-terminal`](https://npmjs.com/package/@ox-content/theme-terminal)         | Terminal     | CRT 蛍光体、スキャンライン、点滅するブロックキャレット、プロンプト余白                       |
-| [`@ox-content/theme-blueprint`](https://npmjs.com/package/@ox-content/theme-blueprint)       | Blueprint    | 製図グリッド、破線の引き出し、自分で描かれるストローク                                       |
-| [`@ox-content/theme-risograph`](https://npmjs.com/package/@ox-content/theme-risograph)       | Risograph    | 見当がずれたデュオトーン印刷。ホバーでインクチャンネルが分かれる                             |
-| [`@ox-content/theme-swiss`](https://npmjs.com/package/@ox-content/theme-swiss)               | Swiss        | International Typographic Style — 硬いグリッド、罫、精密なスライド                           |
-| [`@ox-content/theme-neon`](https://npmjs.com/package/@ox-content/theme-neon)                 | Neon         | サンセットグリッドの輝き、唸る管の輪郭、スキャンラインの走り                                 |
-| [`@ox-content/theme-clay`](https://npmjs.com/package/@ox-content/theme-clay)                 | Clay         | ポインタの下で潰れる、柔らかい押し出し粘土                                                   |
-| [`@ox-content/theme-editorial`](https://npmjs.com/package/@ox-content/theme-editorial)       | Editorial    | ドロップキャップ、ヘアライン罫、カラムの現れを持つ雑誌タイポ                                 |
-| [`@ox-content/theme-aurora`](https://npmjs.com/package/@ox-content/theme-aurora)             | Aurora       | 半透明パネルの後ろをゆっくり流れる円錐の光のカーテン                                         |
-| [`@ox-content/theme-holo`](https://npmjs.com/package/@ox-content/theme-holo)                 | Holo         | パネルが傾き滑るにつれて色相が変わる虹色箔                                                   |
-| [`@ox-content/theme-paper`](https://npmjs.com/package/@ox-content/theme-paper)               | Paper        | 柔らかい紙への活版の凹みと、ギザギザのページ端                                               |
-| [`@ox-content/theme-voltage`](https://npmjs.com/package/@ox-content/theme-voltage)           | Voltage      | 帯電した勾配エッジと生きた電場を持つ、巨大なディスプレイ文字                                 |
-| [`@ox-content/theme-manuscript`](https://npmjs.com/package/@ox-content/theme-manuscript)     | Manuscript   | 写本のページ — 狭い行長、ルブリカの見出し、傍注になる目次                                    |
-| [`@ox-content/theme-ledger`](https://npmjs.com/package/@ox-content/theme-ledger)             | Ledger       | 綴じた帳簿 — 本物の罫線の上に文字、表形式の数字                                              |
-| [`@ox-content/theme-kiosk`](https://npmjs.com/package/@ox-content/theme-kiosk)               | Kiosk        | 駅の案内 — 出発案内板のサイドバー、帯見出し、矢印                                            |
-| [`@ox-content/theme-atlas`](https://npmjs.com/package/@ox-content/theme-atlas)               | Atlas        | 測量図 — 等高線帯、凡例サイドバー、レジストレーションマーク                                  |
-| [`@ox-content/theme-receipt`](https://npmjs.com/package/@ox-content/theme-receipt)           | Receipt      | 感熱ロール — 狭い中央カラム、点線リーダー、破れた端                                          |
-| [`@ox-content/theme-bauhaus`](https://npmjs.com/package/@ox-content/theme-bauhaus)           | Bauhaus      | 円、正方形、三角形、グリッドを拒む対角線                                                     |
-| [`@ox-content/theme-zine`](https://npmjs.com/package/@ox-content/theme-zine)                 | Zine         | コピーしてテープで留めた — ページに対して何も直角でない                                      |
-| [`@ox-content/theme-noir`](https://npmjs.com/package/@ox-content/theme-noir)                 | Noir         | 硬いキーライトと急な落ち込み — 闇から拾い出される形                                          |
+| パッケージ                                                                                   | 名前         | 説明                                                                   |
+| -------------------------------------------------------------------------------------------- | ------------ | ---------------------------------------------------------------------- |
+| [`@ox-content/theme-pixel`](https://npmjs.com/package/@ox-content/theme-pixel)               | Pixel        | 厚い 8-bit 面、硬いオフセット影、段階的なモーション                    |
+| [`@ox-content/theme-liquid-glass`](https://npmjs.com/package/@ox-content/theme-liquid-glass) | Liquid Glass | 屈折するガラスパネル、鏡面エッジ、ホバー時の光の走り                   |
+| [`@ox-content/theme-blur-glass`](https://npmjs.com/package/@ox-content/theme-blur-glass)     | Blur Glass   | 柔らかい霞から解ける、フロストの backdrop-blur 層                      |
+| [`@ox-content/theme-analog-film`](https://npmjs.com/package/@ox-content/theme-analog-film)   | Analog Film  | 粒状、ハレーション、スプロケットレール、穏やかなゲートウィーブ         |
+| [`@ox-content/theme-fluid`](https://npmjs.com/package/@ox-content/theme-fluid)               | Fluid        | コンテンツの後ろで漂い変形する、有機的なブロブ勾配                     |
+| [`@ox-content/theme-fabric`](https://npmjs.com/package/@ox-content/theme-fabric)             | Fabric       | 織り目、縫い目、柔らかい布の折りたたみ                                 |
+| [`@ox-content/theme-leather`](https://npmjs.com/package/@ox-content/theme-leather)           | Leather      | 型押しの粒と鞍縫い。触れると沈む                                       |
+| [`@ox-content/theme-brutalist`](https://npmjs.com/package/@ox-content/theme-brutalist)       | Brutalist    | 生の構造、巨大な文字、叩きつける影                                     |
+| [`@ox-content/theme-terminal`](https://npmjs.com/package/@ox-content/theme-terminal)         | Terminal     | CRT 蛍光体、スキャンライン、点滅するブロックキャレット、プロンプト余白 |
+| [`@ox-content/theme-blueprint`](https://npmjs.com/package/@ox-content/theme-blueprint)       | Blueprint    | 製図グリッド、破線の引き出し、自分で描かれるストローク                 |
+| [`@ox-content/theme-risograph`](https://npmjs.com/package/@ox-content/theme-risograph)       | Risograph    | 見当がずれたデュオトーン印刷。ホバーでインクチャンネルが分かれる       |
+| [`@ox-content/theme-swiss`](https://npmjs.com/package/@ox-content/theme-swiss)               | Swiss        | International Typographic Style — 硬いグリッド、罫、精密なスライド     |
+| [`@ox-content/theme-neon`](https://npmjs.com/package/@ox-content/theme-neon)                 | Neon         | サンセットグリッドの輝き、唸る管の輪郭、スキャンラインの走り           |
+| [`@ox-content/theme-clay`](https://npmjs.com/package/@ox-content/theme-clay)                 | Clay         | ポインタの下で潰れる、柔らかい押し出し粘土                             |
+| [`@ox-content/theme-editorial`](https://npmjs.com/package/@ox-content/theme-editorial)       | Editorial    | ドロップキャップ、ヘアライン罫、カラムの現れを持つ雑誌タイポ           |
+| [`@ox-content/theme-aurora`](https://npmjs.com/package/@ox-content/theme-aurora)             | Aurora       | 半透明パネルの後ろをゆっくり流れる円錐の光のカーテン                   |
+| [`@ox-content/theme-holo`](https://npmjs.com/package/@ox-content/theme-holo)                 | Holo         | パネルが傾き滑るにつれて色相が変わる虹色箔                             |
+| [`@ox-content/theme-paper`](https://npmjs.com/package/@ox-content/theme-paper)               | Paper        | 柔らかい紙への活版の凹みと、ギザギザのページ端                         |
+| [`@ox-content/theme-voltage`](https://npmjs.com/package/@ox-content/theme-voltage)           | Voltage      | 帯電した勾配エッジと生きた電場を持つ、巨大なディスプレイ文字           |
+| [`@ox-content/theme-manuscript`](https://npmjs.com/package/@ox-content/theme-manuscript)     | Manuscript   | 写本のページ — 狭い行長、ルブリカの見出し、傍注になる目次              |
+| [`@ox-content/theme-ledger`](https://npmjs.com/package/@ox-content/theme-ledger)             | Ledger       | 綴じた帳簿 — 本物の罫線の上に文字、表形式の数字                        |
+| [`@ox-content/theme-kiosk`](https://npmjs.com/package/@ox-content/theme-kiosk)               | Kiosk        | 駅の案内 — 出発案内板のサイドバー、帯見出し、矢印                      |
+| [`@ox-content/theme-atlas`](https://npmjs.com/package/@ox-content/theme-atlas)               | Atlas        | 測量図 — 等高線帯、凡例サイドバー、レジストレーションマーク            |
+| [`@ox-content/theme-receipt`](https://npmjs.com/package/@ox-content/theme-receipt)           | Receipt      | 感熱ロール — 狭い中央カラム、点線リーダー、破れた端                    |
+| [`@ox-content/theme-bauhaus`](https://npmjs.com/package/@ox-content/theme-bauhaus)           | Bauhaus      | 円、正方形、三角形、グリッドを拒む対角線                               |
+| [`@ox-content/theme-zine`](https://npmjs.com/package/@ox-content/theme-zine)                 | Zine         | コピーしてテープで留めた — ページに対して何も直角でない                |
+| [`@ox-content/theme-noir`](https://npmjs.com/package/@ox-content/theme-noir)                 | Noir         | 硬いキーライトと急な落ち込み — 闇から拾い出される形                    |
 
 ## 配色
 
 どの配色も、対になるライト **と** ダークのパレットを載せます。組み込みヘッダーの切替で、追加設定なしに切り替わります。
 
-| パッケージ                                                                                                 | 名前          | 説明                                                         |
-| ---------------------------------------------------------------------------------------------------------- | ------------- | ------------------------------------------------------------ |
-| [`@ox-content/theme-color-github`](https://npmjs.com/package/@ox-content/theme-color-github)               | GitHub        | GitHub Light と GitHub Dark                                  |
-| [`@ox-content/theme-color-tokyo-night`](https://npmjs.com/package/@ox-content/theme-color-tokyo-night)     | Tokyo Night   | Tokyo Night Day と Tokyo Night Storm                         |
-| [`@ox-content/theme-color-mono`](https://npmjs.com/package/@ox-content/theme-color-mono)                   | Mono          | 純モノクロ、色相ゼロ                                         |
-| [`@ox-content/theme-color-dracula`](https://npmjs.com/package/@ox-content/theme-color-dracula)             | Dracula       | Dracula と Alucard ライト対                                  |
-| [`@ox-content/theme-color-one-dark`](https://npmjs.com/package/@ox-content/theme-color-one-dark)           | One Dark      | Atom One Light と One Dark                                   |
-| [`@ox-content/theme-color-retro`](https://npmjs.com/package/@ox-content/theme-color-retro)                 | Retro         | 暖かいアンバー蛍光体ターミナル                               |
-| [`@ox-content/theme-color-snow`](https://npmjs.com/package/@ox-content/theme-color-snow)                   | Snow          | 深いスレートの上の、はっきりした雪白                         |
-| [`@ox-content/theme-color-catppuccin`](https://npmjs.com/package/@ox-content/theme-color-catppuccin)       | Catppuccin    | Catppuccin Latte と Mocha                                    |
-| [`@ox-content/theme-color-nord`](https://npmjs.com/package/@ox-content/theme-color-nord)                   | Nord          | Nord Snow Storm と Polar Night                               |
-| [`@ox-content/theme-color-gruvbox`](https://npmjs.com/package/@ox-content/theme-color-gruvbox)             | Gruvbox       | Gruvbox ライトとダーク、中コントラスト                       |
-| [`@ox-content/theme-color-rose-pine`](https://npmjs.com/package/@ox-content/theme-color-rose-pine)         | Rosé Pine     | Rosé Pine Dawn と Rosé Pine                                  |
-| [`@ox-content/theme-color-solarized`](https://npmjs.com/package/@ox-content/theme-color-solarized)         | Solarized     | Ethan Schoonover の Solarized Light と Dark                  |
-| [`@ox-content/theme-color-everforest`](https://npmjs.com/package/@ox-content/theme-color-everforest)       | Everforest    | Everforest ライトとダーク、中コントラスト                    |
-| [`@ox-content/theme-color-ayu`](https://npmjs.com/package/@ox-content/theme-color-ayu)                     | Ayu           | Ayu Light と Ayu Mirage                                      |
-| [`@ox-content/theme-color-vitesse`](https://npmjs.com/package/@ox-content/theme-color-vitesse)             | Vitesse       | Anthony Fu の Vitesse ライトとダーク                         |
-| [`@ox-content/theme-color-night-owl`](https://npmjs.com/package/@ox-content/theme-color-night-owl)         | Night Owl     | Sarah Drasner の Light Owl と Night Owl                      |
-| [`@ox-content/theme-color-monokai`](https://npmjs.com/package/@ox-content/theme-color-monokai)             | Monokai       | Monokai Pro とライトの相棒                                   |
-| [`@ox-content/theme-color-kanagawa`](https://npmjs.com/package/@ox-content/theme-color-kanagawa)           | Kanagawa      | Kanagawa Lotus と Wave                                       |
-| [`@ox-content/theme-color-poimandres`](https://npmjs.com/package/@ox-content/theme-color-poimandres)       | Poimandres    | Poimandres、深い紺の上の冷たいティール                       |
-| [`@ox-content/theme-color-sepia`](https://npmjs.com/package/@ox-content/theme-color-sepia)                 | Sepia         | 長い読書向けに抑えた、低グレアのセピア                       |
-| [`@ox-content/theme-color-high-contrast`](https://npmjs.com/package/@ox-content/theme-color-high-contrast) | High Contrast | 本文を WCAG AAA に寄せた最大コントラスト                     |
-| [`@ox-content/theme-color-synthwave`](https://npmjs.com/package/@ox-content/theme-color-synthwave)         | Synthwave     | ホットマゼンタアクセントのサンセットグリッド synthwave       |
-| [`@ox-content/theme-color-voltage`](https://npmjs.com/package/@ox-content/theme-color-voltage)             | Voltage       | ほぼ黒のキャンバスの上の高電圧アクセント                     |
-| [`@ox-content/theme-color-flexoki`](https://npmjs.com/package/@ox-content/theme-color-flexoki)             | Flexoki       | インクと紙、電子ペーパーのような落ち着き                     |
-| [`@ox-content/theme-color-iceberg`](https://npmjs.com/package/@ox-content/theme-color-iceberg)             | Iceberg       | vim 配色から借りた、冷たく静かな青                           |
-| [`@ox-content/theme-color-zenburn`](https://npmjs.com/package/@ox-content/theme-color-zenburn)             | Zenburn       | 長い作業向けの、古典的な低コントラスト                       |
-| [`@ox-content/theme-color-oceanic`](https://npmjs.com/package/@ox-content/theme-color-oceanic)             | Oceanic       | Oceanic Next — 深いスレートティール                          |
-| [`@ox-content/theme-color-palenight`](https://npmjs.com/package/@ox-content/theme-color-palenight)         | Palenight     | Material Palenight — 柔らかいインディゴ                      |
-| [`@ox-content/theme-color-horizon`](https://npmjs.com/package/@ox-content/theme-color-horizon)             | Horizon       | 夕暮れの暖かいコーラルとプラム                               |
-| [`@ox-content/theme-color-modus`](https://npmjs.com/package/@ox-content/theme-color-modus)                 | Modus         | Protesilaos のアクセシビリティ優先配色。全体が WCAG AAA      |
-| [`@ox-content/theme-color-melange`](https://npmjs.com/package/@ox-content/theme-color-melange)             | Melange       | 落ち着いたアース、暖かく急がない                             |
-| [`@ox-content/theme-color-graphite`](https://npmjs.com/package/@ox-content/theme-color-graphite)           | Graphite      | オフブラックとオフホワイト、電気的なアクセント 1 つ          |
-| [`@ox-content/theme-color-sand`](https://npmjs.com/package/@ox-content/theme-color-sand)                   | Sand          | テラコッタを持つ、暖かい中間の石                             |
-| [`@ox-content/theme-color-moss`](https://npmjs.com/package/@ox-content/theme-color-moss)                   | Moss          | 深い森と紙のクリーム                                         |
-| [`@ox-content/theme-color-slate`](https://npmjs.com/package/@ox-content/theme-color-slate)                 | Slate         | 電気的なライム端を持つ冷たいグレー                           |
-| [`@ox-content/theme-color-plum`](https://npmjs.com/package/@ox-content/theme-color-plum)                   | Plum          | ナスとblush                                                  |
-| [`@ox-content/theme-color-ink`](https://npmjs.com/package/@ox-content/theme-color-ink)                     | Ink           | 暖かい砂を持つ深い紺                                         |
-| [`@ox-content/theme-color-porcelain`](https://npmjs.com/package/@ox-content/theme-color-porcelain)         | Porcelain     | 控えめな青灰を持つ、柔らかい暖かい白                         |
-| [`@ox-content/theme-color-cacao`](https://npmjs.com/package/@ox-content/theme-color-cacao)                 | Cacao         | キャラメルを持つ、暖かいダークチョコレート                   |
-| [`@ox-content/theme-color-coral`](https://npmjs.com/package/@ox-content/theme-color-coral)                 | Coral         | コーラルとティールを持つ、暖かいオフホワイト                 |
-| [`@ox-content/theme-color-arctic`](https://npmjs.com/package/@ox-content/theme-color-arctic)               | Arctic        | 氷河シアンを持つ冷たい白                                     |
-| [`@ox-content/theme-color-fuji`](https://npmjs.com/package/@ox-content/theme-color-fuji)                   | Fuji          | 山の祭ポスター — 森、夜明けのオレンジ、開いた空              |
+| パッケージ                                                                                                 | 名前          | 説明                                                              |
+| ---------------------------------------------------------------------------------------------------------- | ------------- | ----------------------------------------------------------------- |
+| [`@ox-content/theme-color-github`](https://npmjs.com/package/@ox-content/theme-color-github)               | GitHub        | GitHub Light と GitHub Dark                                       |
+| [`@ox-content/theme-color-tokyo-night`](https://npmjs.com/package/@ox-content/theme-color-tokyo-night)     | Tokyo Night   | Tokyo Night Day と Tokyo Night Storm                              |
+| [`@ox-content/theme-color-mono`](https://npmjs.com/package/@ox-content/theme-color-mono)                   | Mono          | 純モノクロ、色相ゼロ                                              |
+| [`@ox-content/theme-color-dracula`](https://npmjs.com/package/@ox-content/theme-color-dracula)             | Dracula       | Dracula と Alucard ライト対                                       |
+| [`@ox-content/theme-color-one-dark`](https://npmjs.com/package/@ox-content/theme-color-one-dark)           | One Dark      | Atom One Light と One Dark                                        |
+| [`@ox-content/theme-color-retro`](https://npmjs.com/package/@ox-content/theme-color-retro)                 | Retro         | 暖かいアンバー蛍光体ターミナル                                    |
+| [`@ox-content/theme-color-snow`](https://npmjs.com/package/@ox-content/theme-color-snow)                   | Snow          | 深いスレートの上の、はっきりした雪白                              |
+| [`@ox-content/theme-color-catppuccin`](https://npmjs.com/package/@ox-content/theme-color-catppuccin)       | Catppuccin    | Catppuccin Latte と Mocha                                         |
+| [`@ox-content/theme-color-nord`](https://npmjs.com/package/@ox-content/theme-color-nord)                   | Nord          | Nord Snow Storm と Polar Night                                    |
+| [`@ox-content/theme-color-gruvbox`](https://npmjs.com/package/@ox-content/theme-color-gruvbox)             | Gruvbox       | Gruvbox ライトとダーク、中コントラスト                            |
+| [`@ox-content/theme-color-rose-pine`](https://npmjs.com/package/@ox-content/theme-color-rose-pine)         | Rosé Pine     | Rosé Pine Dawn と Rosé Pine                                       |
+| [`@ox-content/theme-color-solarized`](https://npmjs.com/package/@ox-content/theme-color-solarized)         | Solarized     | Ethan Schoonover の Solarized Light と Dark                       |
+| [`@ox-content/theme-color-everforest`](https://npmjs.com/package/@ox-content/theme-color-everforest)       | Everforest    | Everforest ライトとダーク、中コントラスト                         |
+| [`@ox-content/theme-color-ayu`](https://npmjs.com/package/@ox-content/theme-color-ayu)                     | Ayu           | Ayu Light と Ayu Mirage                                           |
+| [`@ox-content/theme-color-vitesse`](https://npmjs.com/package/@ox-content/theme-color-vitesse)             | Vitesse       | Anthony Fu の Vitesse ライトとダーク                              |
+| [`@ox-content/theme-color-night-owl`](https://npmjs.com/package/@ox-content/theme-color-night-owl)         | Night Owl     | Sarah Drasner の Light Owl と Night Owl                           |
+| [`@ox-content/theme-color-monokai`](https://npmjs.com/package/@ox-content/theme-color-monokai)             | Monokai       | Monokai Pro とライトの相棒                                        |
+| [`@ox-content/theme-color-kanagawa`](https://npmjs.com/package/@ox-content/theme-color-kanagawa)           | Kanagawa      | Kanagawa Lotus と Wave                                            |
+| [`@ox-content/theme-color-poimandres`](https://npmjs.com/package/@ox-content/theme-color-poimandres)       | Poimandres    | Poimandres、深い紺の上の冷たいティール                            |
+| [`@ox-content/theme-color-sepia`](https://npmjs.com/package/@ox-content/theme-color-sepia)                 | Sepia         | 長い読書向けに抑えた、低グレアのセピア                            |
+| [`@ox-content/theme-color-high-contrast`](https://npmjs.com/package/@ox-content/theme-color-high-contrast) | High Contrast | 本文を WCAG AAA に寄せた最大コントラスト                          |
+| [`@ox-content/theme-color-synthwave`](https://npmjs.com/package/@ox-content/theme-color-synthwave)         | Synthwave     | ホットマゼンタアクセントのサンセットグリッド synthwave            |
+| [`@ox-content/theme-color-voltage`](https://npmjs.com/package/@ox-content/theme-color-voltage)             | Voltage       | ほぼ黒のキャンバスの上の高電圧アクセント                          |
+| [`@ox-content/theme-color-flexoki`](https://npmjs.com/package/@ox-content/theme-color-flexoki)             | Flexoki       | インクと紙、電子ペーパーのような落ち着き                          |
+| [`@ox-content/theme-color-iceberg`](https://npmjs.com/package/@ox-content/theme-color-iceberg)             | Iceberg       | vim 配色から借りた、冷たく静かな青                                |
+| [`@ox-content/theme-color-zenburn`](https://npmjs.com/package/@ox-content/theme-color-zenburn)             | Zenburn       | 長い作業向けの、古典的な低コントラスト                            |
+| [`@ox-content/theme-color-oceanic`](https://npmjs.com/package/@ox-content/theme-color-oceanic)             | Oceanic       | Oceanic Next — 深いスレートティール                               |
+| [`@ox-content/theme-color-palenight`](https://npmjs.com/package/@ox-content/theme-color-palenight)         | Palenight     | Material Palenight — 柔らかいインディゴ                           |
+| [`@ox-content/theme-color-horizon`](https://npmjs.com/package/@ox-content/theme-color-horizon)             | Horizon       | 夕暮れの暖かいコーラルとプラム                                    |
+| [`@ox-content/theme-color-modus`](https://npmjs.com/package/@ox-content/theme-color-modus)                 | Modus         | Protesilaos のアクセシビリティ優先配色。全体が WCAG AAA           |
+| [`@ox-content/theme-color-melange`](https://npmjs.com/package/@ox-content/theme-color-melange)             | Melange       | 落ち着いたアース、暖かく急がない                                  |
+| [`@ox-content/theme-color-graphite`](https://npmjs.com/package/@ox-content/theme-color-graphite)           | Graphite      | オフブラックとオフホワイト、電気的なアクセント 1 つ               |
+| [`@ox-content/theme-color-sand`](https://npmjs.com/package/@ox-content/theme-color-sand)                   | Sand          | テラコッタを持つ、暖かい中間の石                                  |
+| [`@ox-content/theme-color-moss`](https://npmjs.com/package/@ox-content/theme-color-moss)                   | Moss          | 深い森と紙のクリーム                                              |
+| [`@ox-content/theme-color-slate`](https://npmjs.com/package/@ox-content/theme-color-slate)                 | Slate         | 電気的なライム端を持つ冷たいグレー                                |
+| [`@ox-content/theme-color-plum`](https://npmjs.com/package/@ox-content/theme-color-plum)                   | Plum          | ナスとblush                                                       |
+| [`@ox-content/theme-color-ink`](https://npmjs.com/package/@ox-content/theme-color-ink)                     | Ink           | 暖かい砂を持つ深い紺                                              |
+| [`@ox-content/theme-color-porcelain`](https://npmjs.com/package/@ox-content/theme-color-porcelain)         | Porcelain     | 控えめな青灰を持つ、柔らかい暖かい白                              |
+| [`@ox-content/theme-color-cacao`](https://npmjs.com/package/@ox-content/theme-color-cacao)                 | Cacao         | キャラメルを持つ、暖かいダークチョコレート                        |
+| [`@ox-content/theme-color-coral`](https://npmjs.com/package/@ox-content/theme-color-coral)                 | Coral         | コーラルとティールを持つ、暖かいオフホワイト                      |
+| [`@ox-content/theme-color-arctic`](https://npmjs.com/package/@ox-content/theme-color-arctic)               | Arctic        | 氷河シアンを持つ冷たい白                                          |
+| [`@ox-content/theme-color-fuji`](https://npmjs.com/package/@ox-content/theme-color-fuji)                   | Fuji          | 山の祭ポスター — 森、夜明けのオレンジ、開いた空                   |
 | [`@ox-content/theme-color-stage`](https://npmjs.com/package/@ox-content/theme-color-stage)                 | Stage         | イベントポスター — コーラルとアシッドイエローを持つ深いインディゴ |
-| [`@ox-content/theme-color-emerald`](https://npmjs.com/package/@ox-content/theme-color-emerald)             | Emerald       | 深いスレートの上の鮮やかな緑 — カンファレンスバッジのパレット |
-| [`@ox-content/theme-color-commander`](https://npmjs.com/package/@ox-content/theme-color-commander)         | Commander     | 昼は CGA シアンパネル、夜は素のコンソールプロンプト          |
+| [`@ox-content/theme-color-emerald`](https://npmjs.com/package/@ox-content/theme-color-emerald)             | Emerald       | 深いスレートの上の鮮やかな緑 — カンファレンスバッジのパレット     |
+| [`@ox-content/theme-color-commander`](https://npmjs.com/package/@ox-content/theme-color-commander)         | Commander     | 昼は CGA シアンパネル、夜は素のコンソールプロンプト               |
 
 ## シンタックスハイライト
 
@@ -209,14 +209,14 @@ theme: [pixel, tokyoNight, { darkTokens: { "shiki-token-comment": "#5a6a8a" } }]
 
 CSS を触らずに振付を変えられます。どのスキンもタイミングをトークンとして出します。
 
-| トークン               | 目的                                    |
-| ---------------------- | --------------------------------------- |
-| `--octc-motion-fast`   | 色と背景の遷移                          |
-| `--octc-motion-base`   | エレベーション、変形、ページ入替        |
-| `--octc-motion-slow`   | ヒーロー入場、鏡面の走り                |
-| `--octc-motion-ease`   | そのスキンの署名イージング曲線          |
-| `--octc-motion-spring` | 持ち上げと押し込みのオーバーシュート    |
-| `--octc-motion-rise`   | 現れるブロックが移動する距離            |
+| トークン               | 目的                                 |
+| ---------------------- | ------------------------------------ |
+| `--octc-motion-fast`   | 色と背景の遷移                       |
+| `--octc-motion-base`   | エレベーション、変形、ページ入替     |
+| `--octc-motion-slow`   | ヒーロー入場、鏡面の走り             |
+| `--octc-motion-ease`   | そのスキンの署名イージング曲線       |
+| `--octc-motion-spring` | 持ち上げと押し込みのオーバーシュート |
+| `--octc-motion-rise`   | 現れるブロックが移動する距離         |
 
 ```ts
 theme: [liquidGlass, tokyoNight, { tokens: { "motion-base": "200ms", "motion-ease": "linear" } }];
@@ -226,11 +226,11 @@ theme: [liquidGlass, tokyoNight, { tokens: { "motion-base": "200ms", "motion-eas
 
 3 つのスキンは、CSS で偽るのではなく GPU でヒーロー背景を描きます。
 
-| スキン         | 描くもの                                                                                                                                                         |
-| -------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `liquid-glass` | 本物の屈折 — パネルごとの rounded-rect SDF が、球面ベベルに沿って手続き壁紙をパネル中心へ曲げ、縁で色収差を分ける                                                |
-| `fluid`        | curl-noise 速度場を通って移流する染料。発散ゼロなので、非圧縮の液体として読める                                                                                  |
-| `fabric`       | 漂うキーライトで照らされた織りの高さ場。糸は自分の方向に沿って光を拾う                                                                                           |
+| スキン         | 描くもの                                                                                                          |
+| -------------- | ----------------------------------------------------------------------------------------------------------------- |
+| `liquid-glass` | 本物の屈折 — パネルごとの rounded-rect SDF が、球面ベベルに沿って手続き壁紙をパネル中心へ曲げ、縁で色収差を分ける |
+| `fluid`        | curl-noise 速度場を通って移流する染料。発散ゼロなので、非圧縮の液体として読める                                   |
+| `fabric`       | 漂うキーライトで照らされた織りの高さ場。糸は自分の方向に沿って光を拾う                                            |
 
 3 つとも手書き WebGL2 で、**依存はゼロ** です。Three.js もバンドルも、入れるものはありません。テーマ自身の `js` に入り、SSG が 1 つのインラインスクリプトとして出します。
 

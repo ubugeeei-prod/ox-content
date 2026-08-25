@@ -29,14 +29,14 @@ export default {
 };
 ```
 
-| オプション    | 既定                        | 目的                                           |
-| ------------- | --------------------------- | ---------------------------------------------- |
-| `enabled`     | `true`                      | 完全に切るときは `search: false`。             |
-| `limit`       | `10`                        | クライアントが返す結果の上限。                 |
+| オプション    | 既定                        | 目的                                                         |
+| ------------- | --------------------------- | ------------------------------------------------------------ |
+| `enabled`     | `true`                      | 完全に切るときは `search: false`。                           |
+| `limit`       | `10`                        | クライアントが返す結果の上限。                               |
 | `prefix`      | `true`                      | 最後のクエリトークンをプレフィックス一致（タイプアヘッド）。 |
-| `placeholder` | `"Search documentation..."` | 既定テーマの入力プレースホルダ。               |
-| `hotkey`      | `"/"`                       | フォーカス用ホットキー。`""` で登録しない。    |
-| `provider`    | `"local"`                   | `"local"` は BM25 のまま。`"hosted"` はオプトイン。 |
+| `placeholder` | `"Search documentation..."` | 既定テーマの入力プレースホルダ。                             |
+| `hotkey`      | `"/"`                       | フォーカス用ホットキー。`""` で登録しない。                  |
+| `provider`    | `"local"`                   | `"local"` は BM25 のまま。`"hosted"` はオプトイン。          |
 
 インデックスは生成ページの横の `search-index.json` に書き、読者が初めて検索したときに遅延取得します。開発中はメモリから配信し、ページが変わるたびに作り直します。
 
@@ -62,13 +62,13 @@ export default {
 };
 ```
 
-| オプション  | 出典                                     | 目的                                   |
-| ----------- | ---------------------------------------- | -------------------------------------- |
-| `appId`     | 設定または `OX_CONTENT_SEARCH_APP_ID`     | ホスト済みアプリケーション ID。        |
-| `indexName` | 設定または `OX_CONTENT_SEARCH_INDEX_NAME` | リモートインデックス名。               |
-| `searchKey` | 設定または `OX_CONTENT_SEARCH_KEY`        | 公開の検索専用キー。                   |
-| `publicKey` | 設定または `OX_CONTENT_SEARCH_PUBLIC_KEY` | `searchKey` の別名。                   |
-| `endpoint`  | 設定または `OX_CONTENT_SEARCH_ENDPOINT`   | 検索クエリを受ける HTTP URL。          |
+| オプション  | 出典                                      | 目的                            |
+| ----------- | ----------------------------------------- | ------------------------------- |
+| `appId`     | 設定または `OX_CONTENT_SEARCH_APP_ID`     | ホスト済みアプリケーション ID。 |
+| `indexName` | 設定または `OX_CONTENT_SEARCH_INDEX_NAME` | リモートインデックス名。        |
+| `searchKey` | 設定または `OX_CONTENT_SEARCH_KEY`        | 公開の検索専用キー。            |
+| `publicKey` | 設定または `OX_CONTENT_SEARCH_PUBLIC_KEY` | `searchKey` の別名。            |
+| `endpoint`  | 設定または `OX_CONTENT_SEARCH_ENDPOINT`   | 検索クエリを受ける HTTP URL。   |
 
 `publicKey` は `searchKey` の別名です。`endpoint` を省略すると、クライアントは `/search` に POST します。リクエストは `query`、`limit`、`indexName` を持つ JSON `POST` で、ヘッダーに `x-app-id`、`x-index-name`、`x-search-key` が付きます。アダプタは `hits`（または `results`）を、ローカル検索と同じ `{ id, title, url, score, matches, snippet }` 形に写します。
 

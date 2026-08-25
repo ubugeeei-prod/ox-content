@@ -39,14 +39,14 @@ oxContent({
 
 `{ "/old-guide": "/guide" }` のようなパスマップをオプションオブジェクトの代わりに渡すと、そのマップ付きで機能がオンになります。
 
-| オプション      | 型                                        | 既定    |
-| --------------- | ----------------------------------------- | ------- |
+| オプション      | 型                                          | 既定    |
+| --------------- | ------------------------------------------- | ------- |
 | `redirects`     | `boolean` / パスマップ / `RedirectsOptions` | `false` |
-| `map`           | `Record<string, string>`                  | `{}`    |
-| `netlify`       | `boolean`                                 | `false` |
-| `headers`       | `boolean`                                 | `false` |
-| `json`          | `boolean`                                 | `false` |
-| `allowExternal` | `boolean`                                 | `false` |
+| `map`           | `Record<string, string>`                    | `{}`    |
+| `netlify`       | `boolean`                                   | `false` |
+| `headers`       | `boolean`                                   | `false` |
+| `json`          | `boolean`                                   | `false` |
+| `allowExternal` | `boolean`                                   | `false` |
 
 ## Frontmatter
 

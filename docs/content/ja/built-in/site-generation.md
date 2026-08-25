@@ -7,16 +7,16 @@ description: 静的サイト生成、OG 画像、編集リンク、コンテン�
 
 ページ単位の Markdown 変換に加え、プラグインはドキュメントサイトが必要とするビルド単位の機能を載せます。静的 HTML 生成、ページごとの Open Graph 画像、コンテンツコレクション、生成 API ドキュメントです。
 
-| オプション     | 既定                 | 目的                                       |
-| -------------- | -------------------- | ------------------------------------------ |
-| `ssg`          | `{ enabled: true }`  | ビルド中に静的 HTML ページを生成する。     |
-| `ogImage`      | `false`              | ページごとの Open Graph 画像を生成する。   |
-| `editThisPage` | `false`              | 「このページを編集」リンクを付ける。       |
+| オプション     | 既定                   | 目的                                             |
+| -------------- | ---------------------- | ------------------------------------------------ |
+| `ssg`          | `{ enabled: true }`    | ビルド中に静的 HTML ページを生成する。           |
+| `ogImage`      | `false`                | ページごとの Open Graph 画像を生成する。         |
+| `editThisPage` | `false`                | 「このページを編集」リンクを付ける。             |
 | `collections`  | `content` コレクション | クライアントコードから Markdown を問い合わせる。 |
-| `permalinks`   | `false`              | frontmatter の `permalink` / `slug` URL。  |
-| `cascade`      | `false`              | ディレクトリ `_index` の既定 frontmatter。 |
-| `docs`         | `{ enabled: true }`  | JSDoc / TSDoc から API ドキュメントを生成。 |
-| `transformers` | `[]`                 | 独自の Markdown AST 変換。                 |
+| `permalinks`   | `false`                | frontmatter の `permalink` / `slug` URL。        |
+| `cascade`      | `false`                | ディレクトリ `_index` の既定 frontmatter。       |
+| `docs`         | `{ enabled: true }`    | JSDoc / TSDoc から API ドキュメントを生成。      |
+| `transformers` | `[]`                   | 独自の Markdown AST 変換。                       |
 
 ## 静的サイト生成
 
@@ -50,32 +50,32 @@ export default defineConfig({
 });
 ```
 
-| オプション        | 既定           | 目的                                                     |
-| ----------------- | -------------- | -------------------------------------------------------- |
-| `enabled`         | `true`         | `.md` モジュールだけ残すときは `ssg: false`。            |
-| `extension`       | `".html"`      | 生成ページの拡張子。                                     |
-| `clean`           | `false`        | 書き出す前に生成物を消す。                               |
-| `bare`            | `false`        | ナビなしの、テーマなし HTML を出す。                     |
-| `render`          | —              | 文書全体を所有する JSX コンポーネント。                  |
-| `lang`            | `"en"`         | `<html>` の `lang` 属性（bare モード）。                 |
-| `head`            | —              | `<head>` に足す生マークアップ（bare モード）。           |
-| `bodyStart`       | —              | `<body>` の直後に足す生マークアップ（bare モード）。     |
-| `bodyEnd`         | —              | `</body>` の直前に足す生マークアップ（bare モード）。    |
-| `siteName`        | —              | `<title>` の接尾辞と OG サイト名。                       |
-| `siteUrl`         | —              | 絶対 OG URL に使うオリジン。                             |
-| `ogImage`         | —              | 静的フォールバックの OG 画像 URL。                       |
-| `generateOgImage` | `false`        | ページごとの OG 画像（後述）。                           |
-| `lastUpdated`     | `false`        | ページごとの git 最終コミット時刻を出す。                |
-| `pagination`      | `false`        | 記事のあとに前へ / 次へリンク。                          |
-| `breadcrumbs`     | `false`        | サイトルートからサイドバー祖先までの道筋。               |
-| `readerChrome`    | `false`        | コピー、外部リンクアイコン、先頭へ戻る。                 |
-| `localeSwitcher`  | `false`        | i18n ロケールがあるときのヘッダーロケールドロップダウン。 |
-| `a11y`            | `false`        | スキップリンクと印刷スタイル。                           |
-| `notFound`        | `false`        | テーマ付き 404。 [カスタム 404](./not-found.md) を見てください。 |
+| オプション        | 既定           | 目的                                                                  |
+| ----------------- | -------------- | --------------------------------------------------------------------- |
+| `enabled`         | `true`         | `.md` モジュールだけ残すときは `ssg: false`。                         |
+| `extension`       | `".html"`      | 生成ページの拡張子。                                                  |
+| `clean`           | `false`        | 書き出す前に生成物を消す。                                            |
+| `bare`            | `false`        | ナビなしの、テーマなし HTML を出す。                                  |
+| `render`          | —              | 文書全体を所有する JSX コンポーネント。                               |
+| `lang`            | `"en"`         | `<html>` の `lang` 属性（bare モード）。                              |
+| `head`            | —              | `<head>` に足す生マークアップ（bare モード）。                        |
+| `bodyStart`       | —              | `<body>` の直後に足す生マークアップ（bare モード）。                  |
+| `bodyEnd`         | —              | `</body>` の直前に足す生マークアップ（bare モード）。                 |
+| `siteName`        | —              | `<title>` の接尾辞と OG サイト名。                                    |
+| `siteUrl`         | —              | 絶対 OG URL に使うオリジン。                                          |
+| `ogImage`         | —              | 静的フォールバックの OG 画像 URL。                                    |
+| `generateOgImage` | `false`        | ページごとの OG 画像（後述）。                                        |
+| `lastUpdated`     | `false`        | ページごとの git 最終コミット時刻を出す。                             |
+| `pagination`      | `false`        | 記事のあとに前へ / 次へリンク。                                       |
+| `breadcrumbs`     | `false`        | サイトルートからサイドバー祖先までの道筋。                            |
+| `readerChrome`    | `false`        | コピー、外部リンクアイコン、先頭へ戻る。                              |
+| `localeSwitcher`  | `false`        | i18n ロケールがあるときのヘッダーロケールドロップダウン。             |
+| `a11y`            | `false`        | スキップリンクと印刷スタイル。                                        |
+| `notFound`        | `false`        | テーマ付き 404。 [カスタム 404](./not-found.md) を見てください。      |
 | `team`            | `false`        | `layout: team` のメンバーカード。[チーム](./team.md) を見てください。 |
-| `pageChrome`      | `false`        | ページ単位の frontmatter chrome フラグを尊重する。       |
-| `theme`           | `defaultTheme` | `defineTheme()` によるテーマ設定。                       |
-| `navigation`      | 派生           | ファイルツリーの代わりに明示的なナビグループ。           |
+| `pageChrome`      | `false`        | ページ単位の frontmatter chrome フラグを尊重する。                    |
+| `theme`           | `defaultTheme` | `defineTheme()` によるテーマ設定。                                    |
+| `navigation`      | 派生           | ファイルツリーの代わりに明示的なナビグループ。                        |
 
 テーマ — 色、フォント、ヘッダー、フッター、サイドバー、独自 CSS、オプトインのページアウトライン（`theme.aside`、既定 `false`）— は別トピックです。[テーマ](../theming.md#ページアウトライン) を見てください。
 
@@ -150,13 +150,13 @@ oxContent({
 
 ![このページの生成 Open Graph 画像](/screenshots/og-image-example.png)
 
-| `ogImageOptions` | 既定     | 目的                                                  |
-| ---------------- | -------- | ----------------------------------------------------- |
-| `template`       | 組み込み | 独自テンプレート: `.ts`、`.vue`、`.svelte`、`.tsx`。  |
-| `width`          | `1200`   | 画像幅（ピクセル）。                                  |
-| `height`         | `630`    | 画像高さ（ピクセル）。                                |
-| `cache`          | `true`   | 変わっていないページの再描画を飛ばす。                |
-| `concurrency`    | `1`      | 並列の画像描画。                                      |
+| `ogImageOptions` | 既定     | 目的                                                 |
+| ---------------- | -------- | ---------------------------------------------------- |
+| `template`       | 組み込み | 独自テンプレート: `.ts`、`.vue`、`.svelte`、`.tsx`。 |
+| `width`          | `1200`   | 画像幅（ピクセル）。                                 |
+| `height`         | `630`    | 画像高さ（ピクセル）。                               |
+| `cache`          | `true`   | 変わっていないページの再描画を飛ばす。               |
+| `concurrency`    | `1`      | 並列の画像描画。                                     |
 
 `bare` では画像を **生成し、参照します**。bare ページはテーマ付きページと同じ `og:image` / `twitter:image` タグを持ちます。`buildSsg()` はソースパスから画像 URL への `ogImages` マップも返すので、後処理が出力ツリーで `og-image.png` を探す必要はありません。
 
