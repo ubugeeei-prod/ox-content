@@ -152,7 +152,7 @@ pub(super) fn first_flagged_simd(
     }
     #[cfg(not(any(target_arch = "aarch64", target_arch = "x86_64")))]
     {
-        let _ = (bytes, from, tables);
+        let _ = (bytes, from, &tables.low, &tables.high);
         None
     }
 }

@@ -56,8 +56,10 @@ const SHORT_RUN_PREFIX: usize = 8;
 /// A 16-entry table is what a vector shuffle can hold, which is the whole
 /// point: `vqtbl1q_u8` / `pshufb` look up all sixteen lanes in one
 /// instruction, where the flag table needs sixteen loads.
+#[cfg(any(target_arch = "aarch64", target_arch = "x86_64"))]
 const LOW_NIBBLE: [u8; 16] =
     [0x10, 0x02, 0, 0, 0, 0, 0x02, 0, 0, 0, 0x03, 0x08, 0x0C, 0, 0x20, 0x08];
+#[cfg(any(target_arch = "aarch64", target_arch = "x86_64"))]
 const HIGH_NIBBLE: [u8; 16] = [0x01, 0, 0x02, 0x04, 0, 0x08, 0x10, 0x20, 0, 0, 0, 0, 0, 0, 0, 0];
 
 /// Walks at most [`SHORT_RUN_PREFIX`] bytes. Returns the first marker, or
