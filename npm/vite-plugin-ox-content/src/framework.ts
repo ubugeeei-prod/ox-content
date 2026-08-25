@@ -98,11 +98,16 @@ export function createFrameworkMarkdownOptions(options: FrameworkMarkdownOptions
     },
     ogImage: false,
     ogImageOptions: {
+      renderer: "chromium",
       vuePlugin: "vitejs",
       width: 1200,
       height: 630,
       cache: true,
       concurrency: 1,
+      satori: {
+        fonts: [],
+        systemFontFallback: true,
+      },
     },
     transformers: [],
     docs: false,

@@ -71,6 +71,7 @@
     "@cspell/dict-pl_pl": "^3.0.6",
     "@mermaid-js/mermaid-cli": "^11.16.0",
     "@ox-content/napi": "workspace:*",
+    "@resvg/resvg-js": "^2.6.2",
     "cspell-lib": "^10.0.1",
     "glob": "^13.0.6",
     "playwright": "^1.62.1",
@@ -78,6 +79,8 @@
     "rehype-parse": "^9.0.1",
     "rehype-stringify": "^10.0.1",
     "rolldown": "^1.2.5",
+    "satori": "^0.33.4",
+    "satori-html": "^0.3.2",
     "typescript": "catalog:",
     "unified": "^11.0.5"
   },

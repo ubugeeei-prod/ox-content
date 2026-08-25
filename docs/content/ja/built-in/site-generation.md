@@ -156,13 +156,38 @@ oxContent({
 
 ![このページの生成 Open Graph 画像](/screenshots/og-image-example.png)
 
-| `ogImageOptions` | 既定     | 目的                                                 |
-| ---------------- | -------- | ---------------------------------------------------- |
-| `template`       | 組み込み | 独自テンプレート: `.ts`、`.vue`、`.svelte`、`.tsx`。 |
-| `width`          | `1200`   | 画像幅（ピクセル）。                                 |
-| `height`         | `630`    | 画像高さ（ピクセル）。                               |
-| `cache`          | `true`   | 変わっていないページの再描画を飛ばす。               |
-| `concurrency`    | `1`      | 並列の画像描画。                                     |
+| `ogImageOptions`            | 既定         | 目的                                                             |
+| --------------------------- | ------------ | ---------------------------------------------------------------- |
+| `renderer`                  | `"chromium"` | `"chromium"` はブラウザ CSS 互換、`"satori"` は高速な SVG 描画。 |
+| `template`                  | 組み込み     | 独自テンプレート: `.ts`、`.vue`、`.svelte`、`.tsx`。             |
+| `width`                     | `1200`       | 画像幅（ピクセル）。                                             |
+| `height`                    | `630`        | 画像高さ（ピクセル）。                                           |
+| `cache`                     | `true`       | 変わっていないページの再描画を飛ばす。                           |
+| `concurrency`               | `1`          | 並列の画像描画。                                                 |
+| `satori.fonts`              | `[]`         | Satori に渡すフォントファイル（`.ttf`、`.otf`、`.woff`）。       |
+| `satori.systemFontFallback` | `true`       | `satori.fonts` が空のとき、よくある OS フォントパスを探す。      |
+
+Chromium は互換性重視のレンダラーです。通常のブラウザ CSS、ローカル public
+アセット、フレームワークテンプレートをページと同じ感覚で使えます。Satori は
+ブラウザを起動せず HTML を SVG にし、そこから PNG を作るので、大きいサイト
+ほど速くなります。その代わり、テンプレートは Satori が対応する HTML / CSS
+サブセットに収め、テキスト用のフォントを少なくとも 1 つ読み込める必要があります。
+
+```ts
+oxContent({
+  ogImage: true,
+  ogImageOptions: {
+    renderer: "satori",
+    satori: {
+      fonts: [{ path: "public/fonts/Inter-Regular.ttf", name: "Inter" }],
+    },
+  },
+  ssg: {
+    generateOgImage: true,
+    siteUrl: "https://example.com",
+  },
+});
+```
 
 `bare` では画像を **生成し、参照します**。bare ページはテーマ付きページと同じ `og:image` / `twitter:image` タグを持ちます。`buildSsg()` はソースパスから画像 URL への `ogImages` マップも返すので、後処理が出力ツリーで `og-image.png` を探す必要はありません。
 

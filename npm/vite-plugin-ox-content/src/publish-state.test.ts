@@ -304,7 +304,15 @@ function options(root: string, enabled: boolean): ResolvedOptions {
     toc: true,
     tocMaxDepth: 3,
     ogImage: false,
-    ogImageOptions: { width: 1200, height: 630, cache: true, concurrency: 1, vuePlugin: "vitejs" },
+    ogImageOptions: {
+      renderer: "chromium",
+      width: 1200,
+      height: 630,
+      cache: true,
+      concurrency: 1,
+      vuePlugin: "vitejs",
+      satori: { fonts: [], systemFontFallback: true },
+    },
     transformers: [],
     docs: false,
     search: {

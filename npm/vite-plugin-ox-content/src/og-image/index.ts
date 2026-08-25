@@ -1,14 +1,15 @@
 /**
- * Public API for Chromium-based OG image generation.
+ * Public API for OG image generation.
  *
- * Orchestrates browser lifecycle, template resolution, caching,
+ * Orchestrates renderer lifecycle, template resolution, caching,
  * and batch rendering with concurrency control.
  */
 import * as path from "path";
 import * as crypto from "crypto";
 import { openBrowser } from "./browser";
 import type { OgBrowserSession } from "./browser";
-import { getDefaultTemplate } from "./template";
+import { renderHtmlToPngWithSatori } from "./satori-renderer";
+import { getDefaultSatoriTemplate, getDefaultTemplate } from "./template";
 import { computeCacheKey, getCached, writeCache } from "./cache";
 import type {
   OgImageOptions,
@@ -22,6 +23,10 @@ export type {
   ResolvedOgImageOptions,
   OgImageTemplateProps,
   OgImageTemplateFn,
+  OgImageRenderer,
+  OgImageSatoriFont,
+  OgImageSatoriFontWeight,
+  OgImageSatoriOptions,
 } from "./types";
 
 export type { OgBrowserSession } from "./browser";
@@ -31,12 +36,17 @@ export type { OgBrowserSession } from "./browser";
  */
 export function resolveOgImageOptions(options: OgImageOptions | undefined): ResolvedOgImageOptions {
   return {
+    renderer: options?.renderer ?? "chromium",
     template: options?.template,
     vuePlugin: options?.vuePlugin ?? "vitejs",
     width: options?.width ?? 1200,
     height: options?.height ?? 630,
     cache: options?.cache ?? true,
     concurrency: options?.concurrency ?? 1,
+    satori: {
+      fonts: options?.satori?.fonts ?? [],
+      systemFontFallback: options?.satori?.systemFontFallback ?? true,
+    },
   };
 }
 
@@ -73,7 +83,7 @@ async function resolveTemplate(
   root: string,
 ): Promise<OgImageTemplateFn> {
   if (!options.template) {
-    return getDefaultTemplate();
+    return options.renderer === "satori" ? getDefaultSatoriTemplate() : getDefaultTemplate();
   }
 
   const templatePath = path.resolve(root, options.template);
@@ -507,20 +517,67 @@ async function computeTemplateSource(
   options: ResolvedOgImageOptions,
   root: string,
 ): Promise<string> {
+  let baseSource: string;
   if (!options.template) {
-    return "__default__";
+    baseSource = options.renderer === "satori" ? "__default_satori_v1__" : "__default__";
+  } else {
+    const fs = await import("fs/promises");
+    const templatePath = path.resolve(root, options.template);
+    const content = await fs.readFile(templatePath, "utf-8");
+    baseSource = crypto.createHash("sha256").update(content).digest("hex");
   }
 
+  if (options.renderer !== "satori") {
+    return baseSource;
+  }
+
+  const fontSource = await computeSatoriFontSource(options, root);
+  return crypto
+    .createHash("sha256")
+    .update(JSON.stringify({ baseSource, renderer: options.renderer, fontSource }))
+    .digest("hex");
+}
+
+async function computeSatoriFontSource(
+  options: ResolvedOgImageOptions,
+  root: string,
+): Promise<unknown> {
   const fs = await import("fs/promises");
-  const templatePath = path.resolve(root, options.template);
-  const content = await fs.readFile(templatePath, "utf-8");
-  return crypto.createHash("sha256").update(content).digest("hex");
+  const fonts = await Promise.all(
+    options.satori.fonts.map(async (font) => {
+      const fontPath = path.isAbsolute(font.path) ? font.path : path.resolve(root, font.path);
+      try {
+        const stat = await fs.stat(fontPath);
+        return {
+          path: fontPath,
+          name: font.name,
+          weight: font.weight,
+          style: font.style,
+          size: stat.size,
+          mtimeMs: stat.mtimeMs,
+        };
+      } catch {
+        return {
+          path: fontPath,
+          name: font.name,
+          weight: font.weight,
+          style: font.style,
+          missing: true,
+        };
+      }
+    }),
+  );
+
+  return {
+    fonts,
+    systemFontFallback: options.satori.systemFontFallback,
+  };
 }
 
 /**
  * Generates OG images for a batch of pages.
  *
- * Manages the full lifecycle: resolve template → launch browser (with `using`) →
+ * Manages the full lifecycle: resolve template → select renderer →
  * render each page (with caching and concurrency).
  *
  * All errors are non-fatal: failures are reported in results but never throw.
@@ -547,6 +604,10 @@ export async function generateOgImages(
     if (allCached) return allCached;
   }
 
+  if (options.renderer === "satori") {
+    return renderSatoriPages(pages, templateFn, templateSource, options, cacheDir, root);
+  }
+
   // Launch browser
   await using session = await openBrowser();
   if (!session) {
@@ -570,6 +631,30 @@ export async function generateOgImages(
     const batchResults = await Promise.all(
       batch.map((entry) =>
         renderSinglePage(entry, templateFn, templateSource, options, cacheDir, session, publicDir),
+      ),
+    );
+    results.push(...batchResults);
+  }
+
+  return results;
+}
+
+async function renderSatoriPages(
+  pages: OgImagePageEntry[],
+  templateFn: OgImageTemplateFn,
+  templateSource: string,
+  options: ResolvedOgImageOptions,
+  cacheDir: string,
+  root: string,
+): Promise<OgImageResult[]> {
+  const results: OgImageResult[] = [];
+  const concurrency = Math.max(1, options.concurrency);
+
+  for (let i = 0; i < pages.length; i += concurrency) {
+    const batch = pages.slice(i, i + concurrency);
+    const batchResults = await Promise.all(
+      batch.map((entry) =>
+        renderSingleSatoriPage(entry, templateFn, templateSource, options, cacheDir, root),
       ),
     );
     results.push(...batchResults);
@@ -652,6 +737,61 @@ async function renderSinglePage(
     await fs.writeFile(entry.outputPath, png);
 
     // Write cache
+    if (options.cache) {
+      const key = computeCacheKey(
+        templateSource,
+        entry.props as unknown as Record<string, unknown>,
+        options.width,
+        options.height,
+      );
+      await writeCache(cacheDir, key, png);
+    }
+
+    return { outputPath: entry.outputPath, cached: false };
+  } catch (err) {
+    return {
+      outputPath: entry.outputPath,
+      cached: false,
+      error: err instanceof Error ? err.message : String(err),
+    };
+  }
+}
+
+/**
+ * Renders a single page to PNG using Satori, with cache support.
+ */
+async function renderSingleSatoriPage(
+  entry: OgImagePageEntry,
+  templateFn: OgImageTemplateFn,
+  templateSource: string,
+  options: ResolvedOgImageOptions,
+  cacheDir: string,
+  root: string,
+): Promise<OgImageResult> {
+  const fs = await import("fs/promises");
+
+  try {
+    if (options.cache) {
+      const key = computeCacheKey(
+        templateSource,
+        entry.props as unknown as Record<string, unknown>,
+        options.width,
+        options.height,
+      );
+      const cached = await getCached(cacheDir, key);
+      if (cached) {
+        await fs.mkdir(path.dirname(entry.outputPath), { recursive: true });
+        await fs.writeFile(entry.outputPath, cached);
+        return { outputPath: entry.outputPath, cached: true };
+      }
+    }
+
+    const html = await templateFn(entry.props);
+    const png = await renderHtmlToPngWithSatori(html, options, root);
+
+    await fs.mkdir(path.dirname(entry.outputPath), { recursive: true });
+    await fs.writeFile(entry.outputPath, png);
+
     if (options.cache) {
       const key = computeCacheKey(
         templateSource,

@@ -3,7 +3,12 @@ import * as fs from "node:fs/promises";
 import * as os from "node:os";
 import * as path from "node:path";
 import { rolldown } from "rolldown";
-import { isBareSpecifier, tsTemplateBundleOptions } from "./og-image";
+import {
+  generateOgImages,
+  isBareSpecifier,
+  resolveOgImageOptions,
+  tsTemplateBundleOptions,
+} from "./og-image";
 
 describe("isBareSpecifier", () => {
   it("treats package specifiers as resolvable at runtime", () => {
@@ -78,6 +83,95 @@ describe("tsTemplateBundleOptions", () => {
       expect(code).not.toContain("INLINED-RUNTIME");
       // The template's own modules still travel with it.
       expect(code).toContain("<h1>");
+    } finally {
+      await fs.rm(dir, { recursive: true, force: true });
+    }
+  });
+});
+
+describe("resolveOgImageOptions", () => {
+  it("resolves Satori renderer options", () => {
+    expect(
+      resolveOgImageOptions({
+        renderer: "satori",
+        satori: {
+          fonts: [{ path: "fonts/Inter.ttf", name: "Inter", weight: 500 }],
+          systemFontFallback: false,
+        },
+      }),
+    ).toMatchObject({
+      renderer: "satori",
+      width: 1200,
+      height: 630,
+      cache: true,
+      concurrency: 1,
+      satori: {
+        fonts: [{ path: "fonts/Inter.ttf", name: "Inter", weight: 500 }],
+        systemFontFallback: false,
+      },
+    });
+  });
+});
+
+describe("generateOgImages with Satori", () => {
+  it("renders a PNG without launching Chromium", async () => {
+    const dir = await fs.mkdtemp(path.join(os.tmpdir(), "ox-og-satori-"));
+    try {
+      const outputPath = path.join(dir, "og.png");
+      const options = resolveOgImageOptions({
+        renderer: "satori",
+        width: 600,
+        height: 315,
+        cache: false,
+      });
+
+      const [result] = await generateOgImages(
+        [
+          {
+            outputPath,
+            props: {
+              title: "Satori fast mode",
+              description: "Browserless OG image rendering",
+              siteName: "Ox Content",
+            },
+          },
+        ],
+        options,
+        dir,
+      );
+
+      expect(result).toEqual({ outputPath, cached: false });
+      const png = await fs.readFile(outputPath);
+      expect(png.subarray(0, 8).toString("hex")).toBe("89504e470d0a1a0a");
+    } finally {
+      await fs.rm(dir, { recursive: true, force: true });
+    }
+  });
+
+  it("reports a clear error when Satori has no available fonts", async () => {
+    const dir = await fs.mkdtemp(path.join(os.tmpdir(), "ox-og-satori-no-fonts-"));
+    try {
+      const outputPath = path.join(dir, "og.png");
+      const options = resolveOgImageOptions({
+        renderer: "satori",
+        cache: false,
+        satori: { systemFontFallback: false },
+      });
+
+      const [result] = await generateOgImages(
+        [
+          {
+            outputPath,
+            props: { title: "Missing fonts" },
+          },
+        ],
+        options,
+        dir,
+      );
+
+      expect(result.outputPath).toBe(outputPath);
+      expect(result.cached).toBe(false);
+      expect(result.error).toContain("ogImageOptions.satori.fonts");
     } finally {
       await fs.rm(dir, { recursive: true, force: true });
     }

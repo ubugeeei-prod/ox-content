@@ -101,3 +101,45 @@ export function getDefaultTemplate(): OgImageTemplateFn {
 </div>`;
   };
 }
+
+/**
+ * Returns the built-in template for the Satori renderer.
+ *
+ * The Chromium template intentionally uses browser CSS. Satori renders a much
+ * smaller CSS subset, so this keeps the default fast path in that subset.
+ */
+export function getDefaultSatoriTemplate(): OgImageTemplateFn {
+  return function defaultSatoriTemplate(props: OgImageTemplateProps): string {
+    const { title, description, siteName } = props;
+    const rawBrand = siteName?.trim() ? siteName : "Ox Content";
+    const isBrandCard = normalizeBrandValue(title) === normalizeBrandValue(rawBrand);
+
+    const heroTitle = isBrandCard ? "High-performance Markdown toolkit" : title;
+    const heroDescription = isBrandCard
+      ? "Rust-powered docs and high-performance Markdown tooling."
+      : description && description.trim().length > 0
+        ? description
+        : "Rust-powered docs and Markdown tooling.";
+    const descriptionHtml =
+      heroDescription.trim().length > 0
+        ? `<div style="display:flex;font-size:30px;line-height:1.4;color:#b7c7df;width:790px;margin-top:26px;">${escapeHtml(heroDescription)}</div>`
+        : "";
+
+    return `<div style="display:flex;width:100%;height:100%;box-sizing:border-box;background:#0b1220;color:#eff6ff;font-family:OxContentSans, Arial, sans-serif;padding:56px 64px;">
+  <div style="display:flex;flex-direction:column;width:100%;height:100%;border:2px solid #274064;border-top:8px solid #5d83c9;padding:44px 48px;box-sizing:border-box;background:#111a2d;">
+    <div style="display:flex;align-items:center;height:52px;">
+      <div style="display:flex;font-size:36px;font-weight:800;color:#eff6ff;">OXCONTENT</div>
+      <div style="display:flex;margin-left:18px;font-size:34px;color:#a9bbd6;">(</div>
+      <div style="display:flex;width:34px;height:42px;margin-left:6px;margin-right:6px;background:#67b8ff;border-radius:8px;border:2px solid #8fd2ff;"></div>
+      <div style="display:flex;font-size:34px;color:#a9bbd6;">)</div>
+      <div style="display:flex;margin-left:auto;font-size:22px;font-weight:700;color:#9fb5d4;border:1px solid #35527c;border-radius:999px;padding:8px 18px;">FAST OG</div>
+    </div>
+    <div style="display:flex;flex-direction:column;justify-content:center;flex:1;width:900px;">
+      <div style="display:flex;font-size:76px;font-weight:800;line-height:1.04;color:#f8fbff;">${escapeHtml(heroTitle)}</div>
+      ${descriptionHtml}
+    </div>
+    <div style="display:flex;font-size:24px;color:#7f93b3;">${escapeHtml(rawBrand)}</div>
+  </div>
+</div>`;
+  };
+}

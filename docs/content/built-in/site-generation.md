@@ -176,13 +176,38 @@ generated image looks like this:
 
 ![Generated Open Graph image for this page](/screenshots/og-image-example.png)
 
-| `ogImageOptions` | Default  | Purpose                                               |
-| ---------------- | -------- | ----------------------------------------------------- |
-| `template`       | built-in | Custom template: `.ts`, `.vue`, `.svelte`, or `.tsx`. |
-| `width`          | `1200`   | Image width in pixels.                                |
-| `height`         | `630`    | Image height in pixels.                               |
-| `cache`          | `true`   | Skip re-rendering unchanged pages.                    |
-| `concurrency`    | `1`      | Parallel image renders.                               |
+| `ogImageOptions`            | Default      | Purpose                                                               |
+| --------------------------- | ------------ | --------------------------------------------------------------------- |
+| `renderer`                  | `"chromium"` | `"chromium"` for full browser CSS, `"satori"` for fast SVG rendering. |
+| `template`                  | built-in     | Custom template: `.ts`, `.vue`, `.svelte`, or `.tsx`.                 |
+| `width`                     | `1200`       | Image width in pixels.                                                |
+| `height`                    | `630`        | Image height in pixels.                                               |
+| `cache`                     | `true`       | Skip re-rendering unchanged pages.                                    |
+| `concurrency`               | `1`          | Parallel image renders.                                               |
+| `satori.fonts`              | `[]`         | Font files for Satori (`.ttf`, `.otf`, or `.woff`).                   |
+| `satori.systemFontFallback` | `true`       | Try common OS font paths when `satori.fonts` is empty.                |
+
+Chromium is the compatibility renderer: it can use normal browser CSS, local
+public assets, and framework templates exactly as a page would. Satori skips
+the browser and renders HTML to SVG, then PNG, which is much faster for large
+sites. The tradeoff is that templates must stay inside Satori's supported HTML
+and CSS subset, and text needs at least one loadable font.
+
+```ts
+oxContent({
+  ogImage: true,
+  ogImageOptions: {
+    renderer: "satori",
+    satori: {
+      fonts: [{ path: "public/fonts/Inter-Regular.ttf", name: "Inter" }],
+    },
+  },
+  ssg: {
+    generateOgImage: true,
+    siteUrl: "https://example.com",
+  },
+});
+```
 
 Under `bare`, the images are generated **and referenced**: bare pages carry the
 same `og:image` / `twitter:image` tags the themed pages get. `buildSsg()` also
