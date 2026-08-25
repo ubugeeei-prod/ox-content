@@ -138,10 +138,7 @@ function paintResult(element: HTMLElement, _payload: PlayPayload, result: RunRes
   showPanel(element, resultPanelToShow(result, Boolean(stderr)));
 }
 
-export function resultPanelToShow(
-  result: RunResult,
-  hasStderrPanel: boolean,
-): "stderr" | "stdio" {
+export function resultPanelToShow(result: RunResult, hasStderrPanel: boolean): "stderr" | "stdio" {
   if (!hasStderrPanel) {
     return "stdio";
   }
