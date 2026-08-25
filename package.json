@@ -15,7 +15,7 @@
     "ci": "vp run workspace:ci",
     "issue-agent": "node scripts/issue-agent.mjs",
     "ready": "vp run workspace:ready",
-    "release": "vp run release"
+    "release": "vp run workspace:release"
   },
   "devDependencies": {
     "typescript": "catalog:",

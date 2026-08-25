@@ -298,7 +298,6 @@ export default defineConfig({
       "dev-preview": uncachedTask("vp run --filter ./docs preview"),
 
       install: uncachedTask("vp install"),
-      release: uncachedTask("bun scripts/release.ts"),
       "workspace:release": uncachedTask("bun scripts/release.ts"),
       "examples-install": noopTask(["install"], { cache: false }),
     },
