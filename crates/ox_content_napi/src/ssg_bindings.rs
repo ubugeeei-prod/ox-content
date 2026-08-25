@@ -9,6 +9,8 @@ use crate::{
 mod converters;
 mod git;
 pub use git::*;
+mod section_index;
+pub use section_index::*;
 
 use converters::{
     convert_entry_page_config, convert_generated_html_page, convert_json_ld, convert_nav_item,

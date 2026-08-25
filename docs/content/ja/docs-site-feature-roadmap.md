@@ -60,7 +60,7 @@ Ox Content は、非標準の Markdown と追加のサイト振る舞いは **�
 | タクソノミーと関連ページ                         | [#687](https://github.com/ubugeeei-prod/ox-content/issues/687) | planned |
 | ブログ（索引、著者、タグ、読了時間、アーカイブ） | [#688](https://github.com/ubugeeei-prod/ox-content/issues/688) | planned |
 | ドキュメントのバージョニング                     | [#689](https://github.com/ubugeeei-prod/ox-content/issues/689) | planned |
-| 生成されるセクション索引ページ                   | [#690](https://github.com/ubugeeei-prod/ox-content/issues/690) | planned |
+| 生成されるセクション索引ページ                   | [#690](https://github.com/ubugeeei-prod/ox-content/issues/690) | shipped |
 | ページリソースと画像処理                         | [#691](https://github.com/ubugeeei-prod/ox-content/issues/691) | shipped |
 
 ## Phase E — 連携

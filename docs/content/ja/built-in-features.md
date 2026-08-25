@@ -54,6 +54,7 @@ Ox Content は、よく使うドキュメントの挙動を既定で載せ、非
 | [ドキュメントのバージョン管理](./built-in/versioning.md) | プレフィックス、凍結スナップショット、切替 UI                                  |
 | [チーム / メンバー](./built-in/team.md)                  | `layout: team` の静的カード                                                    |
 | [Git コントリビューター](./built-in/contributors.md)     | 各記事の下に一意の git 作者を出すオプトイン                                    |
+| [セクション索引ページ](./built-in/section-index.md)      | `index.md` がないディレクトリ向けの生成一覧                                    |
 
 ## 既定とオプトイン
 
@@ -101,6 +102,7 @@ Ox Content は、よく使うドキュメントの挙動を既定で載せ、非
 | タクソノミー         | `taxonomies`                                                                                                  | `false`       | [タクソノミー](./built-in/taxonomies.md)                 |
 | チームページ         | `ssg.team`                                                                                                    | `false`       | [チーム / メンバー](./built-in/team.md)                  |
 | Git 作者             | `ssg.contributors`                                                                                            | `false`       | [Git コントリビューター](./built-in/contributors.md)     |
+| セクション索引       | `ssg.sectionIndex`                                                                                            | `false`       | [セクション索引ページ](./built-in/section-index.md)      |
 | コード検査           | `codeBlockLint`, `codeBlockTypecheck`, `docsTests`                                                            | `false`       | [品質チェック](./built-in/quality-checks.md)             |
 | 型ホバー             | `typedHover`                                                                                                  | `false`       | [型ホバー](./built-in/typed-hover.md)                    |
 | 独自パイプライン     | `transformers`                                                                                                | `[]`          | [サイト生成](./built-in/site-generation.md)              |

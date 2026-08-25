@@ -168,6 +168,7 @@ export default defineConfig(({ mode }) => {
                       { text: "Taxonomies", link: "/built-in/taxonomies.md" },
                       { text: "Documentation versioning", link: "/built-in/versioning.md" },
                       { text: "Team / members page", link: "/built-in/team.md" },
+                      { text: "Section index pages", link: "/built-in/section-index.md" },
                     ],
                   },
                   { text: "Theming", link: "/theming.md" },

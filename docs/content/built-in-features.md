@@ -58,6 +58,7 @@ inline**.
 | [Documentation versioning](./built-in/versioning.md)   | Opt-in prefixes, frozen snapshots, and a header version dropdown          |
 | [Team / members page](./built-in/team.md)              | Opt-in static member cards on `layout: team` pages                        |
 | [Git contributors](./built-in/contributors.md)         | Opt-in unique git authors under each article                              |
+| [Section index pages](./built-in/section-index.md)     | Opt-in generated listings for directories without `index.md`              |
 
 ## Default vs Opt-in
 
@@ -105,6 +106,7 @@ inline**.
 | Versioning       | `versions`                                                                                                    | `false`              | [Documentation versioning](./built-in/versioning.md)   |
 | Team page        | `ssg.team`                                                                                                    | `false`              | [Team / members page](./built-in/team.md)              |
 | Git authors      | `ssg.contributors`                                                                                            | `false`              | [Git contributors](./built-in/contributors.md)         |
+| Section indexes  | `ssg.sectionIndex`                                                                                            | `false`              | [Section index pages](./built-in/section-index.md)     |
 | Code checks      | `codeBlockLint`, `codeBlockTypecheck`, `docsTests`                                                            | `false`              | [Quality Checks](./built-in/quality-checks.md)         |
 | Typed hover      | `typedHover`                                                                                                  | `false`              | [Typed Hover](./built-in/typed-hover.md)               |
 | Custom pipeline  | `transformers`                                                                                                | `[]`                 | [Site Generation](./built-in/site-generation.md)       |

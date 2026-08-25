@@ -1,0 +1,72 @@
+.ox-section-index {
+  margin: 0 0 2rem;
+}
+
+.ox-section-index > h1 {
+  margin: 0 0 1rem;
+}
+
+.ox-section-index__list,
+.ox-section-index__cards {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.ox-section-index__list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+}
+
+.ox-section-index__list a {
+  color: var(--octc-color-primary);
+  text-underline-offset: 0.15em;
+}
+
+.ox-section-index__cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(14rem, 1fr));
+  gap: 1rem;
+}
+
+.ox-section-index__card {
+  margin: 0;
+}
+
+.ox-section-index__card a {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+  height: 100%;
+  padding: 1rem 1.05rem 1.1rem;
+  border: 1px solid color-mix(in srgb, var(--octc-color-border) 80%, transparent);
+  border-radius: 6px;
+  background: color-mix(in srgb, var(--octc-color-bg-alt) 70%, var(--octc-color-bg));
+  color: inherit;
+  text-decoration: none;
+}
+
+.ox-section-index__card a:hover,
+.ox-section-index__card a:focus-visible {
+  border-color: var(--octc-color-primary);
+}
+
+.ox-section-index__title {
+  font-size: 1.05rem;
+  font-weight: 650;
+  line-height: 1.35;
+  color: var(--octc-color-text);
+}
+
+.ox-section-index__desc {
+  font-size: 0.88rem;
+  line-height: 1.45;
+  color: var(--octc-color-text-muted);
+}
+
+@media (max-width: 640px) {
+  .ox-section-index__cards {
+    grid-template-columns: 1fr;
+  }
+}
