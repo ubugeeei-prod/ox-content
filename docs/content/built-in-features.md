@@ -19,107 +19,109 @@ inline**.
 
 ## Feature Guides
 
-| Guide                                                  | Covers                                                                      |
-| ------------------------------------------------------ | --------------------------------------------------------------------------- |
-| [Markdown Baseline](./built-in/markdown.md)            | GFM, tables, task lists, footnotes, autolinks, frontmatter, TOC             |
-| [Heading Permalinks](./built-in/heading-permalinks.md) | Opt-in visible `#` links that reuse the generated heading id                |
-| [Syntax Extensions](./built-in/syntax-extensions.md)   | Emoji shortcodes, wiki links, attribute syntax, CJK emphasis                |
-| [Custom Containers](./built-in/containers.md)          | Opt-in `::: tip` / `::: details` callout blocks                             |
-| [Cards](./built-in/cards.md)                           | Opt-in `::: card` / `::: link-card` / `::: card-grid` blocks                |
-| [Step Lists](./built-in/steps.md)                      | Opt-in `::: steps` tutorial lists                                           |
-| [File Includes](./built-in/includes.md)                | Opt-in `<!-- @include -->` Markdown fragments                               |
-| [File Tree](./built-in/file-tree.md)                   | Opt-in static `file-tree` directory diagrams                                |
-| [Inline Badges](./built-in/badges.md)                  | Opt-in `{badge:tip}` status labels in headings or prose                     |
-| [Magic Links](./built-in/magic-links.md)               | Opt-in `{link:@user}` / alias / `label\|url` rich links with avatars        |
-| [Images](./built-in/images.md)                         | Opt-in figures, captions, lazy loading, and safe dimensions                 |
-| [Page resources](./built-in/resources.md)              | Opt-in page-bundle assets with resize, crop, and format transforms          |
-| [Code Blocks](./built-in/code-blocks.md)               | Syntax highlighting, code annotations, code imports                         |
-| [Embeds](./built-in/embeds.md)                         | GitHub cards, OG cards, package-manager tabs, tabs, YouTube, social cards   |
-| [Mermaid Diagrams](./built-in/mermaid.md)              | Diagram fences rendered to static SVG                                       |
-| [Math](./built-in/math.md)                             | Opt-in `$…$` / `$$…$$` typeset with optional KaTeX                          |
-| [Search](./built-in/search.md)                         | The static BM25 index and client search API                                 |
-| [Collections](./built-in/collections.md)               | Query Markdown files with a SQL-like builder                                |
-| [Quality Checks](./built-in/quality-checks.md)         | Code block lint, type checking, docs tests, HTML sanitizer                  |
-| [Typed Hover](./built-in/typed-hover.md)               | Opt-in build-time TypeScript hover overlays for `twoslash` fences           |
-| [Site Generation](./built-in/site-generation.md)       | SSG, OG images, edit links, collections, API docs, transformers             |
-| [Page head](./built-in/page-head.md)                   | Build-time Unhead-compatible title / meta / link / JSON-LD API              |
-| [SEO](./built-in/seo.md)                               | Canonical, robots, hreflang, and head validation on that API                |
-| [Previous / Next](./built-in/pagination.md)            | Opt-in previous and next page links                                         |
-| [Breadcrumbs](./built-in/breadcrumbs.md)               | Opt-in trail from the site root through sidebar ancestors                   |
-| [JSON-LD](./built-in/json-ld.md)                       | Opt-in TechArticle / WebSite / BreadcrumbList structured data               |
-| [Reader Chrome](./built-in/reader-chrome.md)           | Opt-in copy, outbound-link icons, and back-to-top                           |
-| [Locale Switcher](./built-in/locale-switcher.md)       | Opt-in header control for configured locales                                |
-| [Accessibility](./built-in/a11y.md)                    | Opt-in skip link and print styles                                           |
-| [Header chrome](./built-in/header-chrome.md)           | Opt-in header nav, announcement bar, and per-page chrome                    |
-| [Sitemap / robots / llms.txt](./built-in/site-maps.md) | Opt-in crawl manifests written next to generated HTML                       |
-| [Draft / unlisted / scheduled](./built-in/drafts.md)   | Opt-in frontmatter publish states for production output                     |
-| [Permalinks and Cascade](./built-in/permalinks.md)     | Opt-in frontmatter URLs and directory-level default frontmatter             |
-| [Redirects and aliases](./built-in/redirects.md)       | Opt-in static HTML redirects from aliases and a rewrite map                 |
-| [Custom 404](./built-in/not-found.md)                  | Opt-in themed 404 page with nav and search                                  |
-| [RSS / Atom / JSON feeds](./built-in/feeds.md)         | Opt-in collection feeds written next to generated HTML                      |
-| [Blog](./built-in/blog.md)                             | Opt-in paginated index, authors, tags, archive, and optional external feeds |
-| [PWA manifest and service worker](./built-in/pwa.md)   | Opt-in web app manifest and conservative offline cache (adds client JS)     |
-| [Taxonomies](./built-in/taxonomies.md)                 | Opt-in tag/category term pages and related-page lists                       |
-| [Documentation versioning](./built-in/versioning.md)   | Opt-in prefixes, frozen snapshots, and a header version dropdown            |
-| [Team / members page](./built-in/team.md)              | Opt-in static member cards on `layout: team` pages                          |
-| [Git contributors](./built-in/contributors.md)         | Opt-in unique git authors under each article                                |
-| [Section index pages](./built-in/section-index.md)     | Opt-in generated listings for directories without `index.md`                |
+| Guide                                                       | Covers                                                                      |
+| ----------------------------------------------------------- | --------------------------------------------------------------------------- |
+| [Markdown Baseline](./built-in/markdown.md)                 | GFM, tables, task lists, footnotes, autolinks, frontmatter, TOC             |
+| [Heading Permalinks](./built-in/heading-permalinks.md)      | Opt-in visible `#` links that reuse the generated heading id                |
+| [Syntax Extensions](./built-in/syntax-extensions.md)        | Emoji shortcodes, wiki links, attribute syntax, CJK emphasis                |
+| [Custom Containers](./built-in/containers.md)               | Opt-in `::: tip` / `::: details` callout blocks                             |
+| [Cards](./built-in/cards.md)                                | Opt-in `::: card` / `::: link-card` / `::: card-grid` blocks                |
+| [Step Lists](./built-in/steps.md)                           | Opt-in `::: steps` tutorial lists                                           |
+| [File Includes](./built-in/includes.md)                     | Opt-in `<!-- @include -->` Markdown fragments                               |
+| [File Tree](./built-in/file-tree.md)                        | Opt-in static `file-tree` directory diagrams                                |
+| [Inline Badges](./built-in/badges.md)                       | Opt-in `{badge:tip}` status labels in headings or prose                     |
+| [Magic Links](./built-in/magic-links.md)                    | Opt-in `{link:@user}` / alias / `label\|url` rich links with avatars        |
+| [Images](./built-in/images.md)                              | Opt-in figures, captions, lazy loading, and safe dimensions                 |
+| [Page resources](./built-in/resources.md)                   | Opt-in page-bundle assets with resize, crop, and format transforms          |
+| [Code Blocks](./built-in/code-blocks.md)                    | Syntax highlighting, code annotations, code imports                         |
+| [Embeds](./built-in/embeds.md)                              | GitHub cards, OG cards, package-manager tabs, tabs, YouTube, social cards   |
+| [Mermaid Diagrams](./built-in/mermaid.md)                   | Diagram fences rendered to static SVG                                       |
+| [Math](./built-in/math.md)                                  | Opt-in `$…$` / `$$…$$` typeset with optional KaTeX                          |
+| [Search](./built-in/search.md)                              | The static BM25 index and client search API                                 |
+| [Collections](./built-in/collections.md)                    | Query Markdown files with a SQL-like builder                                |
+| [Quality Checks](./built-in/quality-checks.md)              | Code block lint, type checking, docs tests, HTML sanitizer                  |
+| [Typed Hover](./built-in/typed-hover.md)                    | Opt-in build-time TypeScript hover overlays for `twoslash` fences           |
+| [Site Generation](./built-in/site-generation.md)            | SSG, OG images, edit links, collections, API docs, transformers             |
+| [Page head](./built-in/page-head.md)                        | Build-time Unhead-compatible title / meta / link / JSON-LD API              |
+| [SEO](./built-in/seo.md)                                    | Canonical, robots, hreflang, and head validation on that API                |
+| [Previous / Next](./built-in/pagination.md)                 | Opt-in previous and next page links                                         |
+| [Breadcrumbs](./built-in/breadcrumbs.md)                    | Opt-in trail from the site root through sidebar ancestors                   |
+| [JSON-LD](./built-in/json-ld.md)                            | Opt-in TechArticle / WebSite / BreadcrumbList structured data               |
+| [Reader Chrome](./built-in/reader-chrome.md)                | Opt-in copy, outbound-link icons, and back-to-top                           |
+| [Locale Switcher](./built-in/locale-switcher.md)            | Opt-in header control for configured locales                                |
+| [Accessibility](./built-in/a11y.md)                         | Opt-in skip link and print styles                                           |
+| [Header chrome](./built-in/header-chrome.md)                | Opt-in header nav, announcement bar, and per-page chrome                    |
+| [Sitemap / robots / llms.txt](./built-in/site-maps.md)      | Opt-in crawl manifests written next to generated HTML                       |
+| [Markdown source companions](./built-in/markdown-source.md) | Opt-in original Markdown written beside generated HTML                      |
+| [Draft / unlisted / scheduled](./built-in/drafts.md)        | Opt-in frontmatter publish states for production output                     |
+| [Permalinks and Cascade](./built-in/permalinks.md)          | Opt-in frontmatter URLs and directory-level default frontmatter             |
+| [Redirects and aliases](./built-in/redirects.md)            | Opt-in static HTML redirects from aliases and a rewrite map                 |
+| [Custom 404](./built-in/not-found.md)                       | Opt-in themed 404 page with nav and search                                  |
+| [RSS / Atom / JSON feeds](./built-in/feeds.md)              | Opt-in collection feeds written next to generated HTML                      |
+| [Blog](./built-in/blog.md)                                  | Opt-in paginated index, authors, tags, archive, and optional external feeds |
+| [PWA manifest and service worker](./built-in/pwa.md)        | Opt-in web app manifest and conservative offline cache (adds client JS)     |
+| [Taxonomies](./built-in/taxonomies.md)                      | Opt-in tag/category term pages and related-page lists                       |
+| [Documentation versioning](./built-in/versioning.md)        | Opt-in prefixes, frozen snapshots, and a header version dropdown            |
+| [Team / members page](./built-in/team.md)                   | Opt-in static member cards on `layout: team` pages                          |
+| [Git contributors](./built-in/contributors.md)              | Opt-in unique git authors under each article                                |
+| [Section index pages](./built-in/section-index.md)          | Opt-in generated listings for directories without `index.md`                |
 
 ## Default vs Opt-in
 
-| Area             | Option                                                                                                        | Default              | Guide                                                  |
-| ---------------- | ------------------------------------------------------------------------------------------------------------- | -------------------- | ------------------------------------------------------ |
-| Markdown base    | `gfm`, `footnotes`, `tables`, `taskLists`, `strikethrough`, `autolinks`                                       | `true`               | [Markdown Baseline](./built-in/markdown.md)            |
-| Page metadata    | `frontmatter`                                                                                                 | `true`               | [Markdown Baseline](./built-in/markdown.md)            |
-| Navigation       | `toc`, `tocMaxDepth`                                                                                          | `true`, `3`          | [Markdown Baseline](./built-in/markdown.md)            |
-| Heading links    | `headingPermalinks` / `theme.headingPermalink`                                                                | `false`, `"hover"`   | [Heading Permalinks](./built-in/heading-permalinks.md) |
-| Static site      | `ssg`                                                                                                         | `{ enabled }`        | [Site Generation](./built-in/site-generation.md)       |
-| API docs         | `docs`                                                                                                        | `{ enabled }`        | [Site Generation](./built-in/site-generation.md)       |
-| Search           | `search`                                                                                                      | `{ enabled }`        | [Search](./built-in/search.md)                         |
-| Collections      | `collections`                                                                                                 | `content` collection | [Collections](./built-in/collections.md)               |
-| Static embeds    | `embeds.github`, `embeds.openGraph`                                                                           | `true`               | [Embeds](./built-in/embeds.md)                         |
-| Opt-in embeds    | `embeds.pm`, `embeds.twitter`, `embeds.bluesky`, `embeds.spotify`, `embeds.stackBlitz`, `embeds.webContainer` | `false`              | [Embeds](./built-in/embeds.md)                         |
-| Syntax highlight | `highlight`                                                                                                   | `false`              | [Code Blocks](./built-in/code-blocks.md)               |
-| Code authoring   | `codeAnnotations`, `codeImports`                                                                              | `false`              | [Code Blocks](./built-in/code-blocks.md)               |
-| Extra syntax     | `wikiLinks`, `emojiShortcodes`, `attrs`, `cjkEmphasis`, `containers`, `badges`, `magicLinks`                  | `false`              | [Syntax Extensions](./built-in/syntax-extensions.md)   |
-| File includes    | `includes`                                                                                                    | `false`              | [File Includes](./built-in/includes.md)                |
-| Cards            | `cards`                                                                                                       | `false`              | [Cards](./built-in/cards.md)                           |
-| Step lists       | `steps`                                                                                                       | `false`              | [Step Lists](./built-in/steps.md)                      |
-| File tree        | `fileTree`                                                                                                    | `false`              | [File Tree](./built-in/file-tree.md)                   |
-| Images           | `images`                                                                                                      | `false`              | [Images](./built-in/images.md)                         |
-| Page resources   | `resources`                                                                                                   | `false`              | [Page resources](./built-in/resources.md)              |
-| Diagrams         | `mermaid`                                                                                                     | `false`              | [Mermaid Diagrams](./built-in/mermaid.md)              |
-| Math             | `math`                                                                                                        | `false`              | [Math](./built-in/math.md)                             |
-| OG images        | `ogImage`                                                                                                     | `false`              | [Site Generation](./built-in/site-generation.md)       |
-| HTML safety      | `sanitize`                                                                                                    | `false`              | [Quality Checks](./built-in/quality-checks.md)         |
-| Editing links    | `editThisPage`                                                                                                | `false`              | [Site Generation](./built-in/site-generation.md)       |
-| Page pager       | `ssg.pagination`                                                                                              | `false`              | [Previous / Next](./built-in/pagination.md)            |
-| Breadcrumbs      | `ssg.breadcrumbs` / `theme.breadcrumbs`                                                                       | `false`              | [Breadcrumbs](./built-in/breadcrumbs.md)               |
-| Page head        | `renderHead`                                                                                                  | build-time           | [Page head](./built-in/page-head.md)                   |
-| SEO tags         | `ssg.siteUrl`, frontmatter `robots` / `canonical`                                                             | off unless set       | [SEO](./built-in/seo.md)                               |
-| Head validation  | `ssg.headValidation`                                                                                          | `false`              | [SEO](./built-in/seo.md)                               |
-| Structured data  | `ssg.jsonLd`                                                                                                  | `false`              | [JSON-LD](./built-in/json-ld.md)                       |
-| Reader chrome    | `ssg.readerChrome`                                                                                            | `false`              | [Reader Chrome](./built-in/reader-chrome.md)           |
-| Locale switcher  | `ssg.localeSwitcher`                                                                                          | `false`              | [Locale Switcher](./built-in/locale-switcher.md)       |
-| Accessibility    | `ssg.a11y`                                                                                                    | `false`              | [Accessibility](./built-in/a11y.md)                    |
-| Header chrome    | `theme.nav`, `theme.announcement`, `ssg.pageChrome`                                                           | off                  | [Header chrome](./built-in/header-chrome.md)           |
-| Crawl manifests  | `siteMaps`                                                                                                    | `false`              | [Sitemap / robots / llms.txt](./built-in/site-maps.md) |
-| Publish states   | `publishState`                                                                                                | `false`              | [Draft / unlisted / scheduled](./built-in/drafts.md)   |
-| Permalinks       | `permalinks`                                                                                                  | `false`              | [Permalinks and Cascade](./built-in/permalinks.md)     |
-| Frontmatter tree | `cascade`                                                                                                     | `false`              | [Permalinks and Cascade](./built-in/permalinks.md)     |
-| Redirects        | `redirects`                                                                                                   | `false`              | [Redirects and aliases](./built-in/redirects.md)       |
-| Custom 404       | `ssg.notFound`                                                                                                | `false`              | [Custom 404](./built-in/not-found.md)                  |
-| Collection feeds | `feeds`                                                                                                       | `false`              | [RSS / Atom / JSON feeds](./built-in/feeds.md)         |
-| Blog             | `blog` / `ssg.blog`                                                                                           | `false`              | [Blog](./built-in/blog.md)                             |
-| PWA              | `pwa`                                                                                                         | `false`              | [PWA manifest and service worker](./built-in/pwa.md)   |
-| Taxonomies       | `taxonomies`                                                                                                  | `false`              | [Taxonomies](./built-in/taxonomies.md)                 |
-| Versioning       | `versions`                                                                                                    | `false`              | [Documentation versioning](./built-in/versioning.md)   |
-| Team page        | `ssg.team`                                                                                                    | `false`              | [Team / members page](./built-in/team.md)              |
-| Git authors      | `ssg.contributors`                                                                                            | `false`              | [Git contributors](./built-in/contributors.md)         |
-| Section indexes  | `ssg.sectionIndex`                                                                                            | `false`              | [Section index pages](./built-in/section-index.md)     |
-| Code checks      | `codeBlockLint`, `codeBlockTypecheck`, `docsTests`                                                            | `false`              | [Quality Checks](./built-in/quality-checks.md)         |
-| Typed hover      | `typedHover`                                                                                                  | `false`              | [Typed Hover](./built-in/typed-hover.md)               |
-| Custom pipeline  | `transformers`                                                                                                | `[]`                 | [Site Generation](./built-in/site-generation.md)       |
+| Area             | Option                                                                                                        | Default              | Guide                                                       |
+| ---------------- | ------------------------------------------------------------------------------------------------------------- | -------------------- | ----------------------------------------------------------- |
+| Markdown base    | `gfm`, `footnotes`, `tables`, `taskLists`, `strikethrough`, `autolinks`                                       | `true`               | [Markdown Baseline](./built-in/markdown.md)                 |
+| Page metadata    | `frontmatter`                                                                                                 | `true`               | [Markdown Baseline](./built-in/markdown.md)                 |
+| Navigation       | `toc`, `tocMaxDepth`                                                                                          | `true`, `3`          | [Markdown Baseline](./built-in/markdown.md)                 |
+| Heading links    | `headingPermalinks` / `theme.headingPermalink`                                                                | `false`, `"hover"`   | [Heading Permalinks](./built-in/heading-permalinks.md)      |
+| Static site      | `ssg`                                                                                                         | `{ enabled }`        | [Site Generation](./built-in/site-generation.md)            |
+| API docs         | `docs`                                                                                                        | `{ enabled }`        | [Site Generation](./built-in/site-generation.md)            |
+| Search           | `search`                                                                                                      | `{ enabled }`        | [Search](./built-in/search.md)                              |
+| Collections      | `collections`                                                                                                 | `content` collection | [Collections](./built-in/collections.md)                    |
+| Static embeds    | `embeds.github`, `embeds.openGraph`                                                                           | `true`               | [Embeds](./built-in/embeds.md)                              |
+| Opt-in embeds    | `embeds.pm`, `embeds.twitter`, `embeds.bluesky`, `embeds.spotify`, `embeds.stackBlitz`, `embeds.webContainer` | `false`              | [Embeds](./built-in/embeds.md)                              |
+| Syntax highlight | `highlight`                                                                                                   | `false`              | [Code Blocks](./built-in/code-blocks.md)                    |
+| Code authoring   | `codeAnnotations`, `codeImports`                                                                              | `false`              | [Code Blocks](./built-in/code-blocks.md)                    |
+| Extra syntax     | `wikiLinks`, `emojiShortcodes`, `attrs`, `cjkEmphasis`, `containers`, `badges`, `magicLinks`                  | `false`              | [Syntax Extensions](./built-in/syntax-extensions.md)        |
+| File includes    | `includes`                                                                                                    | `false`              | [File Includes](./built-in/includes.md)                     |
+| Cards            | `cards`                                                                                                       | `false`              | [Cards](./built-in/cards.md)                                |
+| Step lists       | `steps`                                                                                                       | `false`              | [Step Lists](./built-in/steps.md)                           |
+| File tree        | `fileTree`                                                                                                    | `false`              | [File Tree](./built-in/file-tree.md)                        |
+| Images           | `images`                                                                                                      | `false`              | [Images](./built-in/images.md)                              |
+| Page resources   | `resources`                                                                                                   | `false`              | [Page resources](./built-in/resources.md)                   |
+| Diagrams         | `mermaid`                                                                                                     | `false`              | [Mermaid Diagrams](./built-in/mermaid.md)                   |
+| Math             | `math`                                                                                                        | `false`              | [Math](./built-in/math.md)                                  |
+| OG images        | `ogImage`                                                                                                     | `false`              | [Site Generation](./built-in/site-generation.md)            |
+| HTML safety      | `sanitize`                                                                                                    | `false`              | [Quality Checks](./built-in/quality-checks.md)              |
+| Editing links    | `editThisPage`                                                                                                | `false`              | [Site Generation](./built-in/site-generation.md)            |
+| Page pager       | `ssg.pagination`                                                                                              | `false`              | [Previous / Next](./built-in/pagination.md)                 |
+| Breadcrumbs      | `ssg.breadcrumbs` / `theme.breadcrumbs`                                                                       | `false`              | [Breadcrumbs](./built-in/breadcrumbs.md)                    |
+| Page head        | `renderHead`                                                                                                  | build-time           | [Page head](./built-in/page-head.md)                        |
+| SEO tags         | `ssg.siteUrl`, frontmatter `robots` / `canonical`                                                             | off unless set       | [SEO](./built-in/seo.md)                                    |
+| Head validation  | `ssg.headValidation`                                                                                          | `false`              | [SEO](./built-in/seo.md)                                    |
+| Structured data  | `ssg.jsonLd`                                                                                                  | `false`              | [JSON-LD](./built-in/json-ld.md)                            |
+| Reader chrome    | `ssg.readerChrome`                                                                                            | `false`              | [Reader Chrome](./built-in/reader-chrome.md)                |
+| Locale switcher  | `ssg.localeSwitcher`                                                                                          | `false`              | [Locale Switcher](./built-in/locale-switcher.md)            |
+| Accessibility    | `ssg.a11y`                                                                                                    | `false`              | [Accessibility](./built-in/a11y.md)                         |
+| Header chrome    | `theme.nav`, `theme.announcement`, `ssg.pageChrome`                                                           | off                  | [Header chrome](./built-in/header-chrome.md)                |
+| Crawl manifests  | `siteMaps`                                                                                                    | `false`              | [Sitemap / robots / llms.txt](./built-in/site-maps.md)      |
+| Markdown source  | `ssg.markdownSource`                                                                                          | `false`              | [Markdown source companions](./built-in/markdown-source.md) |
+| Publish states   | `publishState`                                                                                                | `false`              | [Draft / unlisted / scheduled](./built-in/drafts.md)        |
+| Permalinks       | `permalinks`                                                                                                  | `false`              | [Permalinks and Cascade](./built-in/permalinks.md)          |
+| Frontmatter tree | `cascade`                                                                                                     | `false`              | [Permalinks and Cascade](./built-in/permalinks.md)          |
+| Redirects        | `redirects`                                                                                                   | `false`              | [Redirects and aliases](./built-in/redirects.md)            |
+| Custom 404       | `ssg.notFound`                                                                                                | `false`              | [Custom 404](./built-in/not-found.md)                       |
+| Collection feeds | `feeds`                                                                                                       | `false`              | [RSS / Atom / JSON feeds](./built-in/feeds.md)              |
+| Blog             | `blog` / `ssg.blog`                                                                                           | `false`              | [Blog](./built-in/blog.md)                                  |
+| PWA              | `pwa`                                                                                                         | `false`              | [PWA manifest and service worker](./built-in/pwa.md)        |
+| Taxonomies       | `taxonomies`                                                                                                  | `false`              | [Taxonomies](./built-in/taxonomies.md)                      |
+| Versioning       | `versions`                                                                                                    | `false`              | [Documentation versioning](./built-in/versioning.md)        |
+| Team page        | `ssg.team`                                                                                                    | `false`              | [Team / members page](./built-in/team.md)                   |
+| Git authors      | `ssg.contributors`                                                                                            | `false`              | [Git contributors](./built-in/contributors.md)              |
+| Section indexes  | `ssg.sectionIndex`                                                                                            | `false`              | [Section index pages](./built-in/section-index.md)          |
+| Code checks      | `codeBlockLint`, `codeBlockTypecheck`, `docsTests`                                                            | `false`              | [Quality Checks](./built-in/quality-checks.md)              |
+| Typed hover      | `typedHover`                                                                                                  | `false`              | [Typed Hover](./built-in/typed-hover.md)                    |
+| Custom pipeline  | `transformers`                                                                                                | `[]`                 | [Site Generation](./built-in/site-generation.md)            |
 
 Tab groups and YouTube embeds have no option: they are always processed for
 SSG output and dev preview. See [Embeds](./built-in/embeds.md#tabs).

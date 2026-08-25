@@ -391,6 +391,21 @@ export interface SsgOptions {
   pageChrome?: boolean | Record<string, unknown>;
 
   /**
+   * Publish the original Markdown beside each generated HTML page.
+   *
+   * Off by default. `true` writes a `.md` companion using the published URL
+   * (permalink, locale, base, and output directory) and adds
+   * `<link rel="alternate" type="text/markdown">`. An object enables the
+   * feature and can turn the alternate link off.
+   *
+   * The companion is a byte-for-byte copy of the source file, including
+   * frontmatter. Draft and unlisted pages are never written.
+   *
+   * @default false
+   */
+  markdownSource?: boolean | MarkdownSourceOptions;
+
+  /**
    * Write a themed 404 page during SSG.
    *
    * Off by default. `true` reads `404.md` from `srcDir` and writes `404.html`.
@@ -638,6 +653,10 @@ export interface ResolvedSsgOptions {
   /**
    * Present after `resolveSsgOptions`. Omitted in hand-built fixtures means off.
    */
+  markdownSource?: ResolvedMarkdownSourceOptions;
+  /**
+   * Present after `resolveSsgOptions`. Omitted in hand-built fixtures means off.
+   */
   notFound?: ResolvedNotFoundOptions;
   /**
    * Present after `resolveSsgOptions`. Omitted in hand-built fixtures means off.
@@ -827,6 +846,25 @@ export interface ResolvedPwaOptions {
   themeColor?: string;
   backgroundColor?: string;
   startUrl?: string;
+}
+
+/**
+ * Opt-in Markdown source companions written beside generated HTML.
+ */
+export interface MarkdownSourceOptions {
+  /**
+   * Add `<link rel="alternate" type="text/markdown">` to generated HTML.
+   * @default true
+   */
+  alternate?: boolean;
+}
+
+/**
+ * Resolved Markdown source-companion options.
+ */
+export interface ResolvedMarkdownSourceOptions {
+  enabled: boolean;
+  alternate: boolean;
 }
 
 /**
