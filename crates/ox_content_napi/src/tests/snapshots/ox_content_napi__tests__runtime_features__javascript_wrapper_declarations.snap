@@ -1090,9 +1090,7 @@ export interface JsJsonLd {
   publisher?: JsJsonLdPublisher
   /** Site origin used for `@id` / `url`. */
   siteUrl?: string
-  /** Page `@type`. Defaults to `TechArticle`. */
   pageType?: string
-  /** Extra `@graph` nodes as JSON object strings. */
   graph?: Array<string>
 }
 
@@ -1614,17 +1612,11 @@ export interface JsSsgBarePage {
 
 /** SSG configuration. */
 export interface JsSsgConfig {
-  /** Site name. */
   siteName: string
-  /** Base URL path. */
   base: string
-  /** Optional site-root href for breadcrumbs. */
   breadcrumbRootHref?: string
-  /** OG image URL. */
   ogImage?: string
-  /** Site origin used for canonical / `og:url` / hreflang. */
   siteUrl?: string
-  /** `off` / `warn` / `strict`. Omitted is off. */
   headValidation?: string
   /** Theme configuration. */
   theme?: JsThemeConfig
