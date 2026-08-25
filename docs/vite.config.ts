@@ -142,6 +142,7 @@ export default defineConfig(({ mode }) => {
                       { text: "File Tree", link: "/built-in/file-tree.md" },
                       { text: "Inline Badges", link: "/built-in/badges.md" },
                       { text: "Images", link: "/built-in/images.md" },
+                      { text: "Page resources", link: "/built-in/resources.md" },
                       { text: "Code Blocks", link: "/built-in/code-blocks.md" },
                       { text: "Embeds", link: "/built-in/embeds.md" },
                       { text: "Mermaid Diagrams", link: "/built-in/mermaid.md" },
@@ -149,6 +150,7 @@ export default defineConfig(({ mode }) => {
                       { text: "Search", link: "/built-in/search.md" },
                       { text: "Collections", link: "/built-in/collections.md" },
                       { text: "Quality Checks", link: "/built-in/quality-checks.md" },
+                      { text: "Typed Hover", link: "/built-in/typed-hover.md" },
                       { text: "Site Generation", link: "/built-in/site-generation.md" },
                       { text: "Previous / Next", link: "/built-in/pagination.md" },
                       { text: "Breadcrumbs", link: "/built-in/breadcrumbs.md" },
@@ -256,6 +258,7 @@ export default defineConfig(({ mode }) => {
         cards: true,
         steps: true,
         fileTree: true,
+        typedHover: true,
         embeds: {
           pm: true,
           twitter: {

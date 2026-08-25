@@ -19,6 +19,9 @@ import type {
   ResolvedReaderChrome,
   ResolvedSsgOptions,
   A11yOptions,
+  JsonLdOptions,
+  JsonLdPublisherOptions,
+  ResolvedJsonLd,
   ResolvedTeamOptions,
   ReaderChromeOptions,
   SsgOptions,
@@ -69,6 +72,7 @@ import {
   snapshotEntries,
   writeSnapshotSearchIndex,
 } from "./versions";
+import { PageResourceError, processPageResources } from "./resources";
 import {
   createVersionNavigationContext,
   rewriteVersionedHeaderNavItems,
@@ -160,6 +164,7 @@ export function resolveSsgOptions(ssg: SsgOptions | boolean | undefined): Resolv
       lastUpdated: false,
       pagination: false,
       breadcrumbs: false,
+      jsonLd: false,
       readerChrome: false,
       localeSwitcher: false,
       a11y: false,
@@ -179,6 +184,7 @@ export function resolveSsgOptions(ssg: SsgOptions | boolean | undefined): Resolv
       lastUpdated: false,
       pagination: false,
       breadcrumbs: false,
+      jsonLd: false,
       readerChrome: false,
       localeSwitcher: false,
       a11y: false,
@@ -205,6 +211,7 @@ export function resolveSsgOptions(ssg: SsgOptions | boolean | undefined): Resolv
     lastUpdated: ssg.lastUpdated ?? false,
     pagination: resolvePaginationOption(ssg.pagination),
     breadcrumbs: resolvePaginationOption(ssg.breadcrumbs),
+    jsonLd: resolveJsonLdOption(ssg.jsonLd),
     readerChrome: resolveReaderChromeOption(ssg.readerChrome),
     localeSwitcher: resolveLocaleSwitcherOption(ssg.localeSwitcher),
     a11y: resolveA11yOption(ssg.a11y),
@@ -219,6 +226,37 @@ export function resolveSsgOptions(ssg: SsgOptions | boolean | undefined): Resolv
 
 function resolvePaginationOption(value: boolean | Record<string, unknown> | undefined): boolean {
   return value === true || (typeof value === "object" && value !== null);
+}
+
+function resolveJsonLdOption(value: boolean | JsonLdOptions | undefined): ResolvedJsonLd {
+  if (value === true) {
+    return { breadcrumbs: true };
+  }
+  if (value && typeof value === "object") {
+    const publisher = resolveJsonLdPublisher(value.publisher);
+    return {
+      breadcrumbs: value.breadcrumbs !== false,
+      ...(publisher ? { publisher } : {}),
+    };
+  }
+  return false;
+}
+
+function resolveJsonLdPublisher(
+  publisher: JsonLdPublisherOptions | undefined,
+): { name?: string; url?: string } | undefined {
+  if (!publisher || typeof publisher !== "object") {
+    return undefined;
+  }
+  const name = publisher.name?.trim();
+  const url = publisher.url?.trim();
+  if (!name && !url) {
+    return undefined;
+  }
+  return {
+    ...(name ? { name } : {}),
+    ...(url ? { url } : {}),
+  };
 }
 
 function resolveReaderChromeOption(
@@ -446,6 +484,8 @@ export async function generateHtmlPage(
   team: ResolvedTeamOptions = { enabled: false, members: [] },
   pageChrome: boolean = false,
   breadcrumbRootHref?: string,
+  jsonLd: ResolvedJsonLd = false,
+  siteUrl?: string,
 ): Promise<string> {
   const mod = await importNapiModule();
 
@@ -538,6 +578,13 @@ export async function generateHtmlPage(
       a11y: a11y ? { skipLinkLabel: a11y.skipLinkLabel } : undefined,
       team,
       pageChrome,
+      jsonLd: jsonLd
+        ? {
+            breadcrumbs: jsonLd.breadcrumbs,
+            publisher: jsonLd.publisher,
+            siteUrl,
+          }
+        : undefined,
     },
   );
 }
@@ -787,6 +834,8 @@ export async function buildSsg(options: ResolvedOptions, root: string): Promise<
   const { outputPages, listedPages } = applyPublishState(context, collected);
   remapPermalinkNav(context, listedPages);
 
+  await applyPageResources(context, outputPages, generatedFiles, errors);
+
   await generateOgImageAssets(context, collected, generatedFiles, errors);
 
   injectRelatedPages(outputPages, listedPages, context.options.taxonomies);
@@ -883,6 +932,38 @@ async function resolveSiteName(root: string, ssgOptions: ResolvedSsgOptions): Pr
     return pkg.name ? formatTitle(pkg.name) : "Documentation";
   } catch {
     return "Documentation";
+  }
+}
+
+async function applyPageResources(
+  context: BuildSsgContext,
+  pages: PageProcessResult[],
+  generatedFiles: string[],
+  errors: string[],
+): Promise<void> {
+  const options = context.options.resources;
+  if (!options?.enabled) {
+    return;
+  }
+
+  const cacheDir = path.join(context.root, ".cache", "ox-content-resources");
+  const fatal: string[] = [];
+  for (const page of pages) {
+    const processed = await processPageResources({
+      html: page.transformedHtml,
+      inputPath: page.inputPath,
+      outputPath: page.routePaths.outputPath,
+      srcDir: context.srcDir,
+      options,
+      cacheDir,
+    });
+    page.transformedHtml = processed.html;
+    generatedFiles.push(...processed.files);
+    errors.push(...processed.errors);
+    fatal.push(...processed.fatal);
+  }
+  if (fatal.length > 0) {
+    throw new PageResourceError(fatal);
   }
 }
 
@@ -1320,6 +1401,8 @@ async function renderSsgPage(
     context.ssgOptions.team ?? { enabled: false, members: [] },
     context.ssgOptions.pageChrome,
     versionNavigation?.root.href,
+    context.ssgOptions.jsonLd,
+    context.ssgOptions.siteUrl,
   );
 }
 

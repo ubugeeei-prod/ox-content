@@ -12,7 +12,7 @@ use crate::{
 mod converters;
 
 use converters::{
-    convert_entry_page_config, convert_generated_html_page, convert_nav_item,
+    convert_entry_page_config, convert_generated_html_page, convert_json_ld, convert_nav_item,
     convert_navigation_group, convert_pager_override, convert_sidebar_item, convert_theme_config,
     flatten_toc_entries, map_generated_html_page, map_nav_group, map_route_paths, map_shared_asset,
 };
@@ -232,6 +232,7 @@ pub fn generate_ssg_html(
             .collect(),
         a11y: convert_a11y(config.a11y),
         page_chrome: config.page_chrome.unwrap_or(false),
+        json_ld: convert_json_ld(config.json_ld),
     };
 
     ox_content_ssg::generate_html(&ssg_page_data, &ssg_nav_groups, &ssg_config)

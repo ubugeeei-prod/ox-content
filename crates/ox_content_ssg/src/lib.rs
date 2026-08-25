@@ -58,6 +58,7 @@
 //!     locale_paths: vec![],
 //!     a11y: Default::default(),
 //!     page_chrome: false,
+//!     json_ld: Default::default(),
 //! };
 //!
 //! let html = generate_html(&page_data, &nav_groups, &config);
@@ -89,10 +90,10 @@ pub use assets::{
 pub use feeds::{FeedFormat, FeedItem, FeedsOptions, FeedsOutput, generate_feeds};
 pub use html::{
     A11y, BarePageData, EntryPageConfig, FeatureConfig, HeaderNavItem, HeroAction, HeroConfig,
-    HeroImage, HeroNoticeConfig, LocaleInfo, LocalePath, NavGroup, NavItem, PageChromeFlags,
-    PageData, PagerOverride, ReaderChrome, SocialLink, SocialLinks, SsgConfig, TeamLink,
-    TeamMember, TeamOptions, ThemeAnnouncement, ThemeColors, ThemeConfig, ThemeEmbed,
-    ThemeEntryPage, ThemeFonts, ThemeFooter, ThemeHeader, ThemeLayout, TocEntry,
+    HeroImage, HeroNoticeConfig, JsonLd, JsonLdPublisher, LocaleInfo, LocalePath, NavGroup,
+    NavItem, PageChromeFlags, PageData, PagerOverride, ReaderChrome, SocialLink, SocialLinks,
+    SsgConfig, TeamLink, TeamMember, TeamOptions, ThemeAnnouncement, ThemeColors, ThemeConfig,
+    ThemeEmbed, ThemeEntryPage, ThemeFonts, ThemeFooter, ThemeHeader, ThemeLayout, TocEntry,
     generate_bare_html, generate_bare_page, generate_html, render_team_page,
 };
 pub use permalinks::{

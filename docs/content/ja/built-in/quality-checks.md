@@ -154,4 +154,5 @@ script 要素、イベントハンドラ属性、安全でない URL スキー�
 ## 関連
 
 - [コードブロック](./code-blocks.md) — これらの検査が守るフェンス向けのハイライト、注釈、取り込み。
+- [型ホバー](./typed-hover.md) — `twoslash` フェンスのビルド時型オーバーレイ
 - [HTML Sanitizer の例](/examples/html-sanitizer.md)

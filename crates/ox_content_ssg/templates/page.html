@@ -19,6 +19,9 @@
   {% endif %}
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" content="{{ document_title }}">
+{%- if let Some(json_ld) = json_ld %}
+  <script type="application/ld+json">{{ json_ld|safe }}</script>
+{%- endif %}
   <!-- ox-content:styles:start -->
   <style>{{ css|safe }}</style>
   <!-- ox-content:styles:end -->

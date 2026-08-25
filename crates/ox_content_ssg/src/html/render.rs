@@ -8,6 +8,7 @@ use super::header_chrome::{
     HEADER_CHROME_CSS, HEADER_CHROME_JS, header_chrome_needs_css, header_chrome_needs_js,
     push_header_chrome_body_classes, render_announcement, render_header_nav, resolve_page_chrome,
 };
+use super::json_ld::render_json_ld;
 use super::locale_switcher::render_locale_switcher;
 use super::mpa_navigation::{MPA_NAVIGATION_CSS, THEME_BOOTSTRAP_JS, view_transitions_enabled};
 use super::nav::generate_nav_html;
@@ -126,6 +127,7 @@ pub fn generate_html(page_data: &PageData, nav_groups: &[NavGroup], config: &Ssg
     let has_toc = !is_entry_page && super::aside::has_toc(chrome.show_outline, &toc_html);
     let pager = resolve_pager(page_data, nav_groups, config.pagination);
     let breadcrumbs = resolve_breadcrumbs(page_data, nav_groups, config);
+    let json_ld = render_json_ld(page_data, config, breadcrumbs.as_ref());
     let last_updated = chrome
         .show_last_updated
         .then(|| page_data.last_updated.and_then(format_last_updated))
@@ -250,6 +252,7 @@ pub fn generate_html(page_data: &PageData, nav_groups: &[NavGroup], config: &Ssg
         document_title: &document_title,
         description: page_data.description.as_deref(),
         og_image: config.og_image.as_deref(),
+        json_ld: json_ld.as_deref(),
         theme_bootstrap_js: THEME_BOOTSTRAP_JS,
         css: &all_css,
         embed_head,
