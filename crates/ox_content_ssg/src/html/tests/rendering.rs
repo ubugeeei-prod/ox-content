@@ -2,22 +2,40 @@ use super::super::nav::generate_nav_html;
 use super::super::utils::{format_last_updated, generate_toc_html, html_locale_attrs};
 use super::super::*;
 
-#[test]
-fn test_generate_html() {
-    let page_data = PageData {
-        title: "Test Page".to_string(),
-        description: Some("Test description".to_string()),
-        content: "<h1>Hello</h1>".to_string(),
-        toc: vec![TocEntry { depth: 1, text: "Hello".to_string(), slug: "hello".to_string() }],
-        last_updated: Some(0),
+fn page(
+    title: &str,
+    description: Option<&str>,
+    content: &str,
+    toc: Vec<TocEntry>,
+    last_updated: Option<i64>,
+    path: &str,
+) -> PageData {
+    PageData {
+        title: title.to_string(),
+        description: description.map(str::to_string),
+        content: content.to_string(),
+        toc,
+        last_updated,
         contributors: vec![],
-        path: "test".to_string(),
+        path: path.to_string(),
         entry_page: None,
         prev: None,
         next: None,
         breadcrumbs: None,
         chrome: PageChromeFlags::default(),
-    };
+    }
+}
+
+#[test]
+fn test_generate_html() {
+    let page_data = page(
+        "Test Page",
+        Some("Test description"),
+        "<h1>Hello</h1>",
+        vec![TocEntry { depth: 1, text: "Hello".to_string(), slug: "hello".to_string() }],
+        Some(0),
+        "test",
+    );
     let nav_groups = vec![NavGroup {
         title: "Guide".to_string(),
         items: vec![NavItem {
@@ -262,20 +280,7 @@ fn test_mobile_menu_css_stays_reachable_and_touch_safe() {
 
 #[test]
 fn test_generate_html_without_toc_omits_outline() {
-    let page_data = PageData {
-        title: "No TOC".to_string(),
-        description: None,
-        content: "<p>Content</p>".to_string(),
-        toc: vec![],
-        last_updated: None,
-        contributors: vec![],
-        path: "no-toc".to_string(),
-        entry_page: None,
-        prev: None,
-        next: None,
-        breadcrumbs: None,
-        chrome: PageChromeFlags::default(),
-    };
+    let page_data = page("No TOC", None, "<p>Content</p>", vec![], None, "no-toc");
     let config = SsgConfig {
         site_name: "Test Site".to_string(),
         base: "/".to_string(),
@@ -325,20 +330,7 @@ fn test_html_locale_attrs_use_current_locale_and_direction() {
 
     assert_eq!(html_locale_attrs(&config), ("ar", "rtl"));
 
-    let page_data = PageData {
-        title: "مرحبا".to_string(),
-        description: None,
-        content: "<p>Content</p>".to_string(),
-        toc: vec![],
-        last_updated: None,
-        contributors: vec![],
-        path: "ar".to_string(),
-        entry_page: None,
-        prev: None,
-        next: None,
-        breadcrumbs: None,
-        chrome: PageChromeFlags::default(),
-    };
+    let page_data = page("مرحبا", None, "<p>Content</p>", vec![], None, "ar");
     let html = generate_html(&page_data, &[], &config);
     insta::assert_snapshot!(super::snapshot_text(&html));
 }
