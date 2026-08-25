@@ -19,14 +19,18 @@
     opacity: 0;
   }
   body:not(.ox-heading-permalinks--always) :is(h1, h2, h3, h4, h5, h6):hover > .header-anchor,
-  body:not(.ox-heading-permalinks--always) :is(h1, h2, h3, h4, h5, h6):focus-within > .header-anchor,
+  body:not(.ox-heading-permalinks--always)
+    :is(h1, h2, h3, h4, h5, h6):focus-within
+    > .header-anchor,
   body:not(.ox-heading-permalinks--always) .header-anchor:focus-visible {
     opacity: 1;
   }
 }
 @media (prefers-reduced-motion: no-preference) {
   .header-anchor {
-    transition: color 0.15s ease, opacity 0.15s ease;
+    transition:
+      color 0.15s ease,
+      opacity 0.15s ease;
   }
 }
 @media print {
