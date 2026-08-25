@@ -239,7 +239,8 @@ oxContent({
 
 `embeds.webContainer` は、操作時に [WebContainers](https://webcontainers.io/) を起動するサイト向けに、プロジェクトソースとクロスオリジン分離メタデータを持つ遅延プレースホルダを出します。プレースホルダ自体は完全に静的です。
 
-```md
+<!-- prettier-ignore -->
+```mdx
 <WebContainer entry="index.html" title="Demo">
   npm install
   npm run dev

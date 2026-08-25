@@ -22,6 +22,10 @@ export default {
 };
 ```
 
-```html
-<WebContainer entry="index.html" title="Demo"> npm install npm run dev </WebContainer>
+<!-- prettier-ignore -->
+```mdx
+<WebContainer entry="index.html" title="Demo">
+  npm install
+  npm run dev
+</WebContainer>
 ```

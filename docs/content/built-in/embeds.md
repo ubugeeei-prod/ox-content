@@ -299,7 +299,8 @@ cross-origin isolation metadata, for sites that boot
 [WebContainers](https://webcontainers.io/) on interaction. The placeholder
 itself is fully static:
 
-```md
+<!-- prettier-ignore -->
+```mdx
 <WebContainer entry="index.html" title="Demo">
   npm install
   npm run dev

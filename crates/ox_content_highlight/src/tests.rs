@@ -14,6 +14,7 @@ fn aliases_resolve_to_the_same_grammar() {
     for alias in ["bash", "sh", "shell", "zsh"] {
         assert!(supports(alias), "{alias} should be supported");
     }
+    assert!(supports("mdx"));
     assert_eq!(
         highlight_to_html("const a = 1;", "ts"),
         highlight_to_html("const a = 1;", "typescript")
@@ -148,6 +149,20 @@ fn markdown_highlights_a_fenced_block_in_its_own_language() {
     let html = highlight_to_html("```ts\nconst a = 1;\n```\n", "md").expect("supported");
 
     assert!(html.contains("--octc-syntax-token-keyword"), "{html}");
+}
+
+#[test]
+fn mdx_highlights_custom_element_closing_tags() {
+    let html = highlight_to_html(
+        "<WebContainer entry=\"index.html\" title=\"Demo\">\n  npm install\n</WebContainer>\n",
+        "mdx",
+    )
+    .expect("supported");
+    let closing = html.split("&lt;/").nth(1).expect("closing tag should be present");
+
+    assert!(closing.contains("WebContainer"), "{html}");
+    assert!(closing.contains("--octc-syntax-token-function"), "{html}");
+    assert!(closing.contains("--octc-syntax-token-punctuation"), "{html}");
 }
 
 #[test]

@@ -121,7 +121,7 @@ fn grammars() -> &'static [Grammar] {
         ),
         grammar!(
             "javascript",
-            ["javascript", "js", "cjs", "mjs", "jsx"],
+            ["javascript", "js", "cjs", "mjs", "jsx", "mdx"],
             tree_sitter_javascript::LANGUAGE,
             javascript_highlights(),
             tree_sitter_javascript::INJECTIONS_QUERY,
