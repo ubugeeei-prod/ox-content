@@ -4,6 +4,7 @@ mod files;
 mod manual;
 mod navigation;
 mod path;
+mod prefix;
 mod sidebar;
 
 pub use files::{collect_markdown_files, extract_title, format_title};
@@ -13,6 +14,7 @@ pub use path::{
     RoutePaths, get_href, get_og_image_path, get_og_image_url, get_output_path, get_page_locale,
     get_url_path, resolve_route_paths,
 };
+pub use prefix::{apply_route_prefix, normalize_route_prefix};
 pub use sidebar::{SidebarItem, build_theme_nav_items};
 
 const DEFAULT_NAV_GROUP_ORDER: &[&str] = &["", "examples", "packages", "api"];

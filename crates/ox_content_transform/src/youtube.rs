@@ -14,14 +14,15 @@ mod render;
 #[cfg(test)]
 mod tests;
 
-use std::sync::LazyLock;
-
-use regex::Regex;
-
 use crate::html_scan::find_ci;
 
 use parser::find_youtube_element;
 use render::render_embed;
+
+const VIDEO_ID_LEN: usize = 11;
+const URL_ID_PREFIXES: &[&str] =
+    &["youtube.com/watch?v=", "youtu.be/", "youtube.com/embed/", "youtube.com/v/"];
+const SHORTS_PREFIX: &str = "youtube.com/shorts/";
 
 /// Options mirroring the TS `YouTubeOptions`, with the same defaults.
 #[derive(Debug, Clone)]
@@ -43,36 +44,45 @@ impl Default for YouTubeEmbedOptions {
     }
 }
 
-static VIDEO_ID: LazyLock<Regex> = LazyLock::new(|| {
-    #[allow(clippy::expect_used)]
-    Regex::new(r"^[a-zA-Z0-9_-]{11}$").expect("compile-time YouTube video id regex")
-});
-static URL_PATTERNS: LazyLock<[Regex; 2]> = LazyLock::new(|| {
-    #[allow(clippy::expect_used)]
-    [
-        Regex::new(
-            r"(?:youtube\.com/watch\?v=|youtu\.be/|youtube\.com/embed/|youtube\.com/v/)([a-zA-Z0-9_-]{11})",
-        )
-        .expect("compile-time YouTube URL regex"),
-        Regex::new(r"youtube\.com/shorts/([a-zA-Z0-9_-]{11})")
-            .expect("compile-time YouTube shorts regex"),
-    ]
-});
+fn is_video_id(value: &str) -> bool {
+    value.len() == VIDEO_ID_LEN
+        && value.bytes().all(|byte| byte.is_ascii_alphanumeric() || byte == b'-' || byte == b'_')
+}
 
-/// Extract a YouTube video id from a bare id or a watch/share/embed/shorts URL.
-/// Mirrors the TS `extractVideoId`.
-pub fn extract_video_id(input: &str) -> Option<String> {
-    if VIDEO_ID.is_match(input) {
-        return Some(input.to_string());
-    }
-    for pattern in URL_PATTERNS.iter() {
-        if let Some(captures) = pattern.captures(input)
-            && let Some(id) = captures.get(1)
-        {
-            return Some(id.as_str().to_string());
+fn video_id_after(input: &str, start: usize) -> Option<&str> {
+    let id = input.get(start..start + VIDEO_ID_LEN)?;
+    is_video_id(id).then_some(id)
+}
+
+/// Leftmost `prefix + 11-char id` match, continuing past prefixes that are not
+/// followed by a valid id. Mirrors the previous unanchored regex search.
+fn first_prefixed_id<'a>(input: &'a str, prefixes: &[&str]) -> Option<&'a str> {
+    let mut best: Option<(usize, &'a str)> = None;
+    for prefix in prefixes {
+        let mut search = 0;
+        while let Some(relative) = input.get(search..).and_then(|rest| rest.find(prefix)) {
+            let id_start = search + relative + prefix.len();
+            if let Some(id) = video_id_after(input, id_start) {
+                if best.is_none_or(|(position, _)| id_start < position) {
+                    best = Some((id_start, id));
+                }
+                break;
+            }
+            search += relative + 1;
         }
     }
-    None
+    best.map(|(_, id)| id)
+}
+
+/// Extract a YouTube video id from a bare id or a watch/share/embed/shorts URL.
+/// Mirrors the TS `extractVideoId` without compiling regexes at startup.
+pub fn extract_video_id(input: &str) -> Option<String> {
+    if is_video_id(input) {
+        return Some(input.to_string());
+    }
+    first_prefixed_id(input, URL_ID_PREFIXES)
+        .or_else(|| first_prefixed_id(input, &[SHORTS_PREFIX]))
+        .map(str::to_string)
 }
 
 /// Transform every `<youtube …>` element in `html` into an iframe embed.

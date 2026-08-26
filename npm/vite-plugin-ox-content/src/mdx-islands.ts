@@ -8,6 +8,7 @@
  */
 
 import { importNapiModule } from "./napi";
+import { isReservedBuiltinComponent } from "./plugins/embed-transform";
 
 /** Global component map: object, Map, or name list. */
 export type ComponentRegistry =
@@ -62,6 +63,9 @@ export function intersectHydratableComponentNames(
   const local = localNames ? new Set(localNames) : null;
   const used: string[] = [];
   for (const name of names) {
+    if (isReservedBuiltinComponent(name) && !local?.has(name)) {
+      continue;
+    }
     if ((local?.has(name) || isRegisteredComponent(name, components)) && !used.includes(name)) {
       used.push(name);
     }

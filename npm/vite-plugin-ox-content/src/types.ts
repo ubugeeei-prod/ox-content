@@ -176,6 +176,22 @@ export interface SsgOptions {
   extension?: string;
 
   /**
+   * Mount generated page routes under this path, independent from `base` and
+   * `outDir`.
+   *
+   * `blog`, `/blog`, and `/blog/` all mount under `/blog`. Page HTML and
+   * page-level assets follow the prefix. Root host files (`_redirects`,
+   * `_headers`, root feeds, sitemap index) stay at `outDir`. `base` remains
+   * the public deployment prefix and is not used as an output mount.
+   * Frontmatter `permalink` still wins when permalinks are enabled.
+   *
+   * Off when omitted.
+   *
+   * @default undefined
+   */
+  routePrefix?: string;
+
+  /**
    * Remove previously generated files from the output directory before writing
    * the new SSG result.
    *
@@ -624,6 +640,10 @@ export type ResolvedJsonLd =
 export interface ResolvedSsgOptions {
   enabled: boolean;
   extension: string;
+  /**
+   * Present after `resolveSsgOptions`. Omitted / empty means off.
+   */
+  routePrefix?: string;
   clean: boolean;
   bare: boolean;
   render?: ThemeComponent;
@@ -968,6 +988,14 @@ export interface ResolvedCascadeOptions {
 }
 
 /**
+ * Host that consumes the generated `_redirects` file.
+ *
+ * Both values write the same `_redirects` body today. The distinct names
+ * leave room for provider-specific limits and diagnostics later.
+ */
+export type RedirectProvider = "netlify" | "cloudflare";
+
+/**
  * Opt-in static redirects, aliases, and path rewrites.
  *
  * A path map such as `{ "/old-guide": "/guide" }` is also accepted in place
@@ -982,10 +1010,13 @@ export interface RedirectsOptions {
   map?: Record<string, string>;
 
   /**
-   * Write a Netlify / Cloudflare `_redirects` file next to the HTML pages.
-   * @default false
+   * Host that should receive a `_redirects` file.
+   *
+   * Omit the field to detect `CF_PAGES=1`, `WORKERS_CI=1`, or `NETLIFY=true`.
+   * Local builds and GitHub Actions should set this explicitly. HTML redirect
+   * pages are independent of this selector.
    */
-  netlify?: boolean;
+  provider?: RedirectProvider;
 
   /**
    * Write a `_headers` Location map next to the HTML pages.
@@ -1013,7 +1044,7 @@ export interface RedirectsOptions {
 export interface ResolvedRedirectsOptions {
   enabled: boolean;
   map: Record<string, string>;
-  netlify: boolean;
+  provider?: RedirectProvider;
   headers: boolean;
   json: boolean;
   allowExternal: boolean;

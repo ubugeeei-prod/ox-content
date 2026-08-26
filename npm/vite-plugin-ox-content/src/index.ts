@@ -118,6 +118,7 @@ export type {
   ResolvedPermalinksOptions,
   CascadeOptions,
   ResolvedCascadeOptions,
+  RedirectProvider,
   RedirectsOptions,
   ResolvedRedirectsOptions,
   BlogAuthor,

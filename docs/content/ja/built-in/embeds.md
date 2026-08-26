@@ -20,6 +20,8 @@ description: Markdown 中の HTML 風タグで書く GitHub / OG カード、パ
 
 タブと YouTube 埋め込みは `embeds` オプションの外です。SSG ビルドと dev preview では常に処理され、設定は不要です。同じ執筆モデルなので [下](#タブ) で扱います。
 
+`<Tweet>` や `<OgCard>` のようなドキュメント上の PascalCase タグは `.md` と `.mdx` の両方で動きます。同じ名前のドキュメントローカル import（`import Tweet from "./Tweet"`）は組み込みより優先され、MDX island のまま残ります。
+
 すべての組み込み埋め込みを切るときは `embeds: false`、個別に設定するときはオブジェクトです。
 
 ```ts
