@@ -83,6 +83,8 @@ fn full_tweet_css_keeps_rich_copy_and_replies_affordances() {
     assert!(SOCIAL_TWEET_FULL_CSS.contains("--ox-tweet-icon-copy"));
     assert!(SOCIAL_TWEET_FULL_CSS.contains(".ox-tweet__icon--copy"));
     assert!(SOCIAL_TWEET_FULL_CSS.contains(".ox-tweet--full .ox-tweet__action--copy:hover"));
+    assert!(SOCIAL_TWEET_FULL_CSS.contains("[data-ox-tweet-copied]"));
+    assert!(SOCIAL_TWEET_FULL_CSS.contains(".ox-tweet__copied-text"));
     assert!(
         SOCIAL_TWEET_FULL_CSS.contains(
             ".ox-tweet--full .ox-tweet__replies-link {\n  box-sizing: border-box;\n  display: flex;"
@@ -93,4 +95,6 @@ fn full_tweet_css_keeps_rich_copy_and_replies_affordances() {
         SOCIAL_TWEET_FULL_CSS.contains("\n  width: 100%;\n  min-height: 32px;"),
         "{SOCIAL_TWEET_FULL_CSS}"
     );
+    assert!(SOCIAL_TWEET_FULL_CSS.contains(".ox-tweet--full .ox-tweet__replies-link:hover"));
+    assert!(!SOCIAL_TWEET_FULL_CSS.contains("text-align: center"), "{SOCIAL_TWEET_FULL_CSS}");
 }

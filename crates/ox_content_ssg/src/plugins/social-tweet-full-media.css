@@ -145,14 +145,26 @@
   color: var(--ox-tweet-color-blue-text);
 }
 
-.ox-tweet--full .ox-tweet__action--copy:hover {
-  color: var(--ox-tweet-color-blue-text);
+.ox-tweet--full .ox-tweet__action--copy:hover,
+.ox-tweet--full .ox-tweet__action--copy[data-ox-tweet-copied] {
+  color: var(--ox-tweet-color-green);
+}
+
+.ox-tweet--full .ox-tweet__copied-text {
+  display: none;
+}
+
+.ox-tweet--full .ox-tweet__action--copy[data-ox-tweet-copied] .ox-tweet__copy-text {
+  display: none;
+}
+
+.ox-tweet--full .ox-tweet__action--copy[data-ox-tweet-copied] .ox-tweet__copied-text {
+  display: inline;
 }
 
 .ox-tweet--full .ox-tweet__replies {
-  padding: 0.25rem 0 0;
+  padding: 0.25rem 0;
   margin: 0.5rem 0 0;
-  text-align: center;
 }
 
 .ox-tweet--full .ox-tweet__replies-link {
@@ -168,6 +180,10 @@
   color: var(--ox-tweet-color-blue-text);
   border: var(--ox-tweet-border);
   border-radius: 9999px;
+}
+
+.ox-tweet--full .ox-tweet__replies-link:hover {
+  background-color: var(--ox-tweet-color-blue-hover);
 }
 
 @media (max-width: 400px) {

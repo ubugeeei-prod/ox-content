@@ -172,7 +172,11 @@ describe("full-fidelity Tweet cards", () => {
     expect(blue).toContain("data-ox-tweet-copy");
     expect(blue).toContain('data-ox-tweet-copy-url="https://x.com/i/web/status/555"');
     expect(blue).toContain('aria-label="Copy link to post"');
-    expect(blue).toContain(">Copy link</a>");
+    expect(blue).toContain("ox-tweet__copy-text");
+    expect(blue).toContain("Copy link");
+    expect(blue).toContain("ox-tweet__copied-text");
+    expect(blue).toContain("Copied!");
+    expect(blue).not.toContain("<script");
     expect(blue).toContain("1.5K");
     expect(blue).toContain("<strong>44</strong> reposts");
     expect(blue).toContain("<strong>3</strong> quotes");
