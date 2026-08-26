@@ -5,6 +5,7 @@ import {
   splitPlayInfo,
 } from "./authoring";
 import type { CodePlayPreset, ViewerFlags } from "./types";
+import type { ParsedProjectOptions } from "./authoring";
 
 export { parseCodePlayAttributes, parsePlayMeta, type ParsedPlayOptions } from "./authoring";
 
@@ -21,6 +22,7 @@ export interface PlayFence {
   ui?: CodePlayPreset;
   viewers?: Partial<ViewerFlags>;
   timeoutMs?: number;
+  project?: ParsedProjectOptions;
 }
 
 export interface ParsedFence {
@@ -106,6 +108,7 @@ export function parsePlayFences(source: string): PlayFence[] {
         ui: options.ui,
         viewers: options.viewers,
         timeoutMs: options.timeoutMs,
+        project: options.project,
       };
     });
 }
@@ -171,6 +174,7 @@ export function parseCodePlayTags(source: string): PlayFence[] {
       ui: options.ui,
       viewers: options.viewers,
       timeoutMs: options.timeoutMs,
+      project: options.project,
     });
   }
   return tags;

@@ -7,6 +7,7 @@ import type {
   AdapterRequest,
   CodePlayTransport,
   PlaygroundEndpoints,
+  ProjectSandbox,
   ResolvedLanguageEnable,
   RunResult,
   SessionEventMap,
@@ -38,6 +39,7 @@ export class CodePlaySession {
   private readonly timeoutMs: number;
   private readonly transport: CodePlayTransport;
   private readonly endpoints: PlaygroundEndpoints;
+  private readonly project: ProjectSandbox | undefined;
   private readonly loadTypeScript?: () => Promise<TypeScriptLike | undefined>;
   private readonly listeners = new Map<SessionEventName, Set<Listener<unknown>>>();
   private abort: AbortController | undefined;
@@ -50,6 +52,7 @@ export class CodePlaySession {
     this.timeoutMs = input.timeoutMs;
     this.transport = input.transport;
     this.endpoints = input.endpoints;
+    this.project = input.project;
     this.loadTypeScript = input.loadTypeScript;
   }
 
@@ -94,6 +97,7 @@ export class CodePlaySession {
       transport: this.transport,
       loadTypeScript: this.loadTypeScript,
       endpoints: this.endpoints,
+      project: this.project,
       signal,
     };
     try {
@@ -133,5 +137,6 @@ export interface SessionConstructorInput extends SessionInput {
   timeoutMs: number;
   transport: CodePlayTransport;
   endpoints: PlaygroundEndpoints;
+  project?: ProjectSandbox;
   loadTypeScript?: () => Promise<TypeScriptLike | undefined>;
 }

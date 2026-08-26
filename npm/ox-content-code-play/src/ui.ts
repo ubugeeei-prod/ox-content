@@ -1,10 +1,11 @@
 import { resolveLanguage } from "./catalog";
-import { escapeHtml } from "./escape";
+import { escapeAttribute, escapeHtml } from "./escape";
 import { idleRunActionState } from "./hydrate-action";
 import type {
   CodePlayPreset,
   LanguageDefinition,
   PlayPayload,
+  ProjectSandbox,
   RunActionState,
   RunResult,
 } from "./types";
@@ -96,7 +97,7 @@ function renderRuntimeStrip(
     runtimeChip("Executor", executor.label, executor.kind),
     runtimeChip("Checks", checks, payload.capabilities.typecheck ? "ok" : "muted"),
   ].join("");
-  return `<div class="ox-code-play__runtime" aria-label="Code Play runtime">${chips}</div>`;
+  return `<div class="ox-code-play__runtime" aria-label="Code Play runtime">${chips}${renderProjectSandboxHtml(payload.project)}</div>`;
 }
 
 function runtimeLabel(
@@ -138,6 +139,32 @@ function executorLabel(
 
 function runtimeChip(label: string, value: string, kind: "ok" | "warn" | "muted"): string {
   return `<span class="ox-code-play__runtime-chip ox-code-play__runtime-chip--${kind}"><span>${escapeHtml(label)}</span><strong>${escapeHtml(value)}</strong></span>`;
+}
+
+export function renderProjectSandboxHtml(project: ProjectSandbox | undefined): string {
+  if (!project) {
+    return "";
+  }
+  const fileCount = `${project.files.length} ${project.files.length === 1 ? "file" : "files"}`;
+  const target =
+    project.target === "browser"
+      ? "Browser project"
+      : project.target === "node"
+        ? "Node-like project"
+        : "External project";
+  const url = project.openUrl ?? project.fallbackUrl;
+  const warnings = project.warnings?.length
+    ? `<span class="ox-code-play__project-warning" title="${escapeAttribute(project.warnings.join("\n"))}">Warnings</span>`
+    : "";
+  const link = url
+    ? `<a class="ox-code-play__project-link" href="${escapeAttribute(url)}" target="_blank" rel="noopener noreferrer">Open</a>`
+    : "";
+  return `<span class="ox-code-play__project" data-ox-project-provider="${escapeAttribute(project.provider)}">
+    <span class="ox-code-play__project-main"><span>${escapeHtml(project.label)}</span><strong>${escapeHtml(target)}</strong></span>
+    ${project.entry ? `<span class="ox-code-play__project-entry"><span>Entry</span><strong>${escapeHtml(project.entry)}</strong></span>` : ""}
+    <span class="ox-code-play__project-files">${escapeHtml(fileCount)}</span>
+    ${warnings}${link}
+  </span>`;
 }
 
 function renderTabs(state: UiState, panel: string): string {

@@ -1,12 +1,14 @@
 import { mkdtemp, readFile, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
-import { expect, test, type Page } from "@playwright/test";
+import { expect, test } from "@playwright/test";
 import { bundleBrowserClient } from "../../../ox-content-code-play/src/bundle-browser";
 import { resolveCodePlayOptions } from "../../../ox-content-code-play/src/config";
 import { enhancePlayHtml } from "../../../ox-content-code-play/src/html";
+import { parsePlayFences } from "../../../ox-content-code-play/src/markdown";
 import { decodePayload, encodePayload } from "../../../ox-content-code-play/src/payload";
 import { payloadFromFence } from "../../../ox-content-code-play/src/payload-factory";
+import { corsHeaders, fitsViewport, renderWidget, runWidget } from "./code-play-helpers";
 
 test("hydrates written SSG HTML and runs JavaScript in the browser sandbox", async ({ page }) => {
   const outDir = await mkdtemp(path.join(tmpdir(), "ox-code-play-vrt-"));
@@ -283,49 +285,53 @@ test("surfaces Rust playground transport failures as offline in the browser", as
   }
 });
 
-function renderWidget(
-  language: string,
-  code: string,
-  title: string,
-  options: ReturnType<typeof resolveCodePlayOptions>,
-): string {
-  const payload = encodePayload(
-    payloadFromFence(
-      {
-        language,
-        meta: `play play-title="${title}"`,
-        code,
-        raw: "",
-        start: 0,
-        end: 0,
-        typecheck: false,
-        title,
-        config: {},
-      },
-      options,
-    ),
-  );
-  const escapedCode = code.replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;");
-  return enhancePlayHtml(`<pre><code class="language-${language}">${escapedCode}</code></pre>`, {
-    decodePayload,
-    encodePayload,
-    matchFences: [{ language, code, payload }],
-  });
-}
+test("renders project sandbox fallback links on mobile without provider scripts", async ({
+  page,
+}) => {
+  const outDir = await mkdtemp(path.join(tmpdir(), "ox-code-play-vrt-project-"));
+  try {
+    await page.setViewportSize({ width: 390, height: 844 });
+    await bundleBrowserClient(outDir);
+    const client = await readFile(path.join(outDir, "browser.mjs"), "utf8");
+    const options = resolveCodePlayOptions({ languages: { typescript: true } });
+    const source = [
+      '```ts play play-title="Project demo" play-project=stackblitz play-file=src/main.ts play-entry=src/main.ts play-project-url=https://stackblitz.com/edit/ox-content-project',
+      'console.log("project");',
+      "```",
+    ].join("\n");
+    const fence = parsePlayFences(source)[0];
+    if (!fence) {
+      throw new Error("expected a project Code Play fence");
+    }
+    const payload = encodePayload(
+      payloadFromFence(fence, options, {
+        files: [{ path: "package.json", code: '{"scripts":{"dev":"vite"}}\n' }],
+      }),
+    );
+    const widget = enhancePlayHtml(`<pre><code class="language-ts">${fence.code}</code></pre>`, {
+      decodePayload,
+      encodePayload,
+      matchFences: [{ language: "ts", code: fence.code, payload }],
+    });
 
-async function runWidget(page: Page, title: string, output: string): Promise<void> {
-  const widget = page.getByRole("region", { name: new RegExp(title) });
-  await widget.getByRole("button", { name: /Run/ }).click();
-  await expect(widget.locator("[data-ox-status]")).toHaveText("Done");
-  await expect(widget.locator(".ox-code-play__stdio-text")).toContainText(output, {
-    timeout: 10_000,
-  });
-}
+    await page.setContent(
+      `<!doctype html><html><head><meta charset="utf-8"></head><body>${widget}<script type="module">${client}</script></body></html>`,
+      { waitUntil: "domcontentloaded" },
+    );
 
-function corsHeaders(): Record<string, string> {
-  return {
-    "access-control-allow-origin": "*",
-    "access-control-allow-methods": "POST, OPTIONS",
-    "access-control-allow-headers": "content-type",
-  };
-}
+    const project = page.getByRole("region", { name: /Project demo/ });
+    await expect(project.locator(".ox-code-play__project")).toBeVisible();
+    await expect(project).toContainText("StackBlitz");
+    await expect(project).toContainText("2 files");
+    await expect(project.getByRole("link", { name: "Open" })).toHaveAttribute(
+      "href",
+      "https://stackblitz.com/edit/ox-content-project",
+    );
+    await expect(page.locator('script[src*="stackblitz"], iframe[src*="stackblitz"]')).toHaveCount(
+      0,
+    );
+    expect(await fitsViewport(page)).toBe(true);
+  } finally {
+    await rm(outDir, { recursive: true, force: true });
+  }
+});

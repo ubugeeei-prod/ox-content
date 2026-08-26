@@ -57,6 +57,19 @@ sample. The MDX-style `<CodePlay>` tag accepts `title`, `ui`, `timeout`,
 </CodePlay>
 ```
 
+Project-level examples stay opt-in per sample:
+
+````md
+```ts play play-project=stackblitz play-file=src/main.ts play-entry=src/main.ts play-files=package.json,src/App.tsx play-project-url=https://stackblitz.com/edit/example
+console.log("project");
+```
+````
+
+`play-file` names the current fence inside the project, `play-files` lists
+extra files relative to the Markdown source file, and `play-project-url`
+provides the external fallback link. Providers are metadata adapters; no
+StackBlitz, CodeSandbox, or WebContainer script is loaded by Code Play.
+
 ## Headless API
 
 ```ts
@@ -95,6 +108,9 @@ visitor-supplied snippets as `play`.
   The Vite `/__ox-code-play/*` proxy is **dev-only**.
 - Other languages need a Piston-compatible `endpoint` you trust.
 - `sh` never spawns a local shell.
+- Project sandboxes include trusted source in the static payload. `play-files`
+  are read only from relative paths inside the configured Markdown source root,
+  with symlink real paths checked before embedding.
 
 ## Example
 

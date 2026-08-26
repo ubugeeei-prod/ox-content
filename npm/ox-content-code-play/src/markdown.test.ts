@@ -47,6 +47,39 @@ describe("markdown and viewers", () => {
     expect(stripPlayMeta(fence?.meta ?? "")).toBe('annotate="highlight:1"');
   });
 
+  it("parses project sandbox authoring without leaking project keys into config", () => {
+    const source = [
+      '```ts play play-project=stackblitz play-entry=src/main.ts play-file=src/main.ts play-files=package.json,src/App.tsx play-project-url=https://stackblitz.com/edit/ox-content annotate="highlight:1"',
+      "console.log('project');",
+      "```",
+    ].join("\n");
+    const fence = parsePlayFences(source)[0];
+    expect(fence?.project).toEqual({
+      provider: "stackblitz",
+      entry: "src/main.ts",
+      file: "src/main.ts",
+      files: ["package.json", "src/App.tsx"],
+      openUrl: "https://stackblitz.com/edit/ox-content",
+    });
+    expect(fence?.config).toEqual({});
+    expect(stripPlayMeta(fence?.meta ?? "")).toBe('annotate="highlight:1"');
+
+    const payload = payloadFromFence(
+      fence!,
+      resolveCodePlayOptions({ languages: { typescript: true } }),
+    );
+    expect(payload.project).toMatchObject({
+      provider: "stackblitz",
+      label: "StackBlitz",
+      target: "browser",
+      entry: "src/main.ts",
+      openUrl: "https://stackblitz.com/edit/ox-content",
+    });
+    expect(payload.project?.files).toEqual([
+      { path: "src/main.ts", code: "console.log('project');" },
+    ]);
+  });
+
   it("rewrites play fences to comments and parses CodePlay tags", () => {
     const options = resolveCodePlayOptions({ languages: { typescript: true } });
     const rewritten = rewritePlayFences("```ts play\nconst n = 1;\n```", (fence) =>
@@ -70,6 +103,16 @@ describe("markdown and viewers", () => {
       ui: "compact",
       timeoutMs: 3000,
       config: { strict: false, withVet: false },
+    });
+    const projectTags = parseCodePlayTags(
+      `<CodePlay lang="ts" project="codesandbox" entry="src/main.ts" file="src/main.ts" files="package.json,src/App.tsx" project-url="https://codesandbox.io/p/sandbox/demo">\nconst n = 1\n</CodePlay>`,
+    );
+    expect(projectTags[0]?.project).toMatchObject({
+      provider: "codesandbox",
+      entry: "src/main.ts",
+      file: "src/main.ts",
+      files: ["package.json", "src/App.tsx"],
+      openUrl: "https://codesandbox.io/p/sandbox/demo",
     });
   });
 

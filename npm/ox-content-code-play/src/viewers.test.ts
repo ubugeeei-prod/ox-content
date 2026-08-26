@@ -127,6 +127,31 @@ describe("stderr UI flags", () => {
     expect(ready).toContain("On demand");
   });
 
+  it("renders project sandbox metadata and fallback links", () => {
+    const html = renderPlayUi({
+      payload: payload({
+        project: {
+          provider: "stackblitz",
+          label: "StackBlitz",
+          target: "browser",
+          entry: "src/main.ts",
+          files: [
+            { path: "src/main.ts", code: "console.log(1)" },
+            { path: "package.json", code: "{}" },
+          ],
+          openUrl: "https://stackblitz.com/edit/demo",
+          warnings: ["Skipped missing project file: src/missing.ts"],
+        },
+      }),
+    });
+    expect(html).toContain('data-ox-project-provider="stackblitz"');
+    expect(html).toContain("Browser project");
+    expect(html).toContain("src/main.ts");
+    expect(html).toContain("2 files");
+    expect(html).toContain('href="https://stackblitz.com/edit/demo"');
+    expect(html).toContain("Warnings");
+  });
+
   it("omits the stderr tab and panel when viewers.stderr is false", () => {
     const html = renderPlayUi({
       payload: payload({ viewers: { ...DEFAULT_VIEWERS, stderr: false } }),

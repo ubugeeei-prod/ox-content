@@ -1,3 +1,6 @@
+import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
+import path from "node:path";
 import { describe, expect, it } from "vite-plus/test";
 import { DEV_GO_PATH, DEV_RUST_PATH, DEV_TYPECHECK_PATH } from "./config";
 import { decodePayload } from "./payload";
@@ -123,6 +126,76 @@ describe("codePlay vite plugin", () => {
     expect(payload.config.strict).toBe(false);
   });
 
+  it("collects project sandbox files from the Markdown source root", () => {
+    const root = mkdtempSync(path.join(tmpdir(), "ox-code-play-project-"));
+    try {
+      mkdirSync(path.join(root, "content", "src"), { recursive: true });
+      const documentPath = path.join(root, "content", "guide.md");
+      writeFileSync(path.join(root, "content", "package.json"), '{"scripts":{"dev":"vite"}}\n');
+      writeFileSync(path.join(root, "content", "src", "App.tsx"), "export function App() {}\n");
+
+      const plugin = codePlay({ languages: { typescript: true }, srcDir: "content" });
+      resolveCommand(plugin, "build", root);
+      const payload = payloadFromTransform(
+        plugin,
+        [
+          "```ts play play-project=stackblitz play-file=src/main.ts play-entry=src/main.ts play-files=package.json,src/App.tsx play-project-url=https://stackblitz.com/edit/ox-content",
+          'console.log("project");',
+          "```",
+        ].join("\n"),
+        documentPath,
+      );
+
+      expect(payload.project).toMatchObject({
+        provider: "stackblitz",
+        label: "StackBlitz",
+        target: "browser",
+        entry: "src/main.ts",
+      });
+      expect(payload.project?.files.map((file) => file.path)).toEqual([
+        "src/main.ts",
+        "package.json",
+        "src/App.tsx",
+      ]);
+      expect(payload.project?.files[1]?.code).toBe('{"scripts":{"dev":"vite"}}\n');
+      expect(payload.project?.warnings).toBeUndefined();
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+
+  it("drops unsafe project files and provider URLs from payloads", () => {
+    const root = mkdtempSync(path.join(tmpdir(), "ox-code-play-project-unsafe-"));
+    try {
+      mkdirSync(path.join(root, "content", "src"), { recursive: true });
+      const documentPath = path.join(root, "content", "guide.md");
+      writeFileSync(path.join(root, "content", "src", "safe.ts"), "export const safe = true;\n");
+
+      const plugin = codePlay({ languages: { typescript: true }, srcDir: "content" });
+      resolveCommand(plugin, "build", root);
+      const payload = payloadFromTransform(
+        plugin,
+        [
+          "```ts play play-project=stackblitz play-file=src/main.ts play-files=../secret.ts,missing.ts,src/safe.ts play-project-url=https://example.com/not-stackblitz",
+          'console.log("project");',
+          "```",
+        ].join("\n"),
+        documentPath,
+      );
+
+      expect(payload.project?.openUrl).toBeUndefined();
+      expect(payload.project?.files.map((file) => file.path)).toEqual([
+        "src/main.ts",
+        "src/safe.ts",
+      ]);
+      expect(payload.project?.warnings?.join("\n")).toMatch(/unsafe project file path/);
+      expect(payload.project?.warnings?.join("\n")).toMatch(/missing project file/);
+      expect(payload.project?.warnings?.join("\n")).toMatch(/unexpected host/);
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+
   it("does not request a browser client asset until a play fence is transformed", async () => {
     const plugin = codePlay({ languages: { javascript: true } });
     resolveCommand(plugin, "build");
@@ -156,19 +229,23 @@ describe("codePlay vite plugin", () => {
   });
 });
 
-function resolveCommand(plugin: { configResolved?: unknown }, command: "build" | "serve"): void {
+function resolveCommand(
+  plugin: { configResolved?: unknown },
+  command: "build" | "serve",
+  root = "/",
+): void {
   hookFn(plugin.configResolved)({
     command,
-    root: "/",
+    root,
     base: "/",
     build: { outDir: "dist" },
   } as never);
 }
 
-function payloadFromTransform(plugin: { transform?: unknown }, code: string) {
+function payloadFromTransform(plugin: { transform?: unknown }, code: string, id = "page.md") {
   const rewritten = (hookFn(plugin.transform) as (source: string, id: string) => string | null)(
     code,
-    "page.md",
+    id,
   );
   const match =
     typeof rewritten === "string" ? /<!--ox-code-play:([A-Za-z0-9+/=]+)-->/.exec(rewritten) : null;

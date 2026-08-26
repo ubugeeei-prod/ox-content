@@ -3,6 +3,7 @@ import { DEFAULT_ENDPOINTS, DEFAULT_VIEWERS } from "./config";
 import { decodeHtml, escapeAttribute } from "./escape";
 import { parseCodePlayAttributes } from "./markdown";
 import { payloadTypecheckEnabled } from "./payload-factory";
+import { projectSandboxFromPayloadInput } from "./project-sandbox";
 import type { PlaygroundEndpoints, PlayPayload } from "./types";
 
 const COMMENT_PATTERN = /<!--ox-code-play:([A-Za-z0-9+/=]+)-->\s*(<pre\b[\s\S]*?<\/pre>)/gi;
@@ -67,7 +68,7 @@ function upgradeCodePlayTags(html: string, options: HtmlEnhanceOptions): string 
     const definition = resolveLanguage(language);
     const endpoints = options.endpoints ?? DEFAULT_ENDPOINTS;
     const playOptions = parseCodePlayAttributes(attrs);
-    const payload = options.encodePayload({
+    const payloadValue: PlayPayload = {
       language: definition?.id ?? language,
       code,
       title: playOptions.title,
@@ -80,7 +81,17 @@ function upgradeCodePlayTags(html: string, options: HtmlEnhanceOptions): string 
       ui: playOptions.ui ?? "default",
       timeoutMs: playOptions.timeoutMs ?? 10_000,
       endpoints,
+    };
+    const project = projectSandboxFromPayloadInput({
+      language: payloadValue.language,
+      code,
+      definition,
+      project: playOptions.project,
     });
+    if (project) {
+      payloadValue.project = project;
+    }
+    const payload = options.encodePayload(payloadValue);
     return wrapWidget(
       payload,
       `<pre><code class="language-${escapeAttribute(language)}">${body}</code></pre>`,

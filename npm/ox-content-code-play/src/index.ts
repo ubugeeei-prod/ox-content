@@ -24,7 +24,13 @@ export {
   runningRunActionState,
   runPlayAction,
 } from "./hydrate-action";
-export { renderPlayUi, renderRunStatusText } from "./ui";
+export { renderPlayUi, renderProjectSandboxHtml, renderRunStatusText } from "./ui";
+export {
+  PROJECT_SANDBOX_ADAPTERS,
+  normalizeProjectPath,
+  projectSandboxFromPayloadInput,
+  projectSandboxProviderLabel,
+} from "./project-sandbox";
 export {
   renderConfigHtml,
   renderDiagnosticsHtml,
@@ -47,6 +53,12 @@ export type {
   LanguageEnable,
   PlayPayload,
   Provenance,
+  ProjectSandbox,
+  ProjectSandboxAdapter,
+  ProjectSandboxAdapterInput,
+  ProjectSandboxFile,
+  ProjectSandboxProvider,
+  ProjectSandboxTarget,
   RunAction,
   RunActionPhase,
   RunActionState,

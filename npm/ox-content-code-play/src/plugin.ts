@@ -1,5 +1,5 @@
 import { readFile, writeFile } from "node:fs/promises";
-import { existsSync, readFileSync, readdirSync, statSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import path from "node:path";
 import type { Plugin, ViteDevServer } from "vite";
 import { resolveLanguage } from "./catalog";
@@ -12,9 +12,19 @@ import {
   type ResolvedCodePlayOptions,
 } from "./config";
 import { enhanceGeneratedModule, enhancePlayHtml, type HtmlEnhanceOptions } from "./html";
-import { parseCodePlayTags, parsePlayFences, rewritePlayFences } from "./markdown";
+import { parseCodePlayTags, parsePlayFences, rewritePlayFences, type PlayFence } from "./markdown";
 import { decodePayload, encodePayload } from "./payload";
-import { payloadFromFence } from "./payload-factory";
+import { payloadFromFence, type PayloadFromFenceContext } from "./payload-factory";
+import { collectProjectFiles } from "./project-files";
+import {
+  MARKDOWN_RE,
+  cleanMarkdownPath,
+  guessHtmlPath,
+  normalizeBase,
+  sourceRoot,
+  urlToMarkdown,
+  walkFiles,
+} from "./plugin-paths";
 import {
   assertBrowserClientSource,
   resolveClientFile,
@@ -27,7 +37,6 @@ export type CodePlayPluginOptions = RawCodePlayOptions;
 
 const VIRTUAL_ID = "virtual:ox-content/code-play";
 const RESOLVED_VIRTUAL = `\0${VIRTUAL_ID}`;
-const MARKDOWN_RE = /\.(?:md|markdown|mdx)(?:$|\?)/i;
 
 export function codePlay(options: CodePlayPluginOptions = {}): Plugin {
   const resolved = resolveCodePlayOptions(options);
@@ -97,7 +106,13 @@ export function codePlay(options: CodePlayPluginOptions = {}): Plugin {
         if (!definition || !resolved.languages.has(definition.id)) {
           return null;
         }
-        return encodePayload(payloadFromFence(fence, resolved));
+        return encodePayload(
+          payloadFromFence(
+            fence,
+            resolved,
+            projectContextForFence(fence, cleanMarkdownPath(id, root), sourceRoot(root, resolved)),
+          ),
+        );
       });
       if (rewritten === code) {
         return null;
@@ -220,6 +235,7 @@ function enhanceHtmlForUrl(
     return undefined;
   }
   const source = readFileSync(markdownPath, "utf8");
+  const srcRoot = sourceRoot(root, resolved);
   const fences = [...parsePlayFences(source), ...parseCodePlayTags(source)].filter((fence) => {
     const definition = resolveLanguage(fence.language);
     return Boolean(definition && resolved.languages.has(definition.id));
@@ -233,31 +249,12 @@ function enhanceHtmlForUrl(
       fences.map((fence) => ({
         language: fence.language,
         code: fence.code,
-        payload: encodePayload(payloadFromFence(fence, resolved)),
+        payload: encodePayload(
+          payloadFromFence(fence, resolved, projectContextForFence(fence, markdownPath, srcRoot)),
+        ),
       })),
     ),
   );
-}
-
-function urlToMarkdown(
-  urlPath: string,
-  root: string,
-  srcDir: string,
-  base: string,
-): string | undefined {
-  let relative = urlPath;
-  if (base !== "/" && relative.startsWith(base)) {
-    relative = relative.slice(base.length);
-  }
-  relative = relative.replace(/^\//, "").replace(/\.html$/, "");
-  if (!relative || relative.includes("..")) {
-    return undefined;
-  }
-  const candidates = [
-    path.resolve(root, srcDir, `${relative}.md`),
-    path.resolve(root, srcDir, relative, "index.md"),
-  ];
-  return candidates.find((candidate) => existsSync(candidate));
 }
 
 function mountProxies(server: ViteDevServer, rustUrl: string, goUrl: string): void {
@@ -304,7 +301,9 @@ async function enhanceWrittenPages(
         fences.map((fence) => ({
           language: fence.language,
           code: fence.code,
-          payload: encodePayload(payloadFromFence(fence, resolved)),
+          payload: encodePayload(
+            payloadFromFence(fence, resolved, projectContextForFence(fence, file, srcDir)),
+          ),
         })),
       ),
     );
@@ -316,35 +315,18 @@ async function enhanceWrittenPages(
   return enhancedAny;
 }
 
-function guessHtmlPath(file: string, srcDir: string, outDir: string): string | undefined {
-  const relative = path.relative(srcDir, file).replace(/\.(?:md|markdown|mdx)$/i, "");
-  const candidates = [
-    path.join(outDir, `${relative}.html`),
-    path.join(outDir, relative, "index.html"),
-  ];
-  return candidates.find((candidate) => existsSync(candidate));
-}
-
-function walkFiles(dir: string): string[] {
-  const entries = readdirSync(dir);
-  const files: string[] = [];
-  for (const entry of entries) {
-    const full = path.join(dir, entry);
-    const stat = statSync(full);
-    if (stat.isDirectory()) {
-      files.push(...walkFiles(full));
-    } else {
-      files.push(full);
-    }
+function projectContextForFence(
+  fence: Pick<PlayFence, "project">,
+  documentPath: string | undefined,
+  srcRoot: string,
+): PayloadFromFenceContext {
+  if (!fence.project) {
+    return {};
   }
-  return files;
-}
-
-function normalizeBase(base: string): string {
-  if (!base || base === "/") {
-    return "/";
-  }
-  return base.endsWith("/") ? base : `${base}/`;
+  return collectProjectFiles(fence.project, {
+    documentPath,
+    sourceRoot: srcRoot,
+  });
 }
 
 export type { CodePlayPluginOptions as CodePlayOptions };

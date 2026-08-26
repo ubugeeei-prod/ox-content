@@ -176,10 +176,47 @@ export interface ViewerFlags {
 
 export type CodePlayPreset = "default" | "compact" | "headless";
 
+export type ProjectSandboxProvider = "stackblitz" | "codesandbox" | "webcontainer" | "external";
+
+export type ProjectSandboxTarget = "browser" | "node" | "external";
+
+export interface ProjectSandboxFile {
+  path: string;
+  code: string;
+}
+
+export interface ProjectSandbox {
+  provider: ProjectSandboxProvider;
+  label: string;
+  target: ProjectSandboxTarget;
+  entry?: string;
+  files: ProjectSandboxFile[];
+  openUrl?: string;
+  fallbackUrl?: string;
+  warnings?: string[];
+}
+
+export interface ProjectSandboxAdapterInput {
+  provider: string;
+  entry?: string;
+  files: ProjectSandboxFile[];
+  openUrl?: string;
+  fallbackUrl?: string;
+  warnings?: string[];
+}
+
+export interface ProjectSandboxAdapter {
+  provider: ProjectSandboxProvider;
+  label: string;
+  target: ProjectSandboxTarget;
+  resolve(input: ProjectSandboxAdapterInput): ProjectSandbox;
+}
+
 export interface SessionInput {
   language: string;
   code: string;
   config?: Record<string, unknown>;
+  project?: ProjectSandbox;
 }
 
 export interface PlayPayload {
@@ -194,6 +231,7 @@ export interface PlayPayload {
   ui: CodePlayPreset;
   timeoutMs: number;
   endpoints?: PlaygroundEndpoints;
+  project?: ProjectSandbox;
 }
 
 export interface TypeScriptLike {
@@ -244,6 +282,7 @@ export interface AdapterRequest {
   transport: CodePlayTransport;
   loadTypeScript?: () => Promise<TypeScriptLike | undefined>;
   endpoints: PlaygroundEndpoints;
+  project?: ProjectSandbox;
   signal?: AbortSignal;
 }
 

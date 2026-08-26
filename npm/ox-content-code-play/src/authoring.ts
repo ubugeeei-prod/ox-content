@@ -7,6 +7,16 @@ export interface ParsedPlayOptions {
   ui?: CodePlayPreset;
   viewers?: Partial<ViewerFlags>;
   timeoutMs?: number;
+  project?: ParsedProjectOptions;
+}
+
+export interface ParsedProjectOptions {
+  provider: string;
+  entry?: string;
+  file?: string;
+  files: string[];
+  openUrl?: string;
+  fallbackUrl?: string;
 }
 
 export function parsePlayMeta(meta: string): ParsedPlayOptions {
@@ -54,6 +64,9 @@ export function parseCodePlayAttributes(attrs: string): ParsedPlayOptions {
     }
     if (name === "viewers") {
       options.viewers = parseViewers(value);
+      continue;
+    }
+    if (applyProjectAttribute(options, name, value)) {
       continue;
     }
     if (name.startsWith("config-")) {
@@ -134,6 +147,9 @@ function applyPlayOption(options: ParsedPlayOptions, rawName: string, value: str
     options.viewers = parseViewers(value);
     return;
   }
+  if (applyProjectMeta(options, rawName, value)) {
+    return;
+  }
   const configKey =
     name.startsWith("play-config:") || name.startsWith("play-config.")
       ? rawName.slice("play-config:".length)
@@ -143,6 +159,71 @@ function applyPlayOption(options: ParsedPlayOptions, rawName: string, value: str
   if (configKey) {
     options.config[configKey] = coerceOptionValue(value);
   }
+}
+
+function applyProjectMeta(options: ParsedPlayOptions, rawName: string, value: string): boolean {
+  const name = rawName.toLowerCase();
+  switch (name) {
+    case "play-project":
+    case "play-sandbox":
+    case "play-provider":
+      ensureProject(options, value);
+      return true;
+    case "play-entry":
+      ensureProject(options).entry = value;
+      return true;
+    case "play-file":
+      ensureProject(options).file = value;
+      return true;
+    case "play-files":
+      ensureProject(options).files.push(...splitList(value));
+      return true;
+    case "play-project-url":
+    case "play-open-url":
+      ensureProject(options).openUrl = value;
+      return true;
+    case "play-fallback-url":
+      ensureProject(options).fallbackUrl = value;
+      return true;
+    default:
+      return false;
+  }
+}
+
+function applyProjectAttribute(options: ParsedPlayOptions, name: string, value: string): boolean {
+  switch (name) {
+    case "project":
+    case "sandbox":
+    case "provider":
+      ensureProject(options, value);
+      return true;
+    case "entry":
+      ensureProject(options).entry = value;
+      return true;
+    case "file":
+      ensureProject(options).file = value;
+      return true;
+    case "files":
+      ensureProject(options).files.push(...splitList(value));
+      return true;
+    case "project-url":
+    case "open-url":
+      ensureProject(options).openUrl = value;
+      return true;
+    case "fallback-url":
+      ensureProject(options).fallbackUrl = value;
+      return true;
+    default:
+      return false;
+  }
+}
+
+function ensureProject(options: ParsedPlayOptions, provider = "external"): ParsedProjectOptions {
+  options.project ??= { provider, files: [] };
+  if (provider && options.project.provider === "external") {
+    options.project.provider = provider;
+  }
+  return options.project;
 }
 
 function readTokenPair(token: string): { name: string; value: string } | undefined {
@@ -192,6 +273,13 @@ function parseViewers(value: string): Partial<ViewerFlags> | undefined {
     }
   }
   return Object.keys(viewers).length > 0 ? viewers : undefined;
+}
+
+function splitList(value: string): string[] {
+  return value
+    .split(",")
+    .map((item) => item.trim())
+    .filter(Boolean);
 }
 
 function coerceOptionValue(value: string): string | number | boolean {

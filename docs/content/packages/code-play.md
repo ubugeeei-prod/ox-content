@@ -114,6 +114,23 @@ HTML / MDX form:
 </CodePlay>
 ```
 
+Project-level examples opt in per sample with `play-project` or `project`.
+The current fence stays the primary executable snippet, while project metadata
+adds file names, provider choice, and an external fallback link:
+
+````md
+```ts play play-project=stackblitz play-file=src/main.ts play-entry=src/main.ts play-files=package.json,src/App.tsx play-project-url=https://stackblitz.com/edit/example
+console.log("project");
+```
+````
+
+`play-file` names the current fence inside the project. `play-files` is a
+comma-separated list of extra files, resolved relative to the Markdown source
+file and confined to `srcDir`. Supported provider metadata adapters are
+`stackblitz`, `codesandbox`, `webcontainer`, and `external`. Code Play does
+not load provider scripts; the generated widget renders project metadata and
+an **Open** fallback link when a safe `http(s)` URL is supplied.
+
 ## Headless API
 
 ```ts
@@ -249,6 +266,11 @@ ship. Do not mark visitor-supplied or unreviewed snippets as `play`.
 - A Piston-compatible `languages.<id>.endpoint` receives source for that
   language. Only set HTTPS endpoints you trust, without embedded
   credentials.
+- Project sandbox payloads embed trusted source for the current fence and any
+  `play-files` entries. Extra files must be relative paths under the Markdown
+  source root; symlink real paths are checked before embedding, missing or
+  oversized files become widget warnings, and provider URLs are limited to
+  `http(s)` without credentials.
 
 ## First publish
 

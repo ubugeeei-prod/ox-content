@@ -1,9 +1,24 @@
 import { resolveLanguage } from "./catalog";
 import type { ResolvedCodePlayOptions } from "./config";
 import type { PlayFence } from "./markdown";
-import type { LanguageDefinition, PlayPayload, PlaygroundEndpoints } from "./types";
+import { projectSandboxFromPayloadInput } from "./project-sandbox";
+import type {
+  LanguageDefinition,
+  PlayPayload,
+  PlaygroundEndpoints,
+  ProjectSandboxFile,
+} from "./types";
 
-export function payloadFromFence(fence: PlayFence, options: ResolvedCodePlayOptions): PlayPayload {
+export interface PayloadFromFenceContext {
+  files?: ProjectSandboxFile[];
+  warnings?: string[];
+}
+
+export function payloadFromFence(
+  fence: PlayFence,
+  options: ResolvedCodePlayOptions,
+  context: PayloadFromFenceContext = {},
+): PlayPayload {
   const definition = resolveLanguage(fence.language);
   const enabled = definition ? options.languages.get(definition.id) : undefined;
   const payload: PlayPayload = {
@@ -27,6 +42,17 @@ export function payloadFromFence(fence: PlayFence, options: ResolvedCodePlayOpti
   };
   if (enabled?.endpoint) {
     payload.endpoint = enabled.endpoint;
+  }
+  const project = projectSandboxFromPayloadInput({
+    language: payload.language,
+    code: payload.code,
+    definition,
+    project: fence.project,
+    files: context.files,
+    warnings: context.warnings,
+  });
+  if (project) {
+    payload.project = project;
   }
   return payload;
 }

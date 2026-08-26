@@ -93,6 +93,23 @@ HTML / MDX 形式:
 </CodePlay>
 ```
 
+プロジェクト単位の例は、サンプルごとに `play-project` または `project` で明示します。
+現在のフェンスは主たる実行スニペットのままにし、project metadata としてファイル名、
+provider、外部 fallback link を追加します。
+
+````md
+```ts play play-project=stackblitz play-file=src/main.ts play-entry=src/main.ts play-files=package.json,src/App.tsx play-project-url=https://stackblitz.com/edit/example
+console.log("project");
+```
+````
+
+`play-file` は現在のフェンスをプロジェクト内のどのファイルとして扱うかを指定します。
+`play-files` は追加ファイルのカンマ区切りリストで、Markdown source file からの相対パスとして
+解決され、`srcDir` の内側に制限されます。provider metadata adapter は
+`stackblitz`、`codesandbox`、`webcontainer`、`external` に対応しています。
+Code Play は provider script を読み込みません。安全な `http(s)` URL があるとき、
+生成された widget は project metadata と **Open** fallback link を描画します。
+
 ## Headless API
 
 ```ts
@@ -210,6 +227,10 @@ dev ミドルウェアが不要なら `proxy: false` にしてください。
   プライバシーポリシーが適用されます。
 - Piston 互換の `languages.<id>.endpoint` はその言語のソースを受け取ります。
   信頼できる HTTPS エンドポイントだけを、埋め込み認証情報なしで設定してください。
+- Project sandbox payload は、現在のフェンスと `play-files` の信頼済み source を埋め込みます。
+  追加ファイルは Markdown source root 配下の相対パスだけを受け付けます。symlink の実パスも
+  埋め込み前に検査され、存在しないファイルや大きすぎるファイルは widget warning になります。
+  provider URL は認証情報なしの `http(s)` に制限されます。
 
 ## 初回公開
 

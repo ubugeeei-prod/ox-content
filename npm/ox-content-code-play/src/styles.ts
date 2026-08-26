@@ -98,6 +98,64 @@ export const CODE_PLAY_STYLES = `
 .ox-code-play__runtime-chip--ok strong { color: var(--octc-color-primary, var(--octc-accent, #4f46e5)); }
 .ox-code-play__runtime-chip--warn strong { color: var(--octc-warning, #b54708); }
 .ox-code-play__runtime-chip--muted strong { opacity: 0.72; }
+.ox-code-play__project {
+  display: inline-flex;
+  flex: 1 1 18rem;
+  min-width: min(100%, 16rem);
+  gap: 0.45rem;
+  align-items: center;
+  flex-wrap: wrap;
+  margin-left: auto;
+  padding: 0.35rem 0.5rem;
+  border: 1px solid var(--octc-color-border, color-mix(in srgb, currentColor 14%, transparent));
+  border-radius: 6px;
+  background: var(--octc-color-bg, Canvas);
+}
+.ox-code-play__project-main,
+.ox-code-play__project-entry {
+  display: inline-grid;
+  gap: 0.1rem;
+  min-width: 0;
+}
+.ox-code-play__project-main { flex: 1 1 8.5rem; }
+.ox-code-play__project-entry { flex: 999 1 9rem; }
+.ox-code-play__project-main span,
+.ox-code-play__project-entry span {
+  font: 600 0.62rem/1.1 ui-sans-serif, system-ui, sans-serif;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  opacity: 0.62;
+}
+.ox-code-play__project-main strong,
+.ox-code-play__project-entry strong {
+  min-width: 0;
+  overflow-wrap: anywhere;
+  font: 650 0.78rem/1.2 ui-sans-serif, system-ui, sans-serif;
+}
+.ox-code-play__project-files,
+.ox-code-play__project-warning,
+.ox-code-play__project-link {
+  flex: 0 0 auto;
+  border-radius: 6px;
+  padding: 0.18rem 0.45rem;
+  font: 650 0.68rem/1.25 ui-sans-serif, system-ui, sans-serif;
+}
+.ox-code-play__project-files {
+  background: color-mix(in srgb, var(--octc-color-text, CanvasText) 8%, transparent);
+}
+.ox-code-play__project-warning {
+  color: var(--octc-warning, #b54708);
+  background: color-mix(in srgb, var(--octc-warning, #b54708) 12%, transparent);
+}
+.ox-code-play__project-link {
+  color: var(--octc-color-primary, var(--octc-accent, #4f46e5));
+  background: color-mix(in srgb, var(--octc-color-primary, var(--octc-accent, #4f46e5)) 12%, transparent);
+  text-decoration: none;
+}
+.ox-code-play__project-link:focus-visible {
+  outline: 2px solid var(--octc-color-primary, var(--octc-accent, #4f46e5));
+  outline-offset: 2px;
+}
 .ox-code-play .ox-code { margin: 0; }
 .ox-code-play__source pre { margin: 0; border: 0; border-radius: 0; }
 .ox-code-play__tabs {

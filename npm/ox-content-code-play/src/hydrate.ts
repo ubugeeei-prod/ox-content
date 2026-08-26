@@ -88,6 +88,7 @@ function bindWidget(element: HTMLElement, payload: PlayPayload, client: CodePlay
     language: payload.language,
     code: payload.code,
     config: payload.config,
+    project: payload.project,
   });
   const runButton = element.querySelector<HTMLButtonElement>('[data-ox-action="run"]');
   const checkButton = element.querySelector<HTMLButtonElement>('[data-ox-action="typecheck"]');

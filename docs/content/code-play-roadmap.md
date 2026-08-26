@@ -91,6 +91,15 @@ execute and framework previews, third-party playgrounds, endpoint trust,
 production typecheck / CORS, and the "no local shell" guarantee in
 SECURITY.md and the package guide.
 
+### 7. `feat(code-play): project-level sandbox provider adapters`
+
+Tracked in #873. Project examples add provider metadata adapters, multi-file
+payloads, safe Markdown-relative file collection, and fallback links while
+leaving ordinary single-file snippets on the existing local execution paths.
+StackBlitz, CodeSandbox, WebContainer, and external links are represented as
+payload metadata first; provider runtime scripts stay out of pages unless a
+later adapter runtime explicitly opts in.
+
 ## Out of Scope
 
 - Making Code Play a built-in `@ox-content/vite-plugin` option.
