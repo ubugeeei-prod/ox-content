@@ -331,6 +331,7 @@ async function renderPage(
     openGraph: options.embeds.openGraph,
     pm: options.embeds.pm,
     spotify: options.embeds.spotify,
+    appleMusic: options.embeds.appleMusic,
     stackBlitz: options.embeds.stackBlitz,
     twitter: options.embeds.twitter,
     bluesky: options.embeds.bluesky,

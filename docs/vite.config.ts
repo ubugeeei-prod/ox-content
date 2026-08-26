@@ -286,6 +286,7 @@ export default defineConfig(({ mode }) => {
           bluesky: true,
           webContainer: true,
           spotify: true,
+          appleMusic: true,
         },
 
         // Mermaid diagrams (native mmdc via NAPI)

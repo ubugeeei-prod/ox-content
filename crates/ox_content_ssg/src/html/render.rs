@@ -30,6 +30,9 @@ use super::{
     TABS_CSS, TABS_JS, YOUTUBE_CSS,
 };
 
+#[rustfmt::skip]
+const SOCIAL_IFRAME_MARKERS: &[&str] = &["ox-tweet", "ox-bluesky", "ox-webcontainer", "ox-spotify", "ox-apple-music", "ox-stackblitz"];
+
 /// Themed HTML plus page-head diagnostics.
 pub struct GeneratedHtml {
     pub html: String,
@@ -125,10 +128,7 @@ fn generate_html_inner(
     if page_content_contains_any(&page_data.content, &["ox-ogp-card", "ox-ogp-simple"]) {
         css_sections.push(wrap_css_section("plugin-ogp", OGP_CSS));
     }
-    if page_content_contains_any(
-        &page_data.content,
-        &["ox-tweet", "ox-bluesky", "ox-webcontainer", "ox-spotify", "ox-stackblitz"],
-    ) {
+    if page_content_contains_any(&page_data.content, SOCIAL_IFRAME_MARKERS) {
         css_sections.push(wrap_css_section("plugin-social", SOCIAL_CSS));
     }
     if page_content_contains_any(&page_data.content, &["ox-tweet--full"]) {

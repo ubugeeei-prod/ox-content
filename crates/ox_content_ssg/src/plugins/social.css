@@ -330,6 +330,7 @@
 
 /* Media iframes */
 .ox-spotify,
+.ox-apple-music,
 .ox-stackblitz {
   display: block;
   width: 100%;

@@ -1,0 +1,5 @@
+---
+source: crates/ox_content_transform/src/media_embeds/tests.rs
+expression: html
+---
+<iframe class="ox-apple-music" src="https://embed.music.apple.com/gb/album/1989-taylors-version/1708308989" title="Apple Music" width="100%" height="450" loading="lazy" allow="autoplay *; encrypted-media *; fullscreen *; clipboard-write" sandbox="allow-forms allow-popups allow-same-origin allow-scripts allow-storage-access-by-user-activation allow-top-navigation-by-user-activation" referrerpolicy="strict-origin-when-cross-origin"></iframe>
