@@ -89,6 +89,7 @@ fn javascript_wrapper_and_declarations_cover_expected_exports() {
         "renderHead",
         "renderSsgSectionIndex",
         "resolveSsgNavigationGroups",
+        "resolveSsgPageRoutes",
         "resolveSsgRoutePaths",
         "sanitizeHtml",
         "searchIndex",

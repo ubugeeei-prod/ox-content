@@ -71,6 +71,7 @@ renderFrameworkComponentCode
 renderHead
 renderSsgSectionIndex
 resolveSsgNavigationGroups
+resolveSsgPageRoutes
 resolveSsgRoutePaths
 sanitizeHtml
 searchIndex

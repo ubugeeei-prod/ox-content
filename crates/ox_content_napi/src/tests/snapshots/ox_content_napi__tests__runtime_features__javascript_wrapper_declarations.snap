@@ -1658,6 +1658,16 @@ export interface JsResolvedModule {
   exports: Array<JsPublicExport>
 }
 
+/** One page after cascade and optional permalink / slug rewriting. */
+export interface JsResolvedSsgRoutePage {
+  /** Source path relative to the content root. */
+  source: string
+  /** Resolved URL path. */
+  urlPath: string
+  /** Frontmatter after cascade fills. */
+  frontmatter: Record<string, unknown>
+}
+
 /** HTML sanitizer options. */
 export interface JsSanitizeOptions {
   /**
@@ -2022,6 +2032,24 @@ export interface JsSsgPageData {
   canonical?: string
   /** Companion `.md` URL when copy-as-markdown chrome is on. */
   markdownSource?: string
+}
+
+/** Resolved page routes plus collision and rejection diagnostics. */
+export interface JsSsgPageRouteOutput {
+  /** Pages that still have a unique URL. */
+  pages: Array<JsResolvedSsgRoutePage>
+  /** Human-readable collision and rejection messages. */
+  errors: Array<string>
+}
+
+/** One page considered for cascade and permalink resolution. */
+export interface JsSsgRoutePageInput {
+  /** Source path relative to the content root. */
+  source: string
+  /** File-tree URL before permalink or slug rewriting. */
+  fileUrl: string
+  /** Parsed frontmatter object. */
+  frontmatter: Record<string, unknown>
 }
 
 /** Resolved SSG output and public route paths. */
@@ -2797,6 +2825,9 @@ export declare function renderSsgSectionIndex(title: string, items: Array<JsSect
 
 /** Resolves manual SSG navigation groups. */
 export declare function resolveSsgNavigationGroups(navigation: Array<JsSsgNavigationGroup>, base: string, extension: string): Array<JsSsgNavGroup>
+
+/** Resolves permalink / slug routes and `_index` frontmatter cascade. */
+export declare function resolveSsgPageRoutes(pages: Array<JsSsgRoutePageInput>, permalinksEnabled: boolean, cascadeEnabled: boolean): JsSsgPageRouteOutput
 
 /** Resolves all output and public route paths for an SSG page. */
 export declare function resolveSsgRoutePaths(inputPath: string, srcDir: string, outDir: string, base: string, extension: string, siteUrl?: string | undefined | null): JsSsgRoutePaths

@@ -11,6 +11,8 @@ mod git;
 pub use git::*;
 mod head;
 pub use head::render_head;
+mod page_routes;
+pub use page_routes::*;
 mod section_index;
 pub use section_index::*;
 
