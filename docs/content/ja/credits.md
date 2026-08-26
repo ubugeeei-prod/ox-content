@@ -38,6 +38,8 @@ Markdown 属性とリッチなソーシャル埋め込みの見た目の同等�
   要望しました。
 - ryoppippi.com の移行中に、余分な HTML フォールバックページを出さない
   ホスト用リダイレクト出力を要望しました。
+- ryoppippi.com の移行中に、Vite middleware server を閉じると本番 SSG 出力が
+  繰り返されることを報告しました。
 - オプトインの `<NotByAI />` 執筆開示バッジは、ryoppippi.com の Ox Content
   移行で要望され、本番実装として先に入った機能です。
 

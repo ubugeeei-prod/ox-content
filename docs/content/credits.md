@@ -41,6 +41,8 @@ Contribution summary:
   migration.
 - Reported the need for host-only redirect output without redundant HTML
   fallback pages during the ryoppippi.com migration.
+- Reported that closing Vite middleware servers could repeat production SSG
+  output writes during the ryoppippi.com migration.
 - The opt-in `<NotByAI />` authorship badge was requested and first shipped
   in production during the ryoppippi.com Ox Content migration.
 

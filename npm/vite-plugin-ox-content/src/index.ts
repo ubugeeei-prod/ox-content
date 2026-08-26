@@ -440,8 +440,14 @@ function createSsgPlugin(
   getRoot: () => string,
   ssgDevCache: ReturnType<typeof createDevServerCache>,
 ): Plugin {
+  let command: "build" | "serve" | undefined;
+
   return {
     name: "ox-content:ssg",
+
+    config(_config, env) {
+      command = env.command;
+    },
 
     configureServer(devServer) {
       const ssgOptions = resolvedOptions.ssg;
@@ -473,7 +479,7 @@ function createSsgPlugin(
 
     async closeBundle() {
       const ssgOptions = resolvedOptions.ssg;
-      if (!ssgOptions.enabled) {
+      if (command !== "build" || !ssgOptions.enabled) {
         return;
       }
 
