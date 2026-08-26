@@ -40,6 +40,11 @@ type NativeTransformOptions = {
   emojiShortcodes?: { enabled?: boolean; custom?: Record<string, string> };
   attributes?: { enabled?: boolean };
   badges?: { enabled?: boolean };
+  keyboardKeys?: {
+    enabled?: boolean;
+    aliases?: Record<string, string>;
+    style?: string;
+  };
   magicLinks?: {
     enabled?: boolean;
     aliases?: Record<string, { href: string; label?: string; image?: string }>;
@@ -207,6 +212,13 @@ function createNativeTransformOptions(options: ResolvedOptions): NativeTransform
       : undefined,
     attributes: options.attrs?.enabled ? { enabled: true } : undefined,
     badges: options.badges?.enabled ? { enabled: true } : undefined,
+    keyboardKeys: options.keyboardKeys?.enabled
+      ? {
+          enabled: true,
+          aliases: options.keyboardKeys.aliases,
+          style: options.keyboardKeys.style,
+        }
+      : undefined,
     magicLinks: options.magicLinks?.enabled
       ? {
           enabled: true,

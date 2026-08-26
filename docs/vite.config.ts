@@ -144,6 +144,7 @@ export default defineConfig(({ mode }) => {
                       { text: "File Includes", link: "/built-in/includes.md" },
                       { text: "File Tree", link: "/built-in/file-tree.md" },
                       { text: "Inline Badges", link: "/built-in/badges.md" },
+                      { text: "Keyboard Keys", link: "/built-in/keyboard-keys.md" },
                       { text: "Magic Links", link: "/built-in/magic-links.md" },
                       { text: "Images", link: "/built-in/images.md" },
                       { text: "Page resources", link: "/built-in/resources.md" },
@@ -265,6 +266,7 @@ export default defineConfig(({ mode }) => {
         math: true,
         cjkEmphasis: true,
         badges: true,
+        keyboardKeys: true,
         magicLinks: {
           aliases: {
             Oxc: {

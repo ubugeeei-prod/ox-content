@@ -15,6 +15,7 @@ everywhere until a site explicitly enables an extension.
 | `attrs`           | `boolean` / `AttrsOptions`          | `false` |
 | `cjkEmphasis`     | `boolean`                           | `false` |
 | `magicLinks`      | `boolean` / `MagicLinkOptions`      | `false` |
+| `keyboardKeys`    | `boolean` / `KeyboardKeysOptions`   | `false` |
 
 ## Emoji Shortcodes
 
@@ -191,9 +192,15 @@ and the reclassified character ranges.
 Opt-in `{link:@user}`, `{link:alias}`, and `{link:label|url}` rich links with
 optional avatars. Off by default. See [Magic Links](./magic-links.md).
 
+## Keyboard Keys
+
+Opt-in `{kbd:Ctrl+K}` and `{kbd:Cmd Shift P}` semantic shortcuts. Off by
+default. See [Keyboard Keys](./keyboard-keys.md).
+
 ## Related
 
 - [Markdown Baseline](./markdown.md) — the default syntax these extensions
   build on.
 - [Code Blocks](./code-blocks.md) — annotation and import syntax for fences.
 - [Magic Links](./magic-links.md) — configurable GitHub, alias, and URL links.
+- [Keyboard Keys](./keyboard-keys.md) — `{kbd:Ctrl+K}` shortcut markup.

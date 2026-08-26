@@ -53,4 +53,5 @@ API {badge:tip}Beta{/badge} — the `token` field is {badge:required}required{/b
 ## 関連
 
 - [カスタムコンテナ](./containers.md)
+- [キーボードキー](./keyboard-keys.md)
 - [組み込み機能の一覧](../built-in-features.md)
