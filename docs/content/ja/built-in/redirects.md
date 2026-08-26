@@ -82,7 +82,23 @@ redirect: /retired
 
 ## ホスト用ファイル
 
-`netlify: true` で `_redirects` ファイル（`/old /guide 301`）も書き出します。`headers: true` でソースごとの `Location` 行を持つ `_headers` を書き出します。`json: true` で `redirects.json` を書き出します。HTML ページはいずれの場合も書き出します。
+`netlify: true` で `_redirects` ファイル（`/old /guide 301`）も書き出します。`headers: true` でソースごとの `Location` 行を持つ `_headers` を書き出します。`json: true` で `redirects.json` を書き出します。通常の（ワイルドカードでない）ソースには、これまでどおり HTML のフォールバックページも出します。
+
+ソースに `*` が含まれる場合、それは Netlify や Cloudflare Pages 向けのホスト規則の構文であり、リテラルな URL セグメントではありません。該当フラグがオンなら `_redirects`、`_headers`、`redirects.json` には残しますが、`talks*/index.html` のような静的 HTML ファイルは書き出しません。
+
+```ts
+oxContent({
+  redirects: {
+    map: {
+      "/talks*": "/works/talks",
+      "/old-guide": "/guide",
+    },
+    netlify: true,
+  },
+});
+```
+
+このマップは `_redirects` に `/talks* /works/talks 301` を書き、HTML ページは `/old-guide` だけ出します。
 
 ## 下書き
 

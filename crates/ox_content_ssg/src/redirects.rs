@@ -90,7 +90,8 @@ pub fn generate_redirects(options: &RedirectsOptions, pages: &[RedirectPage]) ->
     let netlify = options.netlify.then(|| netlify_body(&entries));
     let headers = options.headers.then(|| headers_body(&entries));
     let json = options.json.then(|| json_body(&entries));
-    RedirectsOutput { pages: entries, netlify, headers, json }
+    let pages = entries.into_iter().filter(|entry| !is_host_wildcard_source(&entry.from)).collect();
+    RedirectsOutput { pages, netlify, headers, json }
 }
 
 /// Static HTML redirect body. `dest` is escaped; callers still validate it.
@@ -158,6 +159,11 @@ fn is_http_url(value: &str) -> bool {
 
 fn has_unsafe_path_segments(value: &str) -> bool {
     value.contains('\\') || value.split('/').any(|segment| matches!(segment, "." | ".."))
+}
+
+/// `*` is host-rule syntax (Netlify / Cloudflare), not a URL segment.
+fn is_host_wildcard_source(from: &str) -> bool {
+    from.contains('*')
 }
 
 fn upsert(
