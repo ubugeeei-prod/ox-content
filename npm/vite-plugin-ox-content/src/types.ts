@@ -1084,6 +1084,15 @@ export interface RedirectsOptions {
   json?: boolean;
 
   /**
+   * Write static HTML fallback pages for ordinary redirect sources.
+   *
+   * Set `false` when the selected host should consume `_redirects` directly.
+   * Wildcard sources never write HTML pages because they are host-rule syntax.
+   * @default true
+   */
+  html?: boolean;
+
+  /**
    * Allow `http://` and `https://` destinations. `javascript:`, `data:`, and
    * protocol-relative `//` targets stay rejected.
    * @default false
@@ -1100,6 +1109,7 @@ export interface ResolvedRedirectsOptions {
   provider?: RedirectProvider;
   headers: boolean;
   json: boolean;
+  html: boolean;
   allowExternal: boolean;
 }
 

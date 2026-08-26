@@ -16,6 +16,7 @@ const on: ResolvedRedirectsOptions = {
   map: {},
   headers: false,
   json: false,
+  html: true,
   allowExternal: false,
 };
 
@@ -29,6 +30,7 @@ describe("redirect provider detection", () => {
       provider: "cloudflare",
       headers: false,
       json: false,
+      html: true,
       allowExternal: false,
     });
     expect(resolveRedirectsOptions(true, { WORKERS_CI: "1" }).provider).toBe("cloudflare");
@@ -69,6 +71,7 @@ describe("redirect provider detection", () => {
         map: { "/old": "/new" },
         headers: false,
         json: false,
+        html: true,
         allowExternal: false,
       });
       expect(resolveRedirectsOptions(true, { WORKERS_CI: "1", NETLIFY: "true" }).provider).toBe(

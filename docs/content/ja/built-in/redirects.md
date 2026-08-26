@@ -7,7 +7,7 @@ aliases:
 
 # リダイレクトとエイリアス
 
-`redirects` を有効にすると、SSG ビルドは古いパスごとに小さな静的 HTML ページを書き出します。ページは meta refresh と canonical リンクを使うので、リネーム後も inbound URL が動きます。どの静的ホストでも動きます。
+`redirects` を有効にすると、SSG ビルドは既定で古いパスごとに小さな静的 HTML ページを書き出します。ページは meta refresh と canonical リンクを使うので、リネーム後も inbound URL が動きます。どの静的ホストでも動きます。
 
 このページ自身も `aliases: [/ja/built-in/aliases]` を宣言しているので、ドキュメントサイトは古いパス向けのライブなリダイレクトを載せます。
 
@@ -46,6 +46,7 @@ oxContent({
 | `provider`      | `"netlify"` / `"cloudflare"`                | 検出    |
 | `headers`       | `boolean`                                   | `false` |
 | `json`          | `boolean`                                   | `false` |
+| `html`          | `boolean`                                   | `true`  |
 | `allowExternal` | `boolean`                                   | `false` |
 
 ## Frontmatter
@@ -82,7 +83,7 @@ redirect: /retired
 
 ## ホスト用ファイル
 
-`provider: "netlify"` または `provider: "cloudflare"` で `_redirects` ファイル（`/old /guide 301`）も書き出します。どちらのホストも、いまは同じ本文です。`headers: true` でソースごとの `Location` 行を持つ `_headers` を書き出します。`json: true` で `redirects.json` を書き出します。HTML のフォールバックページは provider 選択とは独立です。
+`provider: "netlify"` または `provider: "cloudflare"` で `_redirects` ファイル（`/old /guide 301`）も書き出します。どちらのホストも、いまは同じ本文です。`headers: true` でソースごとの `Location` 行を持つ `_headers` を書き出します。`json: true` で `redirects.json` を書き出します。HTML のフォールバックページは provider 選択とは独立しており、既定ではオンです。普通のパスのリダイレクト出力をホスト用 manifest だけにしたいときは `html: false` を設定します。
 
 `provider` を省略すると、CI の環境変数からホストを検出します。
 
@@ -103,11 +104,12 @@ oxContent({
       "/old-guide": "/guide",
     },
     provider: "netlify",
+    html: false,
   },
 });
 ```
 
-このマップは `_redirects` に `/talks* /works/talks 301` を書き、HTML ページは `/old-guide` だけ出します。
+このマップは両方の規則を `_redirects` に書き、HTML リダイレクトページは出しません。`html: false` を外すと、`/old-guide` 向けの HTML ページも書きます。
 
 ## 2.x からの移行
 

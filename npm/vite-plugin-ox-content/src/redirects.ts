@@ -10,7 +10,7 @@ import * as path from "node:path";
 import { resolveRedirectProvider } from "./redirect-provider";
 import type { RedirectsOptions, ResolvedRedirectsOptions } from "./types";
 
-const OPTION_KEYS = new Set(["map", "provider", "headers", "json", "allowExternal"]);
+const OPTION_KEYS = new Set(["map", "provider", "headers", "json", "html", "allowExternal"]);
 
 /** One page that may declare aliases or a single `redirect` source. */
 export interface RedirectPageInput {
@@ -55,7 +55,7 @@ export interface WriteRedirectFilesInput {
  *
  * `false` / omitted stays off. `true` or `{}` enables empty defaults.
  * A path map (`{ "/old": "/new" }`) enables the feature with that map.
- * `{ map, provider, headers, json, allowExternal }` overrides only set fields.
+ * `{ map, provider, headers, json, html, allowExternal }` overrides only set fields.
  * Pass `env` to inject CI detection without reading the real `process.env`.
  */
 export function resolveRedirectsOptions(
@@ -90,6 +90,7 @@ function resolvedRedirects(
     ...(provider ? { provider } : {}),
     headers: value?.headers ?? false,
     json: value?.json ?? false,
+    html: enabled ? (value?.html ?? true) : false,
     allowExternal: value?.allowExternal ?? false,
   };
 }
@@ -135,7 +136,9 @@ export function planRedirectFiles(input: RedirectPlanInput): RedirectPlan {
     return { files: [] };
   }
 
-  const htmlFiles = files.filter((file) => !isHostWildcardSource(file.from));
+  const htmlFiles = input.options.html
+    ? files.filter((file) => !isHostWildcardSource(file.from))
+    : [];
   const plan: RedirectPlan = { files: htmlFiles };
   if (input.options.provider) {
     plan.netlify = files.map((file) => `${file.from} ${file.to} 301`).join("\n") + "\n";

@@ -8,8 +8,8 @@ aliases:
 # Redirects and aliases
 
 When `redirects` is enabled, the SSG build writes a small static HTML page at
-each old path. The page uses a meta refresh plus a canonical link so inbound
-URLs keep working after a rename. That works on any static host.
+each old path by default. The page uses a meta refresh plus a canonical link so
+inbound URLs keep working after a rename. That works on any static host.
 
 This page also declares `aliases: [/built-in/aliases]`, so the docs site
 itself ships a live redirect for that old path.
@@ -51,6 +51,7 @@ options object and enables the feature with that map.
 | `provider`      | `"netlify"` / `"cloudflare"`              | detect  |
 | `headers`       | `boolean`                                 | `false` |
 | `json`          | `boolean`                                 | `false` |
+| `html`          | `boolean`                                 | `true`  |
 | `allowExternal` | `boolean`                                 | `false` |
 
 ## Frontmatter
@@ -102,7 +103,8 @@ Set `provider: "netlify"` or `provider: "cloudflare"` to also write a
 `_redirects` file (`/old /guide 301`). Both hosts use the same body today.
 Set `headers: true` to write `_headers` with a `Location` line per source.
 Set `json: true` to write `redirects.json`. HTML fallback pages stay
-independent of the provider selector.
+independent of the provider selector and stay on by default. Set `html: false`
+when the host manifest should be the only redirect output for ordinary paths.
 
 When `provider` is omitted, the build detects the host from CI env:
 
@@ -130,12 +132,13 @@ oxContent({
       "/old-guide": "/guide",
     },
     provider: "netlify",
+    html: false,
   },
 });
 ```
 
-That map writes `/talks* /works/talks 301` to `_redirects` and an HTML
-page only for `/old-guide`.
+That map writes both rules to `_redirects` and no HTML redirect pages. Remove
+`html: false` to also write an HTML page for `/old-guide`.
 
 ## Migrating from 2.x
 

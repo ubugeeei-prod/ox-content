@@ -15,6 +15,7 @@ const off = {
   map: {},
   headers: false,
   json: false,
+  html: false,
   allowExternal: false,
 };
 
@@ -23,6 +24,7 @@ const on = {
   map: {},
   headers: false,
   json: false,
+  html: true,
   allowExternal: false,
 };
 
@@ -45,6 +47,7 @@ describe("resolveRedirectsOptions", () => {
           provider: "netlify",
           headers: true,
           json: true,
+          html: false,
           allowExternal: true,
         },
         {},
@@ -55,6 +58,7 @@ describe("resolveRedirectsOptions", () => {
       provider: "netlify",
       headers: true,
       json: true,
+      html: false,
       allowExternal: true,
     });
   });

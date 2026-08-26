@@ -39,6 +39,8 @@ Contribution summary:
   ryoppippi.com migration.
 - Requested self-hosted Iconify CSS for used icons during the ryoppippi.com
   migration.
+- Reported the need for host-only redirect output without redundant HTML
+  fallback pages during the ryoppippi.com migration.
 - The opt-in `<NotByAI />` authorship badge was requested and first shipped
   in production during the ryoppippi.com Ox Content migration.
 
