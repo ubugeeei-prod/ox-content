@@ -30,6 +30,8 @@ Also tracked elsewhere and not duplicated here:
 - Theme package peer ranges move to 3.x.
 - Built-ins and Code Play do **not** turn on just because the major version
   changed. Each still needs an explicit install or option.
+- `redirects.netlify` is removed. Use `provider: "netlify"` or omit
+  `provider` so CI can detect Netlify / Cloudflare.
 
 Syntax token CSS uses `--octc-syntax-*` custom properties on
 `<pre class="ox-highlight css-variables">`. Color packages define the matching

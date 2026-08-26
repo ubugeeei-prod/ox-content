@@ -24,6 +24,10 @@ Tabs and YouTube embeds are not part of the `embeds` option: they are always
 processed in SSG builds and dev preview, with no configuration needed. They are
 covered [below](#tabs) because they share the same authoring model.
 
+Documented PascalCase tags such as `<Tweet>` and `<OgCard>` work in both `.md`
+and `.mdx`. A document-local import of the same name (`import Tweet from
+"./Tweet"`) overrides the built-in and stays an MDX island.
+
 Disable every built-in embed with `embeds: false`, or configure embeds
 individually:
 
@@ -311,6 +315,9 @@ render `.ox-tweet--full`. The full-card chrome follows the MIT-licensed
 [sveltweet](https://github.com/ryoppippi/sveltweet) visual contract; notices
 are in [Credits](../credits.md). See
 [Twitter/X Embed](../examples/twitter-embed.md) for details.
+Custom hosts import `@ox-content/vite-plugin/styles/social.css` and, for
+`appearance: "full"`, `styles/twitter-full.css`. See
+[Component styles](./component-styles.md).
 
 ## Bluesky
 
@@ -402,4 +409,5 @@ requirements.
 ## Related
 
 - [Mermaid Diagrams](./mermaid.md) — diagram fences rendered to static SVG.
+- [Component styles](./component-styles.md) — official CSS for custom hosts.
 - [Built-in Features overview](../built-in-features.md)

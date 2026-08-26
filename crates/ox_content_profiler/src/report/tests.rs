@@ -1,3 +1,6 @@
+use std::time::Duration;
+
+use super::format::{fmt_duration, truncate};
 use super::*;
 use crate::alloc::{AllocDelta, SizeHistogram};
 
@@ -54,4 +57,21 @@ fn table_render_is_non_empty() {
     let report = Report::from_iterations("smoke".into(), iters, cfg);
     let table = report.render_table();
     insta::assert_snapshot!(table);
+}
+
+#[test]
+fn fmt_duration_writes_nanoseconds_without_panic() {
+    assert_eq!(fmt_duration(Duration::from_nanos(0)), "0 ns");
+    assert_eq!(fmt_duration(Duration::from_nanos(999)), "999 ns");
+    assert!(fmt_duration(Duration::from_micros(12)).contains("µs"));
+    assert!(fmt_duration(Duration::from_millis(3)).contains("ms"));
+    assert!(fmt_duration(Duration::from_secs(2)).contains(" s"));
+}
+
+#[test]
+fn truncate_respects_utf8_boundaries() {
+    assert_eq!(truncate("abcd", 10), "abcd");
+    assert_eq!(truncate("abcdef", 4), "abc…");
+    assert_eq!(truncate("日本語テスト", 4), "日…");
+    assert_eq!(truncate("🚀🚀🚀", 3), "…");
 }

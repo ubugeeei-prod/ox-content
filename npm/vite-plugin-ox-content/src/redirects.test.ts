@@ -13,7 +13,6 @@ afterEach(async () => {
 const off = {
   enabled: false,
   map: {},
-  netlify: false,
   headers: false,
   json: false,
   allowExternal: false,
@@ -22,7 +21,6 @@ const off = {
 const on = {
   enabled: true,
   map: {},
-  netlify: false,
   headers: false,
   json: false,
   allowExternal: false,
@@ -30,28 +28,31 @@ const on = {
 
 describe("resolveRedirectsOptions", () => {
   it("disables the feature when omitted or false", () => {
-    expect(resolveRedirectsOptions(undefined)).toEqual(off);
-    expect(resolveRedirectsOptions(false)).toEqual(off);
+    expect(resolveRedirectsOptions(undefined, {})).toEqual(off);
+    expect(resolveRedirectsOptions(false, {})).toEqual(off);
   });
 
   it("enables defaults when true", () => {
-    expect(resolveRedirectsOptions(true)).toEqual(on);
+    expect(resolveRedirectsOptions(true, {})).toEqual(on);
   });
 
   it("enables from an object and overrides only set fields", () => {
-    expect(resolveRedirectsOptions({})).toEqual(on);
+    expect(resolveRedirectsOptions({}, {})).toEqual(on);
     expect(
-      resolveRedirectsOptions({
-        map: { "/old": "/guide" },
-        netlify: true,
-        headers: true,
-        json: true,
-        allowExternal: true,
-      }),
+      resolveRedirectsOptions(
+        {
+          map: { "/old": "/guide" },
+          provider: "netlify",
+          headers: true,
+          json: true,
+          allowExternal: true,
+        },
+        {},
+      ),
     ).toEqual({
       enabled: true,
       map: { "/old": "/guide" },
-      netlify: true,
+      provider: "netlify",
       headers: true,
       json: true,
       allowExternal: true,
@@ -59,7 +60,7 @@ describe("resolveRedirectsOptions", () => {
   });
 
   it("treats a path map as enabled defaults plus that map", () => {
-    expect(resolveRedirectsOptions({ "/old-guide": "/guide" })).toEqual({
+    expect(resolveRedirectsOptions({ "/old-guide": "/guide" }, {})).toEqual({
       ...on,
       map: { "/old-guide": "/guide" },
     });
@@ -97,7 +98,7 @@ describe("planRedirectFiles", () => {
 
   it("plans config-map redirects and last-wins after slash folding", () => {
     const plan = planRedirectFiles({
-      options: { ...on, map: { "/old/": "/guide/", "/old": "/other" }, netlify: true },
+      options: { ...on, map: { "/old/": "/guide/", "/old": "/other" }, provider: "netlify" },
       pages: [],
     });
 
@@ -206,7 +207,7 @@ describe("planRedirectFiles", () => {
           "/projects*": "/works",
           "/old": "/guide",
         },
-        netlify: true,
+        provider: "netlify",
         headers: true,
         json: true,
       },
@@ -242,7 +243,7 @@ describe("writeRedirectFiles", () => {
       options: {
         ...on,
         map: { "/old-guide": "/guide" },
-        netlify: true,
+        provider: "netlify",
         headers: true,
         json: true,
       },
@@ -255,7 +256,9 @@ describe("writeRedirectFiles", () => {
     expect(result.files).toHaveLength(5);
     expect(oldHtml).toContain("url=/guide");
     expect(mapHtml).toContain("url=/guide");
-    expect(await fs.readFile(path.join(outDir, "_redirects"), "utf8")).toContain("/old /guide 301");
+    expect(await fs.readFile(path.join(outDir, "_redirects"), "utf8")).toBe(
+      "/old /guide 301\n/old-guide /guide 301\n",
+    );
     expect(await fs.readFile(path.join(outDir, "_headers"), "utf8")).toContain("Location: /guide");
     expect(await fs.readFile(path.join(outDir, "redirects.json"), "utf8")).toContain('"/old"');
   });
@@ -315,7 +318,7 @@ describe("writeRedirectFiles", () => {
       options: {
         ...on,
         map: { "/talks*": "/works/talks", "/old": "/guide" },
-        netlify: true,
+        provider: "netlify",
       },
       pages: [],
     });

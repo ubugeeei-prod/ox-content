@@ -1,4 +1,4 @@
-use super::{YouTubeEmbedOptions, transform_youtube};
+use super::{YouTubeEmbedOptions, extract_video_id, transform_youtube};
 
 fn opts() -> YouTubeEmbedOptions {
     YouTubeEmbedOptions::default()
@@ -76,6 +76,45 @@ fn regular_host_keeps_start_query() {
 fn passes_through_when_no_element() {
     let html = r#"<p>Plain prose with a <a href="/x">link</a> and no embeds.</p>"#;
     assert_eq!(transform_youtube(html, &opts()), html);
+}
+
+#[test]
+fn extract_video_id_accepts_bare_ids_and_url_shapes() {
+    assert_eq!(extract_video_id("dQw4w9WgXcQ").as_deref(), Some("dQw4w9WgXcQ"));
+    assert_eq!(
+        extract_video_id("https://www.youtube.com/watch?v=dQw4w9WgXcQ&t=30").as_deref(),
+        Some("dQw4w9WgXcQ")
+    );
+    assert_eq!(extract_video_id("https://youtu.be/dQw4w9WgXcQ").as_deref(), Some("dQw4w9WgXcQ"));
+    assert_eq!(
+        extract_video_id("https://www.youtube.com/embed/dQw4w9WgXcQ").as_deref(),
+        Some("dQw4w9WgXcQ")
+    );
+    assert_eq!(
+        extract_video_id("https://www.youtube.com/v/dQw4w9WgXcQ").as_deref(),
+        Some("dQw4w9WgXcQ")
+    );
+    assert_eq!(
+        extract_video_id("https://www.youtube.com/shorts/dQw4w9WgXcQ").as_deref(),
+        Some("dQw4w9WgXcQ")
+    );
+}
+
+#[test]
+fn extract_video_id_rejects_hostile_and_partial_inputs() {
+    assert_eq!(extract_video_id(""), None);
+    assert_eq!(extract_video_id("not-a-valid-id"), None);
+    assert_eq!(extract_video_id("dQw4w9WgXc"), None);
+    assert_eq!(extract_video_id("dQw4w9WgXcQQ"), None);
+    assert_eq!(extract_video_id("javascript:alert(1)"), None);
+    assert_eq!(extract_video_id("https://example.com/watch?v=dQw4w9WgXcQ"), None);
+    assert_eq!(extract_video_id("https://YOUTUBE.COM/watch?v=dQw4w9WgXcQ"), None);
+    assert_eq!(extract_video_id("<script>dQw4w9WgXcQ</script>"), None);
+    assert_eq!(
+        extract_video_id("https://youtube.com/shorts/abcdefghijk https://youtu.be/dQw4w9WgXcQ")
+            .as_deref(),
+        Some("dQw4w9WgXcQ")
+    );
 }
 
 #[test]

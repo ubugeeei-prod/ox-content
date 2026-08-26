@@ -51,14 +51,25 @@
       "import": "./dist/jsx-dev-runtime.mjs",
       "require": "./dist/jsx-dev-runtime.cjs",
       "types": "./dist/jsx-dev-runtime.d.mts"
-    }
+    },
+    "./styles/all.css": "./dist/styles/all.css",
+    "./styles/core.css": "./dist/styles/core.css",
+    "./styles/magic-links.css": "./dist/styles/magic-links.css",
+    "./styles/social.css": "./dist/styles/social.css",
+    "./styles/twitter-full.css": "./dist/styles/twitter-full.css",
+    "./styles/ogp.css": "./dist/styles/ogp.css",
+    "./styles/github.css": "./dist/styles/github.css",
+    "./styles/youtube.css": "./dist/styles/youtube.css",
+    "./styles/tabs.css": "./dist/styles/tabs.css",
+    "./styles/mermaid.css": "./dist/styles/mermaid.css"
   },
   "publishConfig": {
     "access": "public",
     "provenance": true
   },
   "scripts": {
-    "build": "vp pack",
+    "build": "vp pack && node scripts/copy-component-styles.mjs",
+    "build:styles": "node scripts/copy-component-styles.mjs",
     "dev": "vp pack --watch",
     "typecheck": "tsgo --noEmit",
     "test:vrt": "playwright test",

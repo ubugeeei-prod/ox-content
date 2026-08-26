@@ -80,6 +80,11 @@ fetch はしません。URL を書くだけです。`imageOverrides` は exact �
 `--alias` / `--url`、`ox-magic-link__image`、`ox-magic-link__label`。
 画像は装飾（`alt=""`）で、ラベルがアクセシブルな名前です。
 
+独自の `ssg: false` ホストは
+`@ox-content/vite-plugin/styles/magic-links.css` を import してください
+（`--octc-*` トークン用に `core.css` も大抵必要です）。
+[コンポーネント CSS](./component-styles.md) を見てください。
+
 ## 対象外
 
 フェンス、インデントコード、インラインコード、生の `<code>` / `<pre>` /
@@ -99,5 +104,6 @@ fetch はしません。URL を書くだけです。`imageOverrides` は exact �
 
 - [構文拡張](./syntax-extensions.md)
 - [インラインバッジ](./badges.md)
+- [コンポーネント CSS](./component-styles.md)
 - [組み込み機能の一覧](../built-in-features.md)
 - [markdown-it-magic-link](https://github.com/antfu/markdown-it-magic-link)
