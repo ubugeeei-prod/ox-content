@@ -21,6 +21,7 @@
 
 ### Performance
 
+- skip package preview releases for benchmark-helper edits (#851)
 - skip PR benchmarks for package-preview helper edits (#851)
 - skip package preview releases for neutral PR edits (#851)
 - skip PR benchmarks for test-only package edits (#851)
