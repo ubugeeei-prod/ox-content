@@ -1149,6 +1149,7 @@ a:hover {
 .content .ox-magic-link__image {
   width: 1em;
   height: 1em;
+  margin: 0;
   border-radius: 999px;
   object-fit: cover;
   flex: 0 0 auto;

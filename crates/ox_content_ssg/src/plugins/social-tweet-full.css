@@ -80,7 +80,8 @@
   background: var(--ox-tweet-bg);
 }
 
-[data-theme="dark"] .ox-tweet--full {
+[data-theme="dark"] .ox-tweet--full,
+.dark .ox-tweet--full {
   --ox-tweet-border: 1px solid rgb(66, 83, 100);
   --ox-tweet-font-color: rgb(247, 249, 249);
   --ox-tweet-font-color-secondary: rgb(139, 152, 165);
@@ -93,7 +94,7 @@
 }
 
 @media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) .ox-tweet--full {
+  :root:not([data-theme="light"]):not(.light) .ox-tweet--full {
     --ox-tweet-border: 1px solid rgb(66, 83, 100);
     --ox-tweet-font-color: rgb(247, 249, 249);
     --ox-tweet-font-color-secondary: rgb(139, 152, 165);

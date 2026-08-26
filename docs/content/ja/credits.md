@@ -46,6 +46,9 @@ Markdown 属性とリッチなソーシャル埋め込みの見た目の同等�
   生成 feed の item URL から prefix が抜けていた問題を報告しました。
 - ryoppippi.com の JSON-backed media feed 移行のために、programmatic feed item
   source を要望しました。
+- ryoppippi.com の移行中に、rich magic link の avatar と prose typography
+  stylesheet の相互作用を報告しました。
+- Twitter / X full card style の class ベース dark mode 対応を要望しました。
 
 ## 第三者の帰属
 

@@ -49,6 +49,9 @@ Contribution summary:
   output and Markdown companions were mounted under the prefix.
 - Requested programmatic feed item sources for the ryoppippi.com JSON-backed
   media feed migration.
+- Reported prose typography stylesheet interactions with rich magic-link
+  avatars during the ryoppippi.com migration.
+- Requested class-based dark-mode support for Twitter/X full-card styles.
 
 ## Third-party attribution
 
