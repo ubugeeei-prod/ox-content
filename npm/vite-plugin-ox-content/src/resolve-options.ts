@@ -4,6 +4,7 @@ import { resolveCollectionsOptions } from "./collections";
 import { resolveDocsOptions } from "./docs";
 import { resolveFeedsOptions } from "./feeds";
 import { resolveFileTreeOptions } from "./file-tree-options";
+import { resolveIconsOptions } from "./icons";
 import { resolveHeadingPermalinksOptions } from "./heading-permalinks-options";
 import { resolveI18nOptions } from "./i18n";
 import { resolveIncludeOptions } from "./include-options";
@@ -47,6 +48,7 @@ export function resolveOptions(options: OxContentOptions): ResolvedOptions {
     ),
     feeds: resolveFeedsOptions(options.feeds),
     pwa: resolvePwaOptions(options.pwa),
+    icons: resolveIconsOptions(options.icons),
     taxonomies: resolveTaxonomiesOptions(options.taxonomies),
     versions: resolveVersionsOptions(options.versions),
     resources: resolveResourcesOptions(options.resources),
