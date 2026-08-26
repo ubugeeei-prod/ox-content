@@ -8,17 +8,19 @@ description: Opt-in authoring syntax - emoji shortcodes, wiki links, attribute s
 Non-standard Markdown syntax is opt-in, so ordinary documents render the same
 everywhere until a site explicitly enables an extension.
 
-| Option            | Type                                | Default |
-| ----------------- | ----------------------------------- | ------- |
-| `emojiShortcodes` | `boolean` / `EmojiShortcodeOptions` | `false` |
-| `wikiLinks`       | `boolean` / `WikiLinkOptions`       | `false` |
-| `attrs`           | `boolean` / `AttrsOptions`          | `false` |
-| `cjkEmphasis`     | `boolean`                           | `false` |
-| `magicLinks`      | `boolean` / `MagicLinkOptions`      | `false` |
-| `notByAi`         | `boolean` / `NotByAiOptions`        | `false` |
-| `keyboardKeys`    | `boolean` / `KeyboardKeysOptions`   | `false` |
-| `abbreviations`   | `boolean` / `AbbreviationsOptions`  | `false` |
-| `definitionLists` | `boolean` / `DefinitionListOptions` | `false` |
+| Option            | Type                                 | Default |
+| ----------------- | ------------------------------------ | ------- |
+| `emojiShortcodes` | `boolean` / `EmojiShortcodeOptions`  | `false` |
+| `wikiLinks`       | `boolean` / `WikiLinkOptions`        | `false` |
+| `attrs`           | `boolean` / `AttrsOptions`           | `false` |
+| `crossReferences` | `boolean` / `CrossReferencesOptions` | `false` |
+| `xrefs`           | Alias for `crossReferences`          | `false` |
+| `cjkEmphasis`     | `boolean`                            | `false` |
+| `magicLinks`      | `boolean` / `MagicLinkOptions`       | `false` |
+| `notByAi`         | `boolean` / `NotByAiOptions`         | `false` |
+| `keyboardKeys`    | `boolean` / `KeyboardKeysOptions`    | `false` |
+| `abbreviations`   | `boolean` / `AbbreviationsOptions`   | `false` |
+| `definitionLists` | `boolean` / `DefinitionListOptions`  | `false` |
 
 ## Emoji Shortcodes
 
@@ -195,6 +197,12 @@ and the reclassified character ranges.
 Opt-in `{link:@user}`, `{link:alias}`, and `{link:label|url}` rich links with
 optional avatars. Off by default. See [Magic Links](./magic-links.md).
 
+## Cross References
+
+Opt-in `@sec-*`, `@fig-*`, and `@tbl-*` references link to labeled headings,
+figures, images, and tables. Off by default. See
+[Cross References](./cross-references.md).
+
 ## NotByAI Badge
 
 Opt-in `<NotByAI />` emits a static human-authorship disclosure. It is not a
@@ -221,6 +229,8 @@ Opt-in `Term` / `: definition` glossary lists. Off by default. See
   build on.
 - [Code Blocks](./code-blocks.md) — annotation and import syntax for fences.
 - [Magic Links](./magic-links.md) — configurable GitHub, alias, and URL links.
+- [Cross References](./cross-references.md) — generated labels for sections,
+  figures, and tables.
 - [Keyboard Keys](./keyboard-keys.md) — `{kbd:Ctrl+K}` shortcut markup.
 - [Abbreviations](./abbreviations.md) — `*[TERM]:` glossary expansion.
 - [Definition Lists](./definition-lists.md) — opt-in `Term` / `: definition`

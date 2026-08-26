@@ -39,6 +39,14 @@ export type {
   TwitterEmbedOptions,
 } from "./plugins";
 export type {
+  CrossReferenceEntry,
+  CrossReferenceFailureMode,
+  CrossReferenceKind,
+  CrossReferenceLabelOptions,
+  CrossReferencesOptions,
+  ResolvedCrossReferencesOptions,
+} from "./cross-references";
+export type {
   CodeAnnotationSyntax,
   CodeAnnotationsOptions,
   ResolvedCodeAnnotationsOptions,

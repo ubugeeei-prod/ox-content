@@ -17,8 +17,7 @@ export default defineConfig(({ mode }) => {
   const ogImage = new URL("og-image.png", siteUrl.replace(/\/?$/, base)).href;
 
   return {
-    // Site base path: GitHub Pages uses /ox-content/, Void uses /.
-    base,
+    base, // Site base path: GitHub Pages uses /ox-content/, Void uses /.
 
     plugins: [
       // The gallery lives in public/ but is generated and gitignored, so a
@@ -138,6 +137,7 @@ export default defineConfig(({ mode }) => {
                       { text: "Component Matrix", link: "/built-in/component-matrix.md" },
                       { text: "Heading Permalinks", link: "/built-in/heading-permalinks.md" },
                       { text: "Syntax Extensions", link: "/built-in/syntax-extensions.md" },
+                      { text: "Cross References", link: "/built-in/cross-references.md" },
                       { text: "Custom Containers", link: "/built-in/containers.md" },
                       { text: "Cards", link: "/built-in/cards.md" },
                       { text: "Step Lists", link: "/built-in/steps.md" },

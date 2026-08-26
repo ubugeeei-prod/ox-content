@@ -4,6 +4,7 @@ import { resolveCardOptions } from "./card-options";
 import { resolveCodeGroupOptions } from "./code-group-options";
 import { resolveConditionalBlockOptions } from "./conditional-block-options";
 import { resolveCollectionsOptions } from "./collections";
+import { resolveCrossReferencesOptions } from "./cross-references";
 import { resolveDocsOptions } from "./docs";
 import { resolveFeedsOptions } from "./feeds";
 import { resolveDataTableOptions } from "./data-table-options";
@@ -75,6 +76,7 @@ export function resolveOptions(options: OxContentOptions): ResolvedOptions {
     wikiLinks: resolveWikiLinkOptions(options.wikiLinks, options.base ?? "/"),
     emojiShortcodes: resolveEmojiShortcodeOptions(options.emojiShortcodes),
     attrs: resolveAttrsOptions(options.attrs),
+    crossReferences: resolveCrossReferencesOptions(options.crossReferences ?? options.xrefs),
     badges: resolveBadgeOptions(options.badges),
     notByAi: resolveNotByAiOptions(options.notByAi),
     keyboardKeys: resolveKeyboardKeysOptions(options.keyboardKeys),

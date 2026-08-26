@@ -140,6 +140,13 @@ export function createDocsResolvedOptions(
     wikiLinks: { enabled: false, baseUrl: "/" },
     emojiShortcodes: { enabled: false, custom: {} },
     attrs: { enabled: false },
+    crossReferences: {
+      enabled: false,
+      missing: "error",
+      duplicates: "error",
+      mismatches: "error",
+      labels: { figure: "Figure", table: "Table", section: "Section" },
+    },
     badges: { enabled: false },
     notByAi: { enabled: false, label: "Written by human, not by AI", href: "https://notbyai.fyi" },
     keyboardKeys: { enabled: false, aliases: {}, style: "words" },

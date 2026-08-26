@@ -7,17 +7,19 @@ description: オプトインの執筆構文 — 絵文字ショートコード�
 
 非標準の Markdown 構文はオプトインです。サイトが拡張を明示的にオンにするまで、普通の文書はどこでも同じように描画されます。
 
-| オプション        | 型                                  | 既定    |
-| ----------------- | ----------------------------------- | ------- |
-| `emojiShortcodes` | `boolean` / `EmojiShortcodeOptions` | `false` |
-| `wikiLinks`       | `boolean` / `WikiLinkOptions`       | `false` |
-| `attrs`           | `boolean` / `AttrsOptions`          | `false` |
-| `cjkEmphasis`     | `boolean`                           | `false` |
-| `magicLinks`      | `boolean` / `MagicLinkOptions`      | `false` |
-| `notByAi`         | `boolean` / `NotByAiOptions`        | `false` |
-| `keyboardKeys`    | `boolean` / `KeyboardKeysOptions`   | `false` |
-| `abbreviations`   | `boolean` / `AbbreviationsOptions`  | `false` |
-| `definitionLists` | `boolean` / `DefinitionListOptions` | `false` |
+| オプション        | 型                                   | 既定    |
+| ----------------- | ------------------------------------ | ------- |
+| `emojiShortcodes` | `boolean` / `EmojiShortcodeOptions`  | `false` |
+| `wikiLinks`       | `boolean` / `WikiLinkOptions`        | `false` |
+| `attrs`           | `boolean` / `AttrsOptions`           | `false` |
+| `crossReferences` | `boolean` / `CrossReferencesOptions` | `false` |
+| `xrefs`           | `crossReferences` の alias           | `false` |
+| `cjkEmphasis`     | `boolean`                            | `false` |
+| `magicLinks`      | `boolean` / `MagicLinkOptions`       | `false` |
+| `notByAi`         | `boolean` / `NotByAiOptions`         | `false` |
+| `keyboardKeys`    | `boolean` / `KeyboardKeysOptions`    | `false` |
+| `abbreviations`   | `boolean` / `AbbreviationsOptions`   | `false` |
+| `definitionLists` | `boolean` / `DefinitionListOptions`  | `false` |
 
 ## 絵文字ショートコード
 
@@ -164,6 +166,10 @@ A**強調。**B
 
 オプトインの `{link:@user}`、`{link:alias}`、`{link:label|url}` リッチリンクです。アバターも付けられます。既定はオフです。詳細は [マジックリンク](./magic-links.md) を見てください。
 
+## 相互参照
+
+`@sec-*`、`@fig-*`、`@tbl-*` を、label 付きの見出し、figure、画像、表へのリンクにします。既定はオフです。詳細は [相互参照](./cross-references.md) を見てください。
+
 ## NotByAI バッジ
 
 オプトインの `<NotByAI />` は静的な人の執筆開示です。状態バッジではありません。既定はオフです。詳細は [NotByAI バッジ](./not-by-ai.md) を見てください。
@@ -188,6 +194,7 @@ A**強調。**B
 - [Markdown の土台](./markdown.md) — これらの拡張が乗る既定構文。
 - [コードブロック](./code-blocks.md) — フェンス向けの注釈と取り込み構文。
 - [マジックリンク](./magic-links.md) — GitHub・エイリアス・URL の設定可能なリンク。
+- [相互参照](./cross-references.md) — セクション、図、表の生成 label。
 - [キーボードキー](./keyboard-keys.md) — `{kbd:Ctrl+K}` ショートカット。
 - [略語・用語集](./abbreviations.md) — `*[TERM]:` 用語展開。
 - [定義リスト](./definition-lists.md) — オプトインの `Term` / `: definition`
