@@ -176,6 +176,22 @@ export interface SsgOptions {
   extension?: string;
 
   /**
+   * Mount generated page routes under this path, independent from `base` and
+   * `outDir`.
+   *
+   * `blog`, `/blog`, and `/blog/` all mount under `/blog`. Page HTML and
+   * page-level assets follow the prefix. Root host files (`_redirects`,
+   * `_headers`, root feeds, sitemap index) stay at `outDir`. `base` remains
+   * the public deployment prefix and is not used as an output mount.
+   * Frontmatter `permalink` still wins when permalinks are enabled.
+   *
+   * Off when omitted.
+   *
+   * @default undefined
+   */
+  routePrefix?: string;
+
+  /**
    * Remove previously generated files from the output directory before writing
    * the new SSG result.
    *
@@ -624,6 +640,10 @@ export type ResolvedJsonLd =
 export interface ResolvedSsgOptions {
   enabled: boolean;
   extension: string;
+  /**
+   * Present after `resolveSsgOptions`. Omitted / empty means off.
+   */
+  routePrefix?: string;
   clean: boolean;
   bare: boolean;
   render?: ThemeComponent;
