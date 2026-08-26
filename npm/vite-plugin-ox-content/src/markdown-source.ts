@@ -227,35 +227,7 @@ export function resolveMarkdownSourceRequest(
 
 /** Frontmatter keys only — not a Markdown parse. */
 export function parseSourceFrontmatter(source: string): Record<string, unknown> {
-  const match = source.match(/^---\r?\n([\s\S]*?)\r?\n---/);
-  if (!match?.[1]) {
-    return {};
-  }
-  const result: Record<string, unknown> = {};
-  for (const line of match[1].split("\n")) {
-    const kv = line.match(/^([A-Za-z_][\w-]*)\s*:\s*(.*)$/);
-    if (!kv) {
-      continue;
-    }
-    result[kv[1]] = parseFrontmatterScalar(kv[2].trim());
-  }
-  return result;
-}
-
-function parseFrontmatterScalar(value: string): unknown {
-  if (value === "true") {
-    return true;
-  }
-  if (value === "false") {
-    return false;
-  }
-  if (
-    (value.startsWith('"') && value.endsWith('"')) ||
-    (value.startsWith("'") && value.endsWith("'"))
-  ) {
-    return value.slice(1, -1);
-  }
-  return value;
+  return importNapiModuleSync().prepareSource(source, { frontmatter: true }).frontmatter;
 }
 
 function companionRelativePath(urlPath: string): string | undefined {
