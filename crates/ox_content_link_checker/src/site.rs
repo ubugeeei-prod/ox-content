@@ -25,27 +25,31 @@ pub fn check_site(options: &SiteCheckOptions) -> io::Result<Vec<SiteReport>> {
     collect_html_files(&site_dir, &mut html_files)?;
     html_files.sort();
 
-    let mut pages = FxHashMap::default();
-    for file in &html_files {
-        let source = fs::read_to_string(file)?;
+    let mut ordered_pages = Vec::with_capacity(html_files.len());
+    for file in html_files {
+        let source = fs::read_to_string(&file)?;
         let document = parse_html(&source);
-        pages.insert(file.clone(), Page { source, document });
+        ordered_pages.push((file, Page { source, document }));
     }
 
+    // Walk the same owned pages we just parsed. Cross-file lookups go through
+    // this map; the current page never needs a fallible get-after-insert.
+    let pages: FxHashMap<&Path, &Page> =
+        ordered_pages.iter().map(|(file, page)| (file.as_path(), page)).collect();
+
     let mut reports = Vec::new();
-    for file in html_files {
-        let page = pages.get(&file).expect("indexed generated page");
+    for (file, page) in &ordered_pages {
         let line_index = LineIndex::new(&page.source);
         let mut diagnostics = Vec::new();
         for link in &page.document.links {
             if let Some(diagnostic) =
-                check_link(&site_dir, &file, &options.base, link, &pages, &line_index)
+                check_link(&site_dir, file, &options.base, link, &pages, &line_index)
             {
                 diagnostics.push(diagnostic);
             }
         }
         if !diagnostics.is_empty() {
-            reports.push(SiteReport { file_path: file, diagnostics });
+            reports.push(SiteReport { file_path: file.clone(), diagnostics });
         }
     }
     Ok(reports)
@@ -56,7 +60,7 @@ fn check_link(
     source_file: &Path,
     base: &str,
     link: &HtmlLink,
-    pages: &FxHashMap<PathBuf, Page>,
+    pages: &FxHashMap<&Path, &Page>,
     line_index: &LineIndex,
 ) -> Option<Diagnostic> {
     let target = link.target.trim();
@@ -90,7 +94,7 @@ fn check_link(
 
     if let Some(fragment) = anchor.filter(|fragment| !fragment.is_empty() && *fragment != "top") {
         let decoded = percent_decode(fragment);
-        let Some(target_page) = pages.get(&target_file) else {
+        let Some(target_page) = pages.get(target_file.as_path()) else {
             return Some(diagnostic(
                 line_index,
                 link,
@@ -116,7 +120,7 @@ fn check_link(
     }
 
     if !link.is_redirect_destination
-        && pages.get(&target_file).is_some_and(|page| page.document.is_redirect)
+        && pages.get(target_file.as_path()).is_some_and(|page| page.document.is_redirect)
     {
         return Some(diagnostic(
             line_index,

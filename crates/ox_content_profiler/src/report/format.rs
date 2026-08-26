@@ -48,8 +48,9 @@ pub(super) fn truncate(s: &str, max: usize) -> String {
     if s.len() <= max {
         s.to_string()
     } else {
+        let end = s.floor_char_boundary(max.saturating_sub(1));
         let mut t = String::with_capacity(max);
-        t.push_str(&s[..max.saturating_sub(1)]);
+        t.push_str(&s[..end]);
         t.push('…');
         t
     }
@@ -87,22 +88,24 @@ pub(super) fn push_fmt(output: &mut String, args: std::fmt::Arguments<'_>) {
     }
 }
 
-fn push_u128(output: &mut String, value: u128) {
+fn push_u128(output: &mut String, mut value: u128) {
+    // Stack buffer is filled only with ASCII `'0'..='9'`. Interpret that
+    // suffix as UTF-8, and copy bytes as chars if the check ever fails
+    // rather than aborting a profiler report.
     let mut buffer = [0_u8; 39];
     let mut cursor = buffer.len();
-    let mut rest = value;
-
     loop {
         cursor -= 1;
-        buffer[cursor] = b'0' + (rest % 10) as u8;
-        rest /= 10;
-        if rest == 0 {
+        buffer[cursor] = b'0' + (value % 10) as u8;
+        value /= 10;
+        if value == 0 {
             break;
         }
     }
-
-    let digits = std::str::from_utf8(&buffer[cursor..]).expect("digits are valid utf-8");
-    output.push_str(digits);
+    match std::str::from_utf8(&buffer[cursor..]) {
+        Ok(digits) => output.push_str(digits),
+        Err(_) => output.extend(buffer[cursor..].iter().copied().map(char::from)),
+    }
 }
 
 fn push_json_control_escape(output: &mut String, value: u32) {

@@ -16,7 +16,7 @@ impl SizeHistogram {
         if i == 1 {
             return "1".into();
         }
-        let lo = 1u64 << (i - 1);
+        let lo = 1u64 << (i - 1).min(63);
         let hi = 1u64 << i.min(63);
         let mut label = String::with_capacity(42);
         push_u64(&mut label, lo);
@@ -35,22 +35,24 @@ impl SizeHistogram {
     }
 }
 
-fn push_u64(output: &mut String, value: u64) {
+fn push_u64(output: &mut String, mut value: u64) {
+    // Stack buffer is filled only with ASCII `'0'..='9'`. Interpret that
+    // suffix as UTF-8, and copy bytes as chars if the check ever fails
+    // rather than aborting a profiler report.
     let mut buffer = [0_u8; 20];
     let mut cursor = buffer.len();
-    let mut rest = value;
-
     loop {
         cursor -= 1;
-        buffer[cursor] = b'0' + (rest % 10) as u8;
-        rest /= 10;
-        if rest == 0 {
+        buffer[cursor] = b'0' + (value % 10) as u8;
+        value /= 10;
+        if value == 0 {
             break;
         }
     }
-
-    let digits = std::str::from_utf8(&buffer[cursor..]).expect("digits are valid utf-8");
-    output.push_str(digits);
+    match std::str::from_utf8(&buffer[cursor..]) {
+        Ok(digits) => output.push_str(digits),
+        Err(_) => output.extend(buffer[cursor..].iter().copied().map(char::from)),
+    }
 }
 
 #[inline]

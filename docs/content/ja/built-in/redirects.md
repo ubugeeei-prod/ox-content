@@ -43,7 +43,7 @@ oxContent({
 | --------------- | ------------------------------------------- | ------- |
 | `redirects`     | `boolean` / パスマップ / `RedirectsOptions` | `false` |
 | `map`           | `Record<string, string>`                    | `{}`    |
-| `netlify`       | `boolean`                                   | `false` |
+| `provider`      | `"netlify"` / `"cloudflare"`                | 検出    |
 | `headers`       | `boolean`                                   | `false` |
 | `json`          | `boolean`                                   | `false` |
 | `allowExternal` | `boolean`                                   | `false` |
@@ -82,9 +82,18 @@ redirect: /retired
 
 ## ホスト用ファイル
 
-`netlify: true` で `_redirects` ファイル（`/old /guide 301`）も書き出します。`headers: true` でソースごとの `Location` 行を持つ `_headers` を書き出します。`json: true` で `redirects.json` を書き出します。通常の（ワイルドカードでない）ソースには、これまでどおり HTML のフォールバックページも出します。
+`provider: "netlify"` または `provider: "cloudflare"` で `_redirects` ファイル（`/old /guide 301`）も書き出します。どちらのホストも、いまは同じ本文です。`headers: true` でソースごとの `Location` 行を持つ `_headers` を書き出します。`json: true` で `redirects.json` を書き出します。HTML のフォールバックページは provider 選択とは独立です。
 
-ソースに `*` が含まれる場合、それは Netlify や Cloudflare Pages 向けのホスト規則の構文であり、リテラルな URL セグメントではありません。該当フラグがオンなら `_redirects`、`_headers`、`redirects.json` には残しますが、`talks*/index.html` のような静的 HTML ファイルは書き出しません。
+`provider` を省略すると、CI の環境変数からホストを検出します。
+
+- `CF_PAGES=1` または `WORKERS_CI=1` → Cloudflare
+- `NETLIFY=true` → Netlify
+
+明示した `provider` は常に勝ちます。ローカルビルドと GitHub Actions でも同じです。Cloudflare と Netlify の変数が同時に付いているときは警告し、ホストを黙って選ばず `_redirects` を出しません。一致がなければ `_redirects` は出しません（これまでの既定と同じです）。
+
+Cloudflare Workers の `_redirects` は静的アセットの応答にだけ効きます。Worker コードが処理するリクエストには適用されません。
+
+ソースに `*` が含まれる場合、それは Netlify や Cloudflare Pages 向けのホスト規則の構文であり、リテラルな URL セグメントではありません。該当出力がオンなら `_redirects`、`_headers`、`redirects.json` には残しますが、`talks*/index.html` のような静的 HTML ファイルは書き出しません。
 
 ```ts
 oxContent({
@@ -93,12 +102,16 @@ oxContent({
       "/talks*": "/works/talks",
       "/old-guide": "/guide",
     },
-    netlify: true,
+    provider: "netlify",
   },
 });
 ```
 
 このマップは `_redirects` に `/talks* /works/talks 301` を書き、HTML ページは `/old-guide` だけ出します。
+
+## 2.x からの移行
+
+3.0 では `redirects.netlify` を削除しました。`netlify: true` は `provider: "netlify"` に置き換えるか、CI 環境にホストを選ばせるなら `provider` を省略してください。
 
 ## 下書き
 
