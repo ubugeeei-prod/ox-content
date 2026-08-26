@@ -555,9 +555,8 @@ describe("SSG routePrefix", () => {
       routePrefixOptions({
         ssg: { ...routePrefixOptions().ssg, routePrefix: "/blog" },
         redirects: {
-          enabled: true,
           map: {},
-          netlify: true,
+          provider: "netlify",
           headers: false,
           json: false,
           allowExternal: false,
