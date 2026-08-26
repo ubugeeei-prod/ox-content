@@ -2,7 +2,13 @@ import { afterEach, describe, expect, it } from "vite-plus/test";
 import * as fs from "node:fs/promises";
 import * as os from "node:os";
 import * as path from "node:path";
-import { extractDocs, generateMarkdown, resolveDocsOptions, writeDocs } from "./docs";
+import {
+  extractDocs,
+  generateMarkdown,
+  generateOpenApiDocs,
+  resolveDocsOptions,
+  writeDocs,
+} from "./docs";
 import type { ExtractedDocs } from "./types";
 
 const tempDirs: string[] = [];
@@ -250,6 +256,79 @@ describe("writeDocs", () => {
 
     const nav = await fs.readFile(path.join(outDir, "nav.ts"), "utf-8");
     expect(nav).toMatchSnapshot();
+  });
+});
+
+describe("resolveDocsOptions", () => {
+  it("normalizes OpenAPI docs shorthand and shared defaults", () => {
+    expect(
+      resolveDocsOptions({
+        basePath: "/reference",
+        openapi: {
+          src: ["./openapi.yaml", { path: "./billing.json", name: "Billing" }],
+          failOnUnresolvedRefs: false,
+        },
+      })?.openapi,
+    ).toEqual({
+      src: [
+        { path: "./openapi.yaml", failOnUnresolvedRefs: false },
+        { path: "./billing.json", name: "Billing", failOnUnresolvedRefs: false },
+      ],
+      basePath: "/reference",
+    });
+  });
+});
+
+describe("generateOpenApiDocs", () => {
+  it("renders local OpenAPI pages and sidebar metadata", async () => {
+    const root = await fs.mkdtemp(path.join(os.tmpdir(), "ox-content-openapi-"));
+    tempDirs.push(root);
+
+    await fs.writeFile(
+      path.join(root, "openapi.yaml"),
+      `openapi: 3.1.0
+info:
+  title: Pet API
+  version: 1.0.0
+paths:
+  /pets/{id}:
+    get:
+      operationId: getPet
+      summary: Get a pet
+      tags: [Pets]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: OK
+components:
+  schemas:
+    Pet:
+      type: object
+      properties:
+        id:
+          type: string
+`,
+      "utf-8",
+    );
+
+    const options = resolveDocsOptions({
+      basePath: "/reference",
+      openapi: "openapi.yaml",
+    })!;
+    const generated = generateOpenApiDocs(options, root);
+
+    expect(generated.pages["openapi/pet-api/index.md"]).toContain("Get a pet");
+    expect(generated.pages["openapi/pet-api/getpet.md"]).toContain("## Responses");
+    expect(generated.pages["openapi/pet-api/schemas.md"]).toContain("## Pet");
+    expect(generated.nav[0]).toMatchObject({
+      title: "Pet API",
+      path: "/reference/openapi/pet-api",
+    });
   });
 });
 

@@ -10,7 +10,7 @@ import type { Plugin, ViteDevServer, ResolvedConfig } from "vite";
 import "./virtual";
 import { createMarkdownEnvironment } from "./environment";
 import { transformMarkdown } from "./transform";
-import { extractDocs, generateMarkdown, writeDocs } from "./docs";
+import { extractDocs, generateMarkdown, generateOpenApiDocs, writeDocs } from "./docs";
 import { buildSsg } from "./ssg";
 import { notFoundSearchExcludeIds } from "./not-found";
 import { BlogFeedError } from "./blog";
@@ -95,6 +95,13 @@ export type {
   MarkdownDisplayFormat,
   DocsOptions,
   ResolvedDocsOptions,
+  OpenApiDocsSource,
+  OpenApiDocsInput,
+  OpenApiDocsOptions,
+  ResolvedOpenApiDocsInput,
+  ResolvedOpenApiDocsOptions,
+  DocsNavigationItem,
+  GeneratedOpenApiDocs,
   DocEntry,
   ParamDoc,
   ReturnDoc,
@@ -236,9 +243,10 @@ async function regenerateDocs(resolvedOptions: ResolvedOptions, root: string): P
   const srcDirs = docsOptions.src.map((src) => path.resolve(root, src));
   const outDir = path.resolve(root, docsOptions.out);
   const extracted = await extractDocs(srcDirs, docsOptions);
-  const generated = generateMarkdown(extracted, docsOptions);
+  const openapi = generateOpenApiDocs(docsOptions, root);
+  const generated = { ...generateMarkdown(extracted, docsOptions), ...openapi.pages };
 
-  await writeDocs(generated, outDir, extracted, docsOptions);
+  await writeDocs(generated, outDir, extracted, docsOptions, openapi.nav);
 
   return Object.keys(generated).length;
 }
@@ -804,7 +812,13 @@ export {
   type RunDocsTestsOptions,
   type WrittenDocsTestFile,
 } from "./docs-tests";
-export { extractDocs, generateMarkdown, writeDocs, resolveDocsOptions } from "./docs";
+export {
+  extractDocs,
+  generateMarkdown,
+  generateOpenApiDocs,
+  writeDocs,
+  resolveDocsOptions,
+} from "./docs";
 export { lintMarkdown, lintMarkdownAsync } from "./lint";
 export { lintMarkdownFile, lintMarkdownFiles, shouldLintMarkdownFile } from "./lint-files";
 export type {

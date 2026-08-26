@@ -183,6 +183,9 @@ export declare function generateI18nModule(dictDir: string, config: JsI18NRuntim
  */
 export declare function generateOgImageSvg(data: JsOgImageData, config?: JsOgImageConfig | undefined | null): string
 
+/** Generates static OpenAPI reference Markdown pages from local JSON/YAML files. */
+export declare function generateOpenApiDocs(inputs: Array<JsOpenApiDocsInput>, options?: JsOpenApiDocsOptions | undefined | null): JsGeneratedOpenApiDocs
+
 /** Generates the client-side search runtime module. */
 export declare function generateSearchModule(optionsJson: string, indexPath: string): string
 
@@ -968,6 +971,12 @@ export interface JsFrameworkComponentIsland {
   content?: string
 }
 
+/** Generated OpenAPI Markdown pages and navigation metadata. */
+export interface JsGeneratedOpenApiDocs {
+  pages: Record<string, string>
+  nav: Array<JsDocsNavItem>
+}
+
 /** One unique git author returned by `getGitContributors`. */
 export interface JsGitContributor {
   /** Author name from `%an`. */
@@ -1415,6 +1424,19 @@ export interface JsOgImageData {
   siteName?: string
   /** Author name. */
   author?: string
+}
+
+/** One local OpenAPI file consumed by the generated docs pipeline. */
+export interface JsOpenApiDocsInput {
+  path: string
+  name?: string
+  failOnUnresolvedRefs?: boolean
+}
+
+/** Options shared by all OpenAPI docs inputs. */
+export interface JsOpenApiDocsOptions {
+  root?: string
+  basePath?: string
 }
 
 /** Per-page frontmatter chrome flags. */

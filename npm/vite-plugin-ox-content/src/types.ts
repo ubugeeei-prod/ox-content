@@ -3711,6 +3711,16 @@ export interface DocsOptions {
   entryPoints?: DocsEntryPoint[];
 
   /**
+   * Local OpenAPI 3.0/3.1 JSON or YAML files to render as static REST API docs.
+   *
+   * Generated pages are written under `out/openapi/<spec>/` and use the same
+   * Markdown, stale-file cleanup, SSG, and search pipeline as source docs.
+   *
+   * @default false
+   */
+  openapi?: OpenApiDocsSource | OpenApiDocsSource[] | OpenApiDocsOptions | false;
+
+  /**
    * Output format.
    *
    * `markdown` is the primary supported format. `json` and `html` are reserved
@@ -3924,6 +3934,7 @@ export interface ResolvedDocsOptions {
   include: string[];
   exclude: string[];
   entryPoints?: ResolvedDocsEntryPoint[];
+  openapi: ResolvedOpenApiDocsOptions | false;
   format: "markdown" | "json" | "html";
   private: boolean;
   internal: boolean;
@@ -3951,6 +3962,55 @@ export interface ResolvedDocsOptions {
   kindSortOrder?: string[];
   singleEntryRoot: "preserve" | "flatten";
   generateNav: boolean;
+}
+
+/** OpenAPI docs shorthand accepted by `docs.openapi`. */
+export type OpenApiDocsSource = string | OpenApiDocsInput;
+
+/** One local OpenAPI file consumed by generated REST API docs. */
+export interface OpenApiDocsInput {
+  /** JSON or YAML file path, resolved from the Vite project root. */
+  path: string;
+  /** Optional display name. Defaults to `info.title` or the file name. */
+  name?: string;
+  /** Fail on unresolved or remote `$ref` values. Defaults to `true`. */
+  failOnUnresolvedRefs?: boolean;
+}
+
+/** Object form for configuring generated OpenAPI docs. */
+export interface OpenApiDocsOptions {
+  /** Local OpenAPI files to render. */
+  src?: OpenApiDocsSource | OpenApiDocsSource[];
+  /** Route prefix used by generated OpenAPI nav metadata. Defaults to `basePath` or `/api`. */
+  basePath?: string;
+  /** Default unresolved `$ref` policy for sources. Defaults to `true`. */
+  failOnUnresolvedRefs?: boolean;
+}
+
+/** Resolved local OpenAPI file input. */
+export interface ResolvedOpenApiDocsInput {
+  path: string;
+  name?: string;
+  failOnUnresolvedRefs: boolean;
+}
+
+/** Resolved generated OpenAPI docs options. */
+export interface ResolvedOpenApiDocsOptions {
+  src: ResolvedOpenApiDocsInput[];
+  basePath?: string;
+}
+
+/** Navigation item emitted for generated docs sidebars. */
+export interface DocsNavigationItem {
+  title: string;
+  path: string;
+  children?: DocsNavigationItem[];
+}
+
+/** Generated OpenAPI Markdown pages and sidebar metadata. */
+export interface GeneratedOpenApiDocs {
+  pages: Record<string, string>;
+  nav: DocsNavigationItem[];
 }
 
 /**

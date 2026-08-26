@@ -18,6 +18,7 @@ mod collection_bindings;
 mod docs_bindings;
 mod docs_graph_types;
 mod docs_markdown_types;
+mod docs_openapi_types;
 mod docs_source_types;
 mod ffi;
 mod framework_codegen;
@@ -44,10 +45,12 @@ pub use docs_bindings::{
     build_export_graph_napi, collect_docs_source_files, extract_docs_from_directories_napi,
     extract_docs_from_entry_points_napi, extract_file_doc_entries, extract_file_docs,
     generate_docs_data_json_napi, generate_docs_markdown, generate_docs_nav_code,
-    generate_docs_nav_metadata, generate_docs_nav_metadata_from_docs_napi, write_generated_docs,
+    generate_docs_nav_metadata, generate_docs_nav_metadata_from_docs_napi,
+    generate_openapi_docs_napi, write_generated_docs,
 };
 pub use docs_graph_types::*;
 pub use docs_markdown_types::*;
+pub use docs_openapi_types::*;
 pub use docs_source_types::*;
 pub use framework_codegen::*;
 pub use highlight_bindings::*;

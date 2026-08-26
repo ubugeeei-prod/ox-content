@@ -195,6 +195,7 @@ module.exports.generateDocsNavCode = binding.generateDocsNavCode;
 module.exports.collectDocsSourceFiles = binding.collectDocsSourceFiles;
 module.exports.generateDocsDataJson = binding.generateDocsDataJson;
 module.exports.generateDocsMarkdown = binding.generateDocsMarkdown;
+module.exports.generateOpenApiDocs = binding.generateOpenApiDocs;
 module.exports.writeGeneratedDocs = binding.writeGeneratedDocs;
 module.exports.buildCollectionManifest = binding.buildCollectionManifest;
 module.exports.mergeHighlightedCodeBlocks = binding.mergeHighlightedCodeBlocks;

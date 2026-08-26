@@ -1,20 +1,22 @@
 // BTreeMap keeps JavaScript-facing docs output deterministic.
 use std::collections::{BTreeMap, HashMap};
-use std::path::Path;
+use std::path::{Path, PathBuf};
 
 use napi::bindgen_prelude::*;
 use napi_derive::napi;
 use ox_content_docs::{
-    DocExtractor, DocsNavMetadataOptions, build_export_graph, extract_docs_from_directories,
-    extract_docs_from_entry_points, generate_docs_data_json, generate_markdown, generate_nav_code,
-    generate_nav_metadata, generate_nav_metadata_from_docs_with_options, normalize_doc_items,
+    DocExtractor, DocsNavMetadataOptions, OpenApiDocsOptions, OpenApiSpecInput, build_export_graph,
+    extract_docs_from_directories, extract_docs_from_entry_points, generate_docs_data_json,
+    generate_markdown, generate_nav_code, generate_nav_metadata,
+    generate_nav_metadata_from_docs_with_options, generate_openapi_docs, normalize_doc_items,
     write_docs_output,
 };
 
 use crate::{
     JsDocEntry, JsDocsMarkdownModule, JsDocsMarkdownOptions, JsDocsNavItem, JsDocsNavOptions,
     JsDocsOutputOptions, JsEntryPointDocsOptions, JsEntryPointSpec, JsEntrypointDocsModule,
-    JsExportGraph, JsExtractedDocsModule, JsGraphOptions, JsSourceDocItem,
+    JsExportGraph, JsExtractedDocsModule, JsGeneratedOpenApiDocs, JsGraphOptions,
+    JsOpenApiDocsInput, JsOpenApiDocsOptions, JsSourceDocItem,
 };
 
 mod graph;
@@ -229,6 +231,34 @@ pub fn generate_docs_data_json_napi(
         &generated_at,
     )
     .map_err(|error| Error::from_reason(error.to_string()))
+}
+
+/// Generates static OpenAPI reference Markdown pages from local JSON/YAML files.
+#[napi(js_name = "generateOpenApiDocs")]
+#[allow(clippy::disallowed_types, clippy::implicit_hasher)]
+pub fn generate_openapi_docs_napi(
+    inputs: Vec<JsOpenApiDocsInput>,
+    options: Option<JsOpenApiDocsOptions>,
+) -> Result<JsGeneratedOpenApiDocs> {
+    let options = options.unwrap_or_default();
+    let inputs = inputs
+        .into_iter()
+        .map(|input| OpenApiSpecInput {
+            path: PathBuf::from(input.path),
+            name: input.name,
+            fail_on_unresolved_refs: input.fail_on_unresolved_refs.unwrap_or(true),
+        })
+        .collect::<Vec<_>>();
+    let generated = generate_openapi_docs(
+        &inputs,
+        &OpenApiDocsOptions { root: options.root.map(PathBuf::from), base_path: options.base_path },
+    )
+    .map_err(|error| Error::from_reason(error.to_string()))?;
+
+    Ok(JsGeneratedOpenApiDocs {
+        pages: generated.pages.into_iter().collect(),
+        nav: generated.nav_items.into_iter().map(map_docs_nav_item).collect(),
+    })
 }
 
 /// Writes generated API documentation files and native sidecars.

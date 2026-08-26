@@ -57,6 +57,11 @@ import type {
   DocEntry,
   ResolvedDocsEntryPoint,
   DocsOptions,
+  DocsNavigationItem,
+  GeneratedOpenApiDocs,
+  OpenApiDocsSource,
+  ResolvedOpenApiDocsInput,
+  ResolvedOpenApiDocsOptions,
 } from "./types";
 import { importNapiModule, importNapiModuleSync } from "./napi";
 
@@ -72,6 +77,8 @@ const DEFAULT_DOCS_INCLUDE = [
   "**/*.cts",
   "**/*.cjs",
 ];
+
+const DEFAULT_OPENAPI_NAV_BASE_PATH = "/api";
 
 /**
  * Extracts JSDoc documentation from source files in specified directories.
@@ -257,6 +264,39 @@ export function generateMarkdown(
 }
 
 /**
+ * Generates Markdown documentation from local OpenAPI 3.0/3.1 files.
+ */
+export function generateOpenApiDocs(
+  options: ResolvedDocsOptions,
+  root = process.cwd(),
+): GeneratedOpenApiDocs {
+  if (!options.openapi) {
+    return { pages: {}, nav: [] };
+  }
+
+  const napi = importNapiModuleSync();
+  const generateOpenApiDocs = (
+    napi as {
+      generateOpenApiDocs?: (
+        inputs: ResolvedOpenApiDocsInput[],
+        options?: { root?: string; basePath?: string },
+      ) => GeneratedOpenApiDocs;
+    }
+  ).generateOpenApiDocs;
+
+  if (typeof generateOpenApiDocs !== "function") {
+    throw new Error(
+      "[ox-content] generateOpenApiDocs is not available from @ox-content/napi. Please rebuild the NAPI package.",
+    );
+  }
+
+  return generateOpenApiDocs(options.openapi.src, {
+    root,
+    basePath: options.openapi.basePath ?? options.basePath ?? DEFAULT_OPENAPI_NAV_BASE_PATH,
+  });
+}
+
+/**
  * Writes generated documentation to the output directory.
  */
 export async function writeDocs(
@@ -264,6 +304,7 @@ export async function writeDocs(
   outDir: string,
   extractedDocs?: ExtractedDocs[],
   options?: ResolvedDocsOptions,
+  extraNav: DocsNavigationItem[] = [],
 ): Promise<void> {
   const napi = importNapiModuleSync();
 
@@ -273,12 +314,22 @@ export async function writeDocs(
     );
   }
 
+  let generateNav = options?.generateNav ?? false;
+  let docsToWrite = docs;
+  if (generateNav && extraNav.length > 0) {
+    docsToWrite = {
+      ...docs,
+      "nav.ts": generateCombinedNavCode(napi, extractedDocs, options, extraNav),
+    };
+    generateNav = false;
+  }
+
   napi.writeGeneratedDocs(
-    docs,
+    docsToWrite,
     outDir,
     extractedDocs ? toRustDocsModules(extractedDocs) : undefined,
     {
-      generateNav: options?.generateNav ?? false,
+      generateNav,
       groupBy: options?.groupBy ?? "file",
       generatedAt: existingGeneratedAt(outDir) ?? new Date().toISOString(),
       basePath: options?.basePath,
@@ -290,6 +341,64 @@ export async function writeDocs(
       singleEntryRoot: options?.singleEntryRoot,
     },
   );
+}
+
+function generateCombinedNavCode(
+  napi: unknown,
+  extractedDocs: ExtractedDocs[] | undefined,
+  options: ResolvedDocsOptions | undefined,
+  extraNav: DocsNavigationItem[],
+): string {
+  const nav = [...generateSourceDocsNav(napi, extractedDocs, options), ...extraNav];
+  const generateDocsNavCode = (
+    napi as {
+      generateDocsNavCode?: (nav: DocsNavigationItem[], exportName?: string) => string;
+    }
+  ).generateDocsNavCode;
+  if (typeof generateDocsNavCode !== "function") {
+    throw new Error("[ox-content] generateDocsNavCode is not available from @ox-content/napi.");
+  }
+  return generateDocsNavCode(nav, "apiNav");
+}
+
+function generateSourceDocsNav(
+  napi: unknown,
+  extractedDocs: ExtractedDocs[] | undefined,
+  options: ResolvedDocsOptions | undefined,
+): DocsNavigationItem[] {
+  if (!extractedDocs?.length || !options || options.groupBy !== "file") {
+    return [];
+  }
+  const generateDocsNavMetadataFromDocs = (
+    napi as {
+      generateDocsNavMetadataFromDocs?: (
+        docs: ReturnType<typeof toRustDocsModules>,
+        options: {
+          basePath?: string;
+          pathStrategy: ResolvedDocsOptions["pathStrategy"];
+          groupOrder?: string[];
+          sort?: string[];
+          sortEntryPoints: boolean;
+          kindSortOrder?: string[];
+          singleEntryRoot: ResolvedDocsOptions["singleEntryRoot"];
+        },
+      ) => DocsNavigationItem[];
+    }
+  ).generateDocsNavMetadataFromDocs;
+  if (typeof generateDocsNavMetadataFromDocs !== "function") {
+    throw new Error(
+      "[ox-content] generateDocsNavMetadataFromDocs is not available from @ox-content/napi.",
+    );
+  }
+  return generateDocsNavMetadataFromDocs(toRustDocsModules(extractedDocs), {
+    basePath: options.basePath,
+    pathStrategy: options.pathStrategy,
+    groupOrder: options.groupOrder,
+    sort: options.sort,
+    sortEntryPoints: options.sortEntryPoints,
+    kindSortOrder: options.kindSortOrder,
+    singleEntryRoot: options.singleEntryRoot,
+  });
 }
 
 /** Keep `docs.json`'s timestamp stable across regenerations of the same tree. */
@@ -366,6 +475,7 @@ export function resolveDocsOptions(
     entryPoints: opts.entryPoints?.map((entryPoint) =>
       typeof entryPoint === "string" ? { path: entryPoint } : entryPoint,
     ),
+    openapi: resolveOpenApiDocsOptions(opts.openapi, opts.basePath),
     format: opts.format ?? "markdown",
     private: opts.private ?? false,
     internal: opts.internal ?? false,
@@ -394,4 +504,60 @@ export function resolveDocsOptions(
     singleEntryRoot: opts.singleEntryRoot ?? "preserve",
     generateNav: opts.generateNav ?? true,
   };
+}
+
+function resolveOpenApiDocsOptions(
+  input: DocsOptions["openapi"],
+  basePath: string | undefined,
+): ResolvedOpenApiDocsOptions | false {
+  if (!input || input === false) {
+    return false;
+  }
+
+  const config = isOpenApiSource(input) || Array.isArray(input) ? { src: input } : input;
+  const defaultFailOnUnresolvedRefs = config.failOnUnresolvedRefs ?? true;
+  const sources = toArray(config.src).map((source) =>
+    resolveOpenApiDocsInput(source, defaultFailOnUnresolvedRefs),
+  );
+
+  if (sources.length === 0) {
+    return false;
+  }
+
+  return {
+    src: sources,
+    basePath: config.basePath ?? basePath,
+  };
+}
+
+function resolveOpenApiDocsInput(
+  source: OpenApiDocsSource,
+  defaultFailOnUnresolvedRefs: boolean,
+): ResolvedOpenApiDocsInput {
+  if (typeof source === "string") {
+    return { path: source, failOnUnresolvedRefs: defaultFailOnUnresolvedRefs };
+  }
+
+  return {
+    path: source.path,
+    name: source.name,
+    failOnUnresolvedRefs: source.failOnUnresolvedRefs ?? defaultFailOnUnresolvedRefs,
+  };
+}
+
+function isOpenApiSource(
+  input: DocsOptions["openapi"],
+): input is OpenApiDocsSource | OpenApiDocsSource[] {
+  return (
+    typeof input === "string" ||
+    Array.isArray(input) ||
+    (typeof input === "object" && input !== null && "path" in input)
+  );
+}
+
+function toArray<T>(value: T | T[] | undefined): T[] {
+  if (value === undefined) {
+    return [];
+  }
+  return Array.isArray(value) ? value : [value];
 }

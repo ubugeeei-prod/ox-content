@@ -38,6 +38,7 @@ mod model;
 mod module_routes;
 mod nav;
 mod normalize;
+mod openapi;
 mod output;
 mod string_builder;
 
@@ -72,5 +73,9 @@ pub use normalize::{
     NormalizedDocEntry, NormalizedDocKind, NormalizedMember, NormalizedMemberKind,
     NormalizedParamDoc, NormalizedReturnDoc, NormalizedThrowsDoc, NormalizedTypeParam,
     normalize_doc_item, normalize_doc_items,
+};
+pub use openapi::{
+    GeneratedOpenApiDocs, OpenApiDocsError, OpenApiDocsOptions, OpenApiDocsResult,
+    OpenApiSpecInput, generate_openapi_docs,
 };
 pub use output::{DocsOutputError, DocsOutputOptions, DocsOutputResult, write_docs_output};
