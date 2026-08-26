@@ -149,7 +149,7 @@ fn generate_html_inner(
     if page_content_contains_any(&page_data.content, &["ox-section-index"]) {
         css_sections.push(wrap_css_section("section-index", SECTION_INDEX_CSS));
     }
-    if page_content_contains_any(&page_data.content, &["ox-file-tree"]) {
+    if page_content_contains_any(&page_data.content, &["ox-file-tree", "ox-data-table"]) {
         css_sections.push(wrap_css_section("file-tree", FILE_TREE_CSS));
     }
     push_heading_permalink_css(&mut css_sections, &page_data.content);

@@ -1254,24 +1254,6 @@ a:hover {
   background: var(--octc-color-bg-alt);
   font-weight: 600;
 }
-.content .ox-data-table {
-  margin: 1.25rem 0;
-  max-width: 100%;
-}
-.content .ox-data-table__scroll {
-  overflow-x: auto;
-  -webkit-overflow-scrolling: touch;
-  max-width: 100%;
-}
-.content .ox-data-table table {
-  margin: 0;
-}
-.content .ox-data-table caption {
-  caption-side: top;
-  text-align: start;
-  font-weight: 600;
-  padding-bottom: 0.5rem;
-}
 .content img {
   max-width: 100%;
   height: auto;
