@@ -1,113 +1,32 @@
 import { describe, expect, it } from "vite-plus/test";
-import type { ResolvedOptions } from "./types";
 import { transformMarkdown } from "./transform";
+import type { ResolvedOptions } from "./types";
 
-describe("code annotations", () => {
-  it("preserves pre and line classes after syntax highlighting", async () => {
-    const markdown = `\`\`\`ts annotate="highlight:1;warning:2;error:3"
-const first = 1;
-const second = 2;
-throw new Error("boom");
-\`\`\`
-`;
+describe("dataTables transform", () => {
+  it("leaves csv-table fences literal unless opted in", async () => {
+    const markdown =
+      '```csv-table title="Options"\nOption,Type,Default\nhighlight,boolean,false\n```\n';
 
-    const result = await transformMarkdown(
+    const defaultResult = await transformMarkdown(
       markdown,
-      "docs/code-annotations.md",
+      "docs/data-tables.md",
       createResolvedOptions(),
     );
+    expect(defaultResult.html).not.toContain("ox-data-table");
 
-    expect(result.html).toMatchSnapshot();
-  });
-
-  it("keeps non-annotated highlighted blocks unchanged", async () => {
-    const markdown = `\`\`\`ts
-const value = 1;
-const next = 2;
-\`\`\`
-`;
-
-    const result = await transformMarkdown(markdown, "docs/plain-code.md", createResolvedOptions());
-
-    expect(result.html).toMatchSnapshot();
-  });
-
-  it("supports VitePress-style fence metadata", async () => {
-    const markdown = `\`\`\`ts:line-numbers=7 {1,3} [config.ts]
-const first = true;
-const second = false;
-const third = true;
-\`\`\`
-`;
-
-    const result = await transformMarkdown(
+    const enabledResult = await transformMarkdown(
       markdown,
-      "docs/vitepress-meta.md",
+      "docs/data-tables.md",
       createResolvedOptions({
-        codeAnnotations: {
-          enabled: true,
-          notation: "vitepress",
-          metaKey: "annotate",
-          defaultLineNumbers: false,
-        },
+        dataTables: { enabled: true, missing: "error" },
       }),
     );
-
-    expect(result.html).toMatchSnapshot();
-  });
-
-  it("supports VitePress-style inline directives", async () => {
-    const markdown = `\`\`\`ts
-// [!code focus:2]
-const first = true;
-const second = false;
-console.log("before") // [!code --]
-console.log("after") // [!code ++]
-console.warn("careful") // [!code warning]
-throw new Error("boom") // [!code error]
-\`\`\`
-`;
-
-    const result = await transformMarkdown(
-      markdown,
-      "docs/vitepress-inline.md",
-      createResolvedOptions({
-        codeAnnotations: {
-          enabled: true,
-          notation: "vitepress",
-          metaKey: "annotate",
-          defaultLineNumbers: false,
-        },
-      }),
-    );
-
-    expect(result.html).toMatchSnapshot();
-  });
-
-  it("supports VitePress-style escape-next-line directives", async () => {
-    const markdown = `\`\`\`ts
-// [!code escape]
-console.warn(literal) // [!code warning]
-console.warn(annotated) // [!code warning]
-\`\`\`
-`;
-
-    const result = await transformMarkdown(
-      markdown,
-      "docs/vitepress-escape.md",
-      createResolvedOptions({
-        highlight: false,
-        codeAnnotations: {
-          enabled: true,
-          notation: "vitepress",
-          metaKey: "annotate",
-          defaultLineNumbers: false,
-        },
-      }),
-    );
-
-    expect(result.html).toMatchSnapshot();
-    expect(result.html.match(/ox-code-line--warning/g)?.length ?? 0).toBe(1);
+    expect(enabledResult.html).toContain('class="ox-data-table"');
+    expect(enabledResult.html).toContain("ox-data-table__scroll");
+    expect(enabledResult.html).toContain("<table");
+    expect(enabledResult.html).toContain("Options");
+    expect(enabledResult.html).toContain("highlight");
+    expect(enabledResult.html).not.toContain("<script");
   });
 });
 
@@ -138,9 +57,9 @@ function createResolvedOptions(overrides: Partial<ResolvedOptions> = {}): Resolv
     taskLists: true,
     strikethrough: true,
     autolinks: true,
-    highlight: true,
+    highlight: false,
     codeAnnotations: {
-      enabled: true,
+      enabled: false,
       notation: "attribute",
       metaKey: "annotate",
       defaultLineNumbers: false,
@@ -155,6 +74,7 @@ function createResolvedOptions(overrides: Partial<ResolvedOptions> = {}): Resolv
     includes: { enabled: false },
     cards: { enabled: false },
     steps: { enabled: false },
+    math: { enabled: false },
     fileTree: { enabled: false, defaultOpen: true, icons: true },
     dataTables: { enabled: false, missing: "error" },
     sanitize: { enabled: false },
@@ -175,7 +95,6 @@ function createResolvedOptions(overrides: Partial<ResolvedOptions> = {}): Resolv
     },
     docsTests: { enabled: false, languages: ["js", "jsx", "ts", "tsx"], requireMeta: true },
     mermaid: false,
-    math: { enabled: false },
     frontmatter: true,
     toc: true,
     tocMaxDepth: 3,

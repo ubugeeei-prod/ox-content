@@ -142,6 +142,7 @@ export default defineConfig(({ mode }) => {
                       { text: "Step Lists", link: "/built-in/steps.md" },
                       { text: "File Includes", link: "/built-in/includes.md" },
                       { text: "File Tree", link: "/built-in/file-tree.md" },
+                      { text: "Data Tables", link: "/built-in/data-tables.md" },
                       { text: "Inline Badges", link: "/built-in/badges.md" },
                       { text: "Magic Links", link: "/built-in/magic-links.md" },
                       { text: "Images", link: "/built-in/images.md" },
@@ -275,6 +276,7 @@ export default defineConfig(({ mode }) => {
         cards: true,
         steps: true,
         fileTree: true,
+        dataTables: true,
         typedHover: true,
         embeds: {
           pm: true,

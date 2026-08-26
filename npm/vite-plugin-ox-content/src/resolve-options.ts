@@ -3,6 +3,7 @@ import { resolveCardOptions } from "./card-options";
 import { resolveCollectionsOptions } from "./collections";
 import { resolveDocsOptions } from "./docs";
 import { resolveFeedsOptions } from "./feeds";
+import { resolveDataTableOptions } from "./data-table-options";
 import { resolveFileTreeOptions } from "./file-tree-options";
 import { resolveHeadingPermalinksOptions } from "./heading-permalinks-options";
 import { resolveI18nOptions } from "./i18n";
@@ -72,6 +73,7 @@ export function resolveOptions(options: OxContentOptions): ResolvedOptions {
     cards: resolveCardOptions(options.cards),
     steps: resolveStepsOptions(options.steps),
     fileTree: resolveFileTreeOptions(options.fileTree),
+    dataTables: resolveDataTableOptions(options.dataTables),
     sanitize: resolveSanitizeOptions(options.sanitize),
     editThisPage: resolveEditThisPageOptions(options.editThisPage),
     cjkEmphasis: options.cjkEmphasis ?? false,

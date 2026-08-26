@@ -49,6 +49,7 @@ import { protectMermaidSvgs, restoreMermaidSvgs } from "./plugins/mermaid-protec
 import { typecheckCodeBlocks } from "./code-blocks";
 import { applyTypedHover } from "./typed-hover";
 import { resolveMdxForFilePath } from "./markdown";
+import { toJsDataTableOptions } from "./data-table-options";
 import { toJsFileTreeOptions } from "./file-tree-options";
 
 /**
@@ -338,6 +339,12 @@ interface JsTransformOptions {
     iconFolderOpen?: string;
     iconFile?: string;
     iconFiles?: Record<string, string>;
+  };
+
+  dataTables?: {
+    enabled?: boolean;
+    rootDir?: string;
+    missing?: "error" | "warn";
   };
 
   sanitize?: JsSanitizeOptions;
@@ -641,6 +648,7 @@ export async function transformMarkdown(
     cards: options.cards?.enabled ? { enabled: true } : undefined,
     steps: options.steps?.enabled ? { enabled: true } : undefined,
     fileTree: toJsFileTreeOptions(options.fileTree),
+    dataTables: toJsDataTableOptions(options.dataTables),
     // Sanitize once at the end of the JS pipeline so opt-in embeds can be
     // expanded before the allow-list is applied.
     sanitize: undefined,

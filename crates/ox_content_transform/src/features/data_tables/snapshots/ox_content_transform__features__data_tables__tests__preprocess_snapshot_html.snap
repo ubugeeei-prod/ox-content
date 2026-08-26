@@ -1,0 +1,15 @@
+---
+source: crates/ox_content_transform/src/features/data_tables/tests.rs
+expression: source
+---
+<div class="ox-data-table">
+<div class="ox-data-table__scroll">
+<table class="ox-data-table__table">
+<caption class="ox-data-table__caption">Options</caption>
+<thead class="ox-data-table__head"><tr class="ox-data-table__row"><th class="ox-data-table__header" scope="col">Option</th><th class="ox-data-table__header" scope="col">Type</th><th class="ox-data-table__header" scope="col">Default</th></tr></thead>
+<tbody class="ox-data-table__body">
+<tr class="ox-data-table__row"><td class="ox-data-table__cell">highlight</td><td class="ox-data-table__cell">boolean</td><td class="ox-data-table__cell">false</td></tr>
+</tbody>
+</table>
+</div>
+</div>

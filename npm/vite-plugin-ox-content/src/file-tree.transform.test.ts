@@ -110,6 +110,7 @@ function createResolvedOptions(overrides: Partial<ResolvedOptions> = {}): Resolv
     steps: { enabled: false },
     math: { enabled: false },
     fileTree: { enabled: false, defaultOpen: true, icons: true },
+    dataTables: { enabled: false, missing: "error" },
     sanitize: { enabled: false },
     editThisPage: { enabled: false, branch: "main", label: "Edit this page" },
     cjkEmphasis: false,
