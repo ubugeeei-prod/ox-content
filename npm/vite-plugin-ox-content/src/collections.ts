@@ -2,6 +2,7 @@ import * as path from "node:path";
 import { applyCollectionRoutes } from "./apply-permalinks";
 import { toJsDataTableOptions } from "./data-table-options";
 import { toJsFileTreeOptions } from "./file-tree-options";
+import { toJsPartialsOptions } from "./partials-options";
 import { generateCollectionsModule } from "./collections-runtime";
 import { importNapiModule } from "./napi";
 import type {
@@ -70,6 +71,7 @@ type NativeTransformOptions = {
   cjkEmphasis?: boolean;
   codeImports?: { enabled?: boolean; rootDir?: string };
   includes?: { enabled?: boolean; rootDir?: string };
+  partials?: { enabled?: boolean; rootDir?: string; root?: string; missing?: string };
   steps?: { enabled?: boolean };
   fileTree?: {
     enabled?: boolean;
@@ -283,6 +285,7 @@ function createNativeTransformOptions(options: ResolvedOptions): NativeTransform
           rootDir: options.includes.rootDir,
         }
       : undefined,
+    partials: toJsPartialsOptions(options.partials),
     cards: options.cards?.enabled ? { enabled: true } : undefined,
     steps: options.steps?.enabled ? { enabled: true } : undefined,
     codeGroups: options.codeGroups?.enabled ? { enabled: true } : undefined,

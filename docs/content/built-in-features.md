@@ -28,6 +28,7 @@ inline**.
 | [Cards](./built-in/cards.md)                                | Opt-in `::: card` / `::: link-card` / `::: card-grid` blocks                |
 | [Step Lists](./built-in/steps.md)                           | Opt-in `::: steps` tutorial lists                                           |
 | [File Includes](./built-in/includes.md)                     | Opt-in `<!-- @include -->` Markdown fragments                               |
+| [Markdown Partials](./built-in/partials.md)                 | Opt-in parameterized `<!-- @partial -->` snippets                           |
 | [File Tree](./built-in/file-tree.md)                        | Opt-in static `file-tree` directory diagrams                                |
 | [Data Tables](./built-in/data-tables.md)                    | Opt-in static tables from `csv-table` / `json-table` fences                 |
 | [Inline Badges](./built-in/badges.md)                       | Opt-in `{badge:tip}` status labels in headings or prose                     |
@@ -96,6 +97,7 @@ inline**.
 | Code groups        | `codeGroups`                                                                                                                                                       | `false`              | [Code Groups](./built-in/code-groups.md)                    |
 | Extra syntax       | `wikiLinks`, `emojiShortcodes`, `attrs`, `cjkEmphasis`, `containers`, `badges`, `notByAi`, `keyboardKeys`, `abbreviations`, `definitionLists`, `magicLinks`        | `false`              | [Syntax Extensions](./built-in/syntax-extensions.md)        |
 | File includes      | `includes`                                                                                                                                                         | `false`              | [File Includes](./built-in/includes.md)                     |
+| Markdown partials  | `partials`                                                                                                                                                         | `false`              | [Markdown Partials](./built-in/partials.md)                 |
 | Cards              | `cards`                                                                                                                                                            | `false`              | [Cards](./built-in/cards.md)                                |
 | Step lists         | `steps`                                                                                                                                                            | `false`              | [Step Lists](./built-in/steps.md)                           |
 | File tree          | `fileTree`                                                                                                                                                         | `false`              | [File Tree](./built-in/file-tree.md)                        |

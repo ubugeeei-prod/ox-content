@@ -149,6 +149,7 @@ export function createDocsResolvedOptions(
     images: { enabled: false, lazy: true },
     codeImports: { enabled: false },
     includes: { enabled: false },
+    partials: { enabled: false, root: "_partials", missing: "literal" },
     cards: { enabled: false },
     steps: { enabled: false },
     codeGroups: { enabled: false },

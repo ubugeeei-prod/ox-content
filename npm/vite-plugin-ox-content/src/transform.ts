@@ -51,6 +51,7 @@ import { applyTypedHover } from "./typed-hover";
 import { resolveMdxForFilePath } from "./markdown";
 import { toJsDataTableOptions } from "./data-table-options";
 import { toJsFileTreeOptions } from "./file-tree-options";
+import { toJsPartialsOptions } from "./partials-options";
 
 /**
  * NAPI bindings for Rust-based Markdown processing.
@@ -343,6 +344,13 @@ interface JsTransformOptions {
   includes?: {
     enabled?: boolean;
     rootDir?: string;
+  };
+
+  partials?: {
+    enabled?: boolean;
+    rootDir?: string;
+    root?: string;
+    missing?: string;
   };
 
   cards?: {
@@ -689,6 +697,7 @@ export async function transformMarkdown(
           rootDir: options.includes.rootDir,
         }
       : undefined,
+    partials: toJsPartialsOptions(options.partials),
     cards: options.cards?.enabled ? { enabled: true } : undefined,
     steps: options.steps?.enabled ? { enabled: true } : undefined,
     codeGroups: options.codeGroups?.enabled ? { enabled: true } : undefined,

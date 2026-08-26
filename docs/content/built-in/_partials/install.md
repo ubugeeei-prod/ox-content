@@ -1,0 +1,1 @@
+Install `{{ package }}` with `{{ manager }}`.

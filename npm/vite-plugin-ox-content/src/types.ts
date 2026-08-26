@@ -1824,6 +1824,18 @@ export interface OxContentOptions {
   includes?: boolean | IncludeOptions;
 
   /**
+   * Inline a parameterized Markdown partial with
+   * `<!-- @partial: ./_partials/install.md package="ox-content" -->`.
+   *
+   * Disabled when omitted. `{{ name }}` substitutions are HTML-escaped.
+   * Missing parameters stay literal unless `missing` is `"error"`. Existing
+   * `<!-- @include: -->` behavior is unchanged.
+   *
+   * @default false
+   */
+  partials?: boolean | PartialsOptions;
+
+  /**
    * Opt-in `::: card` / `::: link-card` / `::: card-grid` blocks.
    *
    * Passing `true` enables the defaults. Pass an object to keep the option
@@ -2123,6 +2135,10 @@ export interface ResolvedOptions {
   images: ResolvedImageOptions;
   codeImports: ResolvedCodeImportOptions;
   includes: ResolvedIncludeOptions;
+  /**
+   * Present after `resolveOptions`. Omitted in hand-built fixtures means off.
+   */
+  partials?: ResolvedPartialsOptions;
   cards: ResolvedCardOptions;
   steps: ResolvedStepsOptions;
   /**
@@ -2754,6 +2770,50 @@ export interface IncludeOptions {
 export interface ResolvedIncludeOptions {
   enabled: boolean;
   rootDir?: string;
+}
+
+/**
+ * Options for parameterized Markdown partials with `<!-- @partial: PATH k="v" -->`.
+ *
+ * Bare names resolve under `root` (`_partials` by default). Relative `./` and
+ * `../` paths resolve from the current file. `@/` and leading `/` resolve from
+ * `rootDir`. After canonicalize, paths outside `rootDir` are rejected.
+ */
+export interface PartialsOptions {
+  /**
+   * Enable the transform when an options object is supplied.
+   *
+   * @default true
+   */
+  enabled?: boolean;
+  /**
+   * Directory used to resolve `@/` and absolute partial paths.
+   *
+   * @default undefined
+   */
+  rootDir?: string;
+  /**
+   * Directory used for bare names such as `install.md`.
+   *
+   * @default "_partials"
+   */
+  root?: string;
+  /**
+   * Missing `{{ name }}` substitutions stay literal, or report a diagnostic.
+   *
+   * @default "literal"
+   */
+  missing?: "literal" | "error";
+}
+
+/**
+ * Resolved parameterized-partial transform options.
+ */
+export interface ResolvedPartialsOptions {
+  enabled: boolean;
+  rootDir?: string;
+  root: string;
+  missing: "literal" | "error";
 }
 
 /**

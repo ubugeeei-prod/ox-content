@@ -22,6 +22,7 @@ mod file_tree_options;
 mod keyboard_keys_options;
 mod magic_link_options;
 mod math_options;
+mod partials_options;
 mod steps_options;
 mod transform_options;
 
@@ -44,6 +45,7 @@ pub use file_tree_options::JsFileTreeOptions;
 pub use keyboard_keys_options::JsKeyboardKeysOptions;
 pub use magic_link_options::{JsMagicLinkAlias, JsMagicLinkImageOverride, JsMagicLinkOptions};
 pub use math_options::JsMathOptions;
+pub use partials_options::JsPartialsOptions;
 pub use steps_options::JsStepsOptions;
 pub use transform_options::JsTransformOptions;
 

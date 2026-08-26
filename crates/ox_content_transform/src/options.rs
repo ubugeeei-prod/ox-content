@@ -36,6 +36,8 @@ pub struct TransformOptions {
     pub containers: Option<ContainerOptions>,
     /// Opt-in Markdown file includes. Disabled when omitted.
     pub includes: Option<IncludeOptions>,
+    /// Opt-in parameterized Markdown partials. Disabled when omitted.
+    pub partials: Option<PartialsOptions>,
     /// Opt-in `::: steps` ordered lists. Disabled when omitted.
     pub steps: Option<StepsOptions>,
     /// Opt-in `::: code-group` fence groups. Disabled when omitted.
@@ -166,6 +168,14 @@ pub struct CodeImportOptions {
 pub struct IncludeOptions {
     pub enabled: Option<bool>,
     pub root_dir: Option<String>,
+}
+
+#[derive(Clone, Default)]
+pub struct PartialsOptions {
+    pub enabled: Option<bool>,
+    pub root_dir: Option<String>,
+    pub root: Option<String>,
+    pub missing: Option<String>,
 }
 
 #[derive(Clone, Default)]

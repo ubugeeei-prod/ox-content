@@ -1486,6 +1486,34 @@ export interface JsParserOptions {
   autolinks?: boolean
 }
 
+/** Opt-in parameterized Markdown partials. */
+export interface JsPartialsOptions {
+  /**
+   * Enable `<!-- @partial: PATH k="v" -->` expansion.
+   *
+   * Default: `false`.
+   */
+  enabled?: boolean
+  /**
+   * Root directory used for `@/` and absolute partial paths.
+   *
+   * Default: project root from the JavaScript caller.
+   */
+  rootDir?: string
+  /**
+   * Directory used for bare partial names such as `install.md`.
+   *
+   * Default: `"_partials"`.
+   */
+  root?: string
+  /**
+   * Missing `{{ name }}` substitutions: `"literal"` (default) or `"error"`.
+   *
+   * Default: `"literal"`.
+   */
+  missing?: string
+}
+
 /** A block the native pass left for the caller's highlighter. */
 export interface JsPendingBlock {
   /** The `language-…` class the block carries. */
@@ -2348,6 +2376,12 @@ export interface JsTransformOptions {
    * Default: disabled.
    */
   includes?: JsIncludeOptions
+  /**
+   * Opt-in parameterized Markdown partials via `<!-- @partial: PATH k="v" -->`.
+   *
+   * Default: disabled.
+   */
+  partials?: JsPartialsOptions
   /**
    * Opt-in `::: steps` ordered lists.
    *

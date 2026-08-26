@@ -29,6 +29,7 @@ mod magic;
 mod math;
 mod not_by_ai;
 mod option_resolve;
+mod partials;
 mod segments;
 mod steps;
 mod wiki;
@@ -64,6 +65,7 @@ pub struct TransformFeatureOptions {
     code_imports: Option<ResolvedCodeImportOptions>,
     containers: Option<ResolvedContainerOptions>,
     includes: Option<ResolvedIncludeOptions>,
+    partials: Option<partials::ResolvedPartials>,
     cards: Option<ResolvedCardOptions>,
     steps: Option<ResolvedStepsOptions>,
     code_groups: Option<ResolvedCodeGroupOptions>,
@@ -139,6 +141,7 @@ impl TransformFeatureOptions {
             }
         }
         let includes = includes::resolve(options.includes.as_ref(), source_path);
+        let partials = partials::resolve(options.partials.as_ref(), source_path);
         let file_tree = file_tree::resolve(options.file_tree.as_ref());
         let data_tables = data_tables::resolve(options.data_tables.as_ref(), source_path);
         let definition_lists = definition_lists::resolve(options.definition_lists.as_ref());
@@ -160,6 +163,7 @@ impl TransformFeatureOptions {
             code_imports,
             containers,
             includes,
+            partials,
             cards,
             steps,
             code_groups,
@@ -184,6 +188,7 @@ impl TransformFeatureOptions {
             || self.code_imports.is_some()
             || self.containers.is_some()
             || self.includes.is_some()
+            || self.partials.is_some()
             || self.cards.is_some()
             || self.steps.is_some()
             || self.code_groups.is_some()
@@ -219,6 +224,13 @@ pub fn preprocess_markdown<'a>(
         && current.contains("<!--")
     {
         let replaced = includes::transform(&current, includes, &mut errors);
+        current = Cow::Owned(replaced);
+    }
+
+    if let Some(partials) = &options.partials
+        && current.contains("@partial")
+    {
+        let replaced = partials::transform(&current, partials, &mut errors);
         current = Cow::Owned(replaced);
     }
 

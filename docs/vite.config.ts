@@ -142,6 +142,7 @@ export default defineConfig(({ mode }) => {
                       { text: "Cards", link: "/built-in/cards.md" },
                       { text: "Step Lists", link: "/built-in/steps.md" },
                       { text: "File Includes", link: "/built-in/includes.md" },
+                      { text: "Markdown Partials", link: "/built-in/partials.md" },
                       { text: "File Tree", link: "/built-in/file-tree.md" },
                       { text: "Data Tables", link: "/built-in/data-tables.md" },
                       { text: "Inline Badges", link: "/built-in/badges.md" },
@@ -287,6 +288,7 @@ export default defineConfig(({ mode }) => {
         images: true,
         codeImports: true,
         includes: true,
+        partials: true,
         cards: true,
         steps: true,
         codeGroups: true,
@@ -307,7 +309,6 @@ export default defineConfig(({ mode }) => {
           audio: true,
           video: true,
         },
-
         // Mermaid diagrams (native mmdc via NAPI)
         mermaid: true,
 

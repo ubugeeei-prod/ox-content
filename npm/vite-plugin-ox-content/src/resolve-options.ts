@@ -10,11 +10,11 @@ import { resolveIconsOptions } from "./icons";
 import { resolveHeadingPermalinksOptions } from "./heading-permalinks-options";
 import { resolveI18nOptions } from "./i18n";
 import { resolveIncludeOptions } from "./include-options";
+import { resolvePartialsOptions } from "./partials-options";
 import { resolveAbbreviationsOptions } from "./abbreviations-options";
 import { resolveMagicLinkOptions } from "./magic-link-options";
 import { resolveDefinitionListOptions } from "./definition-list-options";
 import { resolveNotByAiOptions } from "./not-by-ai-options";
-
 export { resolveNotByAiOptions } from "./not-by-ai-options";
 import { normalizeMarkdownExtensions } from "./markdown";
 import { resolveOgImageOptions } from "./og-image";
@@ -80,6 +80,7 @@ export function resolveOptions(options: OxContentOptions): ResolvedOptions {
     images: resolveImageOptions(options.images),
     codeImports: resolveCodeImportOptions(options.codeImports),
     includes: resolveIncludeOptions(options.includes),
+    partials: resolvePartialsOptions(options.partials),
     cards: resolveCardOptions(options.cards),
     steps: resolveStepsOptions(options.steps),
     codeGroups: resolveCodeGroupOptions(options.codeGroups),
@@ -331,7 +332,6 @@ function resolveCodeAnnotationsOptions(
       defaultLineNumbers: false,
     };
   }
-
   if (options === true) {
     return {
       enabled: true,

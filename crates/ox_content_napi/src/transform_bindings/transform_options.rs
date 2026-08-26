@@ -7,7 +7,7 @@ use super::{
     JsCodeImportOptions, JsContainerOptions, JsDataTableOptions, JsDefinitionListOptions,
     JsEditThisPageOptions, JsEmojiShortcodeOptions, JsFileTreeOptions, JsImageOptions,
     JsIncludeOptions, JsKeyboardKeysOptions, JsMagicLinkOptions, JsMathOptions, JsNotByAiOptions,
-    JsSanitizeOptions, JsStepsOptions, JsWikiLinkOptions,
+    JsPartialsOptions, JsSanitizeOptions, JsStepsOptions, JsWikiLinkOptions,
 };
 
 /// Transform options for JavaScript.
@@ -184,6 +184,11 @@ pub struct JsTransformOptions {
     /// Default: disabled.
     pub includes: Option<JsIncludeOptions>,
 
+    /// Opt-in parameterized Markdown partials via `<!-- @partial: PATH k="v" -->`.
+    ///
+    /// Default: disabled.
+    pub partials: Option<JsPartialsOptions>,
+
     /// Opt-in `::: steps` ordered lists.
     ///
     /// Default: disabled.
@@ -283,6 +288,7 @@ impl From<JsTransformOptions> for TransformOptions {
             edit_this_page: value.edit_this_page.map(Into::into),
             containers: value.containers.map(Into::into),
             includes: value.includes.map(Into::into),
+            partials: value.partials.map(Into::into),
             steps: value.steps.map(Into::into),
             code_groups: value.code_groups.map(Into::into),
             badges: value.badges.map(Into::into),

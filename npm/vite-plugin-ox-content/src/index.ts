@@ -648,6 +648,7 @@ export { resolveAbbreviationsOptions } from "./abbreviations-options";
 export { resolveNotByAiOptions } from "./not-by-ai-options";
 export { resolveCardOptions } from "./card-options";
 export { resolveIncludeOptions } from "./include-options";
+export { resolvePartialsOptions } from "./partials-options";
 export { resolveStepsOptions } from "./step-options";
 export { resolveCodeGroupOptions } from "./code-group-options";
 export { resolveFileTreeOptions } from "./file-tree-options";
