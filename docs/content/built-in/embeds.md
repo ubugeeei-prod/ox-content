@@ -17,6 +17,7 @@ markup; everything else is opt-in.
 | Twitter/X            | `embeds.twitter`      | `false` | `<Tweet />` or `<XPost />`         |
 | Bluesky              | `embeds.bluesky`      | `false` | `<Bluesky />`                      |
 | Spotify              | `embeds.spotify`      | `false` | `<Spotify url="https://..." />`    |
+| Apple Music          | `embeds.appleMusic`   | `false` | `<AppleMusic url="https://..." />` |
 | StackBlitz           | `embeds.stackBlitz`   | `false` | `<StackBlitz url="https://..." />` |
 | WebContainer         | `embeds.webContainer` | `false` | `<WebContainer />`                 |
 
@@ -374,6 +375,30 @@ playlists, episodes, shows, and artists:
 The output is an `<iframe>` pointing at `open.spotify.com/embed/...` with lazy
 loading. Unlike the static cards above it is a real third-party player, which
 is why it stays opt-in.
+
+## Apple Music
+
+`embeds.appleMusic` renders Apple's official iframe player for albums,
+playlists, songs, artists, and music videos:
+
+```mdx
+<AppleMusic url="https://music.apple.com/gb/album/1989-taylors-version/1708308989" />
+```
+
+<AppleMusic url="https://music.apple.com/gb/album/1989-taylors-version/1708308989" />
+
+Share URLs on `music.apple.com` are rewritten to
+`embed.music.apple.com`, keeping the storefront/path and the `i=` song
+selection query. Already-embedded `embed.music.apple.com` URLs are accepted
+after the same host and path checks. Non-HTTPS URLs, lookalike hosts,
+credentials, fragments, and malformed paths stay as authored markup instead
+of becoming an iframe.
+
+The player is a third-party iframe, so the option stays off by default.
+Sites that set a Content-Security-Policy need
+`frame-src https://embed.music.apple.com` (or the equivalent `child-src`)
+before the player can load. See [Apple Music Embed](../examples/apple-music-embed.md)
+for authoring details.
 
 ## StackBlitz
 

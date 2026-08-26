@@ -129,6 +129,7 @@ describe("builtin embed input hardening", () => {
             openGraph: false,
             pm: false,
             spotify: false,
+            appleMusic: false,
             stackBlitz: false,
             twitter: false,
             bluesky: false,
@@ -239,6 +240,7 @@ describe("builtin embed input hardening", () => {
     const html = await transformBuiltinEmbeds(
       [
         '<Spotify url="https://open.spotify.com/track/abc123"></Spotify>',
+        '<AppleMusic url="https://music.apple.com/gb/album/1989-taylors-version/1708308989"></AppleMusic>',
         '<StackBlitz url="https://stackblitz.com/edit/vitejs-vite"></StackBlitz>',
         '<Tweet id="123">static text</Tweet>',
       ].join(""),
@@ -246,6 +248,7 @@ describe("builtin embed input hardening", () => {
         github: false,
         openGraph: false,
         spotify: true,
+        appleMusic: true,
         stackBlitz: true,
         twitter: true,
       },

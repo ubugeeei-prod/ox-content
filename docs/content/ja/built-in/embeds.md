@@ -15,6 +15,7 @@ description: Markdown 中の HTML 風タグで書く GitHub / OG カード、パ
 | Twitter / X              | `embeds.twitter`      | `false` | `<Tweet />` または `<XPost />`     |
 | Bluesky                  | `embeds.bluesky`      | `false` | `<Bluesky />`                      |
 | Spotify                  | `embeds.spotify`      | `false` | `<Spotify url="https://..." />`    |
+| Apple Music              | `embeds.appleMusic`   | `false` | `<AppleMusic url="https://..." />` |
 | StackBlitz               | `embeds.stackBlitz`   | `false` | `<StackBlitz url="https://..." />` |
 | WebContainer             | `embeds.webContainer` | `false` | `<WebContainer />`                 |
 
@@ -288,6 +289,20 @@ oxContent({
 <Spotify url="https://open.spotify.com/track/4uLU6hMCjMI75M1A2tKUQC" />
 
 出力は遅延読み込み付きで `open.spotify.com/embed/...` を指す `<iframe>` です。上の静的カードと違い、本物の第三者プレーヤーなのでオプトインのままです。
+
+## Apple Music
+
+`embeds.appleMusic` はアルバム、プレイリスト、曲、アーティスト、ミュージックビデオ向けの公式 iframe プレーヤーを描画します。
+
+```mdx
+<AppleMusic url="https://music.apple.com/gb/album/1989-taylors-version/1708308989" />
+```
+
+<AppleMusic url="https://music.apple.com/gb/album/1989-taylors-version/1708308989" />
+
+`music.apple.com` の共有 URL は `embed.music.apple.com` に書き換えられ、ストアフロントとパス、曲選択の `i=` クエリは残します。すでに埋め込み用の `embed.music.apple.com` URL も、同じホスト／パス検査のあと受け付けます。HTTPS でない URL、似せたホスト、認証情報、フラグメント、不正なパスは iframe にせず、書いたまま残します。
+
+プレーヤーは第三者 iframe なので、オプションは既定でオフです。Content-Security-Policy を設定しているサイトでは、プレーヤーを読み込むために `frame-src https://embed.music.apple.com`（または同等の `child-src`）が必要です。書き方の詳細は [Apple Music Embed](/examples/apple-music-embed.md) を見てください。
 
 ## StackBlitz
 

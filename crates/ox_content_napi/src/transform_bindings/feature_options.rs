@@ -309,6 +309,11 @@ pub struct JsMediaEmbedsOptions {
     /// Default: `false`.
     pub spotify: Option<bool>,
 
+    /// Render `<AppleMusic>` embeds.
+    ///
+    /// Default: `false`.
+    pub apple_music: Option<bool>,
+
     /// Render `<StackBlitz>` embeds.
     ///
     /// Default: `false`.
@@ -334,6 +339,7 @@ impl From<JsMediaEmbedsOptions> for MediaEmbedsOptions {
     fn from(value: JsMediaEmbedsOptions) -> Self {
         Self {
             spotify: value.spotify,
+            apple_music: value.apple_music,
             stack_blitz: value.stack_blitz,
             twitter: value.twitter,
             bluesky: value.bluesky,

@@ -339,6 +339,31 @@ capitalize(&quot;API&quot;);</code></pre>
 
 exports[`docs generation snapshots > snapshots rendered authoring examples from docs content 1`] = `
 {
+  "appleMusic": "<h1 id="apple-music-embed">Apple Music Embed</h1>
+<p>Apple Music embeds are opt-in and render to Apple's official iframe player.</p>
+<pre><code class="language-ts">import { oxContent } from "@ox-content/vite-plugin";
+
+export default {
+  plugins: [
+    oxContent({
+      embeds: {
+        appleMusic: true,
+      },
+    }),
+  ],
+};
+</code></pre>
+<pre><code class="language-html">&#x3C;AppleMusic url="https://music.apple.com/gb/album/1989-taylors-version/1708308989">&#x3C;/AppleMusic>
+</code></pre>
+<p>Supported share hosts are <code>music.apple.com</code> and already-embedded
+<code>embed.music.apple.com</code> URLs. The transform rewrites the share origin to
+<code>https://embed.music.apple.com</code> and keeps the storefront/path plus the <code>i=</code>
+song-selection query.</p>
+<p>The iframe is lazy-loaded, titled, and uses Apple's recommended <code>allow</code>,
+<code>sandbox</code>, and <code>referrerpolicy</code>. It is a third-party player, so it stays
+disabled until you opt in. Pages that set a Content-Security-Policy need
+<code>frame-src https://embed.music.apple.com</code> (or the equivalent <code>child-src</code>).</p>
+",
   "codeAnnotations": "<h1 id="code-annotations">Code Annotations</h1>
 <p>This example shows the opt-in code annotation model for fenced code blocks. Ox Content supports both the configurable attribute syntax and VitePress-compatible notation.</p>
 <h2 id="enable-the-feature">Enable the feature</h2>
