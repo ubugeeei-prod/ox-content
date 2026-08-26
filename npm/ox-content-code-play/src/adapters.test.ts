@@ -114,6 +114,43 @@ describe("language adapters", () => {
     expect(sh.stdio[0]?.text).toBe("1\n");
   });
 
+  it("runs Python through an explicit Piston-compatible endpoint", async () => {
+    const transport = createMemoryTransport((request) => {
+      expect(request.url).toBe("https://exec.example/api/v2/piston/execute");
+      expect(request.method).toBe("POST");
+      const body = JSON.parse(request.body ?? "{}") as {
+        language: string;
+        version: string;
+        files: Array<{ content: string }>;
+      };
+      expect(body).toEqual({
+        language: "python",
+        version: "*",
+        files: [{ content: "print('py ok')" }],
+      });
+      return {
+        ok: true,
+        status: 200,
+        text: JSON.stringify({ run: { stdout: "py ok\n", stderr: "", code: 0 } }),
+      };
+    });
+    const play = createCodePlay({
+      languages: { python: { endpoint: "https://exec.example/api/v2/piston" } },
+      transport,
+    });
+
+    const result = await play.createSession({ language: "py", code: "print('py ok')" }).run();
+
+    expect(result.status).toBe("ok");
+    expect(result.stdout).toBe("py ok\n");
+    expect(result.stderr).toBe("");
+    expect(result.provenance.execute).toEqual({
+      host: "exec.example",
+      runtime: "python",
+      sandbox: "piston",
+    });
+  });
+
   it("builds framework preview documents instead of executing host UI code", async () => {
     const play = createCodePlay({ languages: { vue: true, react: true } });
     const result = await play

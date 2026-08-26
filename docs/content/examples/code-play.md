@@ -6,7 +6,10 @@ description: Opt-in on-demand sample execution with stdio, stderr, config, prove
 # Code Play
 
 This page uses `@ox-content/code-play` with **JavaScript** and **TypeScript**
-enabled. Other languages stay ordinary fences until a site opts them in.
+enabled. Other languages stay ordinary fences until a site opts them in. The
+standalone `examples/code-play` app also opts into Rust and Go, and renders
+Python with an explicit remote executor when `OX_CODE_PLAY_PYTHON_ENDPOINT` is
+set.
 Routes without a `play` fence stay ordinary docs pages and do not load
 `ox-code-play.js`.
 
@@ -27,6 +30,9 @@ export default {
       languages: {
         javascript: true,
         typescript: { execute: true, typecheck: true },
+        rust: true,
+        go: true,
+        python: { endpoint: "https://piston.example/api/v2/piston" },
       },
       ui: "default",
       viewers: { config: true, stdio: true, stderr: true, provenance: true, timing: true },
@@ -119,9 +125,36 @@ renders no chrome — use `createCodePlay()` from your own UI.
 
 ## Remote languages
 
-Python, Rust, Go, and the rest of the catalog are registered but not enabled
-on this page. Give Rust/Go a playground endpoint, or give Python a
-Piston-compatible `endpoint`, before marking those fences `play`.
+Rust and Go use typed playground adapters. During `vite dev`, their browser
+payloads use the Vite dev proxy by default; production builds embed
+`endpoints.rust` and `endpoints.go`. Python uses the generic remote adapter and
+needs a Piston-compatible `languages.python.endpoint`.
+
+````md
+```rust play typecheck play-title="Rust playground"
+fn main() {
+    println!("ok");
+}
+```
+
+```go play typecheck play-title="Go playground" play-withVet=false
+package main
+
+import "fmt"
+
+func main() {
+    fmt.Println("ok")
+}
+```
+
+```python play play-title="Python via Piston"
+print("ok")
+```
+````
+
+If Python is enabled without an endpoint, **Run** reports
+`status: "unsupported"` and explains that a configured HTTP executor is
+required. Transport and CORS failures report `status: "offline"`.
 
 See [@ox-content/code-play](../packages/code-play.md) and the
 [roadmap](../code-play-roadmap.md).

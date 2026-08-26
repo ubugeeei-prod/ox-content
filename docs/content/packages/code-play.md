@@ -11,8 +11,10 @@ nothing until you list languages.
 
 The [docs example](../examples/code-play.md) on this site and the standalone
 [`examples/code-play`](https://github.com/ubugeeei-prod/ox-content/tree/main/examples/code-play)
-app enable JavaScript and TypeScript only. Rust, Go, and remote languages stay
-off unless you opt in.
+app demonstrate the browser UI. The docs site keeps JavaScript and TypeScript
+enabled; the standalone app also enables Rust and Go, and renders Python with
+an explicit Piston-compatible endpoint when one is configured. Rust, Go, and
+remote languages stay off unless you opt in.
 
 ## Install
 
@@ -29,6 +31,9 @@ export default {
       languages: {
         typescript: { execute: true, typecheck: true },
         javascript: true,
+        rust: true,
+        go: true,
+        python: { endpoint: "https://piston.example/api/v2/piston" },
       },
       ui: "default",
       viewers: { config: true, stdio: true, stderr: true, provenance: true, timing: true },
@@ -77,6 +82,20 @@ fn main() {
     println!("ok");
 }
 ```
+
+```go play typecheck play-title="Go vet off" play-withVet=false
+package main
+
+import "fmt"
+
+func main() {
+    fmt.Println("ok")
+}
+```
+
+```python play play-title="Python via Piston"
+print("ok")
+```
 ````
 
 `play-title` labels the widget. `play-compact` / `play-headless` override
@@ -84,7 +103,8 @@ the UI preset for one sample, `play-timeout=2500` overrides the timeout, and
 `play-viewers=stdio,stderr,-timing` toggles viewers. `play-<config-key>=...`
 sets one language config value for that sample, so TypeScript can use
 `play-strict=false`, Rust can use `play-edition=2021`, and Go can use
-`play-withVet=false`.
+`play-withVet=false`. Python and other remote languages need their
+`languages.<id>.endpoint` set at plugin configuration time.
 
 HTML / MDX form:
 
@@ -197,6 +217,18 @@ Rust and Go on a published page call `endpoints.rust` / `endpoints.go`
 directly from the browser. Official playgrounds may reject that as CORS;
 keep the Vite proxy for local docs, or point `endpoints` at an executor you
 control.
+
+During `vite dev`, Code Play payloads use `/__ox-code-play/rust` and
+`/__ox-code-play/go` by default when `proxy` is enabled. Explicit
+`endpoints.rust` and `endpoints.go` values are preserved. Production builds
+embed the configured endpoints instead, so static hosts do not depend on the
+dev middleware.
+
+Python has no bundled public executor. Configure a Piston-compatible
+`languages.python.endpoint` that you operate or trust. If Python is enabled
+without an endpoint, the widget still renders, but **Run** returns
+`status: "unsupported"` with an endpoint diagnostic instead of silently doing
+nothing.
 
 ## Security
 

@@ -4,6 +4,8 @@ import path from "node:path";
 import type { Plugin, ViteDevServer } from "vite";
 import { resolveLanguage } from "./catalog";
 import {
+  DEV_GO_PATH,
+  DEV_RUST_PATH,
   DEV_TYPECHECK_PATH,
   resolveCodePlayOptions,
   type RawCodePlayOptions,
@@ -30,6 +32,7 @@ const MARKDOWN_RE = /\.(?:md|markdown|mdx)(?:$|\?)/i;
 export function codePlay(options: CodePlayPluginOptions = {}): Plugin {
   const resolved = resolveCodePlayOptions(options);
   const explicitTypecheck = options.endpoints?.typecheck;
+  const proxyTargets = { rust: resolved.endpoints.rust, go: resolved.endpoints.go };
   let base = resolved.base;
   let command: "build" | "serve" = "serve";
   let outDir = resolved.outDir;
@@ -56,12 +59,14 @@ export function codePlay(options: CodePlayPluginOptions = {}): Plugin {
       root = config.root;
       base = resolved.base === "/" ? normalizeBase(config.base) : resolved.base;
       outDir = resolved.outDir ?? config.build.outDir;
-      if (explicitTypecheck === undefined) {
-        if (command === "serve" && resolved.proxy) {
-          resolved.endpoints.typecheck = DEV_TYPECHECK_PATH;
-        } else {
-          delete resolved.endpoints.typecheck;
-        }
+      if (command === "serve" && resolved.proxy) {
+        resolved.endpoints.rust = options.endpoints?.rust ?? DEV_RUST_PATH;
+        resolved.endpoints.go = options.endpoints?.go ?? DEV_GO_PATH;
+      }
+      if (explicitTypecheck === undefined && command === "serve" && resolved.proxy) {
+        resolved.endpoints.typecheck = DEV_TYPECHECK_PATH;
+      } else if (explicitTypecheck === undefined) {
+        delete resolved.endpoints.typecheck;
       }
     },
 
@@ -103,7 +108,7 @@ export function codePlay(options: CodePlayPluginOptions = {}): Plugin {
 
     configureServer(server) {
       if (resolved.proxy) {
-        mountProxies(server, resolved.endpoints.rust, resolved.endpoints.go);
+        mountProxies(server, proxyTargets.rust, proxyTargets.go);
       }
       server.middlewares.use(async (req, res, next) => {
         const urlPath = req.url?.split("?")[0] ?? "";

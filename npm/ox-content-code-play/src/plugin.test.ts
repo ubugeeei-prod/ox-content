@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vite-plus/test";
-import { DEV_TYPECHECK_PATH } from "./config";
+import { DEV_GO_PATH, DEV_RUST_PATH, DEV_TYPECHECK_PATH } from "./config";
 import { decodePayload } from "./payload";
 import { codePlay } from "./plugin";
 
@@ -45,6 +45,69 @@ describe("codePlay vite plugin", () => {
     const payload = payloadFromTransform(plugin, "```python play\nprint(1)\n```\n");
     expect(payload.endpoint).toBe("https://exec.example/api/v2/piston");
     expect(payload.capabilities.execute).toBe(true);
+  });
+
+  it("rewrites opted-in Rust, Go, and Python play fences on the same page", () => {
+    const plugin = codePlay({
+      languages: {
+        rust: true,
+        go: true,
+        python: { endpoint: "https://exec.example/api/v2/piston" },
+      },
+    });
+    resolveCommand(plugin, "build");
+    const transform = hookFn(plugin.transform) as (source: string, id: string) => string | null;
+    const rewritten = transform(
+      [
+        '```rust play typecheck play-title="Rust"',
+        "fn main() {}",
+        "```",
+        '```go play typecheck play-title="Go"',
+        "package main",
+        "func main() {}",
+        "```",
+        '```python play play-title="Python"',
+        "print(1)",
+        "```",
+      ].join("\n"),
+      "page.md",
+    );
+    const payloads = [...(rewritten ?? "").matchAll(/<!--ox-code-play:([A-Za-z0-9+/=]+)-->/g)].map(
+      (match) => decodePayload(match[1] ?? ""),
+    );
+
+    expect(payloads.map((payload) => payload.language)).toEqual(["rust", "go", "python"]);
+    expect(payloads.map((payload) => payload.capabilities.execute)).toEqual([true, true, true]);
+    expect(payloads.map((payload) => payload.capabilities.typecheck)).toEqual([true, true, false]);
+    expect(payloads[2]?.endpoint).toBe("https://exec.example/api/v2/piston");
+  });
+
+  it("uses Vite dev proxy endpoints for Rust and Go browser payloads", () => {
+    const plugin = codePlay({ languages: { rust: true, go: true } });
+    resolveCommand(plugin, "serve");
+
+    const rust = payloadFromTransform(plugin, "```rust play\nfn main() {}\n```\n");
+    const go = payloadFromTransform(plugin, "```go play\npackage main\nfunc main() {}\n```\n");
+
+    expect(rust.endpoints?.rust).toBe(DEV_RUST_PATH);
+    expect(rust.endpoints?.go).toBe(DEV_GO_PATH);
+    expect(go.endpoints?.rust).toBe(DEV_RUST_PATH);
+    expect(go.endpoints?.go).toBe(DEV_GO_PATH);
+  });
+
+  it("keeps explicit Rust and Go endpoints out of the dev proxy payload rewrite", () => {
+    const plugin = codePlay({
+      languages: { rust: true, go: true },
+      endpoints: {
+        rust: "https://rust.example/execute",
+        go: "https://go.example/compile",
+      },
+    });
+    resolveCommand(plugin, "serve");
+
+    const rust = payloadFromTransform(plugin, "```rust play\nfn main() {}\n```\n");
+    expect(rust.endpoints?.rust).toBe("https://rust.example/execute");
+    expect(rust.endpoints?.go).toBe("https://go.example/compile");
   });
 
   it("embeds per-sample authoring options in payloads", () => {

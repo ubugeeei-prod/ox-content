@@ -36,6 +36,12 @@ export const DEFAULT_ENDPOINTS: PlaygroundEndpoints = {
   go: "https://play.golang.org/compile",
 };
 
+/** Vite dev middleware only. Rust browser runs use this proxy during `vite dev`. */
+export const DEV_RUST_PATH = "/__ox-code-play/rust";
+
+/** Vite dev middleware only. Go browser runs use this proxy during `vite dev`. */
+export const DEV_GO_PATH = "/__ox-code-play/go";
+
 /** Vite dev middleware only. Not present in production SSG output. */
 export const DEV_TYPECHECK_PATH = "/__ox-code-play/typecheck";
 

@@ -2,6 +2,9 @@ import { defineConfig } from "vite-plus";
 import { oxContent } from "@ox-content/vite-plugin";
 import { codePlay } from "@ox-content/code-play";
 
+const env = (globalThis as { process?: { env?: Record<string, string | undefined> } }).process?.env;
+const pythonEndpoint = env?.OX_CODE_PLAY_PYTHON_ENDPOINT;
+
 export default defineConfig({
   plugins: [
     oxContent({
@@ -13,6 +16,9 @@ export default defineConfig({
       languages: {
         javascript: true,
         typescript: { execute: true, typecheck: true },
+        rust: true,
+        go: true,
+        python: pythonEndpoint ? { endpoint: pythonEndpoint } : true,
       },
       srcDir: "content",
       outDir: "dist",
