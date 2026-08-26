@@ -50,6 +50,11 @@ pub struct JsMediaEmbedsOptions {
     /// Default: `false`.
     pub zenn: Option<bool>,
 
+    /// Render package registry cards for npm, crates.io, PyPI, and Docker Hub.
+    ///
+    /// Default: `false`.
+    pub package_registry: Option<bool>,
+
     /// Render `<Discord>` static invite/message cards.
     ///
     /// Default: `false`.
@@ -105,6 +110,7 @@ impl From<JsMediaEmbedsOptions> for MediaEmbedsOptions {
             google_maps: value.google_maps,
             qiita: value.qiita,
             zenn: value.zenn,
+            package_registry: value.package_registry,
             discord: value.discord,
             fediverse: value.fediverse,
             facebook: value.facebook,

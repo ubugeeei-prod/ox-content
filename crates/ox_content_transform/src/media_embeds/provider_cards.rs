@@ -121,20 +121,20 @@ pub(super) fn render_instagram(element: &ComponentElement<'_>) -> Option<String>
     Some(render_card(article_card(element, "instagram", "Instagram", href, "Instagram post")))
 }
 
-struct Card<'a> {
-    modifier: &'static str,
-    network: &'static str,
-    href: &'a str,
-    title: &'a str,
-    body: Option<&'a str>,
-    source_label: &'static str,
-    image: Option<&'a str>,
-    avatar: Option<&'a str>,
-    author: Option<&'a str>,
-    date: Option<&'a str>,
-    date_label: Option<&'a str>,
-    meta: Vec<(&'static str, Option<&'a str>)>,
-    iframe: Option<&'a str>,
+pub(super) struct Card<'a> {
+    pub(super) modifier: &'static str,
+    pub(super) network: &'static str,
+    pub(super) href: &'a str,
+    pub(super) title: &'a str,
+    pub(super) body: Option<&'a str>,
+    pub(super) source_label: &'static str,
+    pub(super) image: Option<&'a str>,
+    pub(super) avatar: Option<&'a str>,
+    pub(super) author: Option<&'a str>,
+    pub(super) date: Option<&'a str>,
+    pub(super) date_label: Option<&'a str>,
+    pub(super) meta: Vec<(&'static str, Option<&'a str>)>,
+    pub(super) iframe: Option<&'a str>,
 }
 
 fn article_card<'a>(
@@ -184,7 +184,7 @@ fn render_social_card(
     Some(render_card(card))
 }
 
-fn render_card(card: Card<'_>) -> String {
+pub(super) fn render_card(card: Card<'_>) -> String {
     let mut html = String::new();
     html.push_str("<article class=\"ox-provider-card ox-provider-card--");
     html.push_str(card.modifier);
@@ -259,7 +259,7 @@ fn render_meta(html: &mut String, card: &Card<'_>) {
     html.push_str("</span></footer>");
 }
 
-fn provider_url<'a>(element: &'a ComponentElement<'_>) -> Option<&'a str> {
+pub(super) fn provider_url<'a>(element: &'a ComponentElement<'_>) -> Option<&'a str> {
     attr(element, "url")
         .or_else(|| attr(element, "href"))
         .or_else(|| attr(element, "src"))
@@ -267,12 +267,12 @@ fn provider_url<'a>(element: &'a ComponentElement<'_>) -> Option<&'a str> {
         .filter(|value| is_safe_https_url(value))
 }
 
-fn body_text<'a>(element: &'a ComponentElement<'_>) -> Option<&'a str> {
+pub(super) fn body_text<'a>(element: &'a ComponentElement<'_>) -> Option<&'a str> {
     let body = element.body.trim();
     (!body.is_empty() && !body.starts_with("https://")).then_some(body)
 }
 
-fn first_attr<'a>(element: &'a ComponentElement<'_>, names: &[&str]) -> Option<&'a str> {
+pub(super) fn first_attr<'a>(element: &'a ComponentElement<'_>, names: &[&str]) -> Option<&'a str> {
     names.iter().find_map(|name| attr(element, name))
 }
 
@@ -284,16 +284,17 @@ fn is_google_maps_embed(input: &str) -> bool {
         && parsed.path.starts_with("/maps/embed")
 }
 
-fn is_safe_https_url(input: &str) -> bool {
+pub(super) fn is_safe_https_url(input: &str) -> bool {
     parse_https_url(input).is_some()
 }
 
-struct ParsedHttpsUrl<'a> {
-    host: String,
-    path: &'a str,
+pub(super) struct ParsedHttpsUrl<'a> {
+    pub(super) host: String,
+    pub(super) path: &'a str,
+    pub(super) query: Option<&'a str>,
 }
 
-fn parse_https_url(input: &str) -> Option<ParsedHttpsUrl<'_>> {
+pub(super) fn parse_https_url(input: &str) -> Option<ParsedHttpsUrl<'_>> {
     let trimmed = input.trim();
     let rest = trimmed.strip_prefix("https://").or_else(|| trimmed.strip_prefix("HTTPS://"))?;
     let authority_end = rest.find(['/', '?', '#']).unwrap_or(rest.len());
@@ -312,9 +313,17 @@ fn parse_https_url(input: &str) -> Option<ParsedHttpsUrl<'_>> {
     if path.contains('\\') {
         return None;
     }
-    Some(ParsedHttpsUrl { host, path: if path.is_empty() { "/" } else { path } })
+    let query = (after_authority.as_bytes().get(path_end) == Some(&b'?')).then(|| {
+        let query = &after_authority[path_end + 1..];
+        query.split_once('#').map_or(query, |(query, _fragment)| query)
+    });
+    Some(ParsedHttpsUrl {
+        host,
+        path: if path.is_empty() { "/" } else { path },
+        query: query.filter(|value| !value.is_empty()),
+    })
 }
 
-fn host_in(host: &str, allowed: &[&str]) -> bool {
+pub(super) fn host_in(host: &str, allowed: &[&str]) -> bool {
     allowed.contains(&host)
 }

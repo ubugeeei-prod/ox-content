@@ -7,6 +7,7 @@ import type {
   GitHubOptions,
   OgpOptions,
   ProviderArticleEmbedOptions,
+  ProviderPackageEmbedOptions,
   RedditEmbedOptions,
   TwitterEmbedOptions,
 } from "./plugins";
@@ -2413,6 +2414,13 @@ export interface BuiltinEmbedOptions {
   zenn?: boolean | ProviderArticleEmbedOptions;
 
   /**
+   * Render `<NpmPackage>`, `<CratesIo>`, `<PyPI>`, and `<DockerHub>` as static cards.
+   * Pass `{ fetch: false }` to skip metadata fetching and render link-only cards.
+   * @default false
+   */
+  packageRegistry?: boolean | ProviderPackageEmbedOptions;
+
+  /**
    * Render `<Discord>` as static invite/message cards.
    * @default false
    */
@@ -2479,6 +2487,7 @@ export interface ResolvedBuiltinEmbedOptions {
   googleMaps?: boolean;
   qiita?: ProviderArticleEmbedOptions | false;
   zenn?: ProviderArticleEmbedOptions | false;
+  packageRegistry?: ProviderPackageEmbedOptions | false;
   discord?: boolean;
   fediverse?: boolean;
   facebook?: boolean;

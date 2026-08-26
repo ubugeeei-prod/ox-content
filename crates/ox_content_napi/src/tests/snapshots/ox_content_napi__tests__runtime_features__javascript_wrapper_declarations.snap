@@ -1423,6 +1423,12 @@ export interface JsMediaEmbedsOptions {
    */
   zenn?: boolean
   /**
+   * Render package registry cards for npm, crates.io, PyPI, and Docker Hub.
+   *
+   * Default: `false`.
+   */
+  packageRegistry?: boolean
+  /**
    * Render `<Discord>` static invite/message cards.
    *
    * Default: `false`.

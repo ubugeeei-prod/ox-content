@@ -4,6 +4,11 @@ import {
   normalizeProviderArticleOptions,
   type ProviderArticleEmbedOptions,
 } from "./provider-articles";
+import {
+  enrichProviderPackageEmbeds,
+  normalizeProviderPackageOptions,
+  type ProviderPackageEmbedOptions,
+} from "./provider-packages";
 import { enrichSpeakerDeckEmbeds } from "./speaker-deck";
 import { transformRedditEmbeds, type RedditEmbedOptions } from "./reddit";
 import { transformFetchedTweets } from "./twitter";
@@ -86,6 +91,13 @@ export interface MediaEmbedOptions {
   zenn?: boolean | ProviderArticleEmbedOptions;
 
   /**
+   * Render `<NpmPackage>`, `<CratesIo>`, `<PyPI>`, and `<DockerHub>` package cards.
+   * Pass `{ fetch: false }` to skip metadata fetching and render link-only cards.
+   * @default false
+   */
+  packageRegistry?: boolean | ProviderPackageEmbedOptions;
+
+  /**
    * Render `<Discord>` static invite/message cards.
    * @default false
    */
@@ -149,6 +161,12 @@ export async function transformMediaEmbeds(
       zenn: normalizeProviderArticleOptions(options.zenn),
     });
   }
+  if (options.packageRegistry) {
+    result = await enrichProviderPackageEmbeds(
+      result,
+      normalizeProviderPackageOptions(options.packageRegistry),
+    );
+  }
   if (!hasMediaMarker(result)) return result;
 
   const mod = await importNapiModule();
@@ -164,6 +182,7 @@ export async function transformMediaEmbeds(
     googleMaps: options.googleMaps,
     qiita: Boolean(options.qiita),
     zenn: Boolean(options.zenn),
+    packageRegistry: Boolean(options.packageRegistry),
     discord: options.discord,
     fediverse: options.fediverse,
     facebook: options.facebook,
@@ -187,6 +206,7 @@ function hasEnabledMediaEmbed(options: MediaEmbedOptions): boolean {
     options.googleMaps ||
     options.qiita ||
     options.zenn ||
+    options.packageRegistry ||
     options.discord ||
     options.fediverse ||
     options.facebook ||
@@ -198,7 +218,7 @@ function hasEnabledMediaEmbed(options: MediaEmbedOptions): boolean {
 
 function hasMediaMarker(html: string): boolean {
   return (
-    /<(spotify|applemusic|speakerdeck|stackblitz|tweet|xpost|reddit|bluesky|googlemaps|qiita|zenn|discord|fediverse|mastodon|misskey|mixi2|facebook|threads|instagram|webcontainer)[\s/>]/i.test(
+    /<(spotify|applemusic|speakerdeck|stackblitz|tweet|xpost|reddit|bluesky|googlemaps|qiita|zenn|npmpackage|cratesio|pypi|dockerhub|discord|fediverse|mastodon|misskey|mixi2|facebook|threads|instagram|webcontainer)[\s/>]/i.test(
       html,
     ) || /<(Audio|Video)[\s/>]/.test(html)
   );

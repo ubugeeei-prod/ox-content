@@ -3,12 +3,14 @@ import { resolveBuiltinEmbedOptions } from "../resolve-options";
 import { renderMarkdown } from "../render-markdown";
 import { normalizeSelfClosingEmbeds, transformAllPlugins, transformBuiltinEmbeds } from ".";
 import { clearProviderArticleCache } from "./provider-articles";
+import { clearProviderPackageCache } from "./provider-packages";
 
 const originalFetch = globalThis.fetch;
 
 afterEach(() => {
   globalThis.fetch = originalFetch;
   clearProviderArticleCache();
+  clearProviderPackageCache();
 });
 
 describe("provider-grade static embed cards", () => {
@@ -18,6 +20,10 @@ describe("provider-grade static embed cards", () => {
         '<GoogleMaps url="https://www.google.com/maps/place/Tokyo+Station/" place="Tokyo Station" address="1 Chome Marunouchi" />',
         '<Qiita url="https://qiita.com/ubugeeei/items/abcdef123456" title="Rust docs pipeline" author="ubugeeei" tags="Rust, Markdown">Static cards.</Qiita>',
         '<Zenn url="https://zenn.dev/ubugeeei/articles/ox-content" title="Ox Content notes" />',
+        '<NpmPackage url="https://www.npmjs.com/package/vite" version="7.0.0" license="MIT" />',
+        '<CratesIo url="https://crates.io/crates/serde" version="1.0.0" />',
+        '<PyPI url="https://pypi.org/project/requests" version="2.32.0" />',
+        '<DockerHub url="https://hub.docker.com/_/nginx" downloads="123456" />',
         '<Discord url="https://discord.gg/abc123" server="Ox Content" channel="announcements" />',
         '<Mastodon url="https://mastodon.social/@docs/111" author="@docs@mastodon.social">Fediverse release note.</Mastodon>',
         '<Facebook url="https://www.facebook.com/example/posts/123" title="Launch note" />',
@@ -31,6 +37,7 @@ describe("provider-grade static embed cards", () => {
         googleMaps: true,
         qiita: { fetch: false },
         zenn: { fetch: false },
+        packageRegistry: { fetch: false },
         discord: true,
         fediverse: true,
         facebook: true,
@@ -42,21 +49,26 @@ describe("provider-grade static embed cards", () => {
     expect(html).toContain("ox-provider-card--google-maps");
     expect(html).toContain("ox-provider-card--qiita");
     expect(html).toContain("ox-provider-card--zenn");
+    expect(html).toContain("ox-provider-card--npm");
+    expect(html).toContain("ox-provider-card--crates-io");
+    expect(html).toContain("ox-provider-card--pypi");
+    expect(html).toContain("ox-provider-card--docker-hub");
     expect(html).toContain("ox-provider-card--discord");
     expect(html).toContain("ox-provider-card--mastodon");
     expect(html).toContain("ox-provider-card--facebook");
     expect(html).toContain("ox-provider-card--threads");
     expect(html).toContain("ox-provider-card--instagram");
     expect(html).not.toMatch(
-      /<\/(?:GoogleMaps|Qiita|Zenn|Discord|Mastodon|Facebook|Threads|Instagram)>/,
+      /<\/(?:GoogleMaps|Qiita|Zenn|NpmPackage|CratesIo|PyPI|DockerHub|Discord|Mastodon|Facebook|Threads|Instagram)>/,
     );
   });
 
-  it("defaults Qiita and Zenn cards to build-time metadata fetch", () => {
+  it("defaults provider cards to build-time metadata fetch", () => {
     expect(resolveBuiltinEmbedOptions({ qiita: true }).qiita).toEqual({});
     expect(resolveBuiltinEmbedOptions({ zenn: { fetch: false } }).zenn).toEqual({
       fetch: false,
     });
+    expect(resolveBuiltinEmbedOptions({ packageRegistry: true }).packageRegistry).toEqual({});
   });
 
   it("enriches Qiita and Zenn article metadata before static rendering", async () => {
@@ -141,6 +153,28 @@ describe("provider-grade static embed cards", () => {
         },
       ),
     ).resolves.toBe('<Instagram url="https://user:pass@instagram.com/p/abc123/"></Instagram>');
+  });
+
+  it("renders link-only package cards when metadata fetch fails", async () => {
+    const originalWarn = console.warn;
+    console.warn = () => {};
+    globalThis.fetch = async () => new Response("{}", { status: 404 });
+    try {
+      const html = await transformBuiltinEmbeds(
+        '<NpmPackage url="https://www.npmjs.com/package/private"></NpmPackage>',
+        {
+          github: false,
+          openGraph: false,
+          packageRegistry: true,
+        },
+      );
+
+      expect(html).toContain("ox-provider-card--npm");
+      expect(html).toContain("private");
+      expect(html).toContain("Open package");
+    } finally {
+      console.warn = originalWarn;
+    }
   });
 
   it("normalizes self-closing provider authoring forms", () => {

@@ -19,6 +19,10 @@ import type {
   ProviderArticleEmbedOptions,
   ResolvedProviderArticleEmbedOptions,
 } from "./provider-articles";
+import type {
+  ProviderPackageEmbedOptions,
+  ResolvedProviderPackageEmbedOptions,
+} from "./provider-packages";
 import {
   createSyndicationToken,
   parseTweetReference,
@@ -123,11 +127,13 @@ export type {
   RedditPostReference,
   ProviderArticleEmbedOptions,
   ResolvedProviderArticleEmbedOptions,
+  ProviderPackageEmbedOptions,
+  ResolvedProviderPackageEmbedOptions,
   MermaidOptions,
 };
 
 const SELF_CLOSING_EMBED_TAG =
-  /<(GitHub|OgCard|Tweet|XPost|Reddit|Bluesky|GoogleMaps|Qiita|Zenn|Discord|Fediverse|Mastodon|Misskey|Mixi2|Facebook|Threads|Instagram|Spotify|AppleMusic|SpeakerDeck|Audio|Video|StackBlitz|WebContainer|YouTube|NotByAI)((?:[^>"']|"[^"]*"|'[^']*')*?)\s*\/>(?:\s*<\/\1\s*>)?/gi;
+  /<(GitHub|OgCard|Tweet|XPost|Reddit|Bluesky|GoogleMaps|Qiita|Zenn|NpmPackage|CratesIo|PyPI|DockerHub|Discord|Fediverse|Mastodon|Misskey|Mixi2|Facebook|Threads|Instagram|Spotify|AppleMusic|SpeakerDeck|Audio|Video|StackBlitz|WebContainer|YouTube|NotByAI)((?:[^>"']|"[^"]*"|'[^']*')*?)\s*\/>(?:\s*<\/\1\s*>)?/gi;
 
 /**
  * Custom embed tags are not HTML void elements, so a self-closing authoring
@@ -191,6 +197,7 @@ export async function transformAllPlugins(
     googleMaps = false,
     qiita = false,
     zenn = false,
+    packageRegistry = false,
     discord = false,
     fediverse = false,
     facebook = false,
@@ -249,6 +256,7 @@ export async function transformAllPlugins(
     googleMaps,
     qiita,
     zenn,
+    packageRegistry,
     discord,
     fediverse,
     facebook,
@@ -318,6 +326,7 @@ export async function transformBuiltinEmbeds(
     googleMaps: options.googleMaps,
     qiita: options.qiita,
     zenn: options.zenn,
+    packageRegistry: options.packageRegistry,
     discord: options.discord,
     fediverse: options.fediverse,
     facebook: options.facebook,

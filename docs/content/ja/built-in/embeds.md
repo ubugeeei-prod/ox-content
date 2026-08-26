@@ -7,29 +7,30 @@ description: Markdown 中の HTML 風タグで書く GitHub / OG カード、パ
 
 埋め込みは Markdown 中の HTML 風タグで、変換時に静的 HTML へ展開されます。静的マークアップだけを出す 2 つは既定でオン、それ以外はオプトインです。
 
-| 埋め込み                 | オプション            | 既定    | 書き方                              |
-| ------------------------ | --------------------- | ------- | ----------------------------------- |
-| GitHub カード            | `embeds.github`       | `true`  | `<GitHub repo="owner/name" />`      |
-| OG リンクカード          | `embeds.openGraph`    | `true`  | `<OgCard url="https://..." />`      |
-| パッケージマネージャタブ | `embeds.pm`           | `false` | `<pm>npm install pkg</pm>`          |
-| Twitter / X              | `embeds.twitter`      | `false` | `<Tweet />` または `<XPost />`      |
-| Reddit                   | `embeds.reddit`       | `false` | `<Reddit url="https://..." />`      |
-| Bluesky                  | `embeds.bluesky`      | `false` | `<Bluesky />`                       |
-| Google Maps              | `embeds.googleMaps`   | `false` | `<GoogleMaps url="https://..." />`  |
-| Qiita                    | `embeds.qiita`        | `false` | `<Qiita url="https://..." />`       |
-| Zenn                     | `embeds.zenn`         | `false` | `<Zenn url="https://..." />`        |
-| Discord                  | `embeds.discord`      | `false` | `<Discord url="https://..." />`     |
-| Fediverse                | `embeds.fediverse`    | `false` | `<Mastodon url="https://..." />`    |
-| Facebook                 | `embeds.facebook`     | `false` | `<Facebook url="https://..." />`    |
-| Threads                  | `embeds.threads`      | `false` | `<Threads url="https://..." />`     |
-| Instagram                | `embeds.instagram`    | `false` | `<Instagram url="https://..." />`   |
-| Spotify                  | `embeds.spotify`      | `false` | `<Spotify url="https://..." />`     |
-| Apple Music              | `embeds.appleMusic`   | `false` | `<AppleMusic url="https://..." />`  |
-| Speaker Deck             | `embeds.speakerDeck`  | `false` | `<SpeakerDeck url="https://..." />` |
-| Audio                    | `embeds.audio`        | `false` | `<Audio src="https://..." />`       |
-| Video                    | `embeds.video`        | `false` | `<Video src="https://..." />`       |
-| StackBlitz               | `embeds.stackBlitz`   | `false` | `<StackBlitz url="https://..." />`  |
-| WebContainer             | `embeds.webContainer` | `false` | `<WebContainer />`                  |
+| 埋め込み                 | オプション               | 既定    | 書き方                              |
+| ------------------------ | ------------------------ | ------- | ----------------------------------- |
+| GitHub カード            | `embeds.github`          | `true`  | `<GitHub repo="owner/name" />`      |
+| OG リンクカード          | `embeds.openGraph`       | `true`  | `<OgCard url="https://..." />`      |
+| パッケージマネージャタブ | `embeds.pm`              | `false` | `<pm>npm install pkg</pm>`          |
+| Twitter / X              | `embeds.twitter`         | `false` | `<Tweet />` または `<XPost />`      |
+| Reddit                   | `embeds.reddit`          | `false` | `<Reddit url="https://..." />`      |
+| Bluesky                  | `embeds.bluesky`         | `false` | `<Bluesky />`                       |
+| Google Maps              | `embeds.googleMaps`      | `false` | `<GoogleMaps url="https://..." />`  |
+| Qiita                    | `embeds.qiita`           | `false` | `<Qiita url="https://..." />`       |
+| Zenn                     | `embeds.zenn`            | `false` | `<Zenn url="https://..." />`        |
+| パッケージ registry      | `embeds.packageRegistry` | `false` | `<NpmPackage url="https://..." />`  |
+| Discord                  | `embeds.discord`         | `false` | `<Discord url="https://..." />`     |
+| Fediverse                | `embeds.fediverse`       | `false` | `<Mastodon url="https://..." />`    |
+| Facebook                 | `embeds.facebook`        | `false` | `<Facebook url="https://..." />`    |
+| Threads                  | `embeds.threads`         | `false` | `<Threads url="https://..." />`     |
+| Instagram                | `embeds.instagram`       | `false` | `<Instagram url="https://..." />`   |
+| Spotify                  | `embeds.spotify`         | `false` | `<Spotify url="https://..." />`     |
+| Apple Music              | `embeds.appleMusic`      | `false` | `<AppleMusic url="https://..." />`  |
+| Speaker Deck             | `embeds.speakerDeck`     | `false` | `<SpeakerDeck url="https://..." />` |
+| Audio                    | `embeds.audio`           | `false` | `<Audio src="https://..." />`       |
+| Video                    | `embeds.video`           | `false` | `<Video src="https://..." />`       |
+| StackBlitz               | `embeds.stackBlitz`      | `false` | `<StackBlitz url="https://..." />`  |
+| WebContainer             | `embeds.webContainer`    | `false` | `<WebContainer />`                  |
 
 タブと YouTube 埋め込みは `embeds` オプションの外です。SSG ビルドと dev preview では常に処理され、設定は不要です。同じ執筆モデルなので [下](#タブ) で扱います。
 
@@ -52,6 +53,7 @@ export default {
         bluesky: true,
         qiita: true,
         zenn: true,
+        packageRegistry: true,
       },
     }),
   ],
@@ -323,14 +325,16 @@ oxContent({
 
 ## プロバイダカード
 
-`embeds.googleMaps`、`embeds.qiita`、`embeds.zenn`、`embeds.discord`、
-`embeds.fediverse`、`embeds.facebook`、`embeds.threads`、
-`embeds.instagram` は静的なプロバイダカードを描画します。`qiita: true` と
-`zenn: true` はビルド時に公開記事 metadata を取得します。ネットワークなしの
-リンクカードにしたいときは `{ fetch: false }` を渡します。それ以外の
-プロバイダカードは既定で metadata fetch も第三者スクリプトも使いません。
-`title`、`author`、`avatar`、`date`、`dateLabel`、`tags`、`likes`、
-`reposts`、`replies`、`server`、`channel`、`address`、`image` などの属性で
+`embeds.googleMaps`、`embeds.qiita`、`embeds.zenn`、
+`embeds.packageRegistry`、`embeds.discord`、`embeds.fediverse`、
+`embeds.facebook`、`embeds.threads`、`embeds.instagram` は静的な
+プロバイダカードを描画します。`qiita: true`、`zenn: true`、
+`packageRegistry: true` はビルド時に公開 metadata を取得します。
+ネットワークなしのリンクカードにしたいときは `{ fetch: false }` を渡します。
+それ以外のプロバイダカードは既定で metadata fetch も第三者スクリプトも
+使いません。`title`、`author`、`avatar`、`date`、`dateLabel`、`tags`、
+`likes`、`reposts`、`replies`、`server`、`channel`、`address`、`image`、
+`version`、`license`、`repository`、`downloads`、`stars` などの属性で
 安定した metadata を渡せます。
 
 ```mdx
@@ -350,6 +354,11 @@ oxContent({
   Static cards keep builds predictable.
 </Qiita>
 
+<NpmPackage url="https://www.npmjs.com/package/vite" />
+<CratesIo url="https://crates.io/crates/serde" />
+<PyPI url="https://pypi.org/project/requests" />
+<DockerHub url="https://hub.docker.com/_/nginx" />
+
 <Mastodon
   url="https://mastodon.social/@docs/111"
   author="@docs@mastodon.social"
@@ -361,18 +370,21 @@ oxContent({
 </Mastodon>
 ```
 
-| オプション | 既定      | 目的                                           |
-| ---------- | --------- | ---------------------------------------------- |
-| `fetch`    | `true`    | Qiita / Zenn の metadata をビルド時に取る。    |
-| `timeout`  | `10000`   | metadata リクエストのタイムアウト（ミリ秒）。  |
-| `cache`    | `true`    | このビルド中に取った metadata をメモリに残す。 |
-| `cacheTTL` | `3600000` | キャッシュの鮮度期間（ミリ秒）。               |
+| オプション | 既定      | 目的                                                        |
+| ---------- | --------- | ----------------------------------------------------------- |
+| `fetch`    | `true`    | Qiita / Zenn / package registry metadata をビルド時に取る。 |
+| `timeout`  | `10000`   | metadata リクエストのタイムアウト（ミリ秒）。               |
+| `cache`    | `true`    | このビルド中に取った metadata をメモリに残す。              |
+| `cacheTTL` | `3600000` | キャッシュの鮮度期間（ミリ秒）。                            |
 
 `<Fediverse>`、`<Mastodon>`、`<Misskey>`、`<Mixi2>` は
 `embeds.fediverse` を共有します。Google Maps は安全な Google Maps `embed`
 URL を渡したときだけ lazy iframe も出し、それ以外はリンクカードになります。
-未対応 scheme、認証情報つき URL、別 host の URL、取得できない metadata は、
-ビルドを落とさず、書いたままかリンクカードに落ちます。
+package registry カードは npm、crates.io、PyPI、Docker Hub の package URL
+に対応し、provider が持つ version / tag URL も扱えます。未対応 scheme、
+認証情報つき URL、別 host の URL、取得できない metadata は、ビルドを落とさず
+元のタグかリンクカードへフォールバックします。package metadata fetch の失敗時は、
+status や error reason を含む `[ox-content]` warning も出します。
 
 ## Spotify
 

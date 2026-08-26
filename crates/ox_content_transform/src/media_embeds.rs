@@ -1,6 +1,7 @@
 mod apple_music;
 mod html;
 mod native;
+mod package_cards;
 mod provider_cards;
 mod render;
 mod speaker_deck;
@@ -12,6 +13,7 @@ use crate::{MediaEmbedsOptions, html_scan::find_ci};
 use apple_music::render_apple_music;
 use html::{ComponentElement, find_component, find_pascal_component};
 use native::{render_audio, render_video};
+use package_cards::{render_crates_io, render_docker_hub, render_npm_package, render_pypi};
 use provider_cards::{
     render_discord, render_facebook, render_fediverse, render_google_maps, render_instagram,
     render_mastodon, render_misskey, render_mixi2, render_qiita, render_threads, render_zenn,
@@ -66,6 +68,20 @@ pub fn transform_media_embeds(html: &str, options: Option<&MediaEmbedsOptions>) 
     if options.zenn.unwrap_or(false) && contains_ci(&current, "<zenn") {
         current = transform_component(&current, "zenn", render_zenn);
     }
+    if options.package_registry.unwrap_or(false) {
+        if contains_ci(&current, "<npmpackage") {
+            current = transform_component(&current, "npmpackage", render_npm_package);
+        }
+        if contains_ci(&current, "<cratesio") {
+            current = transform_component(&current, "cratesio", render_crates_io);
+        }
+        if contains_ci(&current, "<pypi") {
+            current = transform_component(&current, "pypi", render_pypi);
+        }
+        if contains_ci(&current, "<dockerhub") {
+            current = transform_component(&current, "dockerhub", render_docker_hub);
+        }
+    }
     if options.discord.unwrap_or(false) && contains_ci(&current, "<discord") {
         current = transform_component(&current, "discord", render_discord);
     }
@@ -110,6 +126,7 @@ fn has_enabled_embed(options: &MediaEmbedsOptions) -> bool {
         || options.google_maps.unwrap_or(false)
         || options.qiita.unwrap_or(false)
         || options.zenn.unwrap_or(false)
+        || options.package_registry.unwrap_or(false)
         || options.discord.unwrap_or(false)
         || options.fediverse.unwrap_or(false)
         || options.facebook.unwrap_or(false)

@@ -66,6 +66,20 @@ fn renders_provider_grade_static_cards() {
 }
 
 #[test]
+fn renders_package_registry_cards() {
+    let enabled = MediaEmbedsOptions { package_registry: Some(true), ..Default::default() };
+    let html = transform_media_embeds(
+        r#"<NpmPackage url="https://www.npmjs.com/package/@vitejs/plugin-vue/v/6.0.0" title="@vitejs/plugin-vue" license="MIT" repository="https://github.com/vitejs/vite-plugin-vue" dateTime="2026-08-26T00:00:00Z" dateLabel="2026-08-26">Vue support for Vite.</NpmPackage>
+<CratesIo url="https://crates.io/crates/serde/1.0.0" description="Serialization framework" license="MIT OR Apache-2.0" downloads="123456"></CratesIo>
+<PyPI url="https://pypi.org/project/requests/2.32.0" repository="https://github.com/psf/requests">Python HTTP for Humans.</PyPI>
+<DockerHub url="https://hub.docker.com/_/nginx/tags?name=mainline" downloads="987654" stars="321" dateLabel="2026-08-23"></DockerHub>"#,
+        Some(&enabled),
+    );
+
+    insta::assert_snapshot!(html);
+}
+
+#[test]
 fn leaves_provider_cards_when_disabled_or_rejected() {
     let input = r#"<Qiita url="https://qiita.com/ubugeeei/items/abcdef123456"></Qiita>"#;
     assert_eq!(transform_media_embeds(input, Some(&MediaEmbedsOptions::default())), input);
@@ -74,6 +88,7 @@ fn leaves_provider_cards_when_disabled_or_rejected() {
         google_maps: Some(true),
         qiita: Some(true),
         zenn: Some(true),
+        package_registry: Some(true),
         discord: Some(true),
         fediverse: Some(true),
         facebook: Some(true),
@@ -85,6 +100,10 @@ fn leaves_provider_cards_when_disabled_or_rejected() {
         r#"<GoogleMaps url="https://google.com.evil.example/maps/place/Tokyo"></GoogleMaps>"#,
         r#"<Qiita url="https://qiita.com/ubugeeei"></Qiita>"#,
         r#"<Zenn url="https://zenn.dev/ubugeeei"></Zenn>"#,
+        r#"<NpmPackage url="https://user:pass@npmjs.com/package/vite"></NpmPackage>"#,
+        r#"<CratesIo url="http://crates.io/crates/serde"></CratesIo>"#,
+        r#"<PyPI url="https://pypi.org/user/requests"></PyPI>"#,
+        r#"<DockerHub url="https://hub.docker.com.evil/r/library/nginx"></DockerHub>"#,
         r#"<Discord url="https://evil.example/channels/1"></Discord>"#,
         r#"<Facebook url="https://facebook.com.evil.example/post"></Facebook>"#,
         r#"<Threads url="http://threads.net/@example/post/abc"></Threads>"#,

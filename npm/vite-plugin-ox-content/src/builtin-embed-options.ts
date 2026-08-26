@@ -1,6 +1,7 @@
 import type { TwitterEmbedOptions } from "./plugins";
 import type { BuiltinPmOptions, OxContentOptions, ResolvedOptions } from "./types";
 import { normalizeProviderArticleOptions } from "./plugins/provider-articles";
+import { normalizeProviderPackageOptions } from "./plugins/provider-packages";
 
 export function resolveBuiltinEmbedOptions(
   options: OxContentOptions["embeds"],
@@ -22,6 +23,7 @@ export function resolveBuiltinEmbedOptions(
       googleMaps: false,
       qiita: false,
       zenn: false,
+      packageRegistry: false,
       discord: false,
       fediverse: false,
       facebook: false,
@@ -47,6 +49,7 @@ export function resolveBuiltinEmbedOptions(
     googleMaps: options?.googleMaps === true,
     qiita: normalizeProviderArticleOptions(options?.qiita),
     zenn: normalizeProviderArticleOptions(options?.zenn),
+    packageRegistry: normalizeProviderPackageOptions(options?.packageRegistry),
     discord: options?.discord === true,
     fediverse: options?.fediverse === true,
     facebook: options?.facebook === true,
