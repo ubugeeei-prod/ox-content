@@ -258,7 +258,7 @@ fn escape_text(value: &str, out: &mut String) {
     }
 }
 
-fn escape_attr(value: &str, out: &mut String) {
+pub(super) fn escape_attr(value: &str, out: &mut String) {
     for ch in value.chars() {
         match ch {
             '&' => out.push_str("&amp;"),

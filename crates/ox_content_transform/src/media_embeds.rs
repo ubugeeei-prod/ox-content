@@ -1,3 +1,4 @@
+mod apple_music;
 mod html;
 mod render;
 #[cfg(test)]
@@ -5,6 +6,7 @@ mod tests;
 
 use crate::{MediaEmbedsOptions, html_scan::find_ci};
 
+use apple_music::render_apple_music;
 use html::{ComponentElement, find_component};
 use render::{
     render_bluesky, render_spotify, render_stackblitz, render_tweet, render_webcontainer,
@@ -21,6 +23,9 @@ pub fn transform_media_embeds(html: &str, options: Option<&MediaEmbedsOptions>) 
     let mut current = html.to_string();
     if options.spotify.unwrap_or(false) && contains_ci(&current, "<spotify") {
         current = transform_component(&current, "spotify", render_spotify);
+    }
+    if options.apple_music.unwrap_or(false) && contains_ci(&current, "<applemusic") {
+        current = transform_component(&current, "applemusic", render_apple_music);
     }
     if options.stack_blitz.unwrap_or(false) && contains_ci(&current, "<stackblitz") {
         current = transform_component(&current, "stackblitz", render_stackblitz);
@@ -42,6 +47,7 @@ pub fn transform_media_embeds(html: &str, options: Option<&MediaEmbedsOptions>) 
 
 fn has_enabled_embed(options: &MediaEmbedsOptions) -> bool {
     options.spotify.unwrap_or(false)
+        || options.apple_music.unwrap_or(false)
         || options.stack_blitz.unwrap_or(false)
         || options.twitter.unwrap_or(false)
         || options.bluesky.unwrap_or(false)

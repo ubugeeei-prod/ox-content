@@ -2139,6 +2139,12 @@ export interface BuiltinEmbedOptions {
   spotify?: boolean;
 
   /**
+   * Render `<AppleMusic url="https://music.apple.com/...">` iframes.
+   * @default false
+   */
+  appleMusic?: boolean;
+
+  /**
    * Render `<StackBlitz url="https://stackblitz.com/edit/...">` iframes.
    * @default false
    */
@@ -2184,6 +2190,7 @@ export interface ResolvedBuiltinEmbedOptions {
   openGraph: OgpOptions | false;
   pm: BuiltinPmOptions | false;
   spotify: boolean;
+  appleMusic: boolean;
   stackBlitz: boolean;
   twitter: TwitterEmbedOptions | false;
   bluesky: boolean;

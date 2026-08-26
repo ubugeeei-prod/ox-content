@@ -202,6 +202,7 @@ pub struct DocsTestOptions {
 #[derive(Clone, Default)]
 pub struct MediaEmbedsOptions {
     pub spotify: Option<bool>,
+    pub apple_music: Option<bool>,
     pub stack_blitz: Option<bool>,
     pub twitter: Option<bool>,
     pub bluesky: Option<bool>,

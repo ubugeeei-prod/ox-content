@@ -1423,6 +1423,7 @@ async function transformSsgHtml(html: string, options: ResolvedOptions): Promise
     openGraph: options.embeds.openGraph,
     pm: options.embeds.pm,
     spotify: options.embeds.spotify,
+    appleMusic: options.embeds.appleMusic,
     stackBlitz: options.embeds.stackBlitz,
     twitter: options.embeds.twitter,
     bluesky: options.embeds.bluesky,
