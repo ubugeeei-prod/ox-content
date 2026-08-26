@@ -1,10 +1,13 @@
 import { Buffer } from "node:buffer";
-import { describe, expect, it } from "vite-plus/test";
+import { afterEach, describe, expect, it } from "vite-plus/test";
 import { createDocsResolvedOptions } from "../test/fixtures/docs-fixture";
 import {
+  clearGitHubResourceCache,
+  collectGitHubResources,
   collectGitHubRepos,
   collectGitHubSources,
   isSafeGitHubRepo,
+  parseGitHubResourceReference,
   parseGitHubPermalink,
   transformGitHub,
 } from "./plugins/github";
@@ -16,7 +19,7 @@ import { transformMarkdown } from "./transform";
 
 function mockGitHubSourceFetch(): typeof fetch {
   return (async (input: RequestInfo | URL) => {
-    const url = String(input);
+    const url = requestUrl(input);
     if (url.includes("/commits")) {
       return {
         ok: true,
@@ -46,6 +49,10 @@ function mockGitHubSourceFetch(): typeof fetch {
     } as Response;
   }) as typeof fetch;
 }
+
+afterEach(() => {
+  clearGitHubResourceCache();
+});
 
 describe("builtin embed input hardening", () => {
   it("accepts only safe GitHub repo references", async () => {
@@ -92,6 +99,180 @@ describe("builtin embed input hardening", () => {
   it("keeps only the first line of a commit message", () => {
     expect(summarizeCommitMessage("feat: add cards\n\nbody")).toBe("feat: add cards");
     expect(summarizeCommitMessage("x".repeat(130))).toBe(`${"x".repeat(119)}…`);
+  });
+
+  it("accepts GitHub work item and gist URLs", async () => {
+    expect(parseGitHubResourceReference("https://github.com/acme/project/issues/42")).toEqual({
+      kind: "issue",
+      repo: "acme/project",
+      number: 42,
+      permalink: "https://github.com/acme/project/issues/42",
+      apiUrl: "https://api.github.com/repos/acme/project/issues/42",
+    });
+    expect(
+      parseGitHubResourceReference("https://github.com/acme/project/pull/7/files"),
+    ).toMatchObject({
+      kind: "pull",
+      repo: "acme/project",
+      number: 7,
+    });
+    expect(
+      parseGitHubResourceReference(
+        "https://github.com/acme/project/commit/0123456789abcdef0123456789abcdef01234567",
+      ),
+    ).toMatchObject({
+      kind: "commit",
+      repo: "acme/project",
+      sha: "0123456789abcdef0123456789abcdef01234567",
+    });
+    expect(
+      parseGitHubResourceReference("https://gist.github.com/acme/0123456789abcdef0123456789abcdef"),
+    ).toMatchObject({
+      kind: "gist",
+      gistOwner: "acme",
+      gistId: "0123456789abcdef0123456789abcdef",
+    });
+    expect(
+      await collectGitHubResources(
+        [
+          '<GitHub url="https://github.com/acme/project/issues/42"></GitHub>',
+          '<GitHub repo="acme/project" discussion="8"></GitHub>',
+        ].join(""),
+      ),
+    ).toHaveLength(2);
+
+    expect(parseGitHubResourceReference("http://github.com/acme/project/issues/42")).toBeNull();
+    expect(
+      parseGitHubResourceReference("https://user:pass@github.com/acme/project/issues/42"),
+    ).toBeNull();
+    expect(
+      parseGitHubResourceReference("https://github.com.evil/acme/project/issues/42"),
+    ).toBeNull();
+    expect(parseGitHubResourceReference("https://github.com/acme/project/issues/0")).toBeNull();
+  });
+
+  it("expands GitHub work items and gists into static resource cards", async () => {
+    const originalFetch = globalThis.fetch;
+    const requests: string[] = [];
+    globalThis.fetch = (async (input) => {
+      const url = requestUrl(input);
+      requests.push(url);
+      switch (url) {
+        case "https://api.github.com/repos/acme/project/issues/42":
+          return okJson({
+            title: "Fix escaped cards",
+            state: "open",
+            html_url: "https://github.com/acme/project/issues/42",
+            body: "Cards should remain **static**.",
+            comments: 3,
+            updated_at: "2026-08-26T12:00:00Z",
+            user: { login: "octo", avatar_url: "https://avatars.githubusercontent.com/u/1?v=4" },
+            labels: [{ name: "bug" }, { name: "docs" }],
+          });
+        case "https://api.github.com/repos/acme/project/issues/7":
+          return okJson({
+            title: "Add provider cards",
+            state: "closed",
+            html_url: "https://github.com/acme/project/pull/7",
+            comments: 1,
+            updated_at: "2026-08-25T12:00:00Z",
+            user: { login: "maintainer" },
+            labels: [{ name: "feature" }],
+          });
+        case "https://api.github.com/repos/acme/project/commits/0123456789abcdef0123456789abcdef01234567":
+          return okJson({
+            sha: "0123456789abcdef0123456789abcdef01234567",
+            html_url:
+              "https://github.com/acme/project/commit/0123456789abcdef0123456789abcdef01234567",
+            commit: {
+              message: "feat: add resources\n\nDetailed body",
+              author: { name: "Jane Doe", date: "2026-08-24T01:02:03Z" },
+            },
+            author: { login: "jane", avatar_url: "https://avatars.githubusercontent.com/u/2?v=4" },
+          });
+        case "https://api.github.com/repos/acme/project/discussions/8":
+          return okJson({
+            title: "How should cards fall back?",
+            state: "open",
+            html_url: "https://github.com/acme/project/discussions/8",
+            comments: 5,
+            updated_at: "2026-08-23T00:00:00Z",
+            user: { login: "reader" },
+          });
+        case "https://api.github.com/gists/0123456789abcdef0123456789abcdef":
+          return okJson({
+            id: "0123456789abcdef0123456789abcdef",
+            html_url: "https://gist.github.com/acme/0123456789abcdef0123456789abcdef",
+            description: "Minimal repro",
+            comments: 2,
+            updated_at: "2026-08-22T00:00:00Z",
+            owner: { login: "acme" },
+            files: {
+              "repro.ts": { filename: "repro.ts", language: "TypeScript" },
+              "README.md": { filename: "README.md", language: "Markdown" },
+            },
+          });
+        default:
+          throw new Error(`unexpected request ${url}`);
+      }
+    }) as typeof fetch;
+
+    try {
+      const html = await transformGitHub(
+        [
+          '<GitHub url="https://github.com/acme/project/issues/42"></GitHub>',
+          '<GitHub url="https://github.com/acme/project/pull/7"></GitHub>',
+          '<GitHub url="https://github.com/acme/project/commit/0123456789abcdef0123456789abcdef01234567"></GitHub>',
+          '<GitHub url="https://github.com/acme/project/discussions/8"></GitHub>',
+          '<GitHub url="https://gist.github.com/acme/0123456789abcdef0123456789abcdef"></GitHub>',
+        ].join("\n"),
+      );
+
+      expect(html).toContain("ox-github-resource-card--issue");
+      expect(html).toContain("Fix escaped cards");
+      expect(html).toContain("bug, docs");
+      expect(html).toContain("ox-github-resource-card--pull");
+      expect(html).toContain("pull request #7");
+      expect(html).toContain("ox-github-resource-card--commit");
+      expect(html).toContain("feat: add resources");
+      expect(html).toContain("ox-github-resource-card--discussion");
+      expect(html).toContain("How should cards fall back?");
+      expect(html).toContain("ox-github-resource-card--gist");
+      expect(html).toContain("repro.ts, README.md");
+      expect(html).toContain('aria-label="GitHub acme/project issue: Fix escaped cards"');
+
+      await transformGitHub('<GitHub url="https://github.com/acme/project/issues/42"></GitHub>');
+      expect(requests.filter((url) => url.endsWith("/issues/42"))).toHaveLength(1);
+    } finally {
+      globalThis.fetch = originalFetch;
+    }
+  });
+
+  it("renders link-only GitHub resource cards when metadata is unavailable", async () => {
+    const originalFetch = globalThis.fetch;
+    const originalWarn = console.warn;
+    const warnings: string[] = [];
+    globalThis.fetch = (async () => new Response("{}", { status: 404 })) as typeof fetch;
+    console.warn = (message?: unknown) => {
+      warnings.push(String(message));
+    };
+
+    try {
+      const html = await transformGitHub(
+        '<GitHub url="https://github.com/acme/project/issues/404"></GitHub>',
+        undefined,
+        { cache: false },
+      );
+
+      expect(html).toContain("ox-github-resource-card--issue");
+      expect(html).toContain("error");
+      expect(html).toContain("acme/project#404");
+      expect(html).toContain("Unavailable");
+      expect(warnings[0]).toContain("404");
+    } finally {
+      globalThis.fetch = originalFetch;
+      console.warn = originalWarn;
+    }
   });
 
   it("expands GitHub source permalinks into code cards", async () => {
@@ -370,3 +551,16 @@ describe("built-in embeds vs MDX island lowering (#879)", () => {
     expect(result.html).not.toMatch(/<p>[\s\S]*<article class="ox-tweet"/);
   });
 });
+
+function requestUrl(input: Parameters<typeof fetch>[0]): string {
+  if (typeof input === "string") return input;
+  if (input instanceof URL) return input.href;
+  return input.url;
+}
+
+function okJson(value: unknown): Response {
+  return new Response(JSON.stringify(value), {
+    status: 200,
+    headers: { "content-type": "application/json" },
+  });
+}

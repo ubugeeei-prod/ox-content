@@ -3,21 +3,25 @@ import rehypeParsePlugin from "rehype-parse";
 import rehypeStringifyPlugin from "rehype-stringify";
 import { unified } from "unified";
 import { interopDefault } from "../../interop";
-import { prefetchGitHubRepos, prefetchGitHubSources } from "./api";
+import { prefetchGitHubRepos, prefetchGitHubResources, prefetchGitHubSources } from "./api";
 import {
   attributesFromElement,
+  collectGitHubResources,
   collectGitHubRepos,
   collectGitHubSources,
   sourceRefFromAttributes,
 } from "./attributes";
 import { createFallbackCard } from "./fallback-card";
 import { createGitHubCard } from "./repo-card";
+import { createGitHubResourceCard, createGitHubResourceFallbackCard } from "./resource-card";
+import { resourceKey, resourceRefFromAttributes } from "./resource";
 import { sourceKey } from "./source";
 import { createGitHubSourceCard } from "./source-card";
 import {
   defaultOptions,
   type GitHubOptions,
   type GitHubRepoData,
+  type GitHubResourceData,
   type GitHubSourceData,
 } from "./types";
 
@@ -31,6 +35,7 @@ const rehypeStringify = interopDefault(rehypeStringifyPlugin);
 function rehypeGitHub(
   repoDataMap: Map<string, GitHubRepoData | null>,
   sourceDataMap: Map<string, GitHubSourceData | null>,
+  resourceDataMap: Map<string, GitHubResourceData | null>,
   options: Required<GitHubOptions>,
 ) {
   return (tree: Root) => {
@@ -56,6 +61,15 @@ function rehypeGitHub(
             node.children[i] = sourceData
               ? createGitHubSourceCard(sourceData, source.lines, options)
               : createFallbackCard(source.permalink);
+            continue;
+          }
+
+          const resource = resourceRefFromAttributes(attrs);
+          if (resource) {
+            const resourceData = resourceDataMap.get(resourceKey(resource));
+            node.children[i] = resourceData
+              ? createGitHubResourceCard(resourceData)
+              : createGitHubResourceFallbackCard(resource);
             continue;
           }
 
@@ -88,10 +102,12 @@ export async function transformGitHub(
   }
   const sources = await collectGitHubSources(html);
   const sourceDataMap = await prefetchGitHubSources(sources, mergedOptions);
+  const resources = await collectGitHubResources(html);
+  const resourceDataMap = await prefetchGitHubResources(resources, mergedOptions);
 
   const result = await unified()
     .use(rehypeParse, { fragment: true })
-    .use(rehypeGitHub, dataMap, sourceDataMap, mergedOptions)
+    .use(rehypeGitHub, dataMap, sourceDataMap, resourceDataMap, mergedOptions)
     .use(rehypeStringify)
     .process(html);
 

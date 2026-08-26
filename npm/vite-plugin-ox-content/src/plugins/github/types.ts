@@ -43,6 +43,38 @@ export interface GitHubSourceData {
   commit?: GitHubSourceCommit;
 }
 
+export type GitHubResourceKind = "issue" | "pull" | "commit" | "discussion" | "gist";
+
+export interface GitHubResourceRef {
+  kind: GitHubResourceKind;
+  permalink: string;
+  apiUrl: string;
+  repo?: string;
+  number?: number;
+  sha?: string;
+  gistId?: string;
+  gistOwner?: string;
+}
+
+export interface GitHubResourceData {
+  kind: GitHubResourceKind;
+  permalink: string;
+  title: string;
+  html_url: string;
+  repo?: string;
+  number?: number;
+  sha?: string;
+  state?: string;
+  author?: string;
+  avatar_url?: string;
+  body?: string;
+  labels?: string[];
+  comments?: number;
+  dateTime?: string;
+  dateLabel?: string;
+  files?: string[];
+}
+
 export interface GitHubOptions {
   /**
    * GitHub API token used for higher rate limits and private repository access.

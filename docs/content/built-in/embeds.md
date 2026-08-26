@@ -112,6 +112,21 @@ is configured. If a repository or file cannot be fetched during the build —
 offline CI, rate limits, an invalid path — the embed renders a fallback link
 card instead of failing the build.
 
+GitHub issue, pull request, commit, discussion, and gist URLs also render as
+static cards through the same `embeds.github` option:
+
+```mdx
+<GitHub url="https://github.com/ubugeeei-prod/ox-content/issues/699" />
+<GitHub url="https://github.com/ubugeeei-prod/ox-content/pull/1025" />
+<GitHub url="https://github.com/ubugeeei-prod/ox-content/commit/5399e080b5320d730e410a49a5aab42ba670a1f1" />
+<GitHub url="https://github.com/ubugeeei-prod/ox-content/discussions/1" />
+<GitHub url="https://gist.github.com/ubugeeei/0123456789abcdef0123456789abcdef" />
+```
+
+These resource cards use unauthenticated public metadata fetches only. Deleted,
+private, rate-limited, or unsupported resources fall back to deterministic
+link-only cards.
+
 ## Open Graph Cards
 
 `embeds.openGraph` fetches a page's Open Graph metadata at build time and

@@ -1,9 +1,13 @@
 import { Buffer } from "node:buffer";
+import { gitHubResourceDataFromJson } from "./resource-metadata";
+import { resourceKey } from "./resource";
 import { inferLanguage, sourceKey, summarizeCommitMessage } from "./source";
 import {
   defaultOptions,
   type GitHubOptions,
   type GitHubRepoData,
+  type GitHubResourceData,
+  type GitHubResourceRef,
   type GitHubSourceCommit,
   type GitHubSourceData,
   type GitHubSourceRef,
@@ -12,6 +16,7 @@ import { encodePath, isSafeGitHubPath, isSafeGitHubRef, isSafeGitHubRepo } from 
 
 const repoCache = new Map<string, { data: GitHubRepoData; timestamp: number }>();
 const sourceCache = new Map<string, { data: GitHubSourceData; timestamp: number }>();
+const resourceCache = new Map<string, { data: GitHubResourceData; timestamp: number }>();
 
 interface GitHubContentApiFile {
   type: string;
@@ -38,6 +43,13 @@ function githubHeaders(options: Required<GitHubOptions>): Record<string, string>
   }
 
   return headers;
+}
+
+function githubPublicHeaders(): Record<string, string> {
+  return {
+    Accept: "application/vnd.github.v3+json",
+    "User-Agent": "ox-content-github-plugin",
+  };
 }
 
 async function fetchSourceCommit(
@@ -69,6 +81,10 @@ async function fetchSourceCommit(
   } catch {
     return undefined;
   }
+}
+
+export function clearGitHubResourceCache(): void {
+  resourceCache.clear();
 }
 
 /**
@@ -187,6 +203,41 @@ export async function fetchGitHubSource(
 }
 
 /**
+ * Fetch public GitHub issue, pull request, commit, discussion, or gist metadata.
+ */
+export async function fetchGitHubResource(
+  resource: GitHubResourceRef,
+  options: Required<GitHubOptions>,
+): Promise<GitHubResourceData | null> {
+  const key = resourceKey(resource);
+  if (options.cache) {
+    const cached = resourceCache.get(key);
+    if (cached && Date.now() - cached.timestamp < options.cacheTTL) {
+      return cached.data;
+    }
+  }
+
+  try {
+    const response = await fetch(resource.apiUrl, { headers: githubPublicHeaders() });
+    if (!response.ok) {
+      console.warn(
+        `Failed to fetch GitHub ${resource.kind} ${resource.permalink}: ${response.status}`,
+      );
+      return null;
+    }
+
+    const data = gitHubResourceDataFromJson(resource, await response.json());
+    if (options.cache && data) {
+      resourceCache.set(key, { data, timestamp: Date.now() });
+    }
+    return data;
+  } catch (error) {
+    console.warn(`Error fetching GitHub ${resource.kind} ${resource.permalink}:`, error);
+    return null;
+  }
+}
+
+/**
  * Pre-fetch all GitHub repos data.
  */
 export async function prefetchGitHubRepos(
@@ -200,6 +251,29 @@ export async function prefetchGitHubRepos(
     Array.from(new Set(repos)).map(async (repo) => {
       const data = await fetchRepoData(repo, mergedOptions);
       results.set(repo, data);
+    }),
+  );
+
+  return results;
+}
+
+/**
+ * Pre-fetch all GitHub resource cards.
+ */
+export async function prefetchGitHubResources(
+  resources: GitHubResourceRef[],
+  options?: GitHubOptions,
+): Promise<Map<string, GitHubResourceData | null>> {
+  const mergedOptions = { ...defaultOptions, ...options };
+  const results = new Map<string, GitHubResourceData | null>();
+  const uniqueResources = Array.from(
+    new Map(resources.map((resource) => [resourceKey(resource), resource])).values(),
+  );
+
+  await Promise.all(
+    uniqueResources.map(async (resource) => {
+      const data = await fetchGitHubResource(resource, mergedOptions);
+      results.set(resourceKey(resource), data);
     }),
   );
 

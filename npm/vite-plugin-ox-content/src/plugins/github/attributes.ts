@@ -1,6 +1,7 @@
 import type { Element } from "hast";
+import { parseGitHubResourceReference, resourceRefFromAttributes } from "./resource";
 import { createGitHubPermalink, parseGitHubLineRange, parseGitHubPermalink } from "./source";
-import type { GitHubSourceRef } from "./types";
+import type { GitHubResourceRef, GitHubSourceRef } from "./types";
 import { isSafeGitHubPath, isSafeGitHubRef, isSafeGitHubRepo } from "./validation";
 
 const GITHUB_COMPONENT_RE = /<github\b([^>]*)>/gi;
@@ -16,7 +17,14 @@ export async function collectGitHubRepos(html: string): Promise<string[]> {
   let match;
   while ((match = GITHUB_COMPONENT_RE.exec(html)) !== null) {
     const attrs = parseAttributes(match[1]);
-    if (attrs.path || attrs.file || attrs.permalink || attrs.url || attrs.href) {
+    if (
+      attrs.path ||
+      attrs.file ||
+      attrs.permalink ||
+      attrs.url ||
+      attrs.href ||
+      hasResourceAttrs(attrs)
+    ) {
       continue;
     }
 
@@ -27,6 +35,24 @@ export async function collectGitHubRepos(html: string): Promise<string[]> {
   }
 
   return repos;
+}
+
+/**
+ * Collect all GitHub issue, pull request, commit, discussion, and gist refs.
+ */
+export async function collectGitHubResources(html: string): Promise<GitHubResourceRef[]> {
+  const resources: GitHubResourceRef[] = [];
+
+  GITHUB_COMPONENT_RE.lastIndex = 0;
+  let match;
+  while ((match = GITHUB_COMPONENT_RE.exec(html)) !== null) {
+    const resource = resourceRefFromAttributes(parseAttributes(match[1]));
+    if (resource) {
+      resources.push(resource);
+    }
+  }
+
+  return resources;
 }
 
 /**
@@ -74,6 +100,15 @@ export function attributesFromElement(el: Element): Record<string, string> {
     "loc",
     "lines",
     "line",
+    "issue",
+    "pull",
+    "pr",
+    "discussion",
+    "commit",
+    "gist",
+    "gistid",
+    "owner",
+    "user",
   ]) {
     const value = getAttribute(el, name);
     if (value !== undefined) {
@@ -81,6 +116,16 @@ export function attributesFromElement(el: Element): Record<string, string> {
     }
   }
   return attrs;
+}
+
+function hasResourceAttrs(attrs: Record<string, string>): boolean {
+  if (attrs.issue || attrs.pull || attrs.pr || attrs.discussion || attrs.commit || attrs.gist) {
+    return true;
+  }
+  return Boolean(
+    (attrs.url || attrs.href || attrs.permalink) &&
+    parseGitHubResourceReference(attrs.url ?? attrs.href ?? attrs.permalink ?? ""),
+  );
 }
 
 function getAttribute(el: Element, name: string): string | undefined {

@@ -98,6 +98,19 @@ ref と行範囲を固定したソーススニペット:
 
 明示的な `token` がなければ `process.env.GITHUB_TOKEN` を自動で拾います。ビルド中にリポジトリやファイルが取れないとき — オフライン CI、レート制限、不正なパス — 埋め込みはビルドを落とさず、フォールバックのリンクカードを描画します。
 
+GitHub issue、pull request、commit、discussion、gist の URL も、同じ
+`embeds.github` オプションで静的カードとして描画できます。
+
+```mdx
+<GitHub url="https://github.com/ubugeeei-prod/ox-content/issues/699" />
+<GitHub url="https://github.com/ubugeeei-prod/ox-content/pull/1025" />
+<GitHub url="https://github.com/ubugeeei-prod/ox-content/commit/5399e080b5320d730e410a49a5aab42ba670a1f1" />
+<GitHub url="https://github.com/ubugeeei-prod/ox-content/discussions/1" />
+<GitHub url="https://gist.github.com/ubugeeei/0123456789abcdef0123456789abcdef" />
+```
+
+これらの resource card は、認証なしで読める public metadata だけを取得します。削除済み、非公開、レート制限、未対応の resource は deterministic な link-only card に落ちます。
+
 ## Open Graph カード
 
 `embeds.openGraph` はビルド時にページの Open Graph メタデータを取り、静的リンクカードを描画します。

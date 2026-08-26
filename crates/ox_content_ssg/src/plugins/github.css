@@ -42,6 +42,29 @@
   text-decoration: underline;
 }
 
+.ox-github-resource-kind {
+  display: inline-flex;
+  align-items: center;
+  border: 1px solid color-mix(in srgb, var(--octc-color-border) 70%, transparent);
+  border-radius: 999px;
+  padding: 0.05rem 0.45rem;
+  color: var(--octc-color-text-muted);
+  font-size: 0.75rem;
+  line-height: 1.4;
+}
+
+.ox-github-resource-title {
+  margin: 0 0 0.5rem;
+  color: var(--octc-color-text);
+  font-weight: 600;
+  line-height: 1.45;
+}
+
+.ox-github-resource-card:hover .ox-github-resource-title {
+  color: var(--octc-color-primary);
+  text-decoration: underline;
+}
+
 .ox-github-description {
   font-size: 0.875rem;
   color: var(--octc-color-text-muted);
