@@ -275,6 +275,28 @@ fn kbd_css_is_included_only_when_ox_kbd_is_present() {
 }
 
 #[test]
+fn abbr_css_is_included_only_when_ox_abbr_is_present() {
+    let config = config("Test Site", "/", None);
+    let with = generate_html(
+        &page(
+            "Abbr",
+            None,
+            r#"<p><abbr class="ox-abbr" title="Language Server Protocol">LSP</abbr></p>"#,
+            vec![],
+            None,
+            "abbr",
+        ),
+        &[],
+        &config,
+    );
+    assert!(with.contains("ox-content:css:plugin-abbr:start"), "{with}");
+    assert!(with.contains(".ox-abbr"), "{with}");
+    let without =
+        generate_html(&page("Plain", None, "<p>no terms</p>", vec![], None, "plain"), &[], &config);
+    assert!(!without.contains("plugin-abbr"), "{without}");
+}
+
+#[test]
 fn test_generate_toc_html_escapes_entries() {
     let html = generate_toc_html(&[TocEntry {
         depth: 2,

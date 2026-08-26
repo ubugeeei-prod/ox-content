@@ -10,6 +10,7 @@ import { resolveIconsOptions } from "./icons";
 import { resolveHeadingPermalinksOptions } from "./heading-permalinks-options";
 import { resolveI18nOptions } from "./i18n";
 import { resolveIncludeOptions } from "./include-options";
+import { resolveAbbreviationsOptions } from "./abbreviations-options";
 import { resolveMagicLinkOptions } from "./magic-link-options";
 import { resolveNotByAiOptions } from "./not-by-ai-options";
 
@@ -73,6 +74,7 @@ export function resolveOptions(options: OxContentOptions): ResolvedOptions {
     badges: resolveBadgeOptions(options.badges),
     notByAi: resolveNotByAiOptions(options.notByAi),
     keyboardKeys: resolveKeyboardKeysOptions(options.keyboardKeys),
+    abbreviations: resolveAbbreviationsOptions(options.abbreviations),
     magicLinks: resolveMagicLinkOptions(options.magicLinks),
     containers: resolveContainerOptions(options.containers),
     images: resolveImageOptions(options.images),

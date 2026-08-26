@@ -1,0 +1,5 @@
+.content .ox-abbr {
+  text-decoration: underline dotted;
+  text-underline-offset: 0.15em;
+  cursor: help;
+}

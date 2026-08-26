@@ -1724,6 +1724,18 @@ export interface OxContentOptions {
   keyboardKeys?: boolean | KeyboardKeysOptions;
 
   /**
+   * Opt-in abbreviation and glossary expansion.
+   *
+   * Passing `true` or an options object expands `*[LSP]: Language Server Protocol`
+   * and config `terms` into `<abbr class="ox-abbr">`. Matching uses Unicode word
+   * boundaries. Fenced, indented, inline, and raw code, HTML comments, and
+   * existing links are skipped. There is no client JavaScript.
+   *
+   * @default false
+   */
+  abbreviations?: boolean | AbbreviationsOptions;
+
+  /**
    * Opt-in `{link:...}` rich magic links.
    *
    * Passing `true` or an options object enables GitHub-user, alias, and
@@ -2086,6 +2098,10 @@ export interface ResolvedOptions {
   /**
    * Present after `resolveOptions`. Omitted in hand-built fixtures means off.
    */
+  abbreviations?: ResolvedAbbreviationsOptions;
+  /**
+   * Present after `resolveOptions`. Omitted in hand-built fixtures means off.
+   */
   magicLinks?: ResolvedMagicLinkOptions;
   containers: ResolvedContainerOptions;
   images: ResolvedImageOptions;
@@ -2305,6 +2321,37 @@ export interface ResolvedKeyboardKeysOptions {
   enabled: boolean;
   aliases: Record<string, string>;
   style: "words" | "symbols";
+}
+
+/**
+ * Options for opt-in abbreviation and glossary expansion.
+ */
+export interface AbbreviationsOptions {
+  /**
+   * Enable the transform when an options object is supplied.
+   *
+   * @default true
+   */
+  enabled?: boolean;
+  /**
+   * Central glossary. Keys are matched with Unicode word boundaries.
+   */
+  terms?: Record<string, string>;
+  /**
+   * Wrap only the first occurrence of each term.
+   *
+   * @default false
+   */
+  firstUseOnly?: boolean;
+}
+
+/**
+ * Resolved abbreviation / glossary transform options.
+ */
+export interface ResolvedAbbreviationsOptions {
+  enabled: boolean;
+  terms: Record<string, string>;
+  firstUseOnly: boolean;
 }
 
 /**

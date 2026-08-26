@@ -81,5 +81,6 @@ built-in table. Labels are chosen at build time.
 ## Related
 
 - [Inline Badges](./badges.md)
+- [Abbreviations](./abbreviations.md)
 - [Syntax Extensions](./syntax-extensions.md)
 - [Built-in Features overview](../built-in-features.md)
