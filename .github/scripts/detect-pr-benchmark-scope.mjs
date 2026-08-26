@@ -20,6 +20,11 @@ const RUNTIME_PATTERNS = [
   /^benchmarks\/polonius-borrowck\//,
 ];
 
+const TEST_ONLY_PATTERNS = [
+  /^npm\/[^/]+\/src\/.*\.test\.[cm]?[jt]sx?$/,
+  /^npm\/[^/]+\/src\/(?:.*\/)?__snapshots__\/.*\.snap$/,
+];
+
 const BUNDLE_PATTERNS = [
   /^benchmarks\/bundle-size\//,
   /^crates\//,
@@ -81,6 +86,9 @@ function classifyFile(file) {
   }
   if (matchesAny(file, RUNTIME_PATTERNS)) {
     return { runtime: true, bundle: false };
+  }
+  if (matchesAny(file, TEST_ONLY_PATTERNS)) {
+    return { runtime: false, bundle: false };
   }
   if (matchesAny(file, BUNDLE_PATTERNS)) {
     return { runtime: false, bundle: true };

@@ -28,6 +28,23 @@ describe("detect-pr-benchmark-scope", () => {
     expect(parseOutputs(result.stdout)).toEqual({ runtime: "false", bundle: "true" });
   });
 
+  it("skips test-only package edits", () => {
+    const result = runScope([
+      "npm/vite-plugin-ox-content-react/src/transform.test.ts",
+      "npm/vite-plugin-ox-content-react/src/__snapshots__/transform.test.ts.snap",
+    ]);
+
+    expect(result.status).toBe(0);
+    expect(parseOutputs(result.stdout)).toEqual({ runtime: "false", bundle: "false" });
+  });
+
+  it("keeps package implementation edits on the bundle gate", () => {
+    const result = runScope(["npm/vite-plugin-ox-content-react/src/transform.ts"]);
+
+    expect(result.status).toBe(0);
+    expect(parseOutputs(result.stdout)).toEqual({ runtime: "false", bundle: "true" });
+  });
+
   it("runs both gates for benchmark harness edits", () => {
     const result = runScope(["benchmarks/bundle-size/parse-benchmark.mjs"]);
 
