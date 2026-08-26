@@ -105,6 +105,7 @@ This project's docs site turns the control on with `markdownSource: { copy: true
 
 ## Related
 
+- [SSG output primitives](./ssg-output.md)
 - [Site Generation](./site-generation.md)
 - [Draft / unlisted / scheduled](./drafts.md)
 - [Permalinks and Cascade](./permalinks.md)

@@ -349,8 +349,18 @@ Each transformer receives the parsed AST plus `{ filePath, frontmatter,
 options }` and returns the (possibly replaced) AST. Transformers compose in
 array order.
 
+## Custom hosts (`ssg: false`)
+
+Hosts that own page templates can still reuse resource fingerprinting,
+Markdown companions, feeds, sitemaps, and git lastmod. Call
+`planSsgOutputs` and the matching writers — see
+[SSG output primitives](./ssg-output.md). Use
+`ssg: { enabled: false, markdownSource, lastUpdated, siteUrl }` when those
+fields should still resolve; the boolean `ssg: false` clears them.
+
 ## Related
 
+- [SSG output primitives](./ssg-output.md) — plan and emit outputs without the default theme.
 - [Previous / Next](./pagination.md) — opt-in previous and next page links.
 - [Breadcrumbs](./breadcrumbs.md) — opt-in trail from the site root through sidebar ancestors.
 - [Page head](./page-head.md) — build-time title / meta / link / JSON-LD API.

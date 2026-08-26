@@ -103,6 +103,7 @@ oxContent({
 
 ## 関連
 
+- [SSG 出力プリミティブ](./ssg-output.md)
 - [コレクション](./collections.md)
 - [ブログ](./blog.md)
 - [Sitemap / robots / llms.txt](./site-maps.md)

@@ -103,6 +103,7 @@ JavaScript なしでも開けます。併記がオンでも `copy` は明示し�
 
 ## 関連
 
+- [SSG 出力プリミティブ](./ssg-output.md)
 - [サイト生成](./site-generation.md)
 - [下書き / 非公開 / 予約公開](./drafts.md)
 - [パーマリンクと Cascade](./permalinks.md)
