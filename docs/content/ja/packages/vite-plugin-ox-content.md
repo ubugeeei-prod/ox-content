@@ -158,6 +158,18 @@ result.toc;
 オプション解決を一度だけにしたいときは `createMarkdownProcessor(options)` を
 使い、`processor.render(source, filePath)` を呼んでください。
 
+`ssg: false`、`renderMarkdown()`、`transformAllPlugins()` が返すのは
+マークアップだけです。その HTML を描画するホストで公式の機能スタイルシートを
+import してください。crate の CSS をアプリにコピーしないでください。
+[コンポーネント CSS](../built-in/component-styles.md) を見てください。
+
+```css
+@import "@ox-content/vite-plugin/styles/core.css";
+@import "@ox-content/vite-plugin/styles/magic-links.css";
+@import "@ox-content/vite-plugin/styles/social.css";
+@import "@ox-content/vite-plugin/styles/twitter-full.css";
+```
+
 ### gfm
 
 - 型: `boolean`
