@@ -20,6 +20,7 @@ export const RESERVED_BUILTIN_COMPONENTS = [
   "XPost",
   "Bluesky",
   "Spotify",
+  "AppleMusic",
   "StackBlitz",
   "WebContainer",
   "YouTube",

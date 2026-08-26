@@ -1264,6 +1264,12 @@ export interface JsMediaEmbedsOptions {
    */
   spotify?: boolean
   /**
+   * Render `<AppleMusic>` embeds.
+   *
+   * Default: `false`.
+   */
+  appleMusic?: boolean
+  /**
    * Render `<StackBlitz>` embeds.
    *
    * Default: `false`.

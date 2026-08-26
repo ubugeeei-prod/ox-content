@@ -205,6 +205,7 @@ function createResolvedOptions(overrides: Partial<ResolvedOptions> = {}): Resolv
       openGraph: {},
       pm: false,
       spotify: false,
+      appleMusic: false,
       stackBlitz: false,
       twitter: false,
       bluesky: false,
