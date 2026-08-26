@@ -74,19 +74,19 @@ oxContent({
 });
 ```
 
-| オプション    | 型                                          | 既定                                  |
-| ------------- | ------------------------------------------- | ------------------------------------- |
-| `feeds`       | `boolean` / 単一フィード / 名前付き / 配列  | `false`                               |
-| `formats`     | `("rss" \| "atom" \| "json")[]`             | `["rss", "atom", "json"]`             |
-| `collection`  | `string`                                    | `content`、なければ最初のコレクション |
-| `limit`       | `number`                                    | `20`                                  |
-| `path`        | `string`                                    | `/`（サイトルート）                   |
-| `title`       | `string`                                    | SSG のサイト名                        |
-| `description` | `string`                                    | SSG のサイト説明                      |
-| `language`    | `string`                                    | 省略                                  |
-| `image`       | `string`                                    | 省略                                  |
-| `favicon`     | `string`                                    | 省略                                  |
-| `copyright`   | `string`                                    | 省略                                  |
+| オプション    | 型                                         | 既定                                  |
+| ------------- | ------------------------------------------ | ------------------------------------- |
+| `feeds`       | `boolean` / 単一フィード / 名前付き / 配列 | `false`                               |
+| `formats`     | `("rss" \| "atom" \| "json")[]`            | `["rss", "atom", "json"]`             |
+| `collection`  | `string`                                   | `content`、なければ最初のコレクション |
+| `limit`       | `number`                                   | `20`                                  |
+| `path`        | `string`                                   | `/`（サイトルート）                   |
+| `title`       | `string`                                   | SSG のサイト名                        |
+| `description` | `string`                                   | SSG のサイト説明                      |
+| `language`    | `string`                                   | 省略                                  |
+| `image`       | `string`                                   | 省略                                  |
+| `favicon`     | `string`                                   | 省略                                  |
+| `copyright`   | `string`                                   | 省略                                  |
 
 `path` は生成ファイルのサイト相対ディレクトリです。`/feeds` なら `feeds/feed.xml`、`feeds/atom.xml`、`feeds/feed.json` を書き出します。チャンネルの `title`、`description`、`language`、`image`、`favicon`、`copyright` は、各形式に対応するフィールドがあるときサイト既定を上書きします（JSON Feed に copyright はありません）。
 

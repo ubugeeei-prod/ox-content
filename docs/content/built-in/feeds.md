@@ -79,19 +79,19 @@ oxContent({
 });
 ```
 
-| Option        | Type                                                 | Default                              |
-| ------------- | ---------------------------------------------------- | ------------------------------------ |
-| `feeds`       | `boolean` / one feed / named record / array          | `false`                              |
-| `formats`     | `("rss" \| "atom" \| "json")[]`                      | `["rss", "atom", "json"]`            |
-| `collection`  | `string`                                             | `content`, else the first collection |
-| `limit`       | `number`                                             | `20`                                 |
-| `path`        | `string`                                             | `/` (site root)                      |
-| `title`       | `string`                                             | SSG site name                        |
-| `description` | `string`                                             | SSG site description                 |
-| `language`    | `string`                                             | omitted                              |
-| `image`       | `string`                                             | omitted                              |
-| `favicon`     | `string`                                             | omitted                              |
-| `copyright`   | `string`                                             | omitted                              |
+| Option        | Type                                        | Default                              |
+| ------------- | ------------------------------------------- | ------------------------------------ |
+| `feeds`       | `boolean` / one feed / named record / array | `false`                              |
+| `formats`     | `("rss" \| "atom" \| "json")[]`             | `["rss", "atom", "json"]`            |
+| `collection`  | `string`                                    | `content`, else the first collection |
+| `limit`       | `number`                                    | `20`                                 |
+| `path`        | `string`                                    | `/` (site root)                      |
+| `title`       | `string`                                    | SSG site name                        |
+| `description` | `string`                                    | SSG site description                 |
+| `language`    | `string`                                    | omitted                              |
+| `image`       | `string`                                    | omitted                              |
+| `favicon`     | `string`                                    | omitted                              |
+| `copyright`   | `string`                                    | omitted                              |
 
 `path` is the site-relative directory for the generated files. `/feeds` writes
 `feeds/feed.xml`, `feeds/atom.xml`, and `feeds/feed.json`. Channel `title`,
