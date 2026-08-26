@@ -17,7 +17,8 @@ use std::process::ExitCode;
 
 use clap::{Parser, ValueEnum};
 use ox_content_link_checker::{
-    CheckOptions, Diagnostic, LinkKind, Severity, SiteCheckOptions, check_site, check_source,
+    CODE_IO_READ, CheckOptions, Diagnostic, LinkKind, Severity, SiteCheckOptions, check_site,
+    check_source,
 };
 
 #[derive(Parser)]
@@ -89,6 +90,7 @@ fn main() -> ExitCode {
                     file: display,
                     diagnostics: vec![Diagnostic {
                         severity: Severity::Error,
+                        code: CODE_IO_READ.to_string(),
                         message: format!("Failed to read file: {error}"),
                         line: 1,
                         column: 1,
@@ -135,6 +137,7 @@ fn main() -> ExitCode {
                     file: site_dir.to_string_lossy().into_owned(),
                     diagnostics: vec![Diagnostic {
                         severity: Severity::Error,
+                        code: CODE_IO_READ.to_string(),
                         message: format!("Failed to inspect generated site: {error}"),
                         line: 1,
                         column: 1,

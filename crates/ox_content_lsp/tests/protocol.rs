@@ -25,6 +25,7 @@ fn initialize_advertises_the_expected_capabilities() {
     assert_eq!(caps["hoverProvider"], json!(true));
     assert!(caps["completionProvider"].is_object(), "missing completionProvider");
     assert_eq!(caps["documentFormattingProvider"], json!(true));
+    assert_eq!(caps["textDocumentSync"]["change"], json!(2), "incremental text sync");
 
     server.shutdown();
 }

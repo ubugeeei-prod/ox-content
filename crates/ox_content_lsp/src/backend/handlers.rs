@@ -16,12 +16,12 @@ impl LanguageServer for Backend {
         self.init_from_params(&params).await;
         Ok(InitializeResult {
             capabilities: ServerCapabilities {
-                // Advertise full-document sync plus save events so
-                // textlint (which runs on save) gets notified.
+                // Incremental sync plus save events so editors can send
+                // didChange ranges and textlint still runs on save.
                 text_document_sync: Some(TextDocumentSyncCapability::Options(
                     TextDocumentSyncOptions {
                         open_close: Some(true),
-                        change: Some(TextDocumentSyncKind::FULL),
+                        change: Some(TextDocumentSyncKind::INCREMENTAL),
                         will_save_wait_until: Some(true),
                         save: Some(TextDocumentSyncSaveOptions::Supported(true)),
                         ..Default::default()
@@ -94,13 +94,21 @@ impl LanguageServer for Backend {
     }
 
     async fn did_open(&self, params: DidOpenTextDocumentParams) {
-        self.open_document(&params.text_document.uri, params.text_document.text).await;
+        self.open_document(
+            &params.text_document.uri,
+            params.text_document.text,
+            params.text_document.version,
+        )
+        .await;
     }
 
     async fn did_change(&self, params: DidChangeTextDocumentParams) {
-        if let Some(change) = params.content_changes.first() {
-            self.on_change(&params.text_document.uri, change.text.clone()).await;
-        }
+        self.change_document(
+            &params.text_document.uri,
+            params.text_document.version,
+            &params.content_changes,
+        )
+        .await;
     }
 
     async fn did_close(&self, params: DidCloseTextDocumentParams) {

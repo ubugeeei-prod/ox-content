@@ -1,8 +1,17 @@
 use serde::Serialize;
 
+pub mod document;
 pub mod registry;
+mod scan;
 
+pub use document::check_document;
 pub use registry::{Attribute, Component, Registry, RegistryError};
+
+pub const CODE_UNQUOTED_PROP: &str = "mdc-unquoted-prop";
+pub const CODE_MISMATCHED_TAG: &str = "mdc-mismatched-tag";
+pub const CODE_ORPHAN_CLOSE: &str = "mdc-orphan-close";
+pub const CODE_UNCLOSED_TAG: &str = "mdc-unclosed-tag";
+pub const CODE_IO_READ: &str = "mdc-io-read";
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]
 #[serde(rename_all = "lowercase")]
@@ -13,6 +22,7 @@ pub enum Severity {
 #[derive(Debug, Clone, PartialEq, Eq, Serialize)]
 pub struct Diagnostic {
     pub severity: Severity,
+    pub code: String,
     pub message: String,
     pub line: u32,
     pub column: u32,
@@ -31,15 +41,15 @@ struct OpenTag {
 
 #[must_use]
 pub fn check(source: &str) -> Vec<Diagnostic> {
-    let line_index = LineIndex::new(source);
-    let masked = masked_fence_ranges(source);
+    let line_index = scan::LineIndex::new(source);
+    let masked = scan::masked_fence_ranges(source);
     let mut diagnostics = Vec::new();
     let mut stack: Vec<OpenTag> = Vec::new();
     let bytes = source.as_bytes();
     let mut index = 0;
 
     while index < bytes.len() {
-        if bytes[index] != b'<' || is_masked(index, &masked) {
+        if bytes[index] != b'<' || scan::is_masked(index, &masked) {
             index += 1;
             continue;
         }
@@ -60,19 +70,21 @@ pub fn check(source: &str) -> Vec<Diagnostic> {
             match stack.pop() {
                 Some(open) if open.name == tag.name => {}
                 Some(open) => {
-                    diagnostics.push(diagnostic(
+                    diagnostics.push(scan::diagnostic(
                         &line_index,
                         tag.name_start,
                         tag.name_end,
+                        CODE_MISMATCHED_TAG,
                         format!("MDC closing tag </{}> does not match <{}>.", tag.name, open.name),
                         Some(tag.name),
                     ));
                     stack.push(open);
                 }
-                None => diagnostics.push(diagnostic(
+                None => diagnostics.push(scan::diagnostic(
                     &line_index,
                     tag.name_start,
                     tag.name_end,
+                    CODE_ORPHAN_CLOSE,
                     format!("MDC closing tag </{}> has no matching opening tag.", tag.name),
                     Some(tag.name),
                 )),
@@ -89,10 +101,11 @@ pub fn check(source: &str) -> Vec<Diagnostic> {
     }
 
     for open in stack.into_iter().rev() {
-        diagnostics.push(diagnostic(
+        diagnostics.push(scan::diagnostic(
             &line_index,
             open.name_start,
             open.name_end,
+            CODE_UNCLOSED_TAG,
             format!("MDC component <{}> is missing a closing tag.", open.name),
             Some(open.name),
         ));
@@ -177,7 +190,11 @@ fn parse_tag(source: &str, start: usize) -> Option<ParsedTag> {
     None
 }
 
-fn check_attributes(source: &str, line_index: &LineIndex, tag: &ParsedTag) -> Vec<Diagnostic> {
+fn check_attributes(
+    source: &str,
+    line_index: &scan::LineIndex,
+    tag: &ParsedTag,
+) -> Vec<Diagnostic> {
     if tag.closing {
         return Vec::new();
     }
@@ -219,10 +236,11 @@ fn check_attributes(source: &str, line_index: &LineIndex, tag: &ParsedTag) -> Ve
             cursor += 1;
         }
         if cursor >= end || !matches!(bytes[cursor], b'"' | b'\'' | b'{') {
-            diagnostics.push(diagnostic(
+            diagnostics.push(scan::diagnostic(
                 line_index,
                 attr_start,
                 cursor.max(attr_start + 1),
+                CODE_UNQUOTED_PROP,
                 "MDC prop values must be quoted strings or brace expressions.".to_string(),
                 Some(tag.name.clone()),
             ));
@@ -264,74 +282,6 @@ fn skip_attribute_value(bytes: &[u8], start: usize, end: usize) -> usize {
         cursor += 1;
     }
     cursor
-}
-
-fn masked_fence_ranges(source: &str) -> Vec<(usize, usize)> {
-    let mut ranges = Vec::new();
-    let mut cursor = 0;
-    let mut fence: Option<(u8, usize)> = None;
-
-    for line in source.split_inclusive('\n') {
-        let line_start = cursor;
-        let trimmed = line.trim_start();
-        let indent = line.len() - trimmed.len();
-        if indent <= 3 && (trimmed.starts_with("```") || trimmed.starts_with("~~~")) {
-            let marker = trimmed.as_bytes()[0];
-            if let Some((open_marker, start)) = fence {
-                if marker == open_marker {
-                    ranges.push((start, line_start + line.len()));
-                    fence = None;
-                }
-            } else {
-                fence = Some((marker, line_start));
-            }
-        }
-        cursor += line.len();
-    }
-
-    if let Some((_, start)) = fence {
-        ranges.push((start, source.len()));
-    }
-
-    ranges
-}
-
-fn is_masked(offset: usize, ranges: &[(usize, usize)]) -> bool {
-    ranges.iter().any(|(start, end)| offset >= *start && offset < *end)
-}
-
-fn diagnostic(
-    line_index: &LineIndex,
-    start: usize,
-    end: usize,
-    message: String,
-    component: Option<String>,
-) -> Diagnostic {
-    let (line, column) = line_index.position(start);
-    let (end_line, end_column) = line_index.position(end);
-    Diagnostic { severity: Severity::Error, message, line, column, end_line, end_column, component }
-}
-
-struct LineIndex {
-    starts: Vec<usize>,
-}
-
-impl LineIndex {
-    fn new(source: &str) -> Self {
-        let mut starts = vec![0];
-        for (index, ch) in source.char_indices() {
-            if ch == '\n' {
-                starts.push(index + 1);
-            }
-        }
-        Self { starts }
-    }
-
-    fn position(&self, offset: usize) -> (u32, u32) {
-        let line = self.starts.partition_point(|start| *start <= offset).saturating_sub(1);
-        let column = offset.saturating_sub(self.starts[line]);
-        (line as u32 + 1, column as u32 + 1)
-    }
 }
 
 #[cfg(test)]

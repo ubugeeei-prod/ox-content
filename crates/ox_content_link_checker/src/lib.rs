@@ -27,7 +27,12 @@ use ox_content_parser::{Parser, ParserOptions};
 use anchors::collect_anchors;
 use line_index::LineIndex;
 pub use site::check_site;
-pub use types::{CheckOptions, Diagnostic, LinkKind, Severity, SiteCheckOptions, SiteReport};
+pub use types::{
+    CODE_CROSS_FILE_ANCHOR, CODE_IO_READ, CODE_MISSING_ANCHOR, CODE_MISSING_FILE,
+    CODE_SITE_ESCAPES_ROOT, CODE_SITE_MISSING, CODE_SITE_MISSING_ANCHOR,
+    CODE_SITE_NON_HTML_FRAGMENT, CODE_SITE_OUTSIDE_BASE, CODE_SITE_REDIRECT, CODE_UNCLASSIFIED,
+    CODE_UNRESOLVED, CheckOptions, Diagnostic, LinkKind, Severity, SiteCheckOptions, SiteReport,
+};
 use walker::Walker;
 
 mod anchors;

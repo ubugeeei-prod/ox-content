@@ -3,26 +3,28 @@ use std::path::PathBuf;
 use ox_content_allocator::Allocator;
 use ox_content_link_checker::{CheckOptions, Severity, check_source as link_check_source};
 use ox_content_parser::{ParseError, Parser, ParserOptions};
-use tower_lsp::lsp_types::{Diagnostic, DiagnosticSeverity, Url};
+use tower_lsp::lsp_types::{Diagnostic, DiagnosticSeverity, NumberOrString, Url};
 
+use crate::config::ResolvedConfig;
 use crate::document::TextDocumentState;
-use crate::frontmatter::FrontmatterBlock;
+use crate::frontmatter::{self, FrontmatterBlock};
+use crate::session::{DiagnosticCache, DiagnosticJob};
+
+use super::Backend;
+
+pub const CODE_MARKDOWN_PARSE: &str = "markdown-parse";
+pub const CODE_FRONTMATTER_SCHEMA: &str = "frontmatter-schema-missing";
 
 pub(super) fn markdown_parse_diagnostics(
     document: &TextDocumentState,
     block: Option<&FrontmatterBlock>,
     mdx: bool,
 ) -> Vec<Diagnostic> {
-    // Diagnostics apply to the markdown body, not the YAML frontmatter.
-    // `block_end_offset` is the byte just past the closing `---` line.
     let (source, offset) = block.map_or_else(
         || (document.text(), 0),
         |block| (&document.text()[block.block_end_offset..], block.block_end_offset),
     );
 
-    // Diagnostics run on keystrokes and the input length is known. Start the
-    // parser with a source-sized arena so editor feedback does not pay bumpalo
-    // chunk growth on every parse.
     let allocator = Allocator::for_source_len(source.len());
     let mut options = ParserOptions::gfm();
     options.mdx = mdx;
@@ -34,45 +36,21 @@ pub(super) fn markdown_parse_diagnostics(
     }
 }
 
-pub(super) fn mdc_diagnostics(
-    document: &TextDocumentState,
-    block: Option<&FrontmatterBlock>,
-) -> Vec<Diagnostic> {
-    // MDC diagnostics apply to the markdown body. Use the post-frontmatter
-    // slice so column/line numbers from the checker line up with the source
-    // the editor opened.
-    let (source, line_offset) = block.map_or_else(
-        || (document.text(), 0),
-        |block| {
-            let before = &document.text()[..block.block_end_offset];
-            (
-                &document.text()[block.block_end_offset..],
-                before.chars().filter(|ch| *ch == '\n').count() as u32,
-            )
-        },
-    );
-
-    ox_content_mdc_checker::check(source)
+pub(super) fn mdc_diagnostics(document: &TextDocumentState) -> Vec<Diagnostic> {
+    ox_content_mdc_checker::check_document(document.text())
         .into_iter()
-        .map(|diagnostic| {
-            let start_line = diagnostic.line.saturating_sub(1) + line_offset;
-            let end_line = diagnostic.end_line.saturating_sub(1) + line_offset;
-            Diagnostic {
-                range: tower_lsp::lsp_types::Range {
-                    start: tower_lsp::lsp_types::Position {
-                        line: start_line,
-                        character: diagnostic.column.saturating_sub(1),
-                    },
-                    end: tower_lsp::lsp_types::Position {
-                        line: end_line,
-                        character: diagnostic.end_column.saturating_sub(1),
-                    },
-                },
-                severity: Some(DiagnosticSeverity::ERROR),
-                source: Some("ox-content-mdc".to_string()),
-                message: diagnostic.message,
-                ..Default::default()
-            }
+        .map(|diagnostic| Diagnostic {
+            range: checker_range(
+                diagnostic.line,
+                diagnostic.column,
+                diagnostic.end_line,
+                diagnostic.end_column,
+            ),
+            severity: Some(DiagnosticSeverity::ERROR),
+            code: Some(NumberOrString::String(diagnostic.code)),
+            source: Some("ox-content-mdc".to_string()),
+            message: diagnostic.message,
+            ..Default::default()
         })
         .collect()
 }
@@ -91,25 +69,40 @@ pub(super) fn link_check_diagnostics(
     link_check_source(document.text(), &options)
         .into_iter()
         .map(|diagnostic| Diagnostic {
-            range: tower_lsp::lsp_types::Range {
-                start: tower_lsp::lsp_types::Position {
-                    line: diagnostic.line.saturating_sub(1),
-                    character: diagnostic.column.saturating_sub(1),
-                },
-                end: tower_lsp::lsp_types::Position {
-                    line: diagnostic.end_line.saturating_sub(1),
-                    character: diagnostic.end_column.saturating_sub(1),
-                },
-            },
+            range: checker_range(
+                diagnostic.line,
+                diagnostic.column,
+                diagnostic.end_line,
+                diagnostic.end_column,
+            ),
             severity: Some(match diagnostic.severity {
                 Severity::Error => DiagnosticSeverity::ERROR,
                 Severity::Warning => DiagnosticSeverity::WARNING,
             }),
+            code: Some(NumberOrString::String(diagnostic.code)),
             source: Some("ox-content-link".to_string()),
             message: diagnostic.message,
             ..Default::default()
         })
         .collect()
+}
+
+fn checker_range(
+    line: u32,
+    column: u32,
+    end_line: u32,
+    end_column: u32,
+) -> tower_lsp::lsp_types::Range {
+    tower_lsp::lsp_types::Range {
+        start: tower_lsp::lsp_types::Position {
+            line: line.saturating_sub(1),
+            character: column.saturating_sub(1),
+        },
+        end: tower_lsp::lsp_types::Position {
+            line: end_line.saturating_sub(1),
+            character: end_column.saturating_sub(1),
+        },
+    }
 }
 
 fn parse_error_to_diagnostic(
@@ -124,43 +117,166 @@ fn parse_error_to_diagnostic(
     Diagnostic {
         range: document.range_from_offsets(start, end),
         severity: Some(DiagnosticSeverity::ERROR),
+        code: Some(NumberOrString::String(CODE_MARKDOWN_PARSE.to_string())),
         source: Some("ox-content".to_string()),
         message: error.to_string(),
         ..Default::default()
     }
 }
 
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use crate::frontmatter::parse_frontmatter;
-
-    #[test]
-    fn markdown_parse_diagnostics_skip_valid_body_after_frontmatter() {
-        let source = "---\ntitle: Doc\n---\n\n# Valid heading\n\nA paragraph.\n";
-        let document = TextDocumentState::new(source.to_string());
-        let frontmatter = parse_frontmatter(&document);
-        let diagnostics = markdown_parse_diagnostics(&document, frontmatter.block.as_ref(), false);
-        assert!(diagnostics.is_empty(), "expected clean parse for valid body, got {diagnostics:?}");
+impl Backend {
+    pub(super) async fn publish_diagnostics_for(&self, uri: &Url) {
+        let Some((document, job, cache)) = self.state.begin_diagnostics(uri).await else {
+            return;
+        };
+        let Some((diagnostics, next_cache)) =
+            self.collect_diagnostics(uri, &document, &cache, &job).await
+        else {
+            return;
+        };
+        if !self.state.finish_diagnostics(uri, &job, next_cache).await {
+            return;
+        }
+        self.client.publish_diagnostics(uri.clone(), diagnostics, Some(job.version)).await;
     }
 
-    #[test]
-    fn markdown_parse_diagnostics_skip_yaml_inside_frontmatter() {
-        // The YAML body would look like a paragraph to the markdown parser
-        // and could produce spurious diagnostics. This regression test pins
-        // the contract that the YAML is fed to the YAML parser only.
-        let source = "---\ntitle: A title with : colon\n---\n\nbody\n";
-        let document = TextDocumentState::new(source.to_string());
-        let frontmatter = parse_frontmatter(&document);
-        let diagnostics = markdown_parse_diagnostics(&document, frontmatter.block.as_ref(), false);
-        assert!(diagnostics.is_empty(), "yaml leaked into markdown diagnostics: {diagnostics:?}");
+    pub(super) async fn run_textlint_for(&self, uri: &Url) {
+        let config = self.resolved_config().await;
+        if !config.textlint.enabled {
+            return;
+        }
+        let Some((document, job, cache)) = self.state.begin_diagnostics(uri).await else {
+            return;
+        };
+        let Ok(path) = uri.to_file_path() else {
+            return;
+        };
+        if !crate::document::is_markdown_path(&path) {
+            return;
+        }
+        let textlint_diagnostics =
+            crate::textlint::run(document.text(), &path, &config.textlint).await;
+        if job.is_cancelled() {
+            return;
+        }
+        let Some((mut current, next_cache)) =
+            self.collect_diagnostics(uri, &document, &cache, &job).await
+        else {
+            return;
+        };
+        current.extend(textlint_diagnostics);
+        if !self.state.finish_diagnostics(uri, &job, next_cache).await {
+            return;
+        }
+        self.client.publish_diagnostics(uri.clone(), current, Some(job.version)).await;
     }
 
-    #[test]
-    fn markdown_parse_diagnostics_accept_mdx_when_enabled() {
-        let source = "import Card from './Card'\n\n<Card count={1}>Visible</Card>\n";
-        let document = TextDocumentState::new(source.to_string());
-        let diagnostics = markdown_parse_diagnostics(&document, None, true);
-        assert!(diagnostics.is_empty(), "expected clean MDX parse, got {diagnostics:?}");
+    async fn collect_diagnostics(
+        &self,
+        uri: &Url,
+        document: &TextDocumentState,
+        cache: &DiagnosticCache,
+        job: &DiagnosticJob,
+    ) -> Option<(Vec<Diagnostic>, DiagnosticCache)> {
+        if job.is_cancelled() {
+            return None;
+        }
+        let config = self.resolved_config().await;
+        let root = self.state.root().await;
+        if job.is_cancelled() {
+            return None;
+        }
+        collect_markdown_diagnostics(uri, document, &config, root, cache, job)
     }
 }
+
+pub(super) fn collect_markdown_diagnostics(
+    uri: &Url,
+    document: &TextDocumentState,
+    config: &ResolvedConfig,
+    src_dir: Option<PathBuf>,
+    cache: &DiagnosticCache,
+    job: &DiagnosticJob,
+) -> Option<(Vec<Diagnostic>, DiagnosticCache)> {
+    let frontmatter = frontmatter::parse_frontmatter(document);
+    let frontmatter_src = frontmatter
+        .block
+        .as_ref()
+        .map_or(String::new(), |block| document.text()[..block.block_end_offset].to_string());
+    let body_src = document.text()[frontmatter_src.len()..].to_string();
+    let (reuse_frontmatter, reuse_body) = cache.reuse(&frontmatter_src, &body_src);
+
+    let mut next = DiagnosticCache { frontmatter_src, body_src, ..DiagnosticCache::default() };
+    if reuse_frontmatter {
+        next.frontmatter.clone_from(&cache.frontmatter);
+    } else {
+        if job.is_cancelled() {
+            return None;
+        }
+        next.frontmatter = frontmatter
+            .block
+            .as_ref()
+            .map_or_else(Vec::new, |block| frontmatter_diagnostics(block, config));
+    }
+
+    if reuse_body {
+        next.parse.clone_from(&cache.parse);
+        next.mdc.clone_from(&cache.mdc);
+        next.links.clone_from(&cache.links);
+        next.spacing.clone_from(&cache.spacing);
+    } else {
+        if job.is_cancelled() {
+            return None;
+        }
+        let is_mdc = uri
+            .to_file_path()
+            .ok()
+            .and_then(|path| path.extension().and_then(|ext| ext.to_str()).map(str::to_string))
+            .is_some_and(|ext| ext == "mdc");
+        let mdx = uri.to_file_path().is_ok_and(|path| crate::document::is_mdx_path(&path));
+        next.parse = markdown_parse_diagnostics(document, frontmatter.block.as_ref(), mdx);
+        if is_mdc {
+            next.mdc = mdc_diagnostics(document);
+        }
+        next.spacing =
+            crate::spacing::diagnostics(document, frontmatter.block.as_ref(), config.spacing);
+        next.links = link_check_diagnostics(document, uri, src_dir);
+    }
+
+    if job.is_cancelled() {
+        return None;
+    }
+
+    let mut diagnostics = next.frontmatter.clone();
+    diagnostics.extend(next.parse.iter().cloned());
+    diagnostics.extend(next.mdc.iter().cloned());
+    diagnostics.extend(next.spacing.iter().cloned());
+    diagnostics.extend(next.links.iter().cloned());
+    Some((diagnostics, next))
+}
+
+pub(super) fn frontmatter_diagnostics(
+    block: &frontmatter::FrontmatterBlock,
+    config: &ResolvedConfig,
+) -> Vec<Diagnostic> {
+    let mut diagnostics = block.diagnostics.clone();
+    match Backend::load_schema(config) {
+        Ok(Some(schema)) => {
+            diagnostics.extend(frontmatter::validate_frontmatter(block, &schema));
+        }
+        Ok(None) => {}
+        Err(message) => diagnostics.push(Diagnostic {
+            range: block.block_range,
+            severity: Some(tower_lsp::lsp_types::DiagnosticSeverity::ERROR),
+            code: Some(NumberOrString::String(CODE_FRONTMATTER_SCHEMA.to_string())),
+            source: Some("ox-content".to_string()),
+            message,
+            ..Default::default()
+        }),
+    }
+    diagnostics
+}
+
+#[cfg(test)]
+#[path = "diagnostics_tests.rs"]
+mod tests;
