@@ -640,6 +640,7 @@ export async function transformMarkdown(
       : undefined,
     cards: options.cards?.enabled ? { enabled: true } : undefined,
     steps: options.steps?.enabled ? { enabled: true } : undefined,
+    codeGroups: options.codeGroups?.enabled ? { enabled: true } : undefined,
     fileTree: toJsFileTreeOptions(options.fileTree),
     // Sanitize once at the end of the JS pipeline so opt-in embeds can be
     // expanded before the allow-list is applied.

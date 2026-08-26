@@ -147,6 +147,7 @@ export function createDocsResolvedOptions(
     includes: { enabled: false },
     cards: { enabled: false },
     steps: { enabled: false },
+    codeGroups: { enabled: false },
     fileTree: { enabled: false, defaultOpen: true, icons: true },
     sanitize: { enabled: false },
     editThisPage: { enabled: false, branch: "main", label: "Edit this page" },

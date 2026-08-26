@@ -38,6 +38,8 @@ pub struct TransformOptions {
     pub includes: Option<IncludeOptions>,
     /// Opt-in `::: steps` ordered lists. Disabled when omitted.
     pub steps: Option<StepsOptions>,
+    /// Opt-in `::: code-group` fence groups. Disabled when omitted.
+    pub code_groups: Option<CodeGroupOptions>,
     /// Opt-in `{badge:variant}` inline badges. Disabled when omitted.
     pub badges: Option<BadgeOptions>,
     /// Opt-in `{link:...}` rich magic links. Disabled when omitted.
@@ -137,6 +139,11 @@ pub struct CardOptions {
 
 #[derive(Clone, Default)]
 pub struct StepsOptions {
+    pub enabled: Option<bool>,
+}
+
+#[derive(Clone, Default)]
+pub struct CodeGroupOptions {
     pub enabled: Option<bool>,
 }
 

@@ -148,6 +148,7 @@ export default defineConfig(({ mode }) => {
                       { text: "Images", link: "/built-in/images.md" },
                       { text: "Page resources", link: "/built-in/resources.md" },
                       { text: "Code Blocks", link: "/built-in/code-blocks.md" },
+                      { text: "Code Groups", link: "/built-in/code-groups.md" },
                       { text: "Embeds", link: "/built-in/embeds.md" },
                       { text: "Mermaid Diagrams", link: "/built-in/mermaid.md" },
                       { text: "Math", link: "/built-in/math.md" },
@@ -276,6 +277,7 @@ export default defineConfig(({ mode }) => {
         includes: true,
         cards: true,
         steps: true,
+        codeGroups: true,
         fileTree: true,
         typedHover: true,
         embeds: {
