@@ -1,0 +1,118 @@
+/* Provider cards for static article, place, community, and social embeds */
+.ox-provider-card {
+  display: block;
+  margin: 1.5rem 0;
+  border: 1px solid color-mix(in srgb, var(--octc-color-border) 74%, transparent);
+  border-radius: 8px;
+  overflow: hidden;
+  background: var(--octc-color-bg);
+}
+
+.ox-provider-card__main {
+  display: block;
+  padding: 1rem;
+  color: var(--octc-color-text);
+  text-decoration: none;
+}
+
+.ox-provider-card__main:hover {
+  text-decoration: none;
+}
+
+.ox-provider-card__header,
+.ox-provider-card__meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.35rem 0.75rem;
+  color: var(--octc-color-text-muted);
+}
+
+.ox-provider-card__header {
+  margin-bottom: 0.625rem;
+  font-size: 0.75rem;
+}
+
+.ox-provider-card__network,
+.ox-provider-card__source {
+  font-weight: 600;
+}
+
+.ox-provider-card__network {
+  color: var(--octc-color-primary);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.ox-provider-card__body-wrap {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  min-width: 0;
+}
+
+.ox-provider-card__avatar {
+  flex: 0 0 auto;
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  object-fit: cover;
+  background: var(--octc-color-bg-alt);
+}
+
+.ox-provider-card__copy {
+  min-width: 0;
+}
+
+.ox-provider-card__title {
+  margin: 0;
+  font-size: 1rem;
+  line-height: 1.35;
+  color: var(--octc-color-text);
+}
+
+.ox-provider-card__main:hover .ox-provider-card__title {
+  text-decoration: underline;
+}
+
+.ox-provider-card__excerpt {
+  margin: 0.625rem 0 0;
+  font-size: 0.875rem;
+  line-height: 1.55;
+  color: var(--octc-color-text-muted);
+  white-space: pre-wrap;
+}
+
+.ox-provider-card__image {
+  display: block;
+  width: 100%;
+  height: auto;
+  max-height: 420px;
+  margin-top: 0.875rem;
+  border: 1px solid color-mix(in srgb, var(--octc-color-border) 74%, transparent);
+  border-radius: 8px;
+  object-fit: cover;
+  background: var(--octc-color-bg-alt);
+}
+
+.ox-provider-card__meta {
+  margin-top: 0.875rem;
+  font-size: 0.75rem;
+}
+
+.ox-provider-card__metric > span {
+  font-weight: 600;
+  color: var(--octc-color-text);
+}
+
+.ox-provider-card__source {
+  color: var(--octc-color-primary);
+}
+
+.ox-provider-card__map {
+  display: block;
+  width: 100%;
+  border: 0;
+  border-top: 1px solid color-mix(in srgb, var(--octc-color-border) 74%, transparent);
+  background: var(--octc-color-bg-alt);
+}

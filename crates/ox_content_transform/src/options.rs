@@ -282,6 +282,14 @@ pub struct MediaEmbedsOptions {
     pub stack_blitz: Option<bool>,
     pub twitter: Option<bool>,
     pub bluesky: Option<bool>,
+    pub google_maps: Option<bool>,
+    pub qiita: Option<bool>,
+    pub zenn: Option<bool>,
+    pub discord: Option<bool>,
+    pub fediverse: Option<bool>,
+    pub facebook: Option<bool>,
+    pub threads: Option<bool>,
+    pub instagram: Option<bool>,
     pub web_container: Option<bool>,
 }
 

@@ -15,6 +15,14 @@ description: Markdown 中の HTML 風タグで書く GitHub / OG カード、パ
 | Twitter / X              | `embeds.twitter`      | `false` | `<Tweet />` または `<XPost />`      |
 | Reddit                   | `embeds.reddit`       | `false` | `<Reddit url="https://..." />`      |
 | Bluesky                  | `embeds.bluesky`      | `false` | `<Bluesky />`                       |
+| Google Maps              | `embeds.googleMaps`   | `false` | `<GoogleMaps url="https://..." />`  |
+| Qiita                    | `embeds.qiita`        | `false` | `<Qiita url="https://..." />`       |
+| Zenn                     | `embeds.zenn`         | `false` | `<Zenn url="https://..." />`        |
+| Discord                  | `embeds.discord`      | `false` | `<Discord url="https://..." />`     |
+| Fediverse                | `embeds.fediverse`    | `false` | `<Mastodon url="https://..." />`    |
+| Facebook                 | `embeds.facebook`     | `false` | `<Facebook url="https://..." />`    |
+| Threads                  | `embeds.threads`      | `false` | `<Threads url="https://..." />`     |
+| Instagram                | `embeds.instagram`    | `false` | `<Instagram url="https://..." />`   |
 | Spotify                  | `embeds.spotify`      | `false` | `<Spotify url="https://..." />`     |
 | Apple Music              | `embeds.appleMusic`   | `false` | `<AppleMusic url="https://..." />`  |
 | Speaker Deck             | `embeds.speakerDeck`  | `false` | `<SpeakerDeck url="https://..." />` |
@@ -42,6 +50,8 @@ export default {
         twitter: true,
         reddit: true,
         bluesky: true,
+        qiita: true,
+        zenn: true,
       },
     }),
   ],
@@ -310,6 +320,59 @@ oxContent({
 <Bluesky url="https://bsky.app/profile/bsky.app/post/3l6oveex3ii2l">
   👋 Bluesky is an open social network
 </Bluesky>
+
+## プロバイダカード
+
+`embeds.googleMaps`、`embeds.qiita`、`embeds.zenn`、`embeds.discord`、
+`embeds.fediverse`、`embeds.facebook`、`embeds.threads`、
+`embeds.instagram` は静的なプロバイダカードを描画します。`qiita: true` と
+`zenn: true` はビルド時に公開記事 metadata を取得します。ネットワークなしの
+リンクカードにしたいときは `{ fetch: false }` を渡します。それ以外の
+プロバイダカードは既定で metadata fetch も第三者スクリプトも使いません。
+`title`、`author`、`avatar`、`date`、`dateLabel`、`tags`、`likes`、
+`reposts`、`replies`、`server`、`channel`、`address`、`image` などの属性で
+安定した metadata を渡せます。
+
+```mdx
+<GoogleMaps
+  url="https://www.google.com/maps/place/Tokyo+Station/"
+  place="Tokyo Station"
+  address="1 Chome Marunouchi, Chiyoda City"
+/>
+
+<Qiita
+  url="https://qiita.com/ubugeeei/items/abcdef123456"
+  title="Rust docs pipeline"
+  author="ubugeeei"
+  tags="Rust, Markdown"
+  likes="42"
+>
+  Static cards keep builds predictable.
+</Qiita>
+
+<Mastodon
+  url="https://mastodon.social/@docs/111"
+  author="@docs@mastodon.social"
+  replies="3"
+  reposts="5"
+  likes="8"
+>
+  Fediverse release note.
+</Mastodon>
+```
+
+| オプション | 既定      | 目的                                           |
+| ---------- | --------- | ---------------------------------------------- |
+| `fetch`    | `true`    | Qiita / Zenn の metadata をビルド時に取る。    |
+| `timeout`  | `10000`   | metadata リクエストのタイムアウト（ミリ秒）。  |
+| `cache`    | `true`    | このビルド中に取った metadata をメモリに残す。 |
+| `cacheTTL` | `3600000` | キャッシュの鮮度期間（ミリ秒）。               |
+
+`<Fediverse>`、`<Mastodon>`、`<Misskey>`、`<Mixi2>` は
+`embeds.fediverse` を共有します。Google Maps は安全な Google Maps `embed`
+URL を渡したときだけ lazy iframe も出し、それ以外はリンクカードになります。
+未対応 scheme、認証情報つき URL、別 host の URL、取得できない metadata は、
+ビルドを落とさず、書いたままかリンクカードに落ちます。
 
 ## Spotify
 

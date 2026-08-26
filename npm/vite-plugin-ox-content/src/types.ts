@@ -3,7 +3,13 @@
  */
 
 import type { ThemeConfig, ResolvedThemeConfig } from "./theme";
-import type { GitHubOptions, OgpOptions, RedditEmbedOptions, TwitterEmbedOptions } from "./plugins";
+import type {
+  GitHubOptions,
+  OgpOptions,
+  ProviderArticleEmbedOptions,
+  RedditEmbedOptions,
+  TwitterEmbedOptions,
+} from "./plugins";
 import type { ThemeComponent } from "./theme-renderer";
 
 // =============================================================================
@@ -2315,6 +2321,56 @@ export interface BuiltinEmbedOptions {
   bluesky?: boolean;
 
   /**
+   * Render `<GoogleMaps>` as static place cards.
+   * @default false
+   */
+  googleMaps?: boolean;
+
+  /**
+   * Render `<Qiita>` as static article cards.
+   * Pass `{ fetch: false }` to skip metadata fetching and render a link-only card.
+   * @default false
+   */
+  qiita?: boolean | ProviderArticleEmbedOptions;
+
+  /**
+   * Render `<Zenn>` as static article cards.
+   * Pass `{ fetch: false }` to skip metadata fetching and render a link-only card.
+   * @default false
+   */
+  zenn?: boolean | ProviderArticleEmbedOptions;
+
+  /**
+   * Render `<Discord>` as static invite/message cards.
+   * @default false
+   */
+  discord?: boolean;
+
+  /**
+   * Render `<Fediverse>`, `<Mastodon>`, `<Misskey>`, and `<Mixi2>` as static cards.
+   * @default false
+   */
+  fediverse?: boolean;
+
+  /**
+   * Render `<Facebook>` as static post cards.
+   * @default false
+   */
+  facebook?: boolean;
+
+  /**
+   * Render `<Threads>` as static post cards.
+   * @default false
+   */
+  threads?: boolean;
+
+  /**
+   * Render `<Instagram>` as static post cards.
+   * @default false
+   */
+  instagram?: boolean;
+
+  /**
    * Render `<WebContainer>` lazy placeholders with isolation metadata.
    * @default false
    */
@@ -2348,6 +2404,14 @@ export interface ResolvedBuiltinEmbedOptions {
   twitter: TwitterEmbedOptions | false;
   reddit?: RedditEmbedOptions | false;
   bluesky: boolean;
+  googleMaps?: boolean;
+  qiita?: ProviderArticleEmbedOptions | false;
+  zenn?: ProviderArticleEmbedOptions | false;
+  discord?: boolean;
+  fediverse?: boolean;
+  facebook?: boolean;
+  threads?: boolean;
+  instagram?: boolean;
   webContainer: boolean;
 }
 

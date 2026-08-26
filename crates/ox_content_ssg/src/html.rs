@@ -228,6 +228,7 @@ const OGP_CSS: &str = include_str!("plugins/ogp.css");
 /// CSS styles for social embeds (Twitter/X, Reddit, Bluesky, WebContainer, media iframes).
 const SOCIAL_CSS: &str = concat!(
     include_str!("plugins/social.css"),
+    include_str!("plugins/provider-cards.css"),
     include_str!("plugins/social-twitter-rich.css"),
     include_str!("plugins/reddit.css"),
 );

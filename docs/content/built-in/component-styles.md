@@ -30,19 +30,19 @@ you can load compact Tweet chrome without the full-card sheet.
 
 ## Entry points
 
-| Import                    | Covers                                                                                         |
-| ------------------------- | ---------------------------------------------------------------------------------------------- |
-| `styles/core.css`         | Base tokens (`--octc-*`) and default prose/chrome from the SSG stylesheet                      |
-| `styles/magic-links.css`  | `{link:...}` chips                                                                             |
-| `styles/social.css`       | Compact Tweet/X, Reddit, Bluesky, Spotify, Apple Music, audio, video, StackBlitz, WebContainer |
-| `styles/twitter-full.css` | `appearance: "full"` Tweet cards, including the react-tweet / sveltweet MIT notice             |
-| `styles/ogp.css`          | Open Graph cards                                                                               |
-| `styles/github.css`       | GitHub repository and source cards                                                             |
-| `styles/youtube.css`      | YouTube embeds                                                                                 |
-| `styles/tabs.css`         | Tabs and package-manager tabs                                                                  |
-| `styles/mermaid.css`      | Mermaid diagrams                                                                               |
-| `styles/not-by-ai.css`    | `<NotByAI />` authorship badge                                                                 |
-| `styles/all.css`          | The feature sheets above, in that order                                                        |
+| Import                    | Covers                                                                                                         |
+| ------------------------- | -------------------------------------------------------------------------------------------------------------- |
+| `styles/core.css`         | Base tokens (`--octc-*`) and default prose/chrome from the SSG stylesheet                                      |
+| `styles/magic-links.css`  | `{link:...}` chips                                                                                             |
+| `styles/social.css`       | Compact Tweet/X, Reddit, Bluesky, provider cards, Spotify, Apple Music, audio, video, StackBlitz, WebContainer |
+| `styles/twitter-full.css` | `appearance: "full"` Tweet cards, including the react-tweet / sveltweet MIT notice                             |
+| `styles/ogp.css`          | Open Graph cards                                                                                               |
+| `styles/github.css`       | GitHub repository and source cards                                                                             |
+| `styles/youtube.css`      | YouTube embeds                                                                                                 |
+| `styles/tabs.css`         | Tabs and package-manager tabs                                                                                  |
+| `styles/mermaid.css`      | Mermaid diagrams                                                                                               |
+| `styles/not-by-ai.css`    | `<NotByAI />` authorship badge                                                                                 |
+| `styles/all.css`          | The feature sheets above, in that order                                                                        |
 
 Feature sheets that use `var(--octc-*)` expect `core.css` first, or the same
 tokens defined on your host. Full Tweet chrome defines its own `--ox-tweet-*`

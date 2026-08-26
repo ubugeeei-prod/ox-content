@@ -1,4 +1,5 @@
 import { resolveBlogOptions } from "./blog";
+import { resolveBuiltinEmbedOptions } from "./builtin-embed-options";
 import { resolveCardOptions } from "./card-options";
 import { resolveCodeGroupOptions } from "./code-group-options";
 import { resolveConditionalBlockOptions } from "./conditional-block-options";
@@ -20,7 +21,6 @@ import { resolveNotByAiOptions } from "./not-by-ai-options";
 import { normalizeMarkdownExtensions } from "./markdown";
 import { resolveOgImageOptions } from "./og-image";
 import { resolveCascadeOptions, resolvePermalinksOptions } from "./permalinks";
-import type { TwitterEmbedOptions } from "./plugins";
 import { resolvePublishStateOptions } from "./publish-state";
 import { resolvePwaOptions } from "./pwa";
 import { resolveRedirectsOptions } from "./redirects";
@@ -33,8 +33,11 @@ import { resolveStepsOptions } from "./step-options";
 import { resolveTaxonomiesOptions } from "./taxonomies";
 import { resolveTimelineOptions } from "./timeline-options";
 import { resolveTypedHoverOptions } from "./typed-hover";
-import type { BuiltinPmOptions, OxContentOptions, ResolvedOptions } from "./types";
+import type { OxContentOptions, ResolvedOptions } from "./types";
 import { resolveVersionsOptions } from "./versions";
+
+export { resolveBuiltinEmbedOptions } from "./builtin-embed-options";
+
 /** Resolves plugin options with defaults. */
 export function resolveOptions(options: OxContentOptions): ResolvedOptions {
   return {
@@ -113,62 +116,6 @@ export function resolveOptions(options: OxContentOptions): ResolvedOptions {
     embeds: resolveBuiltinEmbedOptions(options.embeds),
     i18n: resolveI18nOptions(options.i18n),
   };
-}
-export function resolveBuiltinEmbedOptions(
-  options: OxContentOptions["embeds"],
-): ResolvedOptions["embeds"] {
-  if (options === false) {
-    return {
-      github: false,
-      openGraph: false,
-      pm: false,
-      spotify: false,
-      appleMusic: false,
-      speakerDeck: false,
-      audio: false,
-      video: false,
-      stackBlitz: false,
-      twitter: false,
-      reddit: false,
-      bluesky: false,
-      webContainer: false,
-    };
-  }
-
-  return {
-    github: resolveSingleEmbedOptions(options?.github),
-    openGraph: resolveSingleEmbedOptions(options?.openGraph),
-    pm: resolvePmOptions(options?.pm),
-    spotify: options?.spotify === true,
-    appleMusic: options?.appleMusic === true,
-    speakerDeck: options?.speakerDeck === true,
-    audio: options?.audio === true,
-    video: options?.video === true,
-    stackBlitz: options?.stackBlitz === true,
-    twitter: resolveTwitterEmbedOptions(options?.twitter),
-    reddit: options?.reddit === true ? {} : options?.reddit || false,
-    bluesky: options?.bluesky === true,
-    webContainer: options?.webContainer === true,
-  };
-}
-function resolveSingleEmbedOptions<T extends object>(options: boolean | T | undefined): T | false {
-  if (options === false) return false;
-  if (options === true || options === undefined) return {} as T;
-  return options;
-}
-function resolveTwitterEmbedOptions(
-  options: boolean | TwitterEmbedOptions | undefined,
-): TwitterEmbedOptions | false {
-  if (options === false || options === undefined) return false;
-  if (options === true) return {};
-  return options;
-}
-function resolvePmOptions(
-  options: boolean | BuiltinPmOptions | undefined,
-): BuiltinPmOptions | false {
-  if (options === false || options === undefined) return false;
-  if (options === true) return {};
-  return options;
 }
 function resolveWikiLinkOptions(
   options: OxContentOptions["wikiLinks"],

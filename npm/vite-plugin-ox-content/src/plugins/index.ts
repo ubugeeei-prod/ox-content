@@ -15,6 +15,10 @@ import {
 import { transformPm, type PmOptions } from "./pm";
 import { transformYouTube, extractVideoId, type YouTubeOptions } from "./youtube";
 import { transformMediaEmbeds, type MediaEmbedOptions } from "./media";
+import type {
+  ProviderArticleEmbedOptions,
+  ResolvedProviderArticleEmbedOptions,
+} from "./provider-articles";
 import {
   createSyndicationToken,
   parseTweetReference,
@@ -117,11 +121,13 @@ export type {
   RedditEmbedOptions,
   RedditPostData,
   RedditPostReference,
+  ProviderArticleEmbedOptions,
+  ResolvedProviderArticleEmbedOptions,
   MermaidOptions,
 };
 
 const SELF_CLOSING_EMBED_TAG =
-  /<(GitHub|OgCard|Tweet|XPost|Reddit|Bluesky|Spotify|AppleMusic|SpeakerDeck|Audio|Video|StackBlitz|WebContainer|YouTube|NotByAI)((?:[^>"']|"[^"]*"|'[^']*')*?)\s*\/>(?:\s*<\/\1\s*>)?/gi;
+  /<(GitHub|OgCard|Tweet|XPost|Reddit|Bluesky|GoogleMaps|Qiita|Zenn|Discord|Fediverse|Mastodon|Misskey|Mixi2|Facebook|Threads|Instagram|Spotify|AppleMusic|SpeakerDeck|Audio|Video|StackBlitz|WebContainer|YouTube|NotByAI)((?:[^>"']|"[^"]*"|'[^']*')*?)\s*\/>(?:\s*<\/\1\s*>)?/gi;
 
 /**
  * Custom embed tags are not HTML void elements, so a self-closing authoring
@@ -141,7 +147,7 @@ export function normalizeSelfClosingEmbeds(html: string): string {
  * Transform all plugin components in HTML.
  * Call this during SSG build to process all plugins at once.
  */
-export interface TransformAllOptions {
+export interface TransformAllOptions extends MediaEmbedOptions {
   tabs?: boolean;
   /**
    * Expand `<pm>` package-manager blocks into install tabs. Pass an object to
@@ -155,16 +161,6 @@ export interface TransformAllOptions {
   openGraph?: boolean | OgpOptions;
   mermaid?: boolean;
   githubToken?: string;
-  spotify?: boolean;
-  appleMusic?: boolean;
-  speakerDeck?: boolean;
-  audio?: boolean;
-  video?: boolean;
-  stackBlitz?: boolean;
-  twitter?: boolean | TwitterEmbedOptions;
-  reddit?: boolean | RedditEmbedOptions;
-  bluesky?: boolean;
-  webContainer?: boolean;
 }
 
 /**
@@ -192,6 +188,14 @@ export async function transformAllPlugins(
     twitter = false,
     reddit = false,
     bluesky = false,
+    googleMaps = false,
+    qiita = false,
+    zenn = false,
+    discord = false,
+    fediverse = false,
+    facebook = false,
+    threads = false,
+    instagram = false,
     webContainer = false,
   } = options;
 
@@ -242,6 +246,14 @@ export async function transformAllPlugins(
     twitter,
     reddit,
     bluesky,
+    googleMaps,
+    qiita,
+    zenn,
+    discord,
+    fediverse,
+    facebook,
+    threads,
+    instagram,
     webContainer,
   };
   if (Object.values(mediaOptions).some(Boolean)) {
@@ -267,22 +279,12 @@ export async function transformBuiltinEmbeds(
     github: GitHubOptions | false;
     openGraph: OgpOptions | false;
     pm?: PmOptions | false;
-    spotify?: boolean;
-    appleMusic?: boolean;
-    speakerDeck?: boolean;
-    audio?: boolean;
-    video?: boolean;
-    stackBlitz?: boolean;
-    twitter?: boolean | TwitterEmbedOptions;
-    reddit?: boolean | RedditEmbedOptions;
-    bluesky?: boolean;
-    webContainer?: boolean;
     /**
      * Document-local import bindings. A reserved built-in name in this set
      * stays an MDX island instead of running the first-party embed transform.
      */
     localNames?: Iterable<string>;
-  },
+  } & MediaEmbedOptions,
 ): Promise<string> {
   let result = await normalizeBlockEmbedParagraphs(
     restoreReservedBuiltinIslands(normalizeSelfClosingEmbeds(html), options.localNames),
@@ -313,6 +315,14 @@ export async function transformBuiltinEmbeds(
     twitter: options.twitter,
     reddit: options.reddit,
     bluesky: options.bluesky,
+    googleMaps: options.googleMaps,
+    qiita: options.qiita,
+    zenn: options.zenn,
+    discord: options.discord,
+    fediverse: options.fediverse,
+    facebook: options.facebook,
+    threads: options.threads,
+    instagram: options.instagram,
     webContainer: options.webContainer,
   };
   if (Object.values(mediaOptions).some(Boolean)) {

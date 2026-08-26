@@ -38,6 +38,63 @@ fn renders_bluesky_rich_card_with_metadata() {
 }
 
 #[test]
+fn renders_provider_grade_static_cards() {
+    let enabled = MediaEmbedsOptions {
+        google_maps: Some(true),
+        qiita: Some(true),
+        zenn: Some(true),
+        discord: Some(true),
+        fediverse: Some(true),
+        facebook: Some(true),
+        threads: Some(true),
+        instagram: Some(true),
+        ..Default::default()
+    };
+    let html = transform_media_embeds(
+        r#"<GoogleMaps url="https://www.google.com/maps/place/Tokyo+Station/" place="Tokyo Station" address="1 Chome Marunouchi, Chiyoda City" embed="https://www.google.com/maps/embed?pb=!1m18"></GoogleMaps>
+<Qiita url="https://qiita.com/ubugeeei/items/abcdef123456" title="Rust docs pipeline" author="ubugeeei" tags="Rust, Markdown" likes="42">Static cards keep builds predictable.</Qiita>
+<Zenn url="https://zenn.dev/ubugeeei/articles/ox-content" title="Ox Content notes" author="ubugeeei" date="2026-08-26" likes="12"></Zenn>
+<Discord url="https://discord.gg/abc123" server="Ox Content" channel="announcements">Join the release channel.</Discord>
+<Mastodon url="https://mastodon.social/@docs/111" author="@docs@mastodon.social" replies="3" reposts="5" likes="8">Fediverse release note.</Mastodon>
+<Facebook url="https://www.facebook.com/example/posts/123" title="Launch note" author="Example"></Facebook>
+<Threads url="https://www.threads.net/@example/post/abc" author="@example">Thread copy.</Threads>
+<Instagram url="https://www.instagram.com/p/abc123/" author="@example" image="https://cdn.example.com/photo.jpg">Caption text.</Instagram>"#,
+        Some(&enabled),
+    );
+
+    insta::assert_snapshot!(html);
+}
+
+#[test]
+fn leaves_provider_cards_when_disabled_or_rejected() {
+    let input = r#"<Qiita url="https://qiita.com/ubugeeei/items/abcdef123456"></Qiita>"#;
+    assert_eq!(transform_media_embeds(input, Some(&MediaEmbedsOptions::default())), input);
+
+    let enabled = MediaEmbedsOptions {
+        google_maps: Some(true),
+        qiita: Some(true),
+        zenn: Some(true),
+        discord: Some(true),
+        fediverse: Some(true),
+        facebook: Some(true),
+        threads: Some(true),
+        instagram: Some(true),
+        ..Default::default()
+    };
+    for rejected in [
+        r#"<GoogleMaps url="https://google.com.evil.example/maps/place/Tokyo"></GoogleMaps>"#,
+        r#"<Qiita url="https://qiita.com/ubugeeei"></Qiita>"#,
+        r#"<Zenn url="https://zenn.dev/ubugeeei"></Zenn>"#,
+        r#"<Discord url="https://evil.example/channels/1"></Discord>"#,
+        r#"<Facebook url="https://facebook.com.evil.example/post"></Facebook>"#,
+        r#"<Threads url="http://threads.net/@example/post/abc"></Threads>"#,
+        r#"<Instagram url="https://user:pass@instagram.com/p/abc123/"></Instagram>"#,
+    ] {
+        assert_eq!(transform_media_embeds(rejected, Some(&enabled)), rejected);
+    }
+}
+
+#[test]
 fn renders_apple_music_iframe_from_localized_share_url() {
     let html = transform_media_embeds(
         r#"<AppleMusic url="https://music.apple.com/gb/album/1989-taylors-version/1708308989"></AppleMusic>"#,

@@ -1405,6 +1405,54 @@ export interface JsMediaEmbedsOptions {
    */
   bluesky?: boolean
   /**
+   * Render `<GoogleMaps>` static place cards.
+   *
+   * Default: `false`.
+   */
+  googleMaps?: boolean
+  /**
+   * Render `<Qiita>` static article cards.
+   *
+   * Default: `false`.
+   */
+  qiita?: boolean
+  /**
+   * Render `<Zenn>` static article cards.
+   *
+   * Default: `false`.
+   */
+  zenn?: boolean
+  /**
+   * Render `<Discord>` static invite/message cards.
+   *
+   * Default: `false`.
+   */
+  discord?: boolean
+  /**
+   * Render `<Fediverse>`, `<Mastodon>`, `<Misskey>`, and `<Mixi2>` static post cards.
+   *
+   * Default: `false`.
+   */
+  fediverse?: boolean
+  /**
+   * Render `<Facebook>` static post cards.
+   *
+   * Default: `false`.
+   */
+  facebook?: boolean
+  /**
+   * Render `<Threads>` static post cards.
+   *
+   * Default: `false`.
+   */
+  threads?: boolean
+  /**
+   * Render `<Instagram>` static post cards.
+   *
+   * Default: `false`.
+   */
+  instagram?: boolean
+  /**
    * Render `<WebContainer>` lazy placeholder blocks.
    *
    * Default: `false`.

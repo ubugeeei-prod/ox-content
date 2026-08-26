@@ -17,6 +17,14 @@ markup; everything else is opt-in.
 | Twitter/X            | `embeds.twitter`      | `false` | `<Tweet />` or `<XPost />`          |
 | Reddit               | `embeds.reddit`       | `false` | `<Reddit url="https://..." />`      |
 | Bluesky              | `embeds.bluesky`      | `false` | `<Bluesky />`                       |
+| Google Maps          | `embeds.googleMaps`   | `false` | `<GoogleMaps url="https://..." />`  |
+| Qiita                | `embeds.qiita`        | `false` | `<Qiita url="https://..." />`       |
+| Zenn                 | `embeds.zenn`         | `false` | `<Zenn url="https://..." />`        |
+| Discord              | `embeds.discord`      | `false` | `<Discord url="https://..." />`     |
+| Fediverse            | `embeds.fediverse`    | `false` | `<Mastodon url="https://..." />`    |
+| Facebook             | `embeds.facebook`     | `false` | `<Facebook url="https://..." />`    |
+| Threads              | `embeds.threads`      | `false` | `<Threads url="https://..." />`     |
+| Instagram            | `embeds.instagram`    | `false` | `<Instagram url="https://..." />`   |
 | Spotify              | `embeds.spotify`      | `false` | `<Spotify url="https://..." />`     |
 | Apple Music          | `embeds.appleMusic`   | `false` | `<AppleMusic url="https://..." />`  |
 | Speaker Deck         | `embeds.speakerDeck`  | `false` | `<SpeakerDeck url="https://..." />` |
@@ -49,6 +57,8 @@ export default {
         twitter: true,
         reddit: true,
         bluesky: true,
+        qiita: true,
+        zenn: true,
       },
     }),
   ],
@@ -405,6 +415,59 @@ likes="21k"
 
 👋 Bluesky is an open social network
 </Bluesky>
+
+## Provider Cards
+
+`embeds.googleMaps`, `embeds.qiita`, `embeds.zenn`, `embeds.discord`,
+`embeds.fediverse`, `embeds.facebook`, `embeds.threads`, and
+`embeds.instagram` render static provider cards. `qiita: true` and
+`zenn: true` fetch public article metadata at build time; set
+`{ fetch: false }` to render link cards without network access. Other provider
+cards do not fetch metadata or load third-party scripts by default. Authors can
+pass stable metadata with attributes such as `title`, `author`, `avatar`,
+`date`, `dateLabel`, `tags`, `likes`, `reposts`, `replies`, `server`,
+`channel`, `address`, and `image`.
+
+```mdx
+<GoogleMaps
+  url="https://www.google.com/maps/place/Tokyo+Station/"
+  place="Tokyo Station"
+  address="1 Chome Marunouchi, Chiyoda City"
+/>
+
+<Qiita
+  url="https://qiita.com/ubugeeei/items/abcdef123456"
+  title="Rust docs pipeline"
+  author="ubugeeei"
+  tags="Rust, Markdown"
+  likes="42"
+>
+  Static cards keep builds predictable.
+</Qiita>
+
+<Mastodon
+  url="https://mastodon.social/@docs/111"
+  author="@docs@mastodon.social"
+  replies="3"
+  reposts="5"
+  likes="8"
+>
+  Fediverse release note.
+</Mastodon>
+```
+
+| Option     | Default   | Purpose                                          |
+| ---------- | --------- | ------------------------------------------------ |
+| `fetch`    | `true`    | Fetch Qiita/Zenn metadata at build time.         |
+| `timeout`  | `10000`   | Metadata request timeout in milliseconds.        |
+| `cache`    | `true`    | Cache fetched metadata in memory for this build. |
+| `cacheTTL` | `3600000` | Freshness window in milliseconds.                |
+
+`<Fediverse>`, `<Mastodon>`, `<Misskey>`, and `<Mixi2>` share the
+`embeds.fediverse` option. Google Maps accepts an optional safe Google Maps
+`embed` URL for a lazy iframe; otherwise it renders a link-only place card.
+Unsupported schemes, credentials, non-provider hosts, and unavailable metadata
+fall back to the authored tag or a link-only card instead of failing the build.
 
 ## Spotify
 

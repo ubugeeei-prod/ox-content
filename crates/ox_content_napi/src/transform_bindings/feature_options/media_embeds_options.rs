@@ -35,6 +35,46 @@ pub struct JsMediaEmbedsOptions {
     /// Default: `false`.
     pub bluesky: Option<bool>,
 
+    /// Render `<GoogleMaps>` static place cards.
+    ///
+    /// Default: `false`.
+    pub google_maps: Option<bool>,
+
+    /// Render `<Qiita>` static article cards.
+    ///
+    /// Default: `false`.
+    pub qiita: Option<bool>,
+
+    /// Render `<Zenn>` static article cards.
+    ///
+    /// Default: `false`.
+    pub zenn: Option<bool>,
+
+    /// Render `<Discord>` static invite/message cards.
+    ///
+    /// Default: `false`.
+    pub discord: Option<bool>,
+
+    /// Render `<Fediverse>`, `<Mastodon>`, `<Misskey>`, and `<Mixi2>` static post cards.
+    ///
+    /// Default: `false`.
+    pub fediverse: Option<bool>,
+
+    /// Render `<Facebook>` static post cards.
+    ///
+    /// Default: `false`.
+    pub facebook: Option<bool>,
+
+    /// Render `<Threads>` static post cards.
+    ///
+    /// Default: `false`.
+    pub threads: Option<bool>,
+
+    /// Render `<Instagram>` static post cards.
+    ///
+    /// Default: `false`.
+    pub instagram: Option<bool>,
+
     /// Render `<WebContainer>` lazy placeholder blocks.
     ///
     /// Default: `false`.
@@ -62,6 +102,14 @@ impl From<JsMediaEmbedsOptions> for MediaEmbedsOptions {
             stack_blitz: value.stack_blitz,
             twitter: value.twitter,
             bluesky: value.bluesky,
+            google_maps: value.google_maps,
+            qiita: value.qiita,
+            zenn: value.zenn,
+            discord: value.discord,
+            fediverse: value.fediverse,
+            facebook: value.facebook,
+            threads: value.threads,
+            instagram: value.instagram,
             web_container: value.web_container,
         }
     }
