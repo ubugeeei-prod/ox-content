@@ -24,9 +24,7 @@ fn aliases_resolve_to_the_same_grammar() {
         assert!(supports(alias), "{alias} should be supported");
     }
     assert!(supports("mdx"));
-    for alias in ["sql"] {
-        assert!(supports(alias), "{alias} should be supported");
-    }
+    assert!(supports("sql"));
     for alias in ["graphql", "gql"] {
         assert!(supports(alias), "{alias} should be supported");
     }

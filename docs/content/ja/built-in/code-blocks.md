@@ -38,35 +38,35 @@ JavaScript、`typescriptreact` は TSX を使います。`dotenv`、`.env`、`gi
 Vue / Svelte / Astro / Angular は HTML 文法のままです。crates.io に、この
 tree-sitter 系列と合うメンテされた専用文法がまだありません。
 
-| 言語 | フェンスタグ |
-| ---- | ------------ |
-| TypeScript | `typescript`, `ts`, `cts`, `mts` |
-| TSX | `tsx`, `typescriptreact` |
+| 言語       | フェンスタグ                                                              |
+| ---------- | ------------------------------------------------------------------------- |
+| TypeScript | `typescript`, `ts`, `cts`, `mts`                                          |
+| TSX        | `tsx`, `typescriptreact`                                                  |
 | JavaScript | `javascript`, `js`, `cjs`, `mjs`, `jsx`, `javascriptreact`, `flow`, `mdx` |
-| Rust | `rust`, `rs` |
-| JSON | `json`, `jsonc`, `json5`, `webmanifest` |
-| CSS | `css` |
-| HTML | `html`, `vue`, `svelte`, `astro`, `angular` |
-| Python | `python`, `py` |
-| Go | `go`, `golang` |
-| Java | `java` |
-| C | `c`, `h` |
-| C++ | `cpp`, `c++`, `cc`, `hpp`, `cxx` |
-| YAML | `yaml`, `yml` |
-| Markdown | `markdown`, `md` |
-| Bash | `bash`, `sh`, `shell`, `zsh`, `shellscript` |
-| TOML | `toml` |
-| WGSL | `wgsl` |
-| SQL | `sql` |
-| GraphQL | `graphql`, `gql` |
-| Dockerfile | `dockerfile`, `docker`, `containerfile` |
-| Ruby | `ruby`, `rb` |
-| PHP | `php` |
-| Nix | `nix` |
-| C# | `csharp`, `cs` |
-| Swift | `swift` |
-| Kotlin | `kotlin`, `kt` |
-| GLSL | `glsl` |
+| Rust       | `rust`, `rs`                                                              |
+| JSON       | `json`, `jsonc`, `json5`, `webmanifest`                                   |
+| CSS        | `css`                                                                     |
+| HTML       | `html`, `vue`, `svelte`, `astro`, `angular`                               |
+| Python     | `python`, `py`                                                            |
+| Go         | `go`, `golang`                                                            |
+| Java       | `java`                                                                    |
+| C          | `c`, `h`                                                                  |
+| C++        | `cpp`, `c++`, `cc`, `hpp`, `cxx`                                          |
+| YAML       | `yaml`, `yml`                                                             |
+| Markdown   | `markdown`, `md`                                                          |
+| Bash       | `bash`, `sh`, `shell`, `zsh`, `shellscript`                               |
+| TOML       | `toml`                                                                    |
+| WGSL       | `wgsl`                                                                    |
+| SQL        | `sql`                                                                     |
+| GraphQL    | `graphql`, `gql`                                                          |
+| Dockerfile | `dockerfile`, `docker`, `containerfile`                                   |
+| Ruby       | `ruby`, `rb`                                                              |
+| PHP        | `php`                                                                     |
+| Nix        | `nix`                                                                     |
+| C#         | `csharp`, `cs`                                                            |
+| Swift      | `swift`                                                                   |
+| Kotlin     | `kotlin`, `kt`                                                            |
+| GLSL       | `glsl`                                                                    |
 
 未知のタグは普通の `<pre><code>` のままです。例: `haskell`、`scala`、
 `elixir`、`perl`、`elm`、`assembly`、`asm`、`llvm`、`clojure`、
