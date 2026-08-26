@@ -105,7 +105,21 @@ describe("stderr UI flags", () => {
     const html = renderPlayUi({ payload: payload() });
     expect(html).toContain('data-ox-panel="stderr"');
     expect(html).toContain('data-panel="stderr"');
+    expect(html).toContain("Browser sandbox");
+    expect(html).toContain("On demand");
     expect(html).toContain("No stderr.");
+  });
+
+  it("shows remote executor readiness from the payload", () => {
+    const missing = renderPlayUi({ payload: payload({ language: "python" }) });
+    expect(missing).toContain("Endpoint missing");
+    expect(missing).toContain("Configure endpoint");
+
+    const ready = renderPlayUi({
+      payload: payload({ language: "python", endpoint: "https://exec.example/api/v2/piston" }),
+    });
+    expect(ready).toContain("Piston-compatible");
+    expect(ready).toContain("On demand");
   });
 
   it("omits the stderr tab and panel when viewers.stderr is false", () => {

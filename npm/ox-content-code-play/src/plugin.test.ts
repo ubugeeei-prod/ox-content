@@ -37,6 +37,16 @@ describe("codePlay vite plugin", () => {
     expect(payload.endpoints?.typecheck).toBe("https://example.test/typecheck");
   });
 
+  it("embeds remote language endpoints for hydrated Python runs", () => {
+    const plugin = codePlay({
+      languages: { python: { endpoint: "https://exec.example/api/v2/piston" } },
+    });
+    resolveCommand(plugin, "build");
+    const payload = payloadFromTransform(plugin, "```python play\nprint(1)\n```\n");
+    expect(payload.endpoint).toBe("https://exec.example/api/v2/piston");
+    expect(payload.capabilities.execute).toBe(true);
+  });
+
   it("keeps the Vite typecheck proxy on the dev server", () => {
     const plugin = codePlay({ languages: { typescript: { execute: true, typecheck: true } } });
     resolveCommand(plugin, "serve");
