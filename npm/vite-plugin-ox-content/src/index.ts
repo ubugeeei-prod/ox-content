@@ -881,6 +881,8 @@ export type {
   ThemeColors,
   ThemeLayout,
   ThemeFonts,
+  ThemeFontValue,
+  ThemeWebFont,
   ThemeEntryPage,
   ThemeHeader,
   ThemeFooter,

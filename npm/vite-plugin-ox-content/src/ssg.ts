@@ -9,6 +9,7 @@ import { generateOgImages } from "./og-image";
 import type { OgImagePageEntry } from "./og-image";
 import { transformAllPlugins } from "./plugins";
 import { copyKatexAssets } from "./plugins/math-assets";
+import { writeSelfHostedThemeFonts } from "./theme-fonts";
 import type { TransformAllOptions } from "./plugins";
 import { protectMermaidSvgs, restoreMermaidSvgs } from "./plugins/mermaid-protect";
 import { transformIslands, hasIslands } from "./island";
@@ -672,7 +673,7 @@ export async function generateHtmlPage(
   const navGroupsForRust = convertNavGroupsForRust(navGroups);
 
   // Convert theme to NAPI format if provided
-  const themeForRust = theme ? themeToNapi(theme, locale) : undefined;
+  const themeForRust = theme ? themeToNapi(theme, locale, base) : undefined;
 
   // Convert entry page to NAPI format if provided
   const entryPageForRust = pageData.entryPage
@@ -1111,6 +1112,9 @@ export async function buildSsg(options: ResolvedOptions, root: string): Promise<
   if (options.math?.enabled) {
     generatedFiles.push(...(await copyKatexAssets(outDir)));
   }
+  generatedFiles.push(
+    ...(await writeSelfHostedThemeFonts({ fonts: ssgOptions.theme?.fonts ?? {}, outDir, root })),
+  );
 
   return {
     files: generatedFiles,
