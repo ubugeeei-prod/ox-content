@@ -58,7 +58,11 @@ fn convert_entry_asset(src: &str, base: &str) -> String {
 }
 
 /// Generates the Entry page HTML (hero section and features).
-pub(super) fn generate_entry_html(entry: &EntryPageConfig, base: &str) -> String {
+pub(super) fn generate_entry_html(
+    entry: &EntryPageConfig,
+    base: &str,
+    self_hosted_icons: bool,
+) -> String {
     // Convert hero config to view
     let hero_view = entry.hero.as_ref().map(|hero| {
         let actions = hero.actions.as_ref().map(|actions| {
@@ -121,7 +125,8 @@ pub(super) fn generate_entry_html(entry: &EntryPageConfig, base: &str) -> String
                     })
                     .unwrap_or_default();
 
-                let icon_html = feature.icon.as_ref().map(|icon| render_icon(icon, base));
+                let icon_html =
+                    feature.icon.as_ref().map(|icon| render_icon(icon, base, self_hosted_icons));
 
                 FeatureView {
                     tag,
@@ -139,27 +144,41 @@ pub(super) fn generate_entry_html(entry: &EntryPageConfig, base: &str) -> String
     template.render().unwrap_or_default()
 }
 
+/// Parses `prefix:name` Iconify refs. Rejects URL schemes.
+pub(super) fn parse_iconify_name(icon: &str) -> Option<(&str, &str)> {
+    let (prefix, name) = icon.split_once(':')?;
+    if prefix.contains('/')
+        || name.starts_with("//")
+        || prefix.eq_ignore_ascii_case("http")
+        || prefix.eq_ignore_ascii_case("https")
+        || prefix.eq_ignore_ascii_case("data")
+    {
+        return None;
+    }
+    Some((prefix, name))
+}
+
 /// Renders an icon based on its format.
 ///
 /// Supported formats:
-/// - `mdi:icon-name` - Material Design Icons via Iconify CDN
-/// - `lucide:icon-name` - Lucide icons via Iconify CDN
+/// - `mdi:icon-name` - Material Design Icons via Iconify
+/// - `lucide:icon-name` - Lucide icons via Iconify
 /// - `{prefix}:{name}` - Any Iconify icon set
 /// - URL (http://, https://) - Direct image URL
 /// - Path ending with .svg, .png - Local image path
 /// - Other - Treated as emoji/text
-fn render_icon(icon: &str, base: &str) -> String {
-    // Check for Iconify format (prefix:name)
-    if let Some((prefix, name)) = icon.split_once(':') {
-        // Validate it looks like an icon reference (not a URL scheme)
-        if !prefix.contains('/') && !name.starts_with("//") {
-            // Convert to Iconify CDN URL
-            let iconify_url = format!("https://api.iconify.design/{prefix}/{name}.svg");
-            // Use span with mask-image for color control
-            return format!(
-                "<span class=\"iconify-icon\" style=\"-webkit-mask-image: url('{iconify_url}'); mask-image: url('{iconify_url}')\"></span>"
-            );
+///
+/// When `self_hosted` is true, Iconify names become local CSS classes
+/// (`icon-[prefix--name]`) instead of `api.iconify.design` mask URLs.
+fn render_icon(icon: &str, base: &str, self_hosted: bool) -> String {
+    if let Some((prefix, name)) = parse_iconify_name(icon) {
+        if self_hosted {
+            return format!("<span class=\"iconify-icon icon-[{prefix}--{name}]\"></span>");
         }
+        let iconify_url = format!("https://api.iconify.design/{prefix}/{name}.svg");
+        return format!(
+            "<span class=\"iconify-icon\" style=\"-webkit-mask-image: url('{iconify_url}'); mask-image: url('{iconify_url}')\"></span>"
+        );
     }
 
     // Check if it's an image URL
@@ -186,7 +205,8 @@ fn strip_ascii_suffix_ignore_case<'a>(value: &'a str, suffix: &[u8]) -> Option<&
 
 #[cfg(test)]
 mod tests {
-    use super::{convert_entry_asset, convert_entry_link};
+    use super::{convert_entry_asset, convert_entry_link, generate_entry_html, parse_iconify_name};
+    use crate::{EntryPageConfig, FeatureConfig};
 
     #[test]
     fn entry_links_join_root_markdown_paths_without_double_slashes() {
@@ -208,5 +228,35 @@ mod tests {
             "/ox-content/oxcontent-dark.svg"
         );
         assert_eq!(convert_entry_asset("/shared/logo.svg", "/ox-content/"), "/shared/logo.svg");
+    }
+
+    #[test]
+    fn parse_iconify_name_rejects_url_schemes() {
+        assert_eq!(parse_iconify_name("ox:mark"), Some(("ox", "mark")));
+        assert_eq!(parse_iconify_name("https://example.com/x.svg"), None);
+    }
+
+    fn feature_entry(icon: &str) -> EntryPageConfig {
+        EntryPageConfig {
+            features: Some(vec![FeatureConfig {
+                icon: Some(icon.to_string()),
+                title: "Mark".to_string(),
+                ..Default::default()
+            }]),
+            ..Default::default()
+        }
+    }
+
+    #[test]
+    fn iconify_uses_cdn_when_self_host_is_off() {
+        let html = generate_entry_html(&feature_entry("ox:mark"), "/", false);
+        assert!(html.contains("https://api.iconify.design/ox/mark.svg"));
+    }
+
+    #[test]
+    fn iconify_uses_local_class_when_self_host_is_on() {
+        let html = generate_entry_html(&feature_entry("ox:mark"), "/", true);
+        assert!(html.contains("icon-[ox--mark]"));
+        assert!(!html.contains("api.iconify.design"));
     }
 }

@@ -368,6 +368,7 @@ array order.
 - [Blog](./blog.md) — opt-in paginated index, authors, tags, and archive.
 - [RSS / Atom / JSON feeds](./feeds.md) — opt-in collection feeds.
 - [PWA manifest and service worker](./pwa.md) — opt-in manifest and conservative offline cache (adds client JS).
+- [Self-hosted Iconify CSS](./icons.md) — opt-in CSS masks for used Iconify icons.
 - [Theming](../theming.md) — the theme system used by SSG.
 - [API Docs from JSDoc](../jsdoc.md) — the full `docs` option reference.
 - [Internationalization](../i18n.md) — locale-aware sites on top of SSG.

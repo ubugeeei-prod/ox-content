@@ -58,6 +58,7 @@ Ox Content は、よく使うドキュメントの挙動を既定で載せ、非
 | [RSS / Atom / JSON フィード](./built-in/feeds.md)        | コレクションからフィードを出力                                                 |
 | [ブログ](./built-in/blog.md)                             | ページ送り索引、著者、タグ、アーカイブ、任意の外部フィード                     |
 | [PWA マニフェストとサービスワーカー](./built-in/pwa.md)  | Web アプリマニフェストと保守的なオフラインキャッシュ（クライアント JS を追加） |
+| [セルフホスト Iconify CSS](./built-in/icons.md)          | 使った Iconify アイコンのオプトイン CSS マスク（api.iconify.design なし）      |
 | [タクソノミー](./built-in/taxonomies.md)                 | タグ / カテゴリの用語ページと関連ページ                                        |
 | [ドキュメントのバージョン管理](./built-in/versioning.md) | プレフィックス、凍結スナップショット、切替 UI                                  |
 | [チーム / メンバー](./built-in/team.md)                  | `layout: team` の静的カード                                                    |
@@ -114,6 +115,7 @@ Ox Content は、よく使うドキュメントの挙動を既定で載せ、非
 | フィード             | `feeds`                                                                                                       | `false`            | [RSS / Atom / JSON フィード](./built-in/feeds.md)        |
 | ブログ               | `blog` / `ssg.blog`                                                                                           | `false`            | [ブログ](./built-in/blog.md)                             |
 | PWA                  | `pwa`                                                                                                         | `false`            | [PWA マニフェストとサービスワーカー](./built-in/pwa.md)  |
+| セルフホストアイコン | `icons`                                                                                                       | `false`            | [セルフホスト Iconify CSS](./built-in/icons.md)          |
 | ドキュメント版       | `versions`                                                                                                    | `false`            | [ドキュメントのバージョン管理](./built-in/versioning.md) |
 | タクソノミー         | `taxonomies`                                                                                                  | `false`            | [タクソノミー](./built-in/taxonomies.md)                 |
 | チームページ         | `ssg.team`                                                                                                    | `false`            | [チーム / メンバー](./built-in/team.md)                  |

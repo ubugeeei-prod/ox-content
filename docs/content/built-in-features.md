@@ -62,6 +62,7 @@ inline**.
 | [RSS / Atom / JSON feeds](./built-in/feeds.md)              | Opt-in collection feeds written next to generated HTML                      |
 | [Blog](./built-in/blog.md)                                  | Opt-in paginated index, authors, tags, archive, and optional external feeds |
 | [PWA manifest and service worker](./built-in/pwa.md)        | Opt-in web app manifest and conservative offline cache (adds client JS)     |
+| [Self-hosted Iconify CSS](./built-in/icons.md)              | Opt-in CSS masks for used Iconify icons (no api.iconify.design)             |
 | [Taxonomies](./built-in/taxonomies.md)                      | Opt-in tag/category term pages and related-page lists                       |
 | [Documentation versioning](./built-in/versioning.md)        | Opt-in prefixes, frozen snapshots, and a header version dropdown            |
 | [Team / members page](./built-in/team.md)                   | Opt-in static member cards on `layout: team` pages                          |
@@ -118,6 +119,7 @@ inline**.
 | Collection feeds   | `feeds`                                                                                                       | `false`              | [RSS / Atom / JSON feeds](./built-in/feeds.md)              |
 | Blog               | `blog` / `ssg.blog`                                                                                           | `false`              | [Blog](./built-in/blog.md)                                  |
 | PWA                | `pwa`                                                                                                         | `false`              | [PWA manifest and service worker](./built-in/pwa.md)        |
+| Self-hosted icons  | `icons`                                                                                                       | `false`              | [Self-hosted Iconify CSS](./built-in/icons.md)              |
 | Taxonomies         | `taxonomies`                                                                                                  | `false`              | [Taxonomies](./built-in/taxonomies.md)                      |
 | Versioning         | `versions`                                                                                                    | `false`              | [Documentation versioning](./built-in/versioning.md)        |
 | Team page          | `ssg.team`                                                                                                    | `false`              | [Team / members page](./built-in/team.md)                   |

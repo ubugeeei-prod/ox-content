@@ -175,6 +175,7 @@ export default defineConfig(({ mode }) => {
                       { text: "RSS / Atom / JSON feeds", link: "/built-in/feeds.md" },
                       { text: "Blog", link: "/built-in/blog.md" },
                       { text: "PWA manifest and service worker", link: "/built-in/pwa.md" },
+                      { text: "Self-hosted Iconify CSS", link: "/built-in/icons.md" },
                       { text: "Taxonomies", link: "/built-in/taxonomies.md" },
                       { text: "Documentation versioning", link: "/built-in/versioning.md" },
                       { text: "Team / members page", link: "/built-in/team.md" },
