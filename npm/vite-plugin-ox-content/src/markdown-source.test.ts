@@ -179,7 +179,10 @@ describe("SSG write", () => {
       "getting-started.md": "---\ntitle: Getting Started\n---\n# Getting Started\nBody.\n",
     });
     const built = await buildSsg(ssgOptions({ markdownSource: true, themed: true }), root);
-    const html = await fs.readFile(path.join(root, "dist", "getting-started", "index.html"), "utf8");
+    const html = await fs.readFile(
+      path.join(root, "dist", "getting-started", "index.html"),
+      "utf8",
+    );
     expect(built.files).toContain(path.join(root, "dist", "getting-started.md"));
     expect(html).not.toContain("ox-markdown-source");
     expect(html).not.toContain("Copy as Markdown");
@@ -197,7 +200,10 @@ describe("SSG write", () => {
     expect(built.files).toContain(companion);
     expect(await fs.readFile(companion, "utf8")).toBe(source);
 
-    const html = await fs.readFile(path.join(root, "dist", "getting-started", "index.html"), "utf8");
+    const html = await fs.readFile(
+      path.join(root, "dist", "getting-started", "index.html"),
+      "utf8",
+    );
     expect(html).toContain('class="ox-markdown-source"');
     expect(html).toContain('href="/getting-started.md">View Markdown</a>');
     expect(html).toContain("Copy as Markdown");

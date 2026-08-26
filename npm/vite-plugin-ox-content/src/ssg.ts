@@ -1630,10 +1630,7 @@ function canonicalPageUrl(context: BuildSsgContext, urlPath: string): string | u
   return `${siteUrl}${context.base}${urlPath}/`;
 }
 
-function createSsgPageData(
-  pageResult: PageProcessResult,
-  markdownSource?: string,
-): SsgPageData {
+function createSsgPageData(pageResult: PageProcessResult, markdownSource?: string): SsgPageData {
   const { frontmatter } = pageResult;
   const entryPage =
     frontmatter.layout === "entry"
