@@ -64,6 +64,20 @@ Invalid custom descriptors are dropped in every mode. `strict` is for CI.
 `renderHead({ validation: "strict", ... })` returns the same findings in
 `diagnostics` for custom hosts.
 
+## Deterministic conflicts
+
+Built-ins and custom descriptors are deduped by their effective SEO identity:
+`description`, `robots`, `og:*`, `twitter:*`, canonical links, and matching
+`hreflang` alternates produce one tag. If a later custom descriptor conflicts
+with an earlier SEO tag, `warn` logs a non-fatal diagnostic and `strict` returns
+the same diagnostic without failing the build. `strict` still fails only unsafe
+URLs, invalid `hreflang`, and invalid JSON-LD.
+
+`ssg.siteUrl` must be a safe absolute `http(s)` URL for feeds and crawl
+manifests. Named feeds are preflighted before writing; duplicate feed output
+paths or paths that escape the output directory skip feed generation with a
+warning instead of silently overwriting files.
+
 ## JSON-LD variants
 
 `ssg.jsonLd.type` can be `TechArticle` (default), `BlogPosting`, or `WebPage`.

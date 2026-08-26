@@ -89,6 +89,17 @@ describe("generateSiteMaps", () => {
         pages: samplePages,
       }).warning,
     ).toBeDefined();
+    expect(
+      generateSiteMaps({
+        options: { enabled: true, robots: true, llms: true },
+        siteUrl: "javascript:alert(1)",
+        sitemapLoc: "javascript:alert(1)",
+        pages: samplePages,
+      }),
+    ).toEqual({
+      warning:
+        "[ox-content] siteMaps requires ssg.siteUrl to be a safe absolute http(s) URL; sitemap.xml, robots.txt, and llms.txt were not written",
+    });
   });
 
   it("writes a sorted sitemap, robots.txt, and llms.txt", () => {

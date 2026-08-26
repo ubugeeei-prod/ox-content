@@ -8,9 +8,16 @@
 import * as fs from "node:fs/promises";
 import * as path from "node:path";
 import { applyAtomMeta, applyJsonMeta, applyRssMeta, channelMeta } from "./feed-channel-meta";
-import { generateAtom, generateJson, generateRss, parseDate } from "./feed-format";
-import type { FeedDocument, FeedEntry } from "./feed-format";
-import { classifyPublishState } from "./publish-state";
+import { generateAtom, generateJson, generateRss } from "./feed-format";
+import type { FeedDocument } from "./feed-format";
+import {
+  homePageUrl,
+  outputDir,
+  feedOutputWarning,
+  siteUrlWarning,
+  unsafeFeedPathWarning,
+} from "./feeds-output";
+import { publishedItems } from "./feeds-items";
 import type {
   FeedChannelOptions,
   FeedFormat,
@@ -19,9 +26,6 @@ import type {
   ResolvedFeedsOptions,
   ResolvedPublishStateOptions,
 } from "./types";
-
-const MISSING_SITE_URL =
-  "[ox-content] feeds is enabled but ssg.siteUrl is not set; RSS, Atom, and JSON feeds were not written";
 
 const DEFAULT_FORMATS: FeedFormat[] = ["rss", "atom", "json"];
 const DEFAULT_LIMIT = 20;
@@ -127,8 +131,9 @@ export function generateFeeds(input: FeedsRenderInput): FeedsRenderResult {
   if (!input.options?.enabled) {
     return {};
   }
-  if (!hasSiteUrl(input.siteUrl)) {
-    return { warning: MISSING_SITE_URL };
+  const warning = siteUrlWarning(input.siteUrl);
+  if (warning) {
+    return { warning };
   }
 
   const published = publishedItems(input);
@@ -151,8 +156,21 @@ export function generateFeeds(input: FeedsRenderInput): FeedsRenderResult {
 export async function writeFeedFiles(
   input: WriteFeedFilesInput,
 ): Promise<{ files: string[]; warning?: string }> {
+  if (input.options?.enabled) {
+    const warning = siteUrlWarning(input.siteUrl);
+    if (warning) {
+      return { files: [], warning };
+    }
+  }
+
+  const channels = feedChannels(input.options);
+  const outputWarning = feedOutputWarning(input.outDir, channels);
+  if (outputWarning) {
+    return { files: [], warning: outputWarning };
+  }
+
   const files: string[] = [];
-  for (const channel of feedChannels(input.options)) {
+  for (const channel of channels) {
     const generated = generateFeeds({ ...input, options: { enabled: true, ...channel } });
     if (generated.warning) {
       return { files: [], warning: generated.warning };
@@ -166,6 +184,9 @@ export async function writeFeedFiles(
       continue;
     }
     const dest = outputDir(input.outDir, channel.path);
+    if (!dest) {
+      return { files: [], warning: unsafeFeedPathWarning(channel, 0) };
+    }
     await fs.mkdir(dest, { recursive: true });
     for (const [body, name] of outputs) {
       const outputPath = path.join(dest, name);
@@ -236,16 +257,6 @@ function normalizeFormats(formats: readonly FeedFormat[] | undefined): FeedForma
   return resolved;
 }
 
-function hasSiteUrl(siteUrl: string | undefined): boolean {
-  return Boolean(siteUrl && siteUrl.trim());
-}
-
-function homePageUrl(siteUrl: string | undefined, base = "/"): string {
-  const origin = (siteUrl ?? "").trim().replace(/\/+$/, "");
-  const prefix = !base || base === "/" ? "/" : base.endsWith("/") ? base : `${base}/`;
-  return `${origin}${prefix}`;
-}
-
 function feedDocument(input: FeedsRenderInput): FeedDocument {
   const home = homePageUrl(input.siteUrl, input.base);
   const dir = (input.options?.path ?? DEFAULT_PATH).replace(/^\/+|\/+$/g, "");
@@ -257,89 +268,4 @@ function feedDocument(input: FeedsRenderInput): FeedDocument {
     atomUrl: `${prefix}atom.xml`,
     jsonUrl: `${prefix}feed.json`,
   };
-}
-
-function outputDir(outDir: string, feedPath: string): string {
-  const relative = feedPath.replace(/^\/+|\/+$/g, "");
-  return relative ? path.join(outDir, relative) : outDir;
-}
-
-function rawItems(input: FeedsRenderInput): readonly FeedItemInput[] {
-  if (input.items) {
-    return input.items;
-  }
-  const names = input.collectionNames ?? Object.keys(input.collections ?? {});
-  const name = resolveFeedCollectionName(input.options?.collection, names);
-  return name ? (input.collections?.[name] ?? []) : [];
-}
-
-function publishedItems(input: FeedsRenderInput): FeedEntry[] {
-  const published = rawItems(input)
-    .filter((item) => !isExcludedFromFeed(item, input.publishState))
-    .map((item) => normalizeItem(item, input))
-    .filter((item) => item.loc.length > 0);
-  published.sort((left, right) => {
-    const dateCmp =
-      (right.date?.unix ?? Number.NEGATIVE_INFINITY) -
-      (left.date?.unix ?? Number.NEGATIVE_INFINITY);
-    return dateCmp !== 0 ? dateCmp : left.loc < right.loc ? -1 : left.loc > right.loc ? 1 : 0;
-  });
-  return published.slice(0, input.options?.limit ?? DEFAULT_LIMIT);
-}
-
-function isExcludedFromFeed(
-  item: FeedItemInput,
-  publishState: ResolvedPublishStateOptions | undefined,
-): boolean {
-  const frontmatter = item.frontmatter ?? {};
-  if (item.draft === true || frontmatter.draft === true) {
-    return true;
-  }
-  if (item.unlisted === true || frontmatter.unlisted === true) {
-    return true;
-  }
-  if (frontmatter.external === true) {
-    return true;
-  }
-  if (!publishState?.enabled) {
-    return false;
-  }
-  return !classifyPublishState(
-    {
-      ...frontmatter,
-      ...(item.draft === true ? { draft: true } : {}),
-      ...(item.unlisted === true ? { unlisted: true } : {}),
-    },
-    publishState,
-  ).listed;
-}
-
-function normalizeItem(item: FeedItemInput, input: FeedsRenderInput): FeedEntry {
-  return {
-    title: item.title ?? "",
-    description: typeof item.description === "string" ? item.description : undefined,
-    loc: item.loc || itemLoc(input, item),
-    date:
-      parseDate(dateField(item.date ?? item.frontmatter?.date)) ??
-      parseDate(dateField(item.lastUpdated ?? item.frontmatter?.lastUpdated)),
-  };
-}
-
-function itemLoc(input: FeedsRenderInput, item: FeedItemInput): string {
-  const home = homePageUrl(input.siteUrl, input.base);
-  const urlPath = (item.path ?? "").replace(/^\/+|\/+$/g, "");
-  return urlPath ? `${home}${urlPath}/` : home;
-}
-
-function dateField(value: unknown): string | undefined {
-  if (typeof value === "string" && value.trim()) {
-    return value.trim();
-  }
-  if (typeof value === "number" && Number.isFinite(value)) {
-    return String(value);
-  }
-  if (value instanceof Date && !Number.isNaN(value.getTime())) {
-    return value.toISOString();
-  }
-  return undefined;
 }

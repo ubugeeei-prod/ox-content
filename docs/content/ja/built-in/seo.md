@@ -64,6 +64,20 @@ oxContent({
 独自ホストは `renderHead({ validation: "strict", ... })` の `diagnostics` で
 同じ指摘を受け取れます。
 
+## 決定的な競合
+
+組み込みと独自デスクリプタは、有効な SEO identity で重複排除します。
+`description`、`robots`、`og:*`、`twitter:*`、canonical link、一致する
+`hreflang` alternate は 1 タグになります。後続の独自デスクリプタが先の
+SEO タグと競合すると、`warn` は非 fatal の診断をログし、`strict` も
+ビルドを落とさず同じ診断を返します。`strict` が落とすのは危険な URL、
+不正な `hreflang`、不正な JSON-LD だけです。
+
+feeds と crawl manifest で使う `ssg.siteUrl` は、安全な絶対 `http(s)`
+URL である必要があります。名前付き feed は書き込み前に検査します。
+feed の出力パス重複や、出力ディレクトリ外へ逃げるパスは、ファイルを
+静かに上書きせず警告付きで feed 生成をスキップします。
+
 ## JSON-LD の型
 
 `ssg.jsonLd.type` は `TechArticle`（既定）、`BlogPosting`、`WebPage` です。

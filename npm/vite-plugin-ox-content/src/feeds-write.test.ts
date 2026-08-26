@@ -58,6 +58,40 @@ describe("writeFeedFiles", () => {
     await expect(fs.access(path.join(outDir, "feed.xml"))).rejects.toThrow();
   });
 
+  it("does not write files when siteUrl is unsafe", async () => {
+    const outDir = await fs.mkdtemp(path.join(os.tmpdir(), "ox-content-feeds-"));
+    tempDirs.push(outDir);
+
+    const result = await writeFeedFiles({
+      outDir,
+      siteUrl: "javascript:alert(1)",
+      base: "/",
+      options: { enabled: true, formats: ["rss"], limit: 20, path: "/" },
+      items: sampleItems,
+    });
+
+    expect(result.files).toEqual([]);
+    expect(result.warning).toContain("safe absolute http(s) URL");
+    await expect(fs.access(path.join(outDir, "feed.xml"))).rejects.toThrow();
+  });
+
+  it("rejects unsafe feed output paths before writing files", async () => {
+    const outDir = await fs.mkdtemp(path.join(os.tmpdir(), "ox-content-feeds-"));
+    tempDirs.push(outDir);
+
+    const result = await writeFeedFiles({
+      outDir,
+      siteUrl: "https://example.com",
+      base: "/",
+      options: { enabled: true, formats: ["rss"], limit: 20, path: "../feeds" },
+      items: sampleItems,
+    });
+
+    expect(result.files).toEqual([]);
+    expect(result.warning).toContain("uses an unsafe output path");
+    await expect(fs.readdir(outDir)).resolves.toEqual([]);
+  });
+
   it("writes the enabled files next to generated HTML", async () => {
     const outDir = await fs.mkdtemp(path.join(os.tmpdir(), "ox-content-feeds-"));
     tempDirs.push(outDir);

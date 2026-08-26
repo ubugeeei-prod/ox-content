@@ -4,6 +4,14 @@ use super::input::{HeadAlternate, HeadInput, HeadJsonLd, HeadLink, HeadMeta, Hea
 use crate::html::urls::{is_safe_href, safe_http_url};
 use crate::html::utils::escape_json_for_script;
 
+mod diagnostics;
+mod identity;
+
+use diagnostics::{
+    diagnose_canonical_og_url_conflict, diagnose_link_replacement, diagnose_meta_replacement,
+};
+use identity::{json_ld_identity, link_identity, meta_identity};
+
 /// One resolved tag ready to serialize.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum ResolvedTag {
@@ -47,12 +55,7 @@ pub fn resolve_head(input: &HeadInput) -> ResolvedHead {
     {
         upsert_link(
             &mut tags,
-            HeadLink {
-                key: Some("canonical".into()),
-                rel: "canonical".into(),
-                href: canonical.clone(),
-                ..HeadLink::default()
-            },
+            HeadLink { rel: "canonical".into(), href: canonical.clone(), ..HeadLink::default() },
         );
         if input.social {
             push_meta(&mut tags, property_meta("og:url", Some(canonical.as_str())));
@@ -83,17 +86,20 @@ pub fn resolve_head(input: &HeadInput) -> ResolvedHead {
 
     for meta in &input.metas {
         if let Some(meta) = sanitize_meta(meta, &mut diagnostics) {
-            upsert_meta(&mut tags, meta);
+            let previous = upsert_meta(&mut tags, meta.clone());
+            diagnose_meta_replacement(previous.as_ref(), &meta, &mut diagnostics);
         }
     }
     for alternate in &input.alternates {
         if let Some(link) = sanitize_alternate(alternate, &mut diagnostics) {
-            upsert_link(&mut tags, link);
+            let previous = upsert_link(&mut tags, link.clone());
+            diagnose_link_replacement(previous.as_ref(), &link, &mut diagnostics);
         }
     }
     for link in &input.links {
         if let Some(link) = sanitize_link(link, &mut diagnostics) {
-            upsert_link(&mut tags, link);
+            let previous = upsert_link(&mut tags, link.clone());
+            diagnose_link_replacement(previous.as_ref(), &link, &mut diagnostics);
         }
     }
     for node in &input.json_ld {
@@ -101,6 +107,7 @@ pub fn resolve_head(input: &HeadInput) -> ResolvedHead {
             upsert_json_ld(&mut tags, tag);
         }
     }
+    diagnose_canonical_og_url_conflict(&tags, &mut diagnostics);
 
     if input.validation == HeadValidation::Off {
         diagnostics.clear();
@@ -110,18 +117,12 @@ pub fn resolve_head(input: &HeadInput) -> ResolvedHead {
 
 fn name_meta(name: &str, content: Option<&str>) -> Option<HeadMeta> {
     let content = content.map(str::trim).filter(|value| !value.is_empty())?;
-    Some(HeadMeta {
-        key: Some(format!("name:{name}")),
-        name: Some(name.into()),
-        content: content.to_string(),
-        ..HeadMeta::default()
-    })
+    Some(HeadMeta { name: Some(name.into()), content: content.to_string(), ..HeadMeta::default() })
 }
 
 fn property_meta(property: &str, content: Option<&str>) -> Option<HeadMeta> {
     let content = content.map(str::trim).filter(|value| !value.is_empty())?;
     Some(HeadMeta {
-        key: Some(format!("property:{property}")),
         property: Some(property.into()),
         content: content.to_string(),
         ..HeadMeta::default()
@@ -130,32 +131,36 @@ fn property_meta(property: &str, content: Option<&str>) -> Option<HeadMeta> {
 
 fn push_meta(tags: &mut Vec<ResolvedTag>, meta: Option<HeadMeta>) {
     if let Some(meta) = meta {
-        upsert_meta(tags, meta);
+        let _ = upsert_meta(tags, meta);
     }
 }
 
-fn upsert_meta(tags: &mut Vec<ResolvedTag>, meta: HeadMeta) {
+fn upsert_meta(tags: &mut Vec<ResolvedTag>, meta: HeadMeta) -> Option<HeadMeta> {
     let identity = meta_identity(&meta);
-    if let Some(existing) = tags.iter_mut().find(|tag| match tag {
-        ResolvedTag::Meta(current) => meta_identity(current) == identity,
-        _ => false,
+    if let Some(current) = tags.iter_mut().find_map(|tag| match tag {
+        ResolvedTag::Meta(current) if meta_identity(current) == identity => Some(current),
+        _ => None,
     }) {
-        *existing = ResolvedTag::Meta(meta);
-        return;
+        let previous = current.clone();
+        *current = meta;
+        return Some(previous);
     }
     tags.push(ResolvedTag::Meta(meta));
+    None
 }
 
-fn upsert_link(tags: &mut Vec<ResolvedTag>, link: HeadLink) {
+fn upsert_link(tags: &mut Vec<ResolvedTag>, link: HeadLink) -> Option<HeadLink> {
     let identity = link_identity(&link);
-    if let Some(existing) = tags.iter_mut().find(|tag| match tag {
-        ResolvedTag::Link(current) => link_identity(current) == identity,
-        _ => false,
+    if let Some(current) = tags.iter_mut().find_map(|tag| match tag {
+        ResolvedTag::Link(current) if link_identity(current) == identity => Some(current),
+        _ => None,
     }) {
-        *existing = ResolvedTag::Link(link);
-        return;
+        let previous = current.clone();
+        *current = link;
+        return Some(previous);
     }
     tags.push(ResolvedTag::Link(link));
+    None
 }
 
 fn upsert_json_ld(tags: &mut Vec<ResolvedTag>, tag: ResolvedTag) {
@@ -167,36 +172,6 @@ fn upsert_json_ld(tags: &mut Vec<ResolvedTag>, tag: ResolvedTag) {
         return;
     }
     tags.push(tag);
-}
-
-fn meta_identity(meta: &HeadMeta) -> String {
-    if let Some(key) = meta.key.as_deref().map(str::trim).filter(|key| !key.is_empty()) {
-        return format!("key:{key}");
-    }
-    if let Some(name) = meta.name.as_deref() {
-        return format!("name:{name}");
-    }
-    if let Some(property) = meta.property.as_deref() {
-        return format!("property:{property}");
-    }
-    format!("http-equiv:{}", meta.http_equiv.as_deref().unwrap_or(""))
-}
-
-fn link_identity(link: &HeadLink) -> String {
-    if let Some(key) = link.key.as_deref().map(str::trim).filter(|key| !key.is_empty()) {
-        return format!("key:{key}");
-    }
-    if link.rel == "alternate" {
-        return format!("alternate:{}", link.hreflang.as_deref().unwrap_or(""));
-    }
-    link.rel.clone()
-}
-
-fn json_ld_identity(tag: &ResolvedTag) -> Option<String> {
-    match tag {
-        ResolvedTag::JsonLd { key, .. } => key.clone(),
-        _ => None,
-    }
 }
 
 fn resolve_url(
@@ -263,7 +238,6 @@ fn sanitize_alternate(
         return None;
     }
     Some(HeadLink {
-        key: Some(format!("alternate:{lang}")),
         rel: "alternate".into(),
         href: alternate.href.trim().to_string(),
         hreflang: Some(lang.to_string()),

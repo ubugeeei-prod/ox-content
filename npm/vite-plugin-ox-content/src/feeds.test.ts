@@ -104,6 +104,16 @@ describe("generateFeeds", () => {
         items: sampleItems,
       }).warning,
     ).toBeDefined();
+    expect(
+      generateFeeds({
+        options: { ...enabled },
+        siteUrl: "javascript:alert(1)",
+        items: sampleItems,
+      }),
+    ).toEqual({
+      warning:
+        "[ox-content] feeds requires ssg.siteUrl to be a safe absolute http(s) URL; RSS, Atom, and JSON feeds were not written",
+    });
   });
 
   it("writes a sorted RSS, Atom, and JSON feed", () => {

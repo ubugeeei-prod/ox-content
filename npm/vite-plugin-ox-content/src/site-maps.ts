@@ -11,6 +11,8 @@ import type { ResolvedSiteMapsOptions, SiteMapsOptions } from "./types";
 
 const MISSING_SITE_URL =
   "[ox-content] siteMaps is enabled but ssg.siteUrl is not set; sitemap.xml, robots.txt, and llms.txt were not written";
+const UNSAFE_SITE_URL =
+  "[ox-content] siteMaps requires ssg.siteUrl to be a safe absolute http(s) URL; sitemap.xml, robots.txt, and llms.txt were not written";
 
 /** One page considered for crawl manifests. */
 export interface SiteMapPageInput {
@@ -79,8 +81,9 @@ export function generateSiteMaps(input: SiteMapsRenderInput): SiteMapsRenderResu
   if (!input.options?.enabled) {
     return {};
   }
-  if (!hasSiteUrl(input.siteUrl)) {
-    return { warning: MISSING_SITE_URL };
+  const warning = siteUrlWarning(input.siteUrl);
+  if (warning) {
+    return { warning };
   }
 
   const published = input.pages
@@ -147,17 +150,37 @@ export function formatLastmod(timestampMs: number | undefined): string | undefin
   return date.toISOString().slice(0, 10);
 }
 
-function hasSiteUrl(siteUrl: string | undefined): boolean {
-  return Boolean(siteUrl && siteUrl.trim());
-}
-
 function absoluteSitemapUrl(siteUrl: string | undefined, base: string): string {
-  if (!hasSiteUrl(siteUrl)) {
+  if (siteUrlWarning(siteUrl)) {
     return "";
   }
   const origin = (siteUrl ?? "").trim().replace(/\/+$/, "");
   const prefix = !base || base === "/" ? "/" : base.endsWith("/") ? base : `${base}/`;
   return `${origin}${prefix}sitemap.xml`;
+}
+
+function siteUrlWarning(siteUrl: string | undefined): string | undefined {
+  const trimmed = siteUrl?.trim();
+  if (!trimmed) {
+    return MISSING_SITE_URL;
+  }
+  return isSafeHttpUrl(trimmed) ? undefined : UNSAFE_SITE_URL;
+}
+
+function isSafeHttpUrl(value: string): boolean {
+  if (/\s/u.test(value)) {
+    return false;
+  }
+  const lower = value.toLowerCase();
+  if (!lower.startsWith("https://") && !lower.startsWith("http://")) {
+    return false;
+  }
+  try {
+    const url = new URL(value);
+    return (url.protocol === "https:" || url.protocol === "http:") && url.hostname.length > 0;
+  } catch {
+    return false;
+  }
 }
 
 function generateSitemapXml(pages: readonly SiteMapPageInput[]): string {

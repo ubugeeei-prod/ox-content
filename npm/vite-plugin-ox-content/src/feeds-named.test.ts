@@ -196,6 +196,30 @@ describe("writeFeedFiles named feeds", () => {
     expect(media).not.toContain("Blog post");
   });
 
+  it("rejects duplicate named feed output paths before writing files", async () => {
+    const outDir = await fs.mkdtemp(path.join(os.tmpdir(), "ox-content-feeds-named-"));
+    tempDirs.push(outDir);
+
+    const result = await writeFeedFiles({
+      outDir,
+      siteUrl: "https://example.com",
+      base: "/",
+      siteName: "example.com",
+      options: resolveFeedsOptions([
+        { formats: ["rss"], collection: "blog", path: "/" },
+        { formats: ["rss"], collection: "media", path: "/" },
+      ]),
+      collections: { blog: blogItems, media: mediaItems },
+      collectionNames: ["blog", "media"],
+    });
+
+    expect(result.files).toEqual([]);
+    expect(result.warning).toContain('feeds output path "feed.xml"');
+    expect(result.warning).toContain('"blog"');
+    expect(result.warning).toContain('"media"');
+    await expect(fs.access(path.join(outDir, "feed.xml"))).rejects.toThrow();
+  });
+
   it("writes nothing when feeds is false", async () => {
     const outDir = await fs.mkdtemp(path.join(os.tmpdir(), "ox-content-feeds-off-"));
     tempDirs.push(outDir);
