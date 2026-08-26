@@ -145,6 +145,7 @@ export default defineConfig(({ mode }) => {
                       { text: "File Tree", link: "/built-in/file-tree.md" },
                       { text: "Data Tables", link: "/built-in/data-tables.md" },
                       { text: "Inline Badges", link: "/built-in/badges.md" },
+                      { text: "NotByAI Badge", link: "/built-in/not-by-ai.md" },
                       { text: "Keyboard Keys", link: "/built-in/keyboard-keys.md" },
                       { text: "Magic Links", link: "/built-in/magic-links.md" },
                       { text: "Images", link: "/built-in/images.md" },
@@ -239,6 +240,7 @@ export default defineConfig(({ mode }) => {
                     link: "/packages/vite-plugin-ox-content-solid.md",
                   },
                   { text: "i18n Package", link: "/packages/i18n.md" },
+                  { text: "Checker and Language Server", link: "/packages/lsp.md" },
                   { text: "Code Play", link: "/packages/code-play.md" },
                 ],
               },
@@ -267,6 +269,7 @@ export default defineConfig(({ mode }) => {
         math: true,
         cjkEmphasis: true,
         badges: true,
+        notByAi: true,
         keyboardKeys: true,
         magicLinks: {
           aliases: {

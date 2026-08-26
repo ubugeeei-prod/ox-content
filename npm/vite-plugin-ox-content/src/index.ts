@@ -46,6 +46,8 @@ export type {
   ResolvedAttrsOptions,
   BadgeOptions,
   ResolvedBadgeOptions,
+  NotByAiOptions,
+  ResolvedNotByAiOptions,
   MagicLinkOptions,
   MagicLinkAlias,
   MagicLinkImageOverride,
@@ -640,6 +642,7 @@ export {
   resolveKeyboardKeysOptions,
   resolveMathOptions,
 } from "./resolve-options";
+export { resolveNotByAiOptions } from "./not-by-ai-options";
 export { resolveCardOptions } from "./card-options";
 export { resolveIncludeOptions } from "./include-options";
 export { resolveStepsOptions } from "./step-options";

@@ -14,7 +14,7 @@ use std::path::PathBuf;
 
 let opts = CheckOptions::for_file(PathBuf::from("/path/to/doc.md"));
 for diagnostic in check_source(source, &opts) {
-    eprintln!("{}:{} {}", diagnostic.line, diagnostic.column, diagnostic.message);
+    eprintln!("{}:{} {} {}", diagnostic.code, diagnostic.line, diagnostic.column, diagnostic.message);
 }
 ```
 
@@ -59,6 +59,12 @@ route directories, copied assets, and cross-page fragments. URL-encoded
 paths and the configured deployment base are decoded before resolution.
 Links that intentionally pass through a generated redirect are reported
 as warnings; missing pages, assets, anchors, or root escapes are errors.
+
+Source-check codes include `link-missing-file`, `link-missing-anchor`,
+`link-cross-file-anchor`, `link-unresolved`, and `link-unclassified`. The
+language server publishes the same codes and ranges under
+`source: "ox-content-link"`. See `docs/content/packages/lsp.md` for the
+shared capability list and known gaps.
 
 ## Limitations (tracked follow-ups)
 

@@ -1,5 +1,5 @@
 use serde_json::Value;
-use tower_lsp::lsp_types::{Diagnostic, DiagnosticSeverity};
+use tower_lsp::lsp_types::{Diagnostic, DiagnosticSeverity, NumberOrString};
 
 use crate::frontmatter::utils::{
     display_value, effective_type, matches_type, range_for_named_key, range_for_path, value_kind,
@@ -32,6 +32,7 @@ fn validate_value(
         diagnostics.push(Diagnostic {
             range: range_for_path(block, path),
             severity: Some(DiagnosticSeverity::ERROR),
+            code: Some(NumberOrString::String("frontmatter-type".to_string())),
             source: Some("ox-content".to_string()),
             message: format!("Expected `{type_name}` but found `{}`", value_kind(value)),
             ..Default::default()
@@ -60,6 +61,7 @@ fn validate_enum(
     diagnostics.push(Diagnostic {
         range: range_for_path(block, path),
         severity: Some(DiagnosticSeverity::ERROR),
+        code: Some(NumberOrString::String("frontmatter-enum".to_string())),
         source: Some("ox-content".to_string()),
         message: format!(
             "Expected one of {}",
@@ -85,6 +87,7 @@ fn validate_object(
             diagnostics.push(Diagnostic {
                 range: block.content_range,
                 severity: Some(DiagnosticSeverity::WARNING),
+                code: Some(NumberOrString::String("frontmatter-required".to_string())),
                 source: Some("ox-content".to_string()),
                 message: format!("Missing required frontmatter field `{required}`"),
                 ..Default::default()
@@ -101,6 +104,7 @@ fn validate_object(
             diagnostics.push(Diagnostic {
                 range: range_for_named_key(block, key),
                 severity: Some(DiagnosticSeverity::WARNING),
+                code: Some(NumberOrString::String("frontmatter-unknown".to_string())),
                 source: Some("ox-content".to_string()),
                 message: format!("Unknown frontmatter field `{key}`"),
                 ..Default::default()

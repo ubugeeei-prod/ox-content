@@ -7,10 +7,10 @@ mod mdc;
 mod snippets;
 
 use tower_lsp::Client;
-use tower_lsp::lsp_types::{Diagnostic, Url};
+use tower_lsp::lsp_types::{Diagnostic, TextDocumentContentChangeEvent, Url};
 
 use crate::config::{InitializationOptions, ResolvedConfig};
-use crate::document::{TextDocumentState, is_markdown_path};
+use crate::document::is_markdown_path;
 use crate::frontmatter::{self, FrontmatterSchema};
 use crate::i18n::{self, I18nState};
 use crate::state::LspState;
@@ -26,13 +26,32 @@ impl Backend {
         Self { client, i18n_state: I18nState::new(), state: LspState::new() }
     }
 
-    pub(super) async fn on_change(&self, uri: &Url, text: String) {
+    pub(super) async fn open_document(&self, uri: &Url, text: String, version: i32) {
+        if uri.to_file_path().is_ok_and(|path| i18n::is_i18n_source_path(&path)) {
+            self.i18n_state.add_open_uri(uri.clone()).await;
+        }
+        self.state.upsert_document(uri.clone(), text.clone(), version).await;
+        self.after_document_edit(uri, &text).await;
+    }
+
+    pub(super) async fn change_document(
+        &self,
+        uri: &Url,
+        version: i32,
+        changes: &[TextDocumentContentChangeEvent],
+    ) {
+        let Some(document) = self.state.apply_changes(uri.clone(), version, changes).await else {
+            return;
+        };
+        self.after_document_edit(uri, document.text()).await;
+    }
+
+    async fn after_document_edit(&self, uri: &Url, text: &str) {
         let Some(path) = uri.to_file_path().ok() else {
             return;
         };
 
         if is_markdown_path(&path) {
-            self.state.upsert_document(uri.clone(), text.clone()).await;
             self.publish_diagnostics_for(uri).await;
             // HMR: any subscribed preview panel needs the rendered HTML
             // pushed to it; this replaces the polling
@@ -43,19 +62,12 @@ impl Backend {
 
         let path_str = path.to_string_lossy().to_string();
         if i18n::is_i18n_source_path(&path) {
-            self.i18n_state.update_file_keys(&path_str, &text).await;
+            self.i18n_state.update_file_keys(&path_str, text).await;
             self.publish_i18n_diagnostics().await;
         } else if i18n::is_i18n_dictionary_path(&path) {
             self.i18n_state.reload_dictionaries().await;
             self.publish_i18n_diagnostics().await;
         }
-    }
-
-    pub(super) async fn open_document(&self, uri: &Url, text: String) {
-        if uri.to_file_path().is_ok_and(|path| i18n::is_i18n_source_path(&path)) {
-            self.i18n_state.add_open_uri(uri.clone()).await;
-        }
-        self.on_change(uri, text).await;
     }
 
     pub(super) async fn close_document(&self, uri: &Url) {
@@ -72,48 +84,6 @@ impl Backend {
         self.client.publish_diagnostics(uri.clone(), Vec::new(), None).await;
     }
 
-    pub(super) async fn run_textlint_for(&self, uri: &Url) {
-        let config = self.resolved_config().await;
-        if !config.textlint.enabled {
-            return;
-        }
-        let Some(document) = self.state.document(uri).await else {
-            return;
-        };
-        let Ok(path) = uri.to_file_path() else {
-            return;
-        };
-        if !is_markdown_path(&path) {
-            return;
-        }
-        let textlint_diagnostics =
-            crate::textlint::run(document.text(), &path, &config.textlint).await;
-        // textlint diagnostics live alongside the other Markdown
-        // checks; we publish them through the same channel so the
-        // editor sees a single combined gutter. Re-run the
-        // non-textlint diagnostics here so we don't accidentally
-        // drop the squiggles the on_change path published moments
-        // ago when we replace the diagnostic list.
-        let is_mdc = path.extension().and_then(|ext| ext.to_str()) == Some("mdc");
-        let mut current = self.diagnostics(uri, &document, is_mdc).await;
-        current.extend(textlint_diagnostics);
-        self.client.publish_diagnostics(uri.clone(), current, None).await;
-    }
-
-    pub(super) async fn publish_diagnostics_for(&self, uri: &Url) {
-        let Some(document) = self.state.document(uri).await else {
-            return;
-        };
-
-        let is_mdc = uri
-            .to_file_path()
-            .ok()
-            .and_then(|path| path.extension().and_then(|ext| ext.to_str()).map(str::to_string))
-            .is_some_and(|ext| ext == "mdc");
-        let diagnostics = self.diagnostics(uri, &document, is_mdc).await;
-        self.client.publish_diagnostics(uri.clone(), diagnostics, None).await;
-    }
-
     pub(super) async fn spacing_formatting_edits(
         &self,
         uri: &Url,
@@ -128,45 +98,6 @@ impl Backend {
         let edits =
             crate::spacing::formatting_edits(&document, frontmatter.block.as_ref(), config.spacing);
         (!edits.is_empty()).then_some(edits)
-    }
-
-    async fn diagnostics(
-        &self,
-        uri: &Url,
-        document: &TextDocumentState,
-        is_mdc: bool,
-    ) -> Vec<Diagnostic> {
-        let config = self.resolved_config().await;
-        let frontmatter = frontmatter::parse_frontmatter(document);
-        let mut diagnostics = frontmatter
-            .block
-            .as_ref()
-            .map_or_else(Vec::new, |block| Self::frontmatter_diagnostics(block, &config));
-        let mdx = uri.to_file_path().is_ok_and(|path| crate::document::is_mdx_path(&path));
-        diagnostics.extend(diagnostics::markdown_parse_diagnostics(
-            document,
-            frontmatter.block.as_ref(),
-            mdx,
-        ));
-        if is_mdc {
-            diagnostics.extend(diagnostics::mdc_diagnostics(document, frontmatter.block.as_ref()));
-        }
-        diagnostics.extend(crate::spacing::diagnostics(
-            document,
-            frontmatter.block.as_ref(),
-            config.spacing,
-        ));
-        // Link checker runs on every Markdown/MDC document. It only
-        // consults the local filesystem, so it stays cheap enough to
-        // run on every keystroke. The optional workspace root is used
-        // as the absolute-path resolution base; without it `/foo.md`
-        // links are anchored to the document's own directory.
-        diagnostics.extend(diagnostics::link_check_diagnostics(
-            document,
-            uri,
-            self.state.root().await,
-        ));
-        diagnostics
     }
 
     pub(super) async fn publish_i18n_diagnostics(&self) {
@@ -214,27 +145,6 @@ impl Backend {
 
             self.client.publish_diagnostics(uri.clone(), diagnostics, None).await;
         }
-    }
-
-    fn frontmatter_diagnostics(
-        block: &frontmatter::FrontmatterBlock,
-        config: &ResolvedConfig,
-    ) -> Vec<Diagnostic> {
-        let mut diagnostics = block.diagnostics.clone();
-        match Self::load_schema(config) {
-            Ok(Some(schema)) => {
-                diagnostics.extend(frontmatter::validate_frontmatter(block, &schema));
-            }
-            Ok(None) => {}
-            Err(message) => diagnostics.push(Diagnostic {
-                range: block.block_range,
-                severity: Some(tower_lsp::lsp_types::DiagnosticSeverity::ERROR),
-                source: Some("ox-content".to_string()),
-                message,
-                ..Default::default()
-            }),
-        }
-        diagnostics
     }
 
     pub(super) async fn resolved_config(&self) -> ResolvedConfig {

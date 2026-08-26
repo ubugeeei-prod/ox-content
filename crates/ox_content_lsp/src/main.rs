@@ -24,6 +24,7 @@ mod frontmatter;
 mod i18n;
 mod preview;
 mod selection_range;
+mod session;
 mod spacing;
 mod state;
 mod textlint;
