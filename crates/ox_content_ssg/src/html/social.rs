@@ -61,10 +61,10 @@ fn render_social_icon(link: &SocialLink, self_hosted_icons: bool) -> String {
     link.icon
         .as_deref()
         .map(|icon| {
-            if self_hosted_icons {
-                if let Some((prefix, name)) = super::entry::parse_iconify_name(icon) {
-                    return format!("<span class=\"iconify-icon icon-[{prefix}--{name}]\"></span>");
-                }
+            if self_hosted_icons
+                && let Some((prefix, name)) = super::entry::parse_iconify_name(icon)
+            {
+                return format!("<span class=\"iconify-icon icon-[{prefix}--{name}]\"></span>");
             }
             format!("<span class=\"social-link-icon\">{}</span>", escape_html(icon))
         })
