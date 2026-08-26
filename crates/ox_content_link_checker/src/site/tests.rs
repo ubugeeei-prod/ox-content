@@ -106,3 +106,28 @@ fn generated_site_ignores_markup_like_text_inside_scripts_and_styles() {
     let reports = check_site(&options(&root)).unwrap();
     assert!(reports.is_empty(), "{reports:#?}");
 }
+
+#[test]
+fn generated_site_does_not_panic_on_hostile_markup() {
+    let root = fixture("hostile-markup");
+    let huge_href = format!("/ox-content/{}", "a".repeat(8_192));
+    write(
+        &root,
+        "index.html",
+        &format!(
+            r#"<a href="javascript:alert(1)">js</a>
+<a href="{huge_href}">huge</a>
+<a href="/ox-content/missing/#"><img src="data:text/html,<script>x</script>"></a>
+<a href="./#\0not-an-anchor">nul</a>
+<p>unclosed <a href="/ox-content/ok/#gone""#
+        ),
+    );
+    write(&root, "ok/index.html", r#"<h1 id="ok">Ok</h1>"#);
+
+    let reports = check_site(&options(&root)).unwrap();
+    let diagnostics = all_diagnostics(&reports);
+    assert!(
+        diagnostics.iter().any(|diagnostic| diagnostic.message.contains("does not exist")),
+        "{reports:#?}"
+    );
+}

@@ -3,52 +3,10 @@
   "description": "Reviewed production panic-prone constructs. New hits fail CI. Lower counts when a site is removed. Follow-up PRs for #774 should shrink this list.",
   "entries": [
     {
-      "file": "crates/ox_content_docs/src/graph/docs.rs",
-      "kind": "expect",
-      "count": 1,
-      "reason": "Internal docs-cache lookup after insert. Follow-up: return a typed error."
-    },
-    {
-      "file": "crates/ox_content_docs/src/string_builder.rs",
-      "kind": "expect",
-      "count": 2,
-      "reason": "ASCII digit buffer is written by this crate; UTF-8 is an internal invariant."
-    },
-    {
-      "file": "crates/ox_content_link_checker/src/site.rs",
-      "kind": "expect",
-      "count": 1,
-      "reason": "Generated-page index lookup after the walker inserted the file. Follow-up: Result."
-    },
-    {
-      "file": "crates/ox_content_lsp/src/frontmatter/schema.rs",
-      "kind": "expect",
-      "count": 1,
-      "reason": "Compile-time builtin JSON schema. Follow-up: include_str parse once with documented fallback."
-    },
-    {
       "file": "crates/ox_content_profile_cli/src/markdown.rs",
       "kind": "unreachable",
       "count": 1,
-      "reason": "CLI dispatch exhaustiveness after command routing. Not a user-content path."
-    },
-    {
-      "file": "crates/ox_content_profiler/src/alloc/histogram.rs",
-      "kind": "expect",
-      "count": 1,
-      "reason": "ASCII digit buffer written by this crate; UTF-8 is an internal invariant."
-    },
-    {
-      "file": "crates/ox_content_profiler/src/report/format.rs",
-      "kind": "expect",
-      "count": 1,
-      "reason": "ASCII digit buffer written by this crate; UTF-8 is an internal invariant."
-    },
-    {
-      "file": "crates/ox_content_transform/src/youtube.rs",
-      "kind": "expect",
-      "count": 3,
-      "reason": "Compile-time Regex::new literals. Invalid patterns fail at startup, not on user HTML."
+      "reason": "CLI dispatch exhaustiveness after command routing. Proven: main run() sends only Parse/Render/Pipeline here; docs-* variants are handled first. Not a user-content path."
     }
   ]
 }
