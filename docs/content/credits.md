@@ -47,6 +47,8 @@ Contribution summary:
   in production during the ryoppippi.com Ox Content migration.
 - Reported that generated feed item URLs missed `ssg.routePrefix` while page
   output and Markdown companions were mounted under the prefix.
+- Requested programmatic feed item sources for the ryoppippi.com JSON-backed
+  media feed migration.
 
 ## Third-party attribution
 

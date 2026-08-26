@@ -1124,6 +1124,61 @@ export interface ResolvedRedirectsOptions {
  */
 export type FeedFormat = "rss" | "atom" | "json";
 
+/** One feed item author accepted by programmatic feeds. */
+export interface FeedItemAuthor {
+  name: string;
+  url?: string;
+}
+
+export type FeedItemAuthorInput = string | FeedItemAuthor;
+
+/** One JSON Feed / enclosure attachment accepted by programmatic feeds. */
+export interface FeedItemAttachment {
+  url: string;
+  mimeType?: string;
+  title?: string;
+  sizeInBytes?: number;
+  durationInSeconds?: number;
+}
+
+/** One collection or programmatic item considered for a generated feed. */
+export interface FeedItemInput {
+  title?: string;
+  description?: string;
+  content?: string;
+  path?: string;
+  loc?: string;
+  url?: string;
+  id?: string;
+  date?: unknown;
+  lastUpdated?: unknown;
+  draft?: unknown;
+  unlisted?: unknown;
+  author?: FeedItemAuthorInput;
+  authors?: readonly FeedItemAuthorInput[];
+  image?: string;
+  attachments?: readonly FeedItemAttachment[];
+  language?: string;
+  frontmatter?: Record<string, unknown>;
+}
+
+export interface FeedItemsResolveContext {
+  name?: string;
+  formats: readonly FeedFormat[];
+  path: string;
+  siteUrl?: string;
+  siteName?: string;
+  siteDescription?: string;
+  base: string;
+  outDir?: string;
+}
+
+export type FeedItemsSource =
+  | readonly FeedItemInput[]
+  | ((
+      context: FeedItemsResolveContext,
+    ) => readonly FeedItemInput[] | Promise<readonly FeedItemInput[]>);
+
 /**
  * One feed's formats, source, output path, and channel metadata.
  */
@@ -1139,6 +1194,12 @@ export interface FeedChannelOptions {
    * configured collection when `content` is absent.
    */
   collection?: string;
+
+  /**
+   * Programmatic items for this channel. A channel may set either
+   * `collection` or `items`, not both.
+   */
+  items?: FeedItemsSource;
 
   /**
    * Maximum number of published items, newest first.
@@ -1189,6 +1250,7 @@ export interface ResolvedFeedChannel {
   name?: string;
   formats: readonly FeedFormat[];
   collection?: string;
+  items?: FeedItemsSource;
   limit: number;
   path: string;
   title?: string;

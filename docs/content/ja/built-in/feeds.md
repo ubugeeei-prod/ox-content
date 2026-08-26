@@ -74,11 +74,51 @@ oxContent({
 });
 ```
 
+## Programmatic items
+
+フィードの元データが JSON ファイル、database の結果、ビルド時に集めた curated データのときは、チャンネルに `collection` ではなく `items` を設定できます。resolver は SSG 中に実行され、promise を返せます。
+
+```ts
+import media from "./src/contents/external-rss/media.json";
+
+oxContent({
+  feeds: {
+    media: {
+      formats: ["rss"],
+      path: "/works/media",
+      title: "Media | ryoppippi.com",
+      items: async () =>
+        media
+          .filter((item) => !item.playlist)
+          .map((item) => ({
+            title: item.title,
+            url: item.link,
+            id: `media:${item.link}`,
+            date: item.pubDate,
+            description: `${item.kind === "podcast" ? "Podcast" : "YouTube"} | ${item.title}`,
+            author: { name: "ryoppippi", url: "https://ryoppippi.com" },
+            language: item.lang,
+          })),
+    },
+  },
+  ssg: {
+    siteUrl: "https://ryoppippi.com",
+  },
+});
+```
+
+1 つのチャンネルに `collection` と `items` を同時に書くことはできません。
+同時に指定すると reject されます。programmatic item は `title`、`url` または
+`loc`、任意の `id`、`date`、`description`、`content`、`author` /
+`authors`、`image`、`attachments`、`language` を受け取ります。RSS、Atom、
+JSON Feed の各 renderer は、その形式が対応する field を出力します。
+
 | オプション    | 型                                         | 既定                                  |
 | ------------- | ------------------------------------------ | ------------------------------------- |
 | `feeds`       | `boolean` / 単一フィード / 名前付き / 配列 | `false`                               |
 | `formats`     | `("rss" \| "atom" \| "json")[]`            | `["rss", "atom", "json"]`             |
 | `collection`  | `string`                                   | `content`、なければ最初のコレクション |
+| `items`       | `FeedItemInput[]` / async resolver         | 省略                                  |
 | `limit`       | `number`                                   | `20`                                  |
 | `path`        | `string`                                   | `/`（サイトルート）                   |
 | `title`       | `string`                                   | SSG のサイト名                        |

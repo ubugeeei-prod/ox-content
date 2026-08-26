@@ -1,5 +1,7 @@
 /** RSS / Atom / JSON Feed string bodies used by `feeds.ts`. */
 
+import type { FeedItemAttachment, FeedItemAuthor } from "./types";
+
 export interface ParsedDate {
   unix: number;
   year: number;
@@ -21,12 +23,21 @@ export interface FeedDocument {
 export interface FeedEntry {
   title: string;
   description?: string;
+  content?: string;
   loc: string;
+  id?: string;
   date?: ParsedDate;
+  authors?: FeedItemAuthor[];
+  image?: string;
+  attachments?: FeedItemAttachment[];
+  language?: string;
 }
 
 export function generateRss(doc: FeedDocument, items: readonly FeedEntry[]): string {
-  let xml = '<?xml version="1.0" encoding="UTF-8"?>\n<rss version="2.0">\n  <channel>\n    <title>';
+  const dc = items.some((item) => item.authors?.length || item.language)
+    ? ' xmlns:dc="http://purl.org/dc/elements/1.1/"'
+    : "";
+  let xml = `<?xml version="1.0" encoding="UTF-8"?>\n<rss version="2.0"${dc}>\n  <channel>\n    <title>`;
   xml += escapeXml(doc.siteName);
   xml += "</title>\n    <link>";
   xml += escapeXml(doc.home);
@@ -38,17 +49,18 @@ export function generateRss(doc: FeedDocument, items: readonly FeedEntry[]): str
     xml += escapeXml(item.title);
     xml += "</title>\n      <link>";
     xml += escapeXml(item.loc);
-    xml += "</link>\n      <guid>";
-    xml += escapeXml(item.loc);
-    xml += "</guid>\n";
-    if (item.description) {
+    xml += "</link>\n";
+    xml += rssGuid(item);
+    const description = item.content ?? item.description;
+    if (description) {
       xml += "      <description>";
-      xml += escapeXml(item.description);
+      xml += escapeXml(description);
       xml += "</description>\n";
     }
     if (item.date) {
       xml += `      <pubDate>${formatRfc822(item.date)}</pubDate>\n`;
     }
+    xml += rssItemMeta(item);
     xml += "    </item>\n";
   }
   xml += "  </channel>\n</rss>\n";
@@ -73,17 +85,26 @@ export function generateAtom(doc: FeedDocument, items: readonly FeedEntry[]): st
     xml += "</subtitle>\n";
   }
   for (const item of items) {
-    xml += "  <entry>\n    <title>";
+    xml += `  <entry${item.language ? ` xml:lang="${escapeXml(item.language)}"` : ""}>\n    <title>`;
     xml += escapeXml(item.title);
     xml += '</title>\n    <link href="';
     xml += escapeXml(item.loc);
     xml += '"/>\n    <id>';
-    xml += escapeXml(item.loc);
+    xml += escapeXml(entryId(item));
     xml += `</id>\n    <updated>${item.date ? formatRfc3339(item.date) : updated}</updated>\n`;
     if (item.description) {
       xml += "    <summary>";
       xml += escapeXml(item.description);
       xml += "</summary>\n";
+    }
+    if (item.content) {
+      xml += `    <content type="text">${escapeXml(item.content)}</content>\n`;
+    }
+    for (const author of item.authors ?? []) {
+      xml += atomAuthor(author);
+    }
+    for (const attachment of item.attachments ?? []) {
+      xml += atomAttachment(attachment);
     }
     xml += "  </entry>\n";
   }
@@ -108,34 +129,28 @@ export function generateJson(doc: FeedDocument, items: readonly FeedEntry[]): st
       json += ",";
     }
     json += '\n    {\n      "id": ';
-    json += jsonString(item.loc);
+    json += jsonString(entryId(item));
     json += ',\n      "url": ';
     json += jsonString(item.loc);
     json += ',\n      "title": ';
     json += jsonString(item.title);
-    if (item.description) {
-      json += ',\n      "content_text": ';
+    if (item.description && item.content) {
+      json += ',\n      "summary": ';
       json += jsonString(item.description);
+    }
+    if (item.description || item.content) {
+      json += ',\n      "content_text": ';
+      json += jsonString(item.content ?? item.description);
     }
     if (item.date) {
       json += ',\n      "date_published": ';
       json += jsonString(formatRfc3339(item.date));
     }
+    json += jsonItemMeta(item);
     json += "\n    }";
   });
   json += "\n  ]\n}\n";
   return json;
-}
-
-export function parseDate(value: string | undefined): ParsedDate | undefined {
-  if (!value) {
-    return undefined;
-  }
-  if (/^\d+$/.test(value)) {
-    const n = Number(value);
-    return unixToDate(value.length >= 13 ? Math.trunc(n / 1000) : n);
-  }
-  return parseCivilDate(value);
 }
 
 function channelDescription(doc: FeedDocument): string {
@@ -217,106 +232,100 @@ function pad(value: number, width: number): string {
   return String(value).padStart(width, "0");
 }
 
-function parseCivilDate(value: string): ParsedDate | undefined {
-  if (value.length < 10 || value[4] !== "-" || value[7] !== "-") {
-    return undefined;
-  }
-  const year = Number(value.slice(0, 4));
-  const month = Number(value.slice(5, 7));
-  const day = Number(value.slice(8, 10));
-  let hour = 0;
-  let minute = 0;
-  let second = 0;
-  let offset = 0;
-  if (value.length > 10) {
-    const rest = value.slice(10);
-    const time = rest.startsWith("T") || rest.startsWith(" ") ? rest.slice(1) : "";
-    if (time.length < 8 || time[2] !== ":" || time[5] !== ":") {
-      return undefined;
-    }
-    hour = Number(time.slice(0, 2));
-    minute = Number(time.slice(3, 5));
-    second = Number(time.slice(6, 8));
-    const parsedOffset = parseOffset(timezoneSuffix(time));
-    if (parsedOffset == null) {
-      return undefined;
-    }
-    offset = parsedOffset;
-  }
-  const unix = civilToUnix(year, month, day, hour, minute, second);
-  return unix == null ? undefined : unixToDate(unix - offset);
+function entryId(item: FeedEntry): string {
+  return item.id ?? item.loc;
 }
 
-function timezoneSuffix(rest: string): string {
-  const afterTime = rest.slice(8);
-  if (afterTime.startsWith(".")) {
-    const index = afterTime.search(/[Z+-]/);
-    return index === -1 ? "" : afterTime.slice(index);
-  }
-  return afterTime;
+function rssGuid(item: FeedEntry): string {
+  const id = entryId(item);
+  const attr = id === item.loc ? "" : ' isPermaLink="false"';
+  return `      <guid${attr}>${escapeXml(id)}</guid>\n`;
 }
 
-function parseOffset(tz: string): number | undefined {
-  if (!tz || tz === "Z") {
-    return 0;
+function rssItemMeta(item: FeedEntry): string {
+  let xml = "";
+  for (const author of item.authors ?? []) {
+    xml += `      <dc:creator>${escapeXml(author.name)}</dc:creator>\n`;
   }
-  if (tz.length < 6) {
-    return undefined;
+  if (item.language) {
+    xml += `      <dc:language>${escapeXml(item.language)}</dc:language>\n`;
   }
-  const sign = tz[0] === "+" ? 1 : tz[0] === "-" ? -1 : 0;
-  if (!sign) {
-    return undefined;
+  for (const attachment of item.attachments ?? []) {
+    xml += rssEnclosure(attachment);
   }
-  return sign * (Number(tz.slice(1, 3)) * 3600 + Number(tz.slice(4, 6)) * 60);
+  return xml;
 }
 
-function civilToUnix(
-  year: number,
-  month: number,
-  day: number,
-  hour: number,
-  minute: number,
-  second: number,
-): number | undefined {
-  if (month < 1 || month > 12 || day < 1 || day > 31 || hour > 23 || minute > 59 || second > 60) {
-    return undefined;
-  }
-  let y = year;
-  if (month <= 2) {
-    y -= 1;
-  }
-  const era = Math.trunc((y >= 0 ? y : y - 399) / 400);
-  const yoe = y - era * 400;
-  const shifted = month + (month > 2 ? -3 : 9);
-  const doy = Math.trunc((153 * shifted + 2) / 5) + day - 1;
-  const doe = yoe * 365 + Math.trunc(yoe / 4) - Math.trunc(yoe / 100) + doy;
-  const days = era * 146097 + doe - 719468;
-  return days * 86400 + hour * 3600 + minute * 60 + second;
+function rssEnclosure(attachment: FeedItemAttachment): string {
+  return `      <enclosure${xmlAttrs([
+    ["url", attachment.url],
+    ["type", attachment.mimeType],
+    ["length", attachment.sizeInBytes],
+  ])}/>\n`;
 }
 
-function unixToDate(unix: number): ParsedDate | undefined {
-  const days = Math.floor(unix / 86400);
-  const tod = ((unix % 86400) + 86400) % 86400;
-  const z = days + 719468;
-  const era = Math.trunc((z >= 0 ? z : z - 146096) / 146097);
-  const doe = z - era * 146097;
-  const yoe = Math.trunc(
-    (doe - Math.trunc(doe / 1460) + Math.trunc(doe / 36524) - Math.trunc(doe / 146096)) / 365,
-  );
-  const year = yoe + era * 400;
-  const doy = doe - (365 * yoe + Math.trunc(yoe / 4) - Math.trunc(yoe / 100));
-  const mp = Math.trunc((5 * doy + 2) / 153);
-  const day = doy - Math.trunc((153 * mp + 2) / 5) + 1;
-  const month = mp < 10 ? mp + 3 : mp - 9;
-  return {
-    unix,
-    year: year + (month <= 2 ? 1 : 0),
-    month,
-    day,
-    hour: Math.trunc(tod / 3600),
-    minute: Math.trunc((tod % 3600) / 60),
-    second: tod % 60,
-  };
+function atomAuthor(author: FeedItemAuthor): string {
+  const uri = author.url ? `\n      <uri>${escapeXml(author.url)}</uri>` : "";
+  return `    <author>\n      <name>${escapeXml(author.name)}</name>${uri}\n    </author>\n`;
+}
+
+function atomAttachment(attachment: FeedItemAttachment): string {
+  return `    <link${xmlAttrs([
+    ["rel", "enclosure"],
+    ["href", attachment.url],
+    ["type", attachment.mimeType],
+    ["length", attachment.sizeInBytes],
+    ["title", attachment.title],
+  ])}/>\n`;
+}
+
+function xmlAttrs(attrs: Array<[string, string | number | undefined]>): string {
+  return attrs
+    .flatMap(([key, value]) => (value == null ? [] : [` ${key}="${escapeXml(String(value))}"`]))
+    .join("");
+}
+
+function jsonItemMeta(item: FeedEntry): string {
+  let json = "";
+  if (item.authors?.length) {
+    json += ',\n      "authors": [';
+    json += item.authors.map(jsonAuthor).join(", ");
+    json += "]";
+  }
+  if (item.image) {
+    json += ',\n      "image": ';
+    json += jsonString(item.image);
+  }
+  if (item.language) {
+    json += ',\n      "language": ';
+    json += jsonString(item.language);
+  }
+  if (item.attachments?.length) {
+    json += ',\n      "attachments": [';
+    json += item.attachments.map(jsonAttachment).join(", ");
+    json += "]";
+  }
+  return json;
+}
+
+function jsonAuthor(author: FeedItemAuthor): string {
+  const url = author.url ? `, "url": ${jsonString(author.url)}` : "";
+  return `{\n        "name": ${jsonString(author.name)}${url}\n      }`;
+}
+
+function jsonAttachment(attachment: FeedItemAttachment): string {
+  const fields = [
+    `"url": ${jsonString(attachment.url)}`,
+    attachment.mimeType ? `"mime_type": ${jsonString(attachment.mimeType)}` : "",
+    attachment.title ? `"title": ${jsonString(attachment.title)}` : "",
+    numberJsonField("size_in_bytes", attachment.sizeInBytes),
+    numberJsonField("duration_in_seconds", attachment.durationInSeconds),
+  ].filter(Boolean);
+  return `{\n        ${fields.join(",\n        ")}\n      }`;
+}
+
+function numberJsonField(name: string, value: number | undefined): string {
+  return value == null ? "" : `"${name}": ${String(value)}`;
 }
 
 function weekdayUtc(year: number, month: number, day: number): number {

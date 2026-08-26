@@ -2,7 +2,8 @@
  * Publication dates from RSS / Atom items.
  */
 
-import { parseDate, type ParsedDate } from "./feed-format";
+import { parseDate } from "./feed-date";
+import type { ParsedDate } from "./feed-format";
 
 const MONTHS: Record<string, number> = {
   jan: 1,

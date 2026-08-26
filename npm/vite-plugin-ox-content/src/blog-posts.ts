@@ -3,7 +3,7 @@
  */
 
 import * as path from "node:path";
-import { parseDate } from "./feed-format";
+import { parseDate } from "./feed-date";
 import { resolveBlogCollectionName } from "./blog-options";
 import { siteHref, type BlogSourcePage } from "./blog-html";
 import type { BlogAuthor, ResolvedBlogOptions, ResolvedCollectionsOptions } from "./types";

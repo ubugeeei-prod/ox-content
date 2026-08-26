@@ -21,6 +21,7 @@ describe("public export surface", () => {
       "extractDocs",
       "extractDocsTests",
       "generateCollectionsVirtualModule",
+      "generateFeeds",
       "generateMarkdown",
       "isMarkdownFilePath",
       "oxContent",

@@ -102,6 +102,25 @@ describe("resolveFeedsOptions named feeds", () => {
     expect(resolved.feeds?.[0]?.title).toBe("Blog");
     expect(resolved.feeds?.[1]?.language).toBe("ja");
   });
+
+  it("rejects channels that set both collection and items", () => {
+    expect(() =>
+      resolveFeedsOptions({
+        formats: ["rss"],
+        collection: "blog",
+        items: [],
+      }),
+    ).toThrow("cannot set both collection and items");
+    expect(() =>
+      resolveFeedsOptions({
+        media: {
+          formats: ["rss"],
+          collection: "media",
+          items: [],
+        },
+      }),
+    ).toThrow('"media"');
+  });
 });
 
 describe("generateFeeds channel metadata", () => {

@@ -79,11 +79,53 @@ oxContent({
 });
 ```
 
+## Programmatic items
+
+A channel can set `items` instead of `collection` when the feed source is a JSON
+file, database result, or another curated build-time source. The resolver runs
+during SSG and may return a promise:
+
+```ts
+import media from "./src/contents/external-rss/media.json";
+
+oxContent({
+  feeds: {
+    media: {
+      formats: ["rss"],
+      path: "/works/media",
+      title: "Media | ryoppippi.com",
+      items: async () =>
+        media
+          .filter((item) => !item.playlist)
+          .map((item) => ({
+            title: item.title,
+            url: item.link,
+            id: `media:${item.link}`,
+            date: item.pubDate,
+            description: `${item.kind === "podcast" ? "Podcast" : "YouTube"} | ${item.title}`,
+            author: { name: "ryoppippi", url: "https://ryoppippi.com" },
+            language: item.lang,
+          })),
+    },
+  },
+  ssg: {
+    siteUrl: "https://ryoppippi.com",
+  },
+});
+```
+
+Set either `collection` or `items` on a channel. Supplying both is rejected.
+Programmatic items support `title`, `url` or `loc`, optional `id`, `date`,
+`description`, `content`, `author` / `authors`, `image`, `attachments`, and
+`language`. The RSS, Atom, and JSON Feed renderers emit the fields that each
+format supports.
+
 | Option        | Type                                        | Default                              |
 | ------------- | ------------------------------------------- | ------------------------------------ |
 | `feeds`       | `boolean` / one feed / named record / array | `false`                              |
 | `formats`     | `("rss" \| "atom" \| "json")[]`             | `["rss", "atom", "json"]`            |
 | `collection`  | `string`                                    | `content`, else the first collection |
+| `items`       | `FeedItemInput[]` / async resolver          | omitted                              |
 | `limit`       | `number`                                    | `20`                                 |
 | `path`        | `string`                                    | `/` (site root)                      |
 | `title`       | `string`                                    | SSG site name                        |

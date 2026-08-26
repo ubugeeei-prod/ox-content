@@ -147,6 +147,12 @@ export type {
   ResolvedBlogFeedSource,
   ResolvedBlogOptions,
   FeedFormat,
+  FeedItemAuthor,
+  FeedItemAuthorInput,
+  FeedItemAttachment,
+  FeedItemInput,
+  FeedItemsResolveContext,
+  FeedItemsSource,
   FeedChannelOptions,
   FeedsOptions,
   ResolvedFeedChannel,
@@ -876,7 +882,8 @@ export {
 } from "./publish-state";
 export { resolvePermalinksOptions, resolveCascadeOptions } from "./permalinks";
 export { resolveRedirectsOptions } from "./redirects";
-export { resolveFeedsOptions } from "./feeds";
+export { generateFeeds, resolveFeedsOptions } from "./feeds";
+export type { FeedsRenderInput, FeedsRenderResult, WriteFeedFilesInput } from "./feeds";
 export {
   BlogFeedError,
   resolveBlogOptions,

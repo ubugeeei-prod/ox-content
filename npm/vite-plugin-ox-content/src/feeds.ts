@@ -21,6 +21,8 @@ import { publishedItems } from "./feeds-items";
 import type {
   FeedChannelOptions,
   FeedFormat,
+  FeedItemInput,
+  FeedItemsResolveContext,
   FeedsOptions,
   ResolvedFeedChannel,
   ResolvedFeedsOptions,
@@ -33,6 +35,7 @@ const DEFAULT_PATH = "/";
 const CHANNEL_KEYS = new Set([
   "formats",
   "collection",
+  "items",
   "limit",
   "path",
   "title",
@@ -43,18 +46,7 @@ const CHANNEL_KEYS = new Set([
   "copyright",
 ]);
 
-/** One collection entry considered for a feed. */
-export interface FeedItemInput {
-  title?: string;
-  description?: string;
-  path?: string;
-  loc?: string;
-  date?: unknown;
-  lastUpdated?: unknown;
-  draft?: unknown;
-  unlisted?: unknown;
-  frontmatter?: Record<string, unknown>;
-}
+export type { FeedItemAttachment, FeedItemAuthor, FeedItemInput, FeedItemsSource } from "./types";
 
 /** Inputs for rendering feed bodies. */
 export interface FeedsRenderInput {
@@ -171,7 +163,12 @@ export async function writeFeedFiles(
 
   const files: string[] = [];
   for (const channel of channels) {
-    const generated = generateFeeds({ ...input, options: { enabled: true, ...channel } });
+    const channelItems = await resolveChannelItems(channel, input);
+    const generatedInput = channelItems === undefined ? input : { ...input, items: channelItems };
+    const generated = generateFeeds({
+      ...generatedInput,
+      options: { enabled: true, ...channel },
+    });
     if (generated.warning) {
       return { files: [], warning: generated.warning };
     }
@@ -198,6 +195,11 @@ export async function writeFeedFiles(
 }
 
 function resolveChannel(value: FeedChannelOptions, name?: string): ResolvedFeedChannel {
+  if (value.collection && value.items != null) {
+    throw new Error(
+      `[ox-content] feeds channel ${feedChannelName(name)} cannot set both collection and items`,
+    );
+  }
   const channel: ResolvedFeedChannel = {
     formats: normalizeFormats(value.formats),
     limit: value.limit ?? DEFAULT_LIMIT,
@@ -205,6 +207,9 @@ function resolveChannel(value: FeedChannelOptions, name?: string): ResolvedFeedC
   };
   if (value.collection) {
     channel.collection = value.collection;
+  }
+  if (value.items != null) {
+    channel.items = value.items;
   }
   if (name) {
     channel.name = name;
@@ -255,6 +260,46 @@ function normalizeFormats(formats: readonly FeedFormat[] | undefined): FeedForma
     }
   }
   return resolved;
+}
+
+async function resolveChannelItems(
+  channel: ResolvedFeedChannel,
+  input: WriteFeedFilesInput,
+): Promise<readonly FeedItemInput[] | undefined> {
+  const source = channel.items;
+  if (source == null) {
+    return undefined;
+  }
+  if (Array.isArray(source)) {
+    return source;
+  }
+  const items = await source(feedItemsContext(channel, input));
+  if (Array.isArray(items)) {
+    return items;
+  }
+  throw new Error(
+    `[ox-content] feeds channel ${feedChannelName(channel.name)} items must return an array`,
+  );
+}
+
+function feedItemsContext(
+  channel: ResolvedFeedChannel,
+  input: WriteFeedFilesInput,
+): FeedItemsResolveContext {
+  return {
+    name: channel.name,
+    formats: channel.formats,
+    path: channel.path,
+    siteUrl: input.siteUrl,
+    siteName: input.siteName,
+    siteDescription: input.siteDescription,
+    base: input.base,
+    outDir: input.outDir,
+  };
+}
+
+function feedChannelName(name: string | undefined): string {
+  return name ? JSON.stringify(name) : "default";
 }
 
 function feedDocument(input: FeedsRenderInput): FeedDocument {

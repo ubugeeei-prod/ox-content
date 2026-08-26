@@ -44,6 +44,8 @@ Markdown 属性とリッチなソーシャル埋め込みの見た目の同等�
   移行で要望され、本番実装として先に入った機能です。
 - ページ出力と Markdown companion が `ssg.routePrefix` 配下に配置される一方、
   生成 feed の item URL から prefix が抜けていた問題を報告しました。
+- ryoppippi.com の JSON-backed media feed 移行のために、programmatic feed item
+  source を要望しました。
 
 ## 第三者の帰属
 
