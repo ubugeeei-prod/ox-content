@@ -217,7 +217,9 @@ flowchart LR
 
 The LSP shares the same parser and renderer concepts as the site pipeline, but
 its output is optimized for authoring: diagnostics, snippets, completion,
-go-to-definition, hover, inlay hints, and preview HTML.
+go-to-definition, hover, inlay hints, and preview HTML. Supported checker/LSP
+capabilities and known gaps are listed in
+[Checker and Language Server](./packages/lsp.md).
 
 ## Boundaries And Invariants
 

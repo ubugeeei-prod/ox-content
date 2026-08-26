@@ -2,6 +2,7 @@ use std::fs;
 use std::path::PathBuf;
 
 use clap::{Parser, ValueEnum};
+use ox_content_mdc_checker::{CODE_IO_READ, check_document};
 
 #[derive(Parser)]
 #[command(name = "ox-content-mdc-check", about = "Check MDC component syntax")]
@@ -35,7 +36,7 @@ fn main() {
     for file in &cli.files {
         match fs::read_to_string(file) {
             Ok(source) => {
-                let diagnostics = ox_content_mdc_checker::check(&source);
+                let diagnostics = check_document(&source);
                 error_count += diagnostics.len();
                 results.push(FileDiagnostics {
                     file: file.to_string_lossy().into_owned(),
@@ -48,6 +49,7 @@ fn main() {
                     file: file.to_string_lossy().into_owned(),
                     diagnostics: vec![ox_content_mdc_checker::Diagnostic {
                         severity: ox_content_mdc_checker::Severity::Error,
+                        code: CODE_IO_READ.to_string(),
                         message: error.to_string(),
                         line: 1,
                         column: 1,

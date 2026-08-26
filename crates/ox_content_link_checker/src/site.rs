@@ -6,7 +6,11 @@ use rustc_hash::FxHashMap;
 
 use crate::line_index::LineIndex;
 use crate::target::{classify, percent_decode, split_anchor};
-use crate::{Diagnostic, LinkKind, Severity, SiteCheckOptions, SiteReport};
+use crate::{
+    CODE_SITE_ESCAPES_ROOT, CODE_SITE_MISSING, CODE_SITE_MISSING_ANCHOR,
+    CODE_SITE_NON_HTML_FRAGMENT, CODE_SITE_OUTSIDE_BASE, CODE_SITE_REDIRECT, Diagnostic, LinkKind,
+    Severity, SiteCheckOptions, SiteReport,
+};
 
 use self::html::{HtmlDocument, HtmlLink, parse_html};
 use self::resolve::{ResolveError, resolve_site_target};
@@ -86,6 +90,7 @@ fn check_link(
                     target,
                     if anchor.is_some() { LinkKind::FileAnchor } else { LinkKind::File },
                     Severity::Error,
+                    resolve_error_code(&error),
                     resolve_error_message(path, error),
                 ));
             }
@@ -101,6 +106,7 @@ fn check_link(
                 target,
                 LinkKind::FileAnchor,
                 Severity::Error,
+                CODE_SITE_NON_HTML_FRAGMENT,
                 format!(
                     "Fragment `#{fragment}` targets a non-HTML file (resolved to {}).",
                     target_file.display()
@@ -114,6 +120,7 @@ fn check_link(
                 target,
                 if path.is_empty() { LinkKind::Anchor } else { LinkKind::FileAnchor },
                 Severity::Error,
+                CODE_SITE_MISSING_ANCHOR,
                 format!("Anchor `#{fragment}` is missing from {}.", target_file.display()),
             ));
         }
@@ -128,6 +135,7 @@ fn check_link(
             target,
             LinkKind::File,
             Severity::Warning,
+            CODE_SITE_REDIRECT,
             format!("Link resolves to redirect page {}.", target_file.display()),
         ));
     }
@@ -140,12 +148,14 @@ fn diagnostic(
     target: &str,
     kind: LinkKind,
     severity: Severity,
+    code: &'static str,
     message: String,
 ) -> Diagnostic {
     let (line, column) = line_index.position(link.offset);
     let (end_line, end_column) = line_index.position(link.offset + link.target.len());
     Diagnostic {
         severity,
+        code: code.to_string(),
         message,
         line,
         column,
@@ -153,6 +163,14 @@ fn diagnostic(
         end_column,
         kind,
         target: target.to_string(),
+    }
+}
+
+fn resolve_error_code(error: &ResolveError) -> &'static str {
+    match error {
+        ResolveError::OutsideBase => CODE_SITE_OUTSIDE_BASE,
+        ResolveError::EscapesRoot => CODE_SITE_ESCAPES_ROOT,
+        ResolveError::Missing(_) => CODE_SITE_MISSING,
     }
 }
 

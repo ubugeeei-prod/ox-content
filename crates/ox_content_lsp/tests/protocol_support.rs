@@ -116,6 +116,47 @@ impl Server {
         self.notify("exit", Value::Null);
     }
 
+    #[allow(dead_code)]
+    pub fn did_change_incremental(
+        &mut self,
+        uri: &str,
+        version: i64,
+        start: (u32, u32),
+        end: (u32, u32),
+        text: &str,
+    ) {
+        self.notify(
+            "textDocument/didChange",
+            json!({
+                "textDocument": { "uri": uri, "version": version },
+                "contentChanges": [{
+                    "range": {
+                        "start": { "line": start.0, "character": start.1 },
+                        "end": { "line": end.0, "character": end.1 }
+                    },
+                    "text": text
+                }]
+            }),
+        );
+    }
+
+    #[allow(dead_code)]
+    pub fn await_diagnostics_version(&mut self, uri: &str, version: i64) -> Value {
+        loop {
+            let params = self.await_notification("textDocument/publishDiagnostics");
+            if params["uri"].as_str() == Some(uri) && params["version"].as_i64() == Some(version) {
+                return params;
+            }
+        }
+    }
+
+    /// Reads the next framed server message. Used to drain notifications
+    /// after a later document version has already won.
+    #[allow(dead_code)]
+    pub fn next_message(&mut self) -> Value {
+        self.read_message()
+    }
+
     /// Sends a notification with no response expected.
     pub fn notify(&mut self, method: &str, params: Value) {
         let mut message = json!({ "jsonrpc": "2.0", "method": method });

@@ -13,6 +13,15 @@ fn reports_mismatched_and_unquoted_component_props() {
         diagnostics.iter().map(|diagnostic| diagnostic.message.as_str()).collect();
 
     insta::assert_debug_snapshot!(messages);
+    assert_eq!(
+        diagnostics.iter().map(|diagnostic| diagnostic.code.as_str()).collect::<Vec<_>>(),
+        vec![
+            crate::CODE_UNQUOTED_PROP,
+            crate::CODE_MISMATCHED_TAG,
+            crate::CODE_UNCLOSED_TAG,
+            crate::CODE_UNCLOSED_TAG,
+        ]
+    );
 }
 
 #[test]

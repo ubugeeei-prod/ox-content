@@ -3,10 +3,11 @@ use std::path::PathBuf;
 use std::sync::Arc;
 
 use tokio::sync::RwLock;
-use tower_lsp::lsp_types::Url;
+use tower_lsp::lsp_types::{TextDocumentContentChangeEvent, Url};
 
 use crate::config::InitializationOptions;
 use crate::document::TextDocumentState;
+use crate::session::{DiagnosticCache, DiagnosticJob, PublishGate};
 
 #[derive(Clone)]
 pub struct LspState {
@@ -23,6 +24,8 @@ struct Inner {
     /// and pushes a `oxContent/previewDidChange` notification, replacing
     /// the polling-style refresh editors used to do client-side.
     preview_subscriptions: FxHashSet<Url>,
+    publish_gate: PublishGate,
+    diagnostic_cache: FxHashMap<Url, DiagnosticCache>,
 }
 
 impl LspState {
@@ -51,14 +54,60 @@ impl LspState {
         inner.init_options.clone()
     }
 
-    pub async fn upsert_document(&self, uri: Url, text: String) {
+    pub async fn upsert_document(&self, uri: Url, text: String, version: i32) {
         let mut inner = self.inner.write().await;
-        inner.documents.insert(uri, TextDocumentState::new(text));
+        inner.documents.insert(uri, TextDocumentState::with_version(text, version));
+    }
+
+    pub async fn apply_changes(
+        &self,
+        uri: Url,
+        version: i32,
+        changes: &[TextDocumentContentChangeEvent],
+    ) -> Option<TextDocumentState> {
+        let mut inner = self.inner.write().await;
+        if let Some(document) = inner.documents.get_mut(&uri) {
+            document.apply_changes(changes, version);
+            return Some(document.clone());
+        }
+        let text = changes.iter().rev().find(|change| change.range.is_none())?.text.clone();
+        let document = TextDocumentState::with_version(text, version);
+        inner.documents.insert(uri, document.clone());
+        drop(inner);
+        Some(document)
+    }
+
+    pub async fn begin_diagnostics(
+        &self,
+        uri: &Url,
+    ) -> Option<(TextDocumentState, DiagnosticJob, DiagnosticCache)> {
+        let mut inner = self.inner.write().await;
+        let document = inner.documents.get(uri)?.clone();
+        let job = inner.publish_gate.begin(uri.clone(), document.version());
+        let cache = inner.diagnostic_cache.get(uri).cloned().unwrap_or_default();
+        drop(inner);
+        Some((document, job, cache))
+    }
+
+    pub async fn finish_diagnostics(
+        &self,
+        uri: &Url,
+        job: &DiagnosticJob,
+        cache: DiagnosticCache,
+    ) -> bool {
+        let mut inner = self.inner.write().await;
+        if !inner.publish_gate.should_publish(uri, job) {
+            return false;
+        }
+        inner.diagnostic_cache.insert(uri.clone(), cache);
+        true
     }
 
     pub async fn remove_document(&self, uri: &Url) {
         let mut inner = self.inner.write().await;
         inner.documents.remove(uri);
+        inner.diagnostic_cache.remove(uri);
+        inner.publish_gate.clear(uri);
         // A closed document cannot push preview updates anymore. Drop
         // the subscription so the client doesn't leak state into the
         // next session for the same URI.
@@ -143,7 +192,7 @@ mod tests {
         let state = LspState::new();
         let u = uri("/tmp/c.md");
 
-        state.upsert_document(u.clone(), "# hi".into()).await;
+        state.upsert_document(u.clone(), "# hi".into(), 1).await;
         state.subscribe_preview(u.clone()).await;
         assert!(state.is_preview_subscribed(&u).await);
 

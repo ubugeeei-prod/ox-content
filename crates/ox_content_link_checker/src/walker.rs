@@ -6,7 +6,10 @@ use ox_content_ast::{Node, Span};
 
 use crate::line_index::LineIndex;
 use crate::target::{anchor_of, classify, percent_decode, split_anchor};
-use crate::{Diagnostic, LinkKind, Severity};
+use crate::{
+    CODE_CROSS_FILE_ANCHOR, CODE_MISSING_ANCHOR, CODE_MISSING_FILE, CODE_UNCLASSIFIED,
+    CODE_UNRESOLVED, Diagnostic, LinkKind, Severity,
+};
 
 pub struct Walker<'src, 'opts> {
     diagnostics: Vec<Diagnostic>,
@@ -97,6 +100,7 @@ impl<'src, 'opts> Walker<'src, 'opts> {
                         target.clone(),
                         format!("Anchor `#{anchor}` is not defined in this document."),
                         Severity::Error,
+                        CODE_MISSING_ANCHOR,
                     );
                 }
             }
@@ -110,6 +114,7 @@ impl<'src, 'opts> Walker<'src, 'opts> {
                     target.clone(),
                     format!("Could not classify link target `{target}`."),
                     Severity::Warning,
+                    CODE_UNCLASSIFIED,
                 );
             }
         }
@@ -124,6 +129,7 @@ impl<'src, 'opts> Walker<'src, 'opts> {
                 target.to_string(),
                 format!("Could not resolve `{file_part}` (no base directory available)."),
                 Severity::Error,
+                CODE_UNRESOLVED,
             );
             return;
         };
@@ -139,6 +145,7 @@ impl<'src, 'opts> Walker<'src, 'opts> {
                     resolved.display()
                 ),
                 Severity::Error,
+                CODE_MISSING_FILE,
             );
             return;
         }
@@ -157,6 +164,7 @@ impl<'src, 'opts> Walker<'src, 'opts> {
                         (file exists, anchor unchecked)."
                     ),
                     Severity::Warning,
+                    CODE_CROSS_FILE_ANCHOR,
                 );
             }
         }
@@ -195,11 +203,13 @@ impl<'src, 'opts> Walker<'src, 'opts> {
         target: String,
         message: String,
         severity: Severity,
+        code: &'static str,
     ) {
         let (line, column) = self.line_index.position(span.start as usize);
         let (end_line, end_column) = self.line_index.position(span.end as usize);
         self.diagnostics.push(Diagnostic {
             severity,
+            code: code.to_string(),
             message,
             line,
             column,

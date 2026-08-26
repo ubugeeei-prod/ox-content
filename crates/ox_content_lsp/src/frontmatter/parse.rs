@@ -1,4 +1,4 @@
-use tower_lsp::lsp_types::{Diagnostic, DiagnosticSeverity, Position, Range};
+use tower_lsp::lsp_types::{Diagnostic, DiagnosticSeverity, NumberOrString, Position, Range};
 
 use crate::document::TextDocumentState;
 use crate::frontmatter::utils::{strip_line_breaks, yaml_error_range};
@@ -61,6 +61,7 @@ fn unterminated_block(document: &TextDocumentState) -> FrontmatterBlock {
         diagnostics: vec![Diagnostic {
             range,
             severity: Some(DiagnosticSeverity::ERROR),
+            code: Some(NumberOrString::String("frontmatter-unterminated".to_string())),
             source: Some("ox-content".to_string()),
             message: "Unterminated frontmatter block".to_string(),
             ..Default::default()
@@ -81,6 +82,7 @@ fn parse_yaml(
             vec![Diagnostic {
                 range: yaml_error_range(document, content_start_offset, raw, &error),
                 severity: Some(DiagnosticSeverity::ERROR),
+                code: Some(NumberOrString::String("frontmatter-invalid-yaml".to_string())),
                 source: Some("ox-content".to_string()),
                 message: format!("Invalid YAML frontmatter: {error}"),
                 ..Default::default()
