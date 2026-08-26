@@ -61,7 +61,8 @@
     "./styles/github.css": "./dist/styles/github.css",
     "./styles/youtube.css": "./dist/styles/youtube.css",
     "./styles/tabs.css": "./dist/styles/tabs.css",
-    "./styles/mermaid.css": "./dist/styles/mermaid.css"
+    "./styles/mermaid.css": "./dist/styles/mermaid.css",
+    "./styles/not-by-ai.css": "./dist/styles/not-by-ai.css"
   },
   "publishConfig": {
     "access": "public",

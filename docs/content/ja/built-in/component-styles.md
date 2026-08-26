@@ -42,6 +42,7 @@ import なので、コンパクトな Tweet だけ載せてフルカード用シ
 | `styles/youtube.css`      | YouTube 埋め込み                                                                |
 | `styles/tabs.css`         | タブとパッケージマネージャタブ                                                  |
 | `styles/mermaid.css`      | Mermaid 図                                                                      |
+| `styles/not-by-ai.css`    | `<NotByAI />` 執筆開示バッジ                                                    |
 | `styles/all.css`          | 上の機能シートをこの順で全部                                                    |
 
 `var(--octc-*)` を使う機能シートは、先に `core.css` を読むか、ホスト側で同じ
@@ -96,6 +97,7 @@ crate の CSS をアプリにコピーしないでください。
 
 - [サイト生成](./site-generation.md)
 - [マジックリンク](./magic-links.md)
+- [NotByAI バッジ](./not-by-ai.md)
 - [埋め込み](./embeds.md)
 - [Twitter/X 埋め込み](/examples/twitter-embed.md)
 - [@ox-content/vite-plugin](../packages/vite-plugin-ox-content.md)

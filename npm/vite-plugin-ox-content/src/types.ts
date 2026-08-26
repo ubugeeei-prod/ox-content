@@ -1700,6 +1700,18 @@ export interface OxContentOptions {
   badges?: boolean | BadgeOptions;
 
   /**
+   * Opt-in `<NotByAI />` authorship disclosure badge.
+   *
+   * Passing `true` or an options object emits the official Not By AI light/dark
+   * artwork as static HTML. This is not a status badge — see `badges` for
+   * `{badge:tip}` labels. Disabled when omitted. Fenced, indented, and inline
+   * code plus HTML comments are skipped.
+   *
+   * @default false
+   */
+  notByAi?: boolean | NotByAiOptions;
+
+  /**
    * Opt-in `{kbd:...}` inline keyboard keys.
    *
    * Passing `true` or an options object enables `{kbd:Ctrl+K}` and
@@ -2057,6 +2069,7 @@ export interface ResolvedOptions {
   /**
    * Present after `resolveOptions`. Omitted in hand-built fixtures means off.
    */
+  notByAi?: ResolvedNotByAiOptions;
   keyboardKeys?: ResolvedKeyboardKeysOptions;
   /**
    * Present after `resolveOptions`. Omitted in hand-built fixtures means off.
@@ -2214,6 +2227,39 @@ export interface BadgeOptions {
  */
 export interface ResolvedBadgeOptions {
   enabled: boolean;
+}
+
+/**
+ * Options for the opt-in `<NotByAI />` authorship badge.
+ */
+export interface NotByAiOptions {
+  /**
+   * Enable the badge transform when an options object is supplied.
+   *
+   * @default true
+   */
+  enabled?: boolean;
+  /**
+   * Accessible label for the badge link.
+   *
+   * @default "Written by human, not by AI"
+   */
+  label?: string;
+  /**
+   * Destination URL. Unsafe values fall back to `https://notbyai.fyi`.
+   *
+   * @default "https://notbyai.fyi"
+   */
+  href?: string;
+}
+
+/**
+ * Resolved NotByAI authorship-badge options.
+ */
+export interface ResolvedNotByAiOptions {
+  enabled: boolean;
+  label: string;
+  href: string;
 }
 
 /**

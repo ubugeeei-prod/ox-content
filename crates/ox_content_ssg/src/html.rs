@@ -16,6 +16,7 @@ mod json_ld;
 mod locale_switcher;
 mod mpa_navigation;
 mod nav;
+mod not_by_ai;
 mod page;
 mod pagination;
 mod reader_chrome;

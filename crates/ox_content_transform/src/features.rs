@@ -24,6 +24,7 @@ mod includes;
 mod keyboard_keys;
 mod magic;
 mod math;
+mod not_by_ai;
 mod option_resolve;
 mod segments;
 mod steps;
@@ -64,6 +65,7 @@ pub struct TransformFeatureOptions {
     code_groups: Option<ResolvedCodeGroupOptions>,
     file_tree: Option<ResolvedFileTreeOptions>,
     badges: bool,
+    not_by_ai: Option<not_by_ai::ResolvedNotByAi>,
     keyboard_keys: Option<keyboard_keys::ResolvedKeyboardKeys>,
     magic_links: Option<ResolvedMagicLinks>,
     images: Option<ResolvedImageOptions>,
@@ -132,6 +134,7 @@ impl TransformFeatureOptions {
         let includes = includes::resolve(options.includes.as_ref(), source_path);
         let file_tree = file_tree::resolve(options.file_tree.as_ref());
         let badges = badges::resolve(options.badges.as_ref());
+        let not_by_ai = not_by_ai::resolve(options.not_by_ai.as_ref());
         let keyboard_keys = keyboard_keys::resolve(options.keyboard_keys.as_ref());
         let magic_links = magic::resolve(options.magic_links.as_ref());
         let images = images::resolve(options.images.as_ref(), attributes);
@@ -152,6 +155,7 @@ impl TransformFeatureOptions {
             code_groups,
             file_tree,
             badges,
+            not_by_ai,
             keyboard_keys,
             magic_links,
             images,
@@ -172,6 +176,7 @@ impl TransformFeatureOptions {
             || self.code_groups.is_some()
             || self.file_tree.is_some()
             || self.badges
+            || self.not_by_ai.is_some()
             || self.keyboard_keys.is_some()
             || self.magic_links.is_some()
             || self.images.is_some()
@@ -260,6 +265,7 @@ pub fn preprocess_markdown<'a>(
         }
     }
     keyboard_keys::apply(&mut current, options.keyboard_keys.as_ref());
+    not_by_ai::apply(&mut current, options.not_by_ai.as_ref());
     if let Some(magic_links) = &options.magic_links
         && current.contains("{link:")
         && let Some(replaced) = magic::transform(&current, magic_links)

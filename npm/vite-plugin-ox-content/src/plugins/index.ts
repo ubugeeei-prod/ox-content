@@ -109,7 +109,7 @@ export type {
 };
 
 const SELF_CLOSING_EMBED_TAG =
-  /<(GitHub|OgCard|Tweet|XPost|Bluesky|Spotify|AppleMusic|StackBlitz|WebContainer|YouTube)((?:[^>"']|"[^"]*"|'[^']*')*?)\s*\/>(?:\s*<\/\1\s*>)?/gi;
+  /<(GitHub|OgCard|Tweet|XPost|Bluesky|Spotify|AppleMusic|StackBlitz|WebContainer|YouTube|NotByAI)((?:[^>"']|"[^"]*"|'[^']*')*?)\s*\/>(?:\s*<\/\1\s*>)?/gi;
 
 /**
  * Custom embed tags are not HTML void elements, so a self-closing authoring

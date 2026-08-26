@@ -16,6 +16,7 @@ use super::json_ld::render_json_ld;
 use super::locale_switcher::render_locale_switcher;
 use super::mpa_navigation::{MPA_NAVIGATION_CSS, THEME_BOOTSTRAP_JS, view_transitions_enabled};
 use super::nav::generate_nav_html;
+use super::not_by_ai::push_not_by_ai_css;
 use super::pagination::resolve_pager;
 use super::reader_chrome::{READER_CHROME_CSS, READER_CHROME_JS};
 use super::section_index::SECTION_INDEX_CSS;
@@ -128,6 +129,7 @@ pub(super) fn generate_html_inner(
     if page_content_contains_any(&page_data.content, &["ox-file-tree"]) {
         css_sections.push(wrap_css_section("file-tree", FILE_TREE_CSS));
     }
+    push_not_by_ai_css(&mut css_sections, &page_data.content);
     push_content_plugin_css(&mut css_sections, &page_data.content);
     push_heading_permalink_css(&mut css_sections, &page_data.content);
     if has_footer {

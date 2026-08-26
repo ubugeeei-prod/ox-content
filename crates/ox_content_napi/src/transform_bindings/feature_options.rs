@@ -8,7 +8,9 @@ use ox_content_transform::{
 };
 
 mod image_options;
+mod not_by_ai_options;
 pub use image_options::JsImageOptions;
+pub use not_by_ai_options::JsNotByAiOptions;
 
 /// Wiki-link transform options.
 #[napi(object)]

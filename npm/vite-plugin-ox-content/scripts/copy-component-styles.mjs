@@ -33,6 +33,7 @@ export const STYLE_ENTRIES = /** @type {const} */ ([
   { name: "youtube.css", sources: ["plugins/youtube.css"] },
   { name: "tabs.css", sources: ["plugins/tabs.css"] },
   { name: "mermaid.css", sources: ["plugins/mermaid.css"] },
+  { name: "not-by-ai.css", sources: ["plugins/not-by-ai.css"] },
 ]);
 
 export const ALL_STYLESHEET = "all.css";

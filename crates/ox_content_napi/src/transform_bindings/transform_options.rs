@@ -6,7 +6,7 @@ use super::{
     JsAttrsOptions, JsBadgeOptions, JsCardOptions, JsCodeGroupOptions, JsCodeImportOptions,
     JsContainerOptions, JsEditThisPageOptions, JsEmojiShortcodeOptions, JsFileTreeOptions,
     JsImageOptions, JsIncludeOptions, JsKeyboardKeysOptions, JsMagicLinkOptions, JsMathOptions,
-    JsSanitizeOptions, JsStepsOptions, JsWikiLinkOptions,
+    JsNotByAiOptions, JsSanitizeOptions, JsStepsOptions, JsWikiLinkOptions,
 };
 
 /// Transform options for JavaScript.
@@ -198,6 +198,11 @@ pub struct JsTransformOptions {
     /// Default: disabled.
     pub badges: Option<JsBadgeOptions>,
 
+    /// Opt-in `<NotByAI />` authorship badge.
+    ///
+    /// Default: disabled.
+    pub not_by_ai: Option<JsNotByAiOptions>,
+
     /// Opt-in `{kbd:...}` inline keyboard keys.
     ///
     /// Default: disabled.
@@ -265,6 +270,7 @@ impl From<JsTransformOptions> for TransformOptions {
             steps: value.steps.map(Into::into),
             code_groups: value.code_groups.map(Into::into),
             badges: value.badges.map(Into::into),
+            not_by_ai: value.not_by_ai.map(Into::into),
             keyboard_keys: value.keyboard_keys.map(Into::into),
             magic_links: value.magic_links.map(Into::into),
             images: value.images.map(Into::into),

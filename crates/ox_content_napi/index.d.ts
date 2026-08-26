@@ -1295,6 +1295,28 @@ export interface JsMediaEmbedsOptions {
   webContainer?: boolean
 }
 
+/** Opt-in `<NotByAI />` authorship badge. */
+export interface JsNotByAiOptions {
+  /**
+   * Enable `<NotByAI />` expansion.
+   *
+   * Default: `false`.
+   */
+  enabled?: boolean
+  /**
+   * Accessible label for the badge link.
+   *
+   * Default: `"Written by human, not by AI"`.
+   */
+  label?: string
+  /**
+   * Destination URL. Unsafe values fall back to `https://notbyai.fyi`.
+   *
+   * Default: `"https://notbyai.fyi"`.
+   */
+  href?: string
+}
+
 /** OG image configuration for JavaScript. */
 export interface JsOgImageConfig {
   /** Image width in pixels. */
@@ -2274,6 +2296,12 @@ export interface JsTransformOptions {
    * Default: disabled.
    */
   badges?: JsBadgeOptions
+  /**
+   * Opt-in `<NotByAI />` authorship badge.
+   *
+   * Default: disabled.
+   */
+  notByAi?: JsNotByAiOptions
   /**
    * Opt-in `{kbd:...}` inline keyboard keys.
    *

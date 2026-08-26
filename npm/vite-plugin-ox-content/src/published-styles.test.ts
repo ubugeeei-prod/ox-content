@@ -19,6 +19,7 @@ const DOCUMENTED_STYLE_IMPORTS = [
   "youtube.css",
   "tabs.css",
   "mermaid.css",
+  "not-by-ai.css",
   "all.css",
 ] as const;
 
@@ -35,6 +36,7 @@ const CRATE_SOURCES: Record<
   "youtube.css": ["plugins/youtube.css"],
   "tabs.css": ["plugins/tabs.css"],
   "mermaid.css": ["plugins/mermaid.css"],
+  "not-by-ai.css": ["plugins/not-by-ai.css"],
 };
 
 function crateCss(relativePath: string): string {

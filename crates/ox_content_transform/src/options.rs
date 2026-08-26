@@ -42,6 +42,8 @@ pub struct TransformOptions {
     pub code_groups: Option<CodeGroupOptions>,
     /// Opt-in `{badge:variant}` inline badges. Disabled when omitted.
     pub badges: Option<BadgeOptions>,
+    /// Opt-in `<NotByAI />` authorship badge. Disabled when omitted.
+    pub not_by_ai: Option<NotByAiOptions>,
     /// Opt-in `{kbd:...}` inline keyboard keys. Disabled when omitted.
     pub keyboard_keys: Option<KeyboardKeysOptions>,
     /// Opt-in `{link:...}` rich magic links. Disabled when omitted.
@@ -57,6 +59,13 @@ pub struct TransformOptions {
 #[derive(Clone, Default)]
 pub struct BadgeOptions {
     pub enabled: Option<bool>,
+}
+
+#[derive(Clone, Default)]
+pub struct NotByAiOptions {
+    pub enabled: Option<bool>,
+    pub label: Option<String>,
+    pub href: Option<String>,
 }
 
 #[derive(Clone, Default)]

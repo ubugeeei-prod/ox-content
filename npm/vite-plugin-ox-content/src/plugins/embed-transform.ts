@@ -24,6 +24,7 @@ export const RESERVED_BUILTIN_COMPONENTS = [
   "StackBlitz",
   "WebContainer",
   "YouTube",
+  "NotByAI",
 ] as const;
 
 const RESERVED_BUILTIN_COMPONENT_SET = new Set<string>(RESERVED_BUILTIN_COMPONENTS);
