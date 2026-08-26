@@ -12,13 +12,13 @@ messages from the checker binaries.
 
 ## Shared diagnostic cases
 
-| Source             | CLI                              | Codes                                                                                         |
-| ------------------ | -------------------------------- | --------------------------------------------------------------------------------------------- |
-| `ox-content-mdc`   | `ox-content-mdc-check`           | `mdc-unquoted-prop`, `mdc-mismatched-tag`, `mdc-orphan-close`, `mdc-unclosed-tag`             |
-| `ox-content-link`  | `ox-content-link-check`          | `link-missing-file`, `link-missing-anchor`, `link-cross-file-anchor`, `link-unresolved`       |
-| `ox-content`       | none (frontmatter is LSP-only)   | `frontmatter-unknown`, `frontmatter-type`, `frontmatter-enum`, `frontmatter-required`         |
-| `ox-content-spacing` | none (spacing is LSP-only)     | `space-between-half-and-full-width`, `require-space-between-half-and-full-width`              |
-| `textlint`         | configured `textlint` command    | rule ids from the sidecar                                                                     |
+| Source               | CLI                            | Codes                                                                                   |
+| -------------------- | ------------------------------ | --------------------------------------------------------------------------------------- |
+| `ox-content-mdc`     | `ox-content-mdc-check`         | `mdc-unquoted-prop`, `mdc-mismatched-tag`, `mdc-orphan-close`, `mdc-unclosed-tag`       |
+| `ox-content-link`    | `ox-content-link-check`        | `link-missing-file`, `link-missing-anchor`, `link-cross-file-anchor`, `link-unresolved` |
+| `ox-content`         | none (frontmatter is LSP-only) | `frontmatter-unknown`, `frontmatter-type`, `frontmatter-enum`, `frontmatter-required`   |
+| `ox-content-spacing` | none (spacing is LSP-only)     | `space-between-half-and-full-width`, `require-space-between-half-and-full-width`        |
+| `textlint`           | configured `textlint` command  | rule ids from the sidecar                                                               |
 
 MDC CLI checks skip YAML frontmatter so tag diagnostics line up with the
 language server. Link checks run on the full document in both surfaces.

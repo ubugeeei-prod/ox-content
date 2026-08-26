@@ -12,13 +12,13 @@ description: ox-content-lsp と CLI チェッカーが共有する診断、対�
 
 ## 共有する診断ケース
 
-| Source               | CLI                              | コード                                                                                          |
-| -------------------- | -------------------------------- | ----------------------------------------------------------------------------------------------- |
-| `ox-content-mdc`     | `ox-content-mdc-check`           | `mdc-unquoted-prop`, `mdc-mismatched-tag`, `mdc-orphan-close`, `mdc-unclosed-tag`               |
-| `ox-content-link`    | `ox-content-link-check`          | `link-missing-file`, `link-missing-anchor`, `link-cross-file-anchor`, `link-unresolved`         |
-| `ox-content`         | なし（frontmatter は LSP のみ）  | `frontmatter-unknown`, `frontmatter-type`, `frontmatter-enum`, `frontmatter-required`           |
-| `ox-content-spacing` | なし（spacing は LSP のみ）      | `space-between-half-and-full-width`, `require-space-between-half-and-full-width`                |
-| `textlint`           | 設定した `textlint` コマンド     | sidecar の rule id                                                                              |
+| Source               | CLI                             | コード                                                                                  |
+| -------------------- | ------------------------------- | --------------------------------------------------------------------------------------- |
+| `ox-content-mdc`     | `ox-content-mdc-check`          | `mdc-unquoted-prop`, `mdc-mismatched-tag`, `mdc-orphan-close`, `mdc-unclosed-tag`       |
+| `ox-content-link`    | `ox-content-link-check`         | `link-missing-file`, `link-missing-anchor`, `link-cross-file-anchor`, `link-unresolved` |
+| `ox-content`         | なし（frontmatter は LSP のみ） | `frontmatter-unknown`, `frontmatter-type`, `frontmatter-enum`, `frontmatter-required`   |
+| `ox-content-spacing` | なし（spacing は LSP のみ）     | `space-between-half-and-full-width`, `require-space-between-half-and-full-width`        |
+| `textlint`           | 設定した `textlint` コマンド    | sidecar の rule id                                                                      |
 
 MDC CLI は YAML frontmatter をスキップし、言語サーバーと同じ行にタグ診断を出します。
 リンク検査はどちらの面でも文書全体を対象にします。
