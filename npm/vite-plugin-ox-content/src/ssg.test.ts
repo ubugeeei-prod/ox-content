@@ -19,6 +19,7 @@ import {
   shouldGenerateOgImages,
 } from "./ssg";
 import { applyContributorOptions, filterGitContributors, gravatarAvatar } from "./contributors";
+import { resolveFeedsOptions } from "./feeds";
 import type { ResolvedOptions } from "./types";
 import { createDocsResolvedOptions } from "../test/fixtures/docs-fixture";
 
@@ -583,6 +584,82 @@ describe("SSG routePrefix", () => {
       "utf8",
     );
     expect(html).toContain("/blog/first-post/");
+    expect(built.errors).toEqual([]);
+  });
+
+  it("applies routePrefix to feed item URLs without moving root feed files", async () => {
+    const root = await makeSite({
+      "my-post/index.md": "---\ntitle: My Post\ndate: 2026-08-26\n---\n# My Post\n",
+      "explicit/index.md":
+        "---\ntitle: Explicit\ndate: 2026-08-25\npermalink: /news/explicit\n---\n# Explicit\n",
+    });
+    const built = await buildSsg(
+      routePrefixOptions({
+        ssg: {
+          ...routePrefixOptions().ssg,
+          routePrefix: "/blog/",
+          markdownSource: { enabled: true, alternate: true, copy: true },
+        },
+        collections: {
+          enabled: true,
+          collections: {
+            blog: { name: "blog", source: ["*/index.md"], include: [] },
+          },
+        },
+        feeds: resolveFeedsOptions({
+          formats: ["rss", "atom", "json"],
+          collection: "blog",
+          path: "/",
+        }),
+        permalinks: { enabled: true },
+      }),
+      root,
+    );
+
+    expect(built.files).toEqual(
+      expect.arrayContaining([
+        path.join(root, "dist", "blog", "my-post", "index.html"),
+        path.join(root, "dist", "blog", "my-post.md"),
+        path.join(root, "dist", "news", "explicit", "index.html"),
+        path.join(root, "dist", "news", "explicit.md"),
+        path.join(root, "dist", "feed.xml"),
+        path.join(root, "dist", "atom.xml"),
+        path.join(root, "dist", "feed.json"),
+      ]),
+    );
+    await expect(fs.access(path.join(root, "dist", "blog", "feed.xml"))).rejects.toThrow();
+
+    const rss = await fs.readFile(path.join(root, "dist", "feed.xml"), "utf8");
+    expect(rss).toContain("<link>https://example.com/blog/my-post/</link>");
+    expect(rss).toContain("<guid>https://example.com/blog/my-post/</guid>");
+    expect(rss).toContain("<link>https://example.com/news/explicit/</link>");
+    expect(rss).not.toContain("https://example.com/my-post/");
+    expect(rss).not.toContain("https://example.com/blog/news/explicit/");
+
+    const atom = await fs.readFile(path.join(root, "dist", "atom.xml"), "utf8");
+    expect(atom).toContain('<link href="https://example.com/blog/my-post/"/>');
+    expect(atom).toContain("<id>https://example.com/blog/my-post/</id>");
+    expect(atom).toContain('<link href="https://example.com/news/explicit/"/>');
+
+    const jsonFeed = JSON.parse(
+      await fs.readFile(path.join(root, "dist", "feed.json"), "utf8"),
+    ) as {
+      feed_url: string;
+      items: Array<{ id: string; url: string }>;
+    };
+    expect(jsonFeed.feed_url).toBe("https://example.com/feed.json");
+    expect(jsonFeed.items).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          id: "https://example.com/blog/my-post/",
+          url: "https://example.com/blog/my-post/",
+        }),
+        expect.objectContaining({
+          id: "https://example.com/news/explicit/",
+          url: "https://example.com/news/explicit/",
+        }),
+      ]),
+    );
     expect(built.errors).toEqual([]);
   });
 

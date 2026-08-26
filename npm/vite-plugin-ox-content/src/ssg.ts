@@ -17,6 +17,7 @@ import { transformIslands, hasIslands } from "./island";
 import { importNapiModule, importNapiModuleSync } from "./napi";
 import { DEFAULT_MARKDOWN_EXTENSIONS } from "./markdown";
 import type {
+  CollectionEntry,
   ResolvedOptions,
   ResolvedA11y,
   ResolvedReaderChrome,
@@ -2074,9 +2075,7 @@ async function writeGeneratedPages(
     options: context.options.feeds,
     publishState: context.options.publishState,
     collectionNames: Object.keys(context.options.collections?.collections ?? {}),
-    collections: context.options.feeds?.enabled
-      ? (await buildCollectionManifest(context.root, context.options)).collections
-      : undefined,
+    collections: await buildFeedCollections(context, outputPages),
   });
   generatedFiles.push(...feeds.files);
   if (feeds.warning) {
@@ -2106,6 +2105,44 @@ function sitePathFromUrlPath(urlPath: string): string {
     return "/";
   }
   return urlPath.startsWith("/") ? urlPath : `/${urlPath}`;
+}
+
+async function buildFeedCollections(
+  context: BuildSsgContext,
+  outputPages: readonly PageProcessResult[],
+): Promise<Record<string, CollectionEntry[]> | undefined> {
+  if (!context.options.feeds?.enabled) {
+    return undefined;
+  }
+  const manifest = await buildCollectionManifest(context.root, context.options);
+  return applyFeedPageRoutes(manifest.collections, context, outputPages);
+}
+
+function applyFeedPageRoutes(
+  collections: Record<string, CollectionEntry[]>,
+  context: BuildSsgContext,
+  outputPages: readonly PageProcessResult[],
+): Record<string, CollectionEntry[]> {
+  const routeBySource = new Map<string, string>();
+  for (const page of outputPages) {
+    const route = sitePathFromUrlPath(page.routePaths.urlPath);
+    routeBySource.set(page.inputPath, route);
+    routeBySource.set(
+      path.relative(context.srcDir, page.inputPath).replaceAll(path.sep, "/"),
+      route,
+    );
+  }
+
+  const routed: Record<string, CollectionEntry[]> = {};
+  for (const [name, entries] of Object.entries(collections)) {
+    routed[name] = entries.map((entry) => {
+      const route =
+        routeBySource.get(entry.source) ??
+        routeBySource.get(path.resolve(context.srcDir, entry.source));
+      return route ? { ...entry, path: route } : entry;
+    });
+  }
+  return routed;
 }
 
 function sitemapPages(
