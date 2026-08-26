@@ -25,12 +25,24 @@ const status = run("node", [
   requiredEnv("HEAD_SHA"),
 ]);
 
+const budgetStatus = run("node", [
+  "benchmarks/bundle-size/check-budgets.mjs",
+  "--budgets",
+  "benchmarks/perf-budgets.json",
+  "--bundle",
+  join(runnerTemp, "bundle-head.json"),
+  "--runtime",
+  join(runnerTemp, "benchmark-head.json"),
+  "--append",
+  commentPath,
+]);
+
 if (process.env.GITHUB_STEP_SUMMARY) {
   appendFileSync(process.env.GITHUB_STEP_SUMMARY, `${readFileSync(commentPath, "utf8")}\n`);
 }
 
-if (status !== 0) {
-  process.exit(status);
+if (status !== 0 || budgetStatus !== 0) {
+  process.exit(status !== 0 ? status : budgetStatus);
 }
 
 /**
