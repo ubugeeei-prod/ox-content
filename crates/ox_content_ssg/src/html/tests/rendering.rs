@@ -253,6 +253,31 @@ fn test_html_locale_attrs_use_current_locale_and_direction() {
     insta::assert_snapshot!(super::snapshot_text(&html));
 }
 #[test]
+fn definition_list_css_is_included_only_when_markup_is_present() {
+    let config = config("Test Site", "/", None);
+    let with = generate_html(
+        &page(
+            "Glossary",
+            None,
+            r#"<dl class="ox-definition-list"><dt>HTTP</dt><dd>Protocol</dd></dl>"#,
+            vec![],
+            None,
+            "glossary",
+        ),
+        &[],
+        &config,
+    );
+    assert!(with.contains("ox-content:css:plugin-definition-list:start"), "{with}");
+    assert!(with.contains(".ox-definition-list"), "{with}");
+    let without = generate_html(
+        &page("Plain", None, "<p>no glossary</p>", vec![], None, "plain"),
+        &[],
+        &config,
+    );
+    assert!(!without.contains("plugin-definition-list"), "{without}");
+}
+
+#[test]
 fn kbd_css_is_included_only_when_ox_kbd_is_present() {
     let config = config("Test Site", "/", None);
     let with = generate_html(
@@ -272,6 +297,32 @@ fn kbd_css_is_included_only_when_ox_kbd_is_present() {
     let without =
         generate_html(&page("Plain", None, "<p>no keys</p>", vec![], None, "plain"), &[], &config);
     assert!(!without.contains("plugin-kbd"), "{without}");
+}
+
+#[test]
+fn tabs_js_is_included_only_when_tab_groups_sync() {
+    let config = config("Test Site", "/", None);
+    let static_tabs = generate_html(
+        &page("Tabs", None, r#"<div class="ox-tabs"></div>"#, vec![], None, "tabs"),
+        &[],
+        &config,
+    );
+    assert!(static_tabs.contains("ox-content:css:plugin-tabs:start"), "{static_tabs}");
+    assert!(!static_tabs.contains("ox-content:js:tabs:"), "{static_tabs}");
+
+    let synced = generate_html(
+        &page(
+            "Tabs",
+            None,
+            r#"<div class="ox-tabs" data-ox-tab-group="pkg"></div>"#,
+            vec![],
+            None,
+            "tabs-sync",
+        ),
+        &[],
+        &config,
+    );
+    assert!(synced.contains("ox-content:js:tabs:start"), "{synced}");
 }
 
 #[test]

@@ -115,7 +115,7 @@ function wrapMatchingFences(
 }
 
 function wrapWidget(payload: string, inner: string): string {
-  return `<ox-code-play data-ox-code-play="${escapeAttribute(payload)}">${inner}</ox-code-play>`;
+  return `<ox-code-play data-ox-code-play="${escapeAttribute(payload)}" inert>${inner}</ox-code-play>`;
 }
 
 function readJsonString(source: string, start: number): { value: string; end: number } | undefined {

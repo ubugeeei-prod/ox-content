@@ -31,7 +31,7 @@ fn copy_as_markdown_points_at_the_companion_when_on() {
     );
     assert!(
         html.contains(
-            r#"<button type="button" class="ox-copy-markdown" data-ox-copy-markdown aria-label="Copy as Markdown">Copy as Markdown</button>"#
+            r#"<button type="button" class="ox-copy-markdown" data-ox-copy-markdown disabled aria-label="Copy as Markdown">Copy as Markdown</button>"#
         ),
         "{html}"
     );

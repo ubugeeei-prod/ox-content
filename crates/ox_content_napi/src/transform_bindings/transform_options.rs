@@ -4,9 +4,10 @@ use ox_content_transform::{MathOptions, TransformOptions};
 
 use super::{
     JsAttrsOptions, JsBadgeOptions, JsCardOptions, JsCodeGroupOptions, JsCodeImportOptions,
-    JsContainerOptions, JsDataTableOptions, JsEditThisPageOptions, JsEmojiShortcodeOptions,
-    JsFileTreeOptions, JsImageOptions, JsIncludeOptions, JsKeyboardKeysOptions, JsMagicLinkOptions,
-    JsMathOptions, JsNotByAiOptions, JsSanitizeOptions, JsStepsOptions, JsWikiLinkOptions,
+    JsContainerOptions, JsDataTableOptions, JsDefinitionListOptions, JsEditThisPageOptions,
+    JsEmojiShortcodeOptions, JsFileTreeOptions, JsImageOptions, JsIncludeOptions,
+    JsKeyboardKeysOptions, JsMagicLinkOptions, JsMathOptions, JsNotByAiOptions, JsSanitizeOptions,
+    JsStepsOptions, JsWikiLinkOptions,
 };
 
 /// Transform options for JavaScript.
@@ -208,6 +209,11 @@ pub struct JsTransformOptions {
     /// Default: disabled.
     pub keyboard_keys: Option<JsKeyboardKeysOptions>,
 
+    /// Opt-in PHP Markdown Extra / mdBook-style definition lists.
+    ///
+    /// Default: disabled.
+    pub definition_lists: Option<JsDefinitionListOptions>,
+
     /// Opt-in `{link:...}` rich magic links.
     ///
     /// Default: disabled.
@@ -277,6 +283,7 @@ impl From<JsTransformOptions> for TransformOptions {
             badges: value.badges.map(Into::into),
             not_by_ai: value.not_by_ai.map(Into::into),
             keyboard_keys: value.keyboard_keys.map(Into::into),
+            definition_lists: value.definition_lists.map(Into::into),
             magic_links: value.magic_links.map(Into::into),
             images: value.images.map(Into::into),
             cards: value.cards.map(Into::into),

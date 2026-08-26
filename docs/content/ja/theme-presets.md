@@ -502,3 +502,20 @@ export default defineTheme({
   css: `.header { border-bottom: 2px solid var(--octc-color-primary); }`,
 });
 ```
+
+## デフォルトテーマの品質
+
+組み込みスタイルシート（`ssg.css`）が、すべてのスキンと配色が乗る品質の下限です。値をハードコードする代わりに、次のトークンを上書きしてください。
+
+| トークン                                                            | 役割                                                |
+| ------------------------------------------------------------------- | --------------------------------------------------- |
+| `--octc-focus-ring` / `--octc-focus-offset`                         | 共有の `:focus-visible` リング                      |
+| `--octc-motion-base` / `--octc-motion-ease`                         | 既定のモーション。`prefers-reduced-motion` では無効 |
+| `--octc-code-pad-*` / `--octc-table-cell-pad-*`                     | コード枠と表セルの余白                              |
+| `--octc-touch-target`                                               | モバイルナビのヒット領域                            |
+| `--octc-color-on-primary`                                           | ブランド塗りつぶし上の文字（ヒーロー、告知バー）    |
+| `--octc-color-tip` / `--octc-color-warning` / `--octc-color-danger` | ステータス用クローム                                |
+
+`html` のスムーススクロールは `prefers-reduced-motion: no-preference` のときだけ有効です。コード行のぼかしとナビのシェブロン遷移は、モーション低減時に切れます。PR ベンチマークはデフォルトテーマの CSS/JS サイズを出し続けます。クロームを足すより、これらのトークンを調整してください。
+
+**ここでの対象外:** セルフホストフォント、Iconify CSS、tweet / full-card の見た目、印刷用スタイルシート、スキンごとのギャラリースクショ更新。回帰したら個別の follow-up として切ってください。

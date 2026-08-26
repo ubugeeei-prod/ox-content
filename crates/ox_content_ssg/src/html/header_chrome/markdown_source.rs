@@ -16,7 +16,7 @@ fn render_markdown_source_chrome(href: &str) -> String {
     let escaped = escape_html(href);
     format!(
         "<p class=\"ox-markdown-source\">\
-<button type=\"button\" class=\"ox-copy-markdown\" data-ox-copy-markdown aria-label=\"Copy as Markdown\">Copy as Markdown</button>\
+<button type=\"button\" class=\"ox-copy-markdown\" data-ox-copy-markdown disabled aria-label=\"Copy as Markdown\">Copy as Markdown</button>\
 <a class=\"ox-view-markdown\" href=\"{escaped}\">View Markdown</a>\
 <span class=\"ox-copy-markdown-status\" data-ox-copy-markdown-status role=\"status\" aria-live=\"polite\"></span>\
 </p>\n"

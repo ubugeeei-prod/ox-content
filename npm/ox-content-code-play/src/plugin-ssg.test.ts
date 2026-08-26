@@ -35,8 +35,36 @@ describe("codePlay SSG HTML enhance", () => {
     const html = readFileSync(path.join(outDir, "index.html"), "utf8");
     expect(html).toContain("data-ox-code-play");
     expect(html).toContain("<ox-code-play");
+    expect(html).toContain(" inert>");
     expect(html).toContain("ox-code-play.js");
     expect(html).toContain('type="module"');
+  });
+
+  it("does not inject ox-code-play.js on a page without play widgets", async () => {
+    const root = mkdtempSync(path.join(tmpdir(), "ox-code-play-ssg-plain-"));
+    const srcDir = path.join(root, "content");
+    const outDir = path.join(root, "dist");
+    mkdirSync(srcDir, { recursive: true });
+    mkdirSync(outDir, { recursive: true });
+    writeFileSync(path.join(srcDir, "index.md"), "# Plain\n\nHello.\n");
+    writeFileSync(path.join(outDir, "index.html"), `<p>Hello.</p>\n`);
+
+    const plugin = codePlay({
+      languages: { javascript: true },
+      srcDir: "content",
+      outDir: "dist",
+    });
+    hookFn(plugin.configResolved)({
+      command: "build",
+      root,
+      base: "/",
+      build: { outDir: "dist" },
+    } as never);
+    await hookFn(plugin.closeBundle)();
+
+    const html = readFileSync(path.join(outDir, "index.html"), "utf8");
+    expect(html).not.toContain("ox-code-play.js");
+    expect(html).not.toContain("data-ox-code-play");
   });
 
   it("omits TypeScript typecheck from written SSG payloads without an endpoint", async () => {

@@ -147,5 +147,9 @@ Pull requests use the same Blacksmith runner class for base/head runtime,
 fixture build-time, bundle, and rendered HTML output-size comparisons. The
 comment includes the regression gate, a head-commit competitive snapshot, and
 the captured runner/runtime metadata so result drift can be traced back to the
-environment. Build time is reported as an informational signal first; runtime,
-bundle gzip, and rendered HTML gzip are the gated values.
+environment. Relative runtime, bundle gzip, and rendered HTML gzip still gate
+the check. Absolute ceilings for those same surfaces, plus fixture build time
+and initial requests, live in [`perf-budgets.json`](./perf-budgets.json) and
+are enforced by `node benchmarks/bundle-size/check-budgets.mjs` on the head
+measurements. The `benchmark-regression-accepted` PR label overrides both
+gates.

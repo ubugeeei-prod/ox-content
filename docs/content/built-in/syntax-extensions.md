@@ -17,6 +17,7 @@ everywhere until a site explicitly enables an extension.
 | `magicLinks`      | `boolean` / `MagicLinkOptions`      | `false` |
 | `notByAi`         | `boolean` / `NotByAiOptions`        | `false` |
 | `keyboardKeys`    | `boolean` / `KeyboardKeysOptions`   | `false` |
+| `definitionLists` | `boolean` / `DefinitionListOptions` | `false` |
 
 ## Emoji Shortcodes
 
@@ -203,6 +204,11 @@ status badge. Off by default. See [NotByAI Badge](./not-by-ai.md).
 Opt-in `{kbd:Ctrl+K}` and `{kbd:Cmd Shift P}` semantic shortcuts. Off by
 default. See [Keyboard Keys](./keyboard-keys.md).
 
+## Definition Lists
+
+Opt-in `Term` / `: definition` glossary lists. Off by default. See
+[Definition Lists](./definition-lists.md).
+
 ## Related
 
 - [Markdown Baseline](./markdown.md) — the default syntax these extensions
@@ -210,3 +216,5 @@ default. See [Keyboard Keys](./keyboard-keys.md).
 - [Code Blocks](./code-blocks.md) — annotation and import syntax for fences.
 - [Magic Links](./magic-links.md) — configurable GitHub, alias, and URL links.
 - [Keyboard Keys](./keyboard-keys.md) — `{kbd:Ctrl+K}` shortcut markup.
+- [Definition Lists](./definition-lists.md) — opt-in `Term` / `: definition`
+  glossaries.

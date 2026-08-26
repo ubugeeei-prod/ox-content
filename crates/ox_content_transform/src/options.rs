@@ -46,6 +46,8 @@ pub struct TransformOptions {
     pub not_by_ai: Option<NotByAiOptions>,
     /// Opt-in `{kbd:...}` inline keyboard keys. Disabled when omitted.
     pub keyboard_keys: Option<KeyboardKeysOptions>,
+    /// Opt-in PHP Markdown Extra / mdBook-style definition lists. Disabled when omitted.
+    pub definition_lists: Option<DefinitionListOptions>,
     /// Opt-in `{link:...}` rich magic links. Disabled when omitted.
     pub magic_links: Option<MagicLinkOptions>,
     /// Opt-in figures, captions, and lazy images. Disabled when omitted.
@@ -75,6 +77,11 @@ pub struct KeyboardKeysOptions {
     pub enabled: Option<bool>,
     pub aliases: Option<FxHashMap<String, String>>,
     pub style: Option<String>,
+}
+
+#[derive(Clone, Default)]
+pub struct DefinitionListOptions {
+    pub enabled: Option<bool>,
 }
 
 #[derive(Clone, Default)]

@@ -1,6 +1,15 @@
 use super::*;
 
 #[test]
+fn keeps_definition_list_markup() {
+    let html = r#"<dl class="ox-definition-list"><dt>HTTP</dt><dd>Protocol</dd></dl>"#;
+    let sanitized = sanitize_html(html, Some(&SanitizeOptions::default()));
+    assert!(sanitized.contains("<dl class=\"ox-definition-list\">"), "{sanitized}");
+    assert!(sanitized.contains("<dt>HTTP</dt>"), "{sanitized}");
+    assert!(sanitized.contains("<dd>Protocol</dd>"), "{sanitized}");
+}
+
+#[test]
 fn removes_scripts_and_event_handlers() {
     let html = r#"<p onclick="x()">Hi<script>alert(1)</script><a href="javascript:x">x</a></p>"#;
     let sanitized = sanitize_html(html, Some(&SanitizeOptions::default()));

@@ -13,6 +13,16 @@ pub(super) fn wrap_css_section(name: &str, css: &str) -> String {
     format!("/* ox-content:css:{name}:start */\n{css}\n/* ox-content:css:{name}:end */\n")
 }
 
+pub(super) fn wrap_js_section(name: &str, js: &str) -> String {
+    if js.trim().is_empty() {
+        return String::new();
+    }
+
+    // Same idea as CSS sections: JS comments survive template rendering and
+    // let the asset pass emit one file per feature instead of one blob.
+    format!("// ox-content:js:{name}:start\n{js}\n// ox-content:js:{name}:end\n")
+}
+
 pub(super) fn page_content_contains_any(content: &str, needles: &[&str]) -> bool {
     // Page asset detection checks for a small set of HTML markers in the final
     // content. `memmem` keeps each probe on optimized byte search instead of

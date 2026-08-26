@@ -143,6 +143,7 @@ export function createDocsResolvedOptions(
     badges: { enabled: false },
     notByAi: { enabled: false, label: "Written by human, not by AI", href: "https://notbyai.fyi" },
     keyboardKeys: { enabled: false, aliases: {}, style: "words" },
+    definitionLists: { enabled: false },
     containers: { enabled: false, types: {} },
     images: { enabled: false, lazy: true },
     codeImports: { enabled: false },

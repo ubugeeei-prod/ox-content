@@ -11,12 +11,26 @@ description: ベンチマーク結果、バンドルサイズ、出荷物に効�
 
 ## 何を測るか
 
-Ox Content には性能の面が 2 つあります。
+Ox Content には性能の面が 4 つあり、どれも pull request で報告します。
 
 - Markdown のパースと描画の実行時スループット。
-- 生成サイトの静的出力の重さ。gzip サイズと、最初のリクエスト数を含みます。
+- フィクスチャの本番ビルド時間。
+- 生成サイトの静的出力の重さ。gzip サイズと、描画 HTML の gzip を含みます。
+- `index.html` と、ローカルのクリティカルパスアセットの初期リクエスト数。
 
-実行時は CLI、開発サーバ、エディタ連携、バッチビルドで効きます。出力の重さはドキュメントサイトで効きます。生成 HTML、CSS、JS が、遷移のたびに利用者が取るものだからです。
+実行時は CLI、開発サーバ、エディタ連携、バッチビルドで効きます。出力の重さはドキュメントサイトで効きます。生成 HTML、CSS、JS が、遷移のたびに利用者が取るものだからです。絶対上限は
+[`benchmarks/perf-budgets.json`](https://github.com/ubugeeei-prod/ox-content/blob/main/benchmarks/perf-budgets.json)
+にあります。base / head の相対差は、これまでどおり PR Benchmark コメントです。
+
+### 対象外
+
+予算ファイルは、次を意図してゲートしません。
+
+- 開発者のノート PC でのホスト絶対 ops/sec。公開している相対順位を使い、下限は Blacksmith ランナー級向けです。
+- 失敗で落とす天井としての競合アプリサイズ（VitePress、Astro）。
+- ドキュメントサイト全体の出力（`docs/dist`）、OG 画像バイナリ、取得したフォント。
+- `vp run build:npm` の壁時計時間。このハーネスが測るビルド時間はフィクスチャの `buildMs` です。
+- 検索、テーマ、埋め込み、Code Play、MDX island の単独ペイロード。既定フィクスチャはそれらをオンにしないので、既定シェルの数字の外に置きます。
 
 ## 実行時スナップショット
 
@@ -164,15 +178,16 @@ Ox Content はこれ向けのオプトイン逸脱を載せます。`cjkEmphasis
 - 出力ディレクトリのファイル数。
 - `index.html` と、HTML または CSS から参照されるローカルアセットの、推定初期リクエスト数。
 
-最新のローカルバンドルサイズ掃引は 2026-05-28、Node `v24.16.0`、Apple M5 Pro です。表はローカル掃引で成功した本番ビルドです。
+最新の Blacksmith フィクスチャ掃引は 2026-08-26（`blacksmith-32vcpu-ubuntu-2404`、Node `v26.7.0`）です。PR Benchmark コメント（#1001、#1005 など）から取りました。
 
-| App                 |    Total |  Gzipped | Ratio   | Requests | Files |
-| ------------------- | -------: | -------: | ------- | -------: | ----: |
-| `ox-content (bare)` |  20.6 KB |   5.8 KB | 1.00x   |        1 |     5 |
-| `ox-content`        | 111.1 KB |  25.6 KB | 4.41x   |        4 |     9 |
-| `VitePress (bare)`  | 155.0 KB |  46.9 KB | 8.05x   |        6 |    14 |
-| `ox-content + Vue`  | 169.6 KB |  47.9 KB | 8.23x   |        4 |     9 |
-| `VitePress`         | 972.4 KB | 717.2 KB | 123.18x |       21 |    29 |
+| App                   |  Gzipped | HTML gzip | Requests | Files |
+| --------------------- | -------: | --------: | -------: | ----: |
+| `ox-content (bare)`   |   5.8 KB |    2.9 KB |        1 |     5 |
+| `ox-content`          |  31.4 KB |    9.8 KB |        5 |    10 |
+| `ox-content + Vue`    |  53.9 KB |    9.8 KB |        5 |    10 |
+| `VitePress (bare)`    |  47.3 KB |    8.4 KB |        6 |    14 |
+| `Astro + Vue`         |  33.1 KB |    5.4 KB |        3 |     7 |
+| `VitePress (default)` | 717.2 KB |   14.2 KB |       21 |    29 |
 
 `ox-content (bare)` は JS なしのベースラインです。`ox-content` は組み込み docs シェルを含みます。`ox-content + Vue` はフレームワーク island 対応を足します。VitePress 行は同じベンチマーク本文を使うので、比較は執筆内容ではなく生成出力の形に寄ります。
 
@@ -194,13 +209,29 @@ SSG パイプラインはまず完全な HTML ページを描画し、すべて�
 
 ## PR 回帰ゲート
 
-Pull request は、`blacksmith-32vcpu-ubuntu-2404` 上で base コミットと head コミットの両方に対してベンチマークワークフローを走らせます。ワークフローは実行時、競争スナップショット、環境、バンドルサイズの各節を持つ報告を 1 つ投稿します。
+Pull request は、`blacksmith-32vcpu-ubuntu-2404` 上で base コミットと head コミットの両方に対してベンチマークワークフローを走らせます。ワークフローは実行時、競争スナップショット、環境、バンドルサイズ、予算の各節を持つ報告を 1 つ投稿します。
 
 実行時行は、`@ox-content/napi` と `@ox-content/napi (async)` の大きなベンチマークターゲットを比較します。+/-5% 以内はノイズとし、head のスループットが base より 10% 超遅いと検査は失敗します。
 
 競争スナップショットはゲートではありません。同じ大きな入力コーパスで、head コミットの対象パッケージを次に速い比較パッケージと並べます。
 
-バンドル行は、成功した各ベンチマークアプリの gzip 出力を比較します。gzip サイズが 5% 超増えると検査は失敗します。メンテナは `benchmark-regression-accepted` PR ラベルで、意図して回帰を受け入れられます。
+バンドル行は、成功した各ベンチマークアプリの gzip 出力を比較します。gzip サイズが 5% 超増えると検査は失敗します。head の測定が
+[`benchmarks/perf-budgets.json`](https://github.com/ubugeeei-prod/ox-content/blob/main/benchmarks/perf-budgets.json)
+を超えても失敗します。どちらの失敗も、メンテナは `benchmark-regression-accepted` PR ラベルで意図して受け入れられます。
+
+## 領域の監査
+
+主要な面ごとに、測ったベースラインと、目標または明示の no-op があります。数字は上の 2026-08-26 Blacksmith 報告であり、手元のノート PC の走行ではありません。
+
+| 領域                                     | ベースライン                                                                   | 目標または no-op                                                                                                                                         |
+| ---------------------------------------- | ------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| フィクスチャのビルド時間                 | 既定シェル約 370–430 ms。冷えた走行は約 750 ms                                 | 天井 5 秒。より狭いゲートはしない。#1003 は出力サイズ不変のまま同じフィクスチャが +45% 振れた。                                                          |
+| 実行時パース / 描画                      | large `@ox-content/napi` パース約 5.3k–6.1k ops/sec、パース + 描画約 6.5k–7.3k | 下限 2500 / 4000 ops/sec。公開表のパース + 描画で `pulldown-cmark` より速いままにする。                                                                  |
+| バンドル gzip                            | bare 5.8 KB、既定 31.4 KB、+Vue 53.9 KB                                        | 既定を 48 KB 未満に保つ。共有チャンクはすでに VitePress 既定（717.2 KB）より小さい。既定シェルの追加分割は測定済み no-op: リクエスト 5 対 VitePress 21。 |
+| 描画 HTML gzip                           | bare 2.9 KB、既定 / Vue 9.8 KB                                                 | 既定シェルの天井 16 KB。                                                                                                                                 |
+| 初期リクエスト                           | bare 1、既定 / Vue 5                                                           | 天井 8。既定フィクスチャにブロックするリクエストを足さない。                                                                                             |
+| 公開パッケージの重さ                     | `measure.mjs` は測らない                                                       | no-op: CI がゲートするのは生成サイト出力であり、npm tarball の重さではない。                                                                             |
+| 検索 / 埋め込み / Code Play / MDX island | フィクスチャアプリはこれらをオンにしない                                       | no-op: フィクスチャが行使するまで、機能ペイロードを 31.4 KB の既定シェル数字の外に置く。                                                                 |
 
 ## 再現
 
@@ -222,6 +253,14 @@ node benchmarks/bundle-size/measure.mjs
 
 ```bash
 node benchmarks/bundle-size/measure.mjs --skip-install
+```
+
+予算検査向けに JSON を書き、任意で専用のビルド時間掃引もリポジトリルートから走らせます。
+
+```bash
+node benchmarks/bundle-size/measure.mjs --json /tmp/bundle.json
+node benchmarks/bundle-size/build-time-benchmark.mjs --json /tmp/build.json
+node benchmarks/bundle-size/check-budgets.mjs --bundle /tmp/bundle.json --build /tmp/build.json
 ```
 
 Rust 側のパーサベンチマークは次です。
