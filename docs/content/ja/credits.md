@@ -36,6 +36,8 @@ Markdown 属性とリッチなソーシャル埋め込みの見た目の同等�
   要望しました。
 - ryoppippi.com の移行中に、使った Iconify アイコン向けのセルフホスト CSS を
   要望しました。
+- オプトインの `<NotByAI />` 執筆開示バッジは、ryoppippi.com の Ox Content
+  移行で要望され、本番実装として先に入った機能です。
 
 ## 第三者の帰属
 
@@ -50,3 +52,13 @@ Copyright (c) 2024 ryoppippi）に従います。実行時にこれらのパッ�
 `crates/ox_content_ssg/src/plugins/social-tweet-full.css` に再掲しています。
 
 X、Twitter、および関連する標章は、それぞれの権利者の商標です。
+
+### Not By AI バッジのアートワーク
+
+オプトインの `<NotByAI />` バッジは、[Not By AI](https://notbyai.fyi) の公式
+ライト / ダーク「Written by Human, Not By AI」SVG をベンダーしています。
+コピーはベンダー時にサニタイズし、静的 HTML としてインラインします。実行時に
+notbyai.fyi からスクリプトやアセットは読みません。
+
+Not By AI および関連する標章は、それぞれの権利者の商標です。利用資格と商用
+利用の条件は [Not By AI のガイドライン](https://notbyai.fyi) を見てください。

@@ -31,7 +31,8 @@ pub use embed_types::{JsPmOptions, JsPmTransformResult, JsTabsTransformResult, J
 pub use feature_options::{
     JsAttrsOptions, JsCodeBlockLintOptions, JsCodeImportOptions, JsContainerOptions,
     JsContainerTypeOptions, JsDocsTestOptions, JsEditThisPageOptions, JsEmojiShortcodeOptions,
-    JsImageOptions, JsIncludeOptions, JsMediaEmbedsOptions, JsSanitizeOptions, JsWikiLinkOptions,
+    JsImageOptions, JsIncludeOptions, JsMediaEmbedsOptions, JsNotByAiOptions, JsSanitizeOptions,
+    JsWikiLinkOptions,
 };
 pub use file_tree_options::JsFileTreeOptions;
 pub use keyboard_keys_options::JsKeyboardKeysOptions;

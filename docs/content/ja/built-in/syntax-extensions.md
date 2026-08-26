@@ -14,6 +14,7 @@ description: オプトインの執筆構文 — 絵文字ショートコード�
 | `attrs`           | `boolean` / `AttrsOptions`          | `false` |
 | `cjkEmphasis`     | `boolean`                           | `false` |
 | `magicLinks`      | `boolean` / `MagicLinkOptions`      | `false` |
+| `notByAi`         | `boolean` / `NotByAiOptions`        | `false` |
 | `keyboardKeys`    | `boolean` / `KeyboardKeysOptions`   | `false` |
 
 ## 絵文字ショートコード
@@ -160,6 +161,10 @@ A**強調。**B
 ## マジックリンク
 
 オプトインの `{link:@user}`、`{link:alias}`、`{link:label|url}` リッチリンクです。アバターも付けられます。既定はオフです。詳細は [マジックリンク](./magic-links.md) を見てください。
+
+## NotByAI バッジ
+
+オプトインの `<NotByAI />` は静的な人の執筆開示です。状態バッジではありません。既定はオフです。詳細は [NotByAI バッジ](./not-by-ai.md) を見てください。
 
 ## キーボードキー
 

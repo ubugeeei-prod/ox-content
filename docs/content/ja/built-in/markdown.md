@@ -182,4 +182,5 @@ TOC は `.md` モジュールに `{ depth, text, slug, children }` の木とし�
 
 - [見出しパーマリンク](./heading-permalinks.md) — その id の上のオプトインの可視 `#` リンク。
 - [構文拡張](./syntax-extensions.md) — この土台の上の、オプトインの執筆構文。
+- [NotByAI バッジ](./not-by-ai.md) — オプトインの静的な人の執筆開示。
 - [組み込み機能の一覧](../built-in-features.md)
