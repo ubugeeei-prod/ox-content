@@ -138,6 +138,8 @@ export type {
   ResolvedFeedsOptions,
   PwaOptions,
   ResolvedPwaOptions,
+  IconsOptions,
+  ResolvedIconsOptions,
   TaxonomiesOptions,
   ResolvedTaxonomiesOptions,
   SearchOptions,

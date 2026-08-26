@@ -3,7 +3,7 @@ use askama::Template;
 use super::utils::escape_html;
 use super::{MobileSocialLinksTemplate, SocialLink, SocialLinks, SocialLinksTemplate};
 
-pub(super) fn generate_social_links_html(links: &SocialLinks) -> String {
+pub(super) fn generate_social_links_html(links: &SocialLinks, self_hosted_icons: bool) -> String {
     let template = SocialLinksTemplate {
         github: links.github.as_deref(),
         twitter: links.twitter.as_deref(),
@@ -12,13 +12,16 @@ pub(super) fn generate_social_links_html(links: &SocialLinks) -> String {
     let mut html = template.render().unwrap_or_default();
     if let Some(custom_links) = &links.links {
         for link in custom_links {
-            html.push_str(&render_custom_social_link(link, false));
+            html.push_str(&render_custom_social_link(link, false, self_hosted_icons));
         }
     }
     html
 }
 
-pub(super) fn generate_mobile_social_links_html(links: &SocialLinks) -> String {
+pub(super) fn generate_mobile_social_links_html(
+    links: &SocialLinks,
+    self_hosted_icons: bool,
+) -> String {
     let template = MobileSocialLinksTemplate {
         github: links.github.as_deref(),
         twitter: links.twitter.as_deref(),
@@ -27,17 +30,17 @@ pub(super) fn generate_mobile_social_links_html(links: &SocialLinks) -> String {
     let mut html = template.render().unwrap_or_default();
     if let Some(custom_links) = &links.links {
         for link in custom_links {
-            html.push_str(&render_custom_social_link(link, true));
+            html.push_str(&render_custom_social_link(link, true, self_hosted_icons));
         }
     }
     html
 }
 
-fn render_custom_social_link(link: &SocialLink, mobile: bool) -> String {
+fn render_custom_social_link(link: &SocialLink, mobile: bool, self_hosted_icons: bool) -> String {
     let label = link.aria_label.as_deref().or(link.icon.as_deref()).unwrap_or("Social link");
     let href = escape_html(&link.link);
     let label = escape_html(label);
-    let icon_html = render_social_icon(link);
+    let icon_html = render_social_icon(link, self_hosted_icons);
 
     if mobile {
         format!(
@@ -50,14 +53,21 @@ fn render_custom_social_link(link: &SocialLink, mobile: bool) -> String {
     }
 }
 
-fn render_social_icon(link: &SocialLink) -> String {
+fn render_social_icon(link: &SocialLink, self_hosted_icons: bool) -> String {
     if let Some(svg) = link.icon_svg.as_deref().and_then(validate_social_svg) {
         return svg.to_string();
     }
 
     link.icon
         .as_deref()
-        .map(|icon| format!("<span class=\"social-link-icon\">{}</span>", escape_html(icon)))
+        .map(|icon| {
+            if self_hosted_icons {
+                if let Some((prefix, name)) = super::entry::parse_iconify_name(icon) {
+                    return format!("<span class=\"iconify-icon icon-[{prefix}--{name}]\"></span>");
+                }
+            }
+            format!("<span class=\"social-link-icon\">{}</span>", escape_html(icon))
+        })
         .unwrap_or_default()
 }
 

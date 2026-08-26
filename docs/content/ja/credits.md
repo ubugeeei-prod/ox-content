@@ -34,6 +34,8 @@ Markdown 属性とリッチなソーシャル埋め込みの見た目の同等�
 - sveltweet を通して、Twitter / X full card の見た目の契約の検証に協力しました。
 - ryoppippi.com の移行中に、組み込みテーマ向けのセルフホスト Web フォント取得を
   要望しました。
+- ryoppippi.com の移行中に、使った Iconify アイコン向けのセルフホスト CSS を
+  要望しました。
 - オプトインの `<NotByAI />` 執筆開示バッジは、ryoppippi.com の Ox Content
   移行で要望され、本番実装として先に入った機能です。
 

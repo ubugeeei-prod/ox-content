@@ -449,6 +449,7 @@ async function renderPage(
     options.ssg.siteUrl,
     options.ssg.headValidation,
     i18n?.defaultLocale,
+    Boolean(options.icons?.enabled),
   );
 
   if (markdownSource && options.ssg.markdownSource?.alternate) {

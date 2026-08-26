@@ -37,6 +37,8 @@ Contribution summary:
   sveltweet.
 - Requested self-hosted web font acquisition for the built-in theme during the
   ryoppippi.com migration.
+- Requested self-hosted Iconify CSS for used icons during the ryoppippi.com
+  migration.
 - The opt-in `<NotByAI />` authorship badge was requested and first shipped
   in production during the ryoppippi.com Ox Content migration.
 
