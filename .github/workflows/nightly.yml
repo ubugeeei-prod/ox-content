@@ -33,9 +33,43 @@ env:
   LINUX_GLIBC_VERSION: "2.17"
 
 jobs:
+  preview-scope:
+    name: Package preview scope
+    runs-on: blacksmith-32vcpu-ubuntu-2404
+    outputs:
+      preview: ${{ steps.scope.outputs.preview }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Detect package preview scope
+        id: scope
+        env:
+          BASE_REPOSITORY: ${{ github.repository }}
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          if [[ "${{ github.event_name }}" != "pull_request" ]]; then
+            echo "preview=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          git fetch --no-tags --depth=1 "https://github.com/$BASE_REPOSITORY.git" "$BASE_SHA"
+          git diff --name-only "$BASE_SHA" "$GITHUB_SHA" > "$RUNNER_TEMP/preview-changed-files.txt"
+          node .github/scripts/detect-pr-preview-scope.mjs "$RUNNER_TEMP/preview-changed-files.txt" >> "$GITHUB_OUTPUT"
+
+          echo "Changed files:"
+          sed 's/^/  /' "$RUNNER_TEMP/preview-changed-files.txt"
+
   build-napi:
     name: Build NAPI - ${{ matrix.target }}
-    if: github.event_name != 'workflow_dispatch' || inputs.skip_build != true
+    needs: preview-scope
+    if: |
+      needs.preview-scope.outputs.preview == 'true' &&
+      (github.event_name != 'workflow_dispatch' || inputs.skip_build != true)
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
@@ -173,11 +207,14 @@ jobs:
   release:
     name: Publish preview via pkg-pr-new
     runs-on: blacksmith-32vcpu-ubuntu-2404
-    needs: build-napi
+    needs:
+      - preview-scope
+      - build-napi
     # Skip when explicitly disabled via workflow_dispatch.
     # Use always() so this still runs when build-napi was skipped (skip_build mode).
     if: |
       always() &&
+      needs.preview-scope.outputs.preview == 'true' &&
       (github.event_name != 'workflow_dispatch' || inputs.skip_release != true) &&
       (needs.build-napi.result == 'success' ||
        (github.event_name == 'workflow_dispatch' && inputs.skip_build == true))

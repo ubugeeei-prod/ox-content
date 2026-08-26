@@ -21,6 +21,7 @@
 
 ### Performance
 
+- skip package preview releases for neutral PR edits (#851)
 - skip PR benchmarks for test-only package edits (#851)
 
 ## [3.0.0-alpha.8] - 2026-08-25
