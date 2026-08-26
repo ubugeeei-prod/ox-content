@@ -45,6 +45,16 @@ describe("detect-pr-benchmark-scope", () => {
     expect(parseOutputs(result.stdout)).toEqual({ runtime: "false", bundle: "true" });
   });
 
+  it("skips package preview helper edits", () => {
+    const result = runScope([
+      ".github/scripts/detect-pr-preview-scope.mjs",
+      "scripts/pr-preview-scope.test.ts",
+    ]);
+
+    expect(result.status).toBe(0);
+    expect(parseOutputs(result.stdout)).toEqual({ runtime: "false", bundle: "false" });
+  });
+
   it("runs both gates for benchmark harness edits", () => {
     const result = runScope(["benchmarks/bundle-size/parse-benchmark.mjs"]);
 
