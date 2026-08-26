@@ -1,4 +1,5 @@
 import path from "node:path";
+import { resolveTweetTimeZone } from "./date-utils";
 import { fetchTweetData, materializeTweetAssets } from "./fetch";
 import { renderFetchedTweet } from "./render";
 import type { ResolvedTwitterEmbedOptions, TwitterEmbedOptions } from "./types";
@@ -20,6 +21,7 @@ export function resolveTwitterEmbedOptions(
     downloadVideo: options.downloadVideo ?? false,
     maxVideoBytes: options.maxVideoBytes ?? 8_388_608,
     appearance: options.appearance === "full" ? "full" : "compact",
+    timeZone: resolveTweetTimeZone(options.timeZone),
   };
 }
 

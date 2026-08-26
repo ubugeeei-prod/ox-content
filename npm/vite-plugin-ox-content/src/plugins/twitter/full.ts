@@ -1,6 +1,7 @@
 // Static HTML for appearance: "full". Visual contract follows MIT-licensed
 // react-tweet (Copyright (c) 2023 Luis Alvarez) and sveltweet (Copyright (c)
 // 2024 ryoppippi). Notices live in social-tweet-full.css and docs/content/credits.md.
+import { formatFullDate } from "./date-utils";
 import { escapeAttribute, escapeHtml } from "./html";
 import { renderMedia } from "./markup";
 import { formatCount, renderTweetMetrics } from "./metrics";
@@ -10,7 +11,12 @@ import { quotedPermalink, replyPermalink, sanitizeScreenName, sanitizeStatusId }
 
 const HELP_HREF = "https://help.x.com/en/x-for-websites-ads-info-and-privacy";
 
-export function renderFullTweet(permalink: string, data: TweetData, assets: TweetAssets): string {
+export function renderFullTweet(
+  permalink: string,
+  data: TweetData,
+  assets: TweetAssets,
+  timeZone = "UTC",
+): string {
   const quote = data.quoted_tweet ? renderFullQuote(data.quoted_tweet, assets.quoted) : "";
   return [
     '<figure class="ox-tweet ox-tweet--fetched ox-tweet--full">',
@@ -19,7 +25,7 @@ export function renderFullTweet(permalink: string, data: TweetData, assets: Twee
     `<div class="ox-tweet__body">${renderTweetText(data, { omitTrailingQuoteUrl: Boolean(quote) })}</div>`,
     renderMedia(assets, permalink),
     quote,
-    renderInfo(permalink, data.created_at),
+    renderInfo(permalink, data.created_at, timeZone),
     renderTweetMetrics(data, { replies: false, likes: false }),
     renderActions(permalink, data),
     renderReplies(permalink, data.conversation_count),
@@ -86,8 +92,8 @@ function renderReply(data: TweetData): string {
   return `<p class="ox-tweet__reply"><a class="ox-tweet__reply-link" href="${escapeAttribute(href)}" target="_blank" rel="noopener noreferrer">Replying to @${escapeHtml(handle)}</a></p>`;
 }
 
-function renderInfo(permalink: string, createdAt: string | undefined): string {
-  const formatted = formatFullDate(createdAt);
+function renderInfo(permalink: string, createdAt: string | undefined, timeZone: string): string {
+  const formatted = formatFullDate(createdAt, timeZone);
   const time = formatted
     ? `<a class="ox-tweet__permalink" href="${escapeAttribute(permalink)}" target="_blank" rel="noopener noreferrer"><time datetime="${formatted.iso}">${escapeHtml(formatted.label)}</time></a>`
     : `<a class="ox-tweet__permalink" href="${escapeAttribute(permalink)}" target="_blank" rel="noopener noreferrer">View on X</a>`;
@@ -102,7 +108,7 @@ function renderActions(permalink: string, data: TweetData): string {
     '<div class="ox-tweet__actions">',
     `<a class="ox-tweet__action ox-tweet__action--like" href="https://x.com/intent/like?tweet_id=${id}" target="_blank" rel="noopener noreferrer"><span class="ox-tweet__icon ox-tweet__icon--like"></span><span>${likes}</span></a>`,
     `<a class="ox-tweet__action ox-tweet__action--reply" href="https://x.com/intent/tweet?in_reply_to=${id}" target="_blank" rel="noopener noreferrer"><span class="ox-tweet__icon ox-tweet__icon--reply"></span>Reply</a>`,
-    `<a class="ox-tweet__action ox-tweet__action--copy" href="${escapeAttribute(permalink)}" target="_blank" rel="noopener noreferrer" data-ox-tweet-copy data-ox-tweet-copy-url="${escapeAttribute(permalink)}" aria-label="Copy link to post"><span class="ox-tweet__icon ox-tweet__icon--copy"></span>Copy link</a>`,
+    `<a class="ox-tweet__action ox-tweet__action--copy" href="${escapeAttribute(permalink)}" target="_blank" rel="noopener noreferrer" data-ox-tweet-copy data-ox-tweet-copy-url="${escapeAttribute(permalink)}" aria-label="Copy link to post"><span class="ox-tweet__icon ox-tweet__icon--copy"></span><span class="ox-tweet__copy-text">Copy link</span><span class="ox-tweet__copied-text">Copied!</span></a>`,
     "</div>",
   ].join("");
 }
@@ -154,25 +160,4 @@ function repliesLabel(value: unknown): string {
   if (n === 0) return "Read more on X";
   if (n === 1) return "Read 1 reply";
   return `Read ${formatCount(n)} replies`;
-}
-
-function formatFullDate(createdAt: string | undefined): { iso: string; label: string } | undefined {
-  if (!createdAt) return undefined;
-  const date = new Date(createdAt);
-  if (Number.isNaN(date.valueOf())) return undefined;
-  const parts = new Intl.DateTimeFormat("en-US", {
-    hour: "numeric",
-    minute: "2-digit",
-    hour12: true,
-    month: "short",
-    day: "numeric",
-    year: "numeric",
-    timeZone: "UTC",
-  }).formatToParts(date);
-  const get = (type: Intl.DateTimeFormatPartTypes) =>
-    parts.find((part) => part.type === type)?.value ?? "";
-  return {
-    iso: date.toISOString(),
-    label: `${get("hour")}:${get("minute")} ${get("dayPeriod")} · ${get("month")} ${get("day")}, ${get("year")}`,
-  };
 }

@@ -15,7 +15,7 @@ export function renderFetchedTweet(
   options: ResolvedTwitterEmbedOptions,
 ): string {
   if (options.appearance === "full") {
-    return renderFullTweet(permalink, data, assets);
+    return renderFullTweet(permalink, data, assets, options.timeZone);
   }
   const quote = data.quoted_tweet ? renderQuotedTweet(data.quoted_tweet, assets.quoted) : "";
   return [

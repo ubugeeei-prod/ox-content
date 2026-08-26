@@ -19,6 +19,12 @@ export interface TwitterEmbedOptions {
   maxVideoBytes?: number;
   /** Fetched-card chrome. `"full"` matches sveltweet / react-tweet. @default "compact" */
   appearance?: TweetAppearance;
+  /**
+   * IANA timezone for full-card timestamps.
+   * Invalid values fall back to UTC so build output stays deterministic.
+   * @default "UTC"
+   */
+  timeZone?: string;
 }
 
 export interface ResolvedTwitterEmbedOptions {
@@ -32,6 +38,7 @@ export interface ResolvedTwitterEmbedOptions {
   downloadVideo: boolean;
   maxVideoBytes: number;
   appearance: TweetAppearance;
+  timeZone: string;
 }
 
 export type TweetAppearance = "compact" | "full";

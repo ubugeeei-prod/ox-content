@@ -5,7 +5,7 @@ import path from "node:path";
 import { afterEach, describe, expect, it } from "vite-plus/test";
 import { transformMediaEmbeds } from "./media";
 import { clearTweetCache } from "./twitter/fetch";
-import { transformFetchedTweets } from "./twitter/transform";
+import { resolveTwitterEmbedOptions, transformFetchedTweets } from "./twitter/transform";
 import { createSyndicationToken, parseTweetReference } from "./twitter/url";
 
 const originalFetch = globalThis.fetch;
@@ -30,6 +30,15 @@ describe("fetched Twitter embeds", () => {
     expect(createSyndicationToken("1234567890123456789")).toBe(
       ((Number("1234567890123456789") / 1e15) * Math.PI).toString(36).replaceAll(/(0+|\.)/g, ""),
     );
+  });
+
+  it("defaults tweet timestamps to UTC and accepts a valid timeZone", () => {
+    expect(resolveTwitterEmbedOptions({}).timeZone).toBe("UTC");
+    expect(resolveTwitterEmbedOptions({ timeZone: "Europe/London" }).timeZone).toBe(
+      "Europe/London",
+    );
+    expect(resolveTwitterEmbedOptions({ timeZone: "Not/AZone" }).timeZone).toBe("UTC");
+    expect(resolveTwitterEmbedOptions({ timeZone: "   " }).timeZone).toBe("UTC");
   });
 
   it("renders fetched content, rewrites links, downloads media, and reuses disk cache", async () => {

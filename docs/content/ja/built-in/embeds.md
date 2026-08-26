@@ -233,6 +233,7 @@ oxContent({
       fetch: true,
       lang: "en",
       appearance: "compact",
+      timeZone: "UTC",
       mediaOutputDir: "public/ox-content/twitter",
       mediaPublicPath: "/ox-content/twitter",
     },
@@ -252,6 +253,7 @@ oxContent({
 | `downloadVideo`   | `false`                     | ビルド時に MP4 動画とアニメーション GIF を取る。    |
 | `maxVideoBytes`   | `8388608`                   | これより大きい動画はスキップする（8 MiB）。         |
 | `appearance`      | `"compact"`                 | `"full"` で sveltweet 形の静的クロムを出す。        |
+| `timeZone`        | `"UTC"`                     | フルカード日時の IANA タイムゾーン。                |
 
 ダウンロードしたメディアは自分のサイトから出すので、厳しい `img-src 'self'` CSP も動き続けます。動画とアニメーション GIF は、`downloadVideo` をオンにしない限り自前のポスターと Watch on X パーマリンクを使い、生成 HTML に `video.twimg.com` は出しません。削除済みや非公開の投稿は、ビルドを落とさずリンクのみのカードに落ちます。引用投稿が欠けていても、元の投稿カードは残します。フルカード用 CSS は `.ox-tweet--full` を描画するページにだけ載ります。フルカードのクロムは MIT ライセンスの [react-tweet](https://github.com/vercel/react-tweet) と [sveltweet](https://github.com/ryoppippi/sveltweet) の見た目の契約に従います。帰属は [クレジット](../credits.md) にあります。詳細は [Twitter/X Embed](/examples/twitter-embed.md) を見てください。
 

@@ -278,6 +278,7 @@ oxContent({
       fetch: true,
       lang: "en",
       appearance: "compact",
+      timeZone: "UTC",
       mediaOutputDir: "public/ox-content/twitter",
       mediaPublicPath: "/ox-content/twitter",
     },
@@ -297,6 +298,7 @@ oxContent({
 | `downloadVideo`   | `false`                     | Download MP4 video and animated GIF assets.      |
 | `maxVideoBytes`   | `8388608`                   | Skip videos larger than this (8 MiB).            |
 | `appearance`      | `"compact"`                 | `"full"` for sveltweet-shaped static chrome.     |
+| `timeZone`        | `"UTC"`                     | IANA zone for full-card timestamps.              |
 
 Downloaded media is served from your site, so a strict `img-src 'self'` CSP
 keeps working. Video and animated GIF posts use a self-hosted poster and a

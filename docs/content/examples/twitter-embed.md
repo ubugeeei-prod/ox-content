@@ -24,6 +24,7 @@ export default {
           fetch: true,
           lang: "en",
           appearance: "compact",
+          timeZone: "UTC",
           mediaOutputDir: "public/ox-content/twitter",
           mediaPublicPath: "/ox-content/twitter",
         },
@@ -60,6 +61,7 @@ root card.
 | `downloadVideo`   | `false`                     | Download MP4 video and animated GIF assets.      |
 | `maxVideoBytes`   | `8388608`                   | Skip videos larger than this (8 MiB).            |
 | `appearance`      | `"compact"`                 | `"full"` for sveltweet-shaped static chrome.     |
+| `timeZone`        | `"UTC"`                     | IANA zone for full-card timestamps.              |
 
 Full appearance is static HTML/CSS: no hydration, widget iframe, or per-card
 listeners. It reuses the same materialized avatar/photo/video assets as compact.
@@ -74,9 +76,13 @@ respective owners.
 
 Intentional differences from `sveltweet@0.5.1` / `react-tweet`:
 
-- Copy link is a static permalink action instead of a hydrated clipboard widget.
+- Copy link is a static permalink with `data-ox-tweet-copy` hooks. The card stays
+  useful without JavaScript; integrations that enhance those hooks get the same
+  Copy link / Copied! swap as react-tweet.
 - No fonts or assets from the X/Twitter CDN. The card uses the page font stack.
-- Timestamps use UTC so build output does not depend on the viewer timezone.
+- Timestamps default to UTC so build output does not depend on the builder
+  timezone. Set `timeZone: "Europe/London"` (or another IANA zone) to match a
+  site-local clock. Invalid zones fall back to UTC.
 - Downloaded video uses native `<video controls>` instead of a custom player.
 - Government / legacy verified badges share the checkmark glyph and change color
   only. Side-by-side sveltweet VRT is not in CI; HTML fixtures cover the states.
