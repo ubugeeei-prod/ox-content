@@ -39,7 +39,12 @@ import { highlightPageHtml } from "./highlight";
 import { importNapiModule } from "./napi";
 import { transformMermaidStatic } from "./plugins/mermaid";
 import { renderKatexMath } from "./plugins/math";
-import { normalizeSelfClosingEmbeds, transformBuiltinEmbeds } from "./plugins";
+import {
+  documentLocalComponentNames,
+  filterReservedBuiltinComponentNames,
+  normalizeSelfClosingEmbeds,
+  transformBuiltinEmbeds,
+} from "./plugins";
 import { protectMermaidSvgs, restoreMermaidSvgs } from "./plugins/mermaid-protect";
 import { typecheckCodeBlocks } from "./code-blocks";
 import { applyTypedHover } from "./typed-hover";
@@ -681,14 +686,17 @@ export async function transformMarkdown(
     html = await highlightPageHtml(html, napi.mergeHighlightedCodeBlocks);
   }
 
-  // Render static built-in embeds while Mermaid SVG placeholders are protected.
-  html = await transformBuiltinEmbeds(
-    html,
-    options.embeds ?? {
+  const localNames = documentLocalComponentNames(result.imports ?? []);
+
+  // Reserved first-party names are restored from MDX islands before embed
+  // transforms, unless a document-local import overrides that name.
+  html = await transformBuiltinEmbeds(html, {
+    ...(options.embeds ?? {
       github: {},
       openGraph: {},
-    },
-  );
+    }),
+    localNames,
+  });
 
   // GitHub source cards are created after the first highlight pass, so run
   // highlighting again when those blocks are present.
@@ -709,7 +717,7 @@ export async function transformMarkdown(
 
   const imports = result.imports ?? [];
   const exports = result.exports ?? [];
-  const components = result.components ?? [];
+  const components = filterReservedBuiltinComponentNames(result.components ?? [], localNames);
   html = await applyTypedHover(source, html, options.typedHover);
 
   // Generate JavaScript module code

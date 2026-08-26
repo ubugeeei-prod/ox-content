@@ -96,4 +96,19 @@ describe("discoverRegisteredMdxComponents", () => {
     });
     expect(override).toEqual(["Chart", "Alert"]);
   });
+
+  it("reserves built-in embed names unless a document-local import overrides them", async () => {
+    const builtin = await discoverRegisteredMdxComponents({
+      source: '<Tweet id="1234567890" />\n<OgCard url="https://example.com" />\n<Alert />\n',
+      components: { Tweet: "./Tweet.tsx", OgCard: "./OgCard.tsx", Alert: "./Alert.tsx" },
+    });
+    expect(builtin).toEqual(["Alert"]);
+
+    const localOverride = await discoverRegisteredMdxComponents({
+      source: '<Tweet id="1234567890" />\n<Alert />\n',
+      components: { Tweet: "./GlobalTweet.tsx", Alert: "./Alert.tsx" },
+      localNames: ["Tweet"],
+    });
+    expect(localOverride).toEqual(["Tweet", "Alert"]);
+  });
 });

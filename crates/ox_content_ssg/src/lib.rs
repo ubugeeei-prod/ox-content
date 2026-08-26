@@ -112,10 +112,10 @@ pub use redirects::{
     generate_redirects, is_safe_dest, normalize_path,
 };
 pub use routes::{
-    ManualNavigationGroup, ManualNavigationItem, RoutePaths, SidebarItem, build_nav_items,
-    build_theme_nav_items, collect_markdown_files, extract_title, format_title, get_href,
-    get_og_image_path, get_og_image_url, get_output_path, get_page_locale, get_url_path,
-    resolve_navigation_groups, resolve_route_paths,
+    ManualNavigationGroup, ManualNavigationItem, RoutePaths, SidebarItem, apply_route_prefix,
+    build_nav_items, build_theme_nav_items, collect_markdown_files, extract_title, format_title,
+    get_href, get_og_image_path, get_og_image_url, get_output_path, get_page_locale, get_url_path,
+    normalize_route_prefix, resolve_navigation_groups, resolve_route_paths,
 };
 pub use site_maps::{SiteMapPage, SiteMapsOptions, SiteMapsOutput, generate_site_maps};
 pub use vitepress::normalize_vitepress_frontmatter;

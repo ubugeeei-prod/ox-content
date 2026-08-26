@@ -38,6 +38,7 @@ Ox Content は、よく使うドキュメントの挙動を既定で載せ、非
 | [品質チェック](./built-in/quality-checks.md)             | lint、型チェック、docs テスト、HTML サニタイズ                                 |
 | [型ホバー](./built-in/typed-hover.md)                    | `twoslash` フェンスのビルド時 TypeScript 型オーバーレイ                        |
 | [サイト生成](./built-in/site-generation.md)              | SSG、OG 画像、編集リンク、API ドキュメント                                     |
+| [コンポーネント CSS](./built-in/component-styles.md)     | `ssg: false` と `transformAllPlugins()` 向けの公式 CSS                         |
 | [ページ head](./built-in/page-head.md)                   | ビルド時の Unhead 互換 title / meta / link / JSON-LD API                       |
 | [SEO](./built-in/seo.md)                                 | その API 上の canonical、robots、hreflang、検証                                |
 | [前へ / 次へ](./built-in/pagination.md)                  | サイドバー順の前後リンク                                                       |

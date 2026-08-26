@@ -189,8 +189,22 @@ struct BarePageTemplate<'a> {
     body_end: &'a str,
 }
 
-/// CSS styles for SSG pages.
-const SSG_CSS: &str = include_str!("ssg.css");
+/// Marker expanded from `ssg.css` so Magic Link rules live in one file.
+const MAGIC_LINKS_INCLUDE_MARK: &str = "/* @include magic-links.css */\n";
+
+/// Published Magic Link stylesheet. Inlined into `SSG_CSS` at the same
+/// position the rules previously occupied in `ssg.css`.
+const MAGIC_LINKS_CSS: &str = include_str!("plugins/magic-links.css");
+
+/// CSS styles for SSG pages, with Magic Link rules spliced in.
+static SSG_CSS: std::sync::LazyLock<String> = std::sync::LazyLock::new(|| {
+    let template = include_str!("ssg.css");
+    assert!(
+        template.contains(MAGIC_LINKS_INCLUDE_MARK),
+        "ssg.css must include the magic-links marker so SSG and published CSS stay aligned"
+    );
+    template.replacen(MAGIC_LINKS_INCLUDE_MARK, MAGIC_LINKS_CSS, 1)
+});
 
 /// CSS styles for Entry pages (hero, features).
 const ENTRY_CSS: &str = include_str!("entry.css");

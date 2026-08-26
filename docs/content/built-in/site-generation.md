@@ -54,38 +54,59 @@ export default defineConfig({
 });
 ```
 
-| Option            | Default        | Purpose                                                                                               |
-| ----------------- | -------------- | ----------------------------------------------------------------------------------------------------- |
-| `enabled`         | `true`         | Set `ssg: false` to keep only `.md` modules.                                                          |
-| `extension`       | `".html"`      | Generated page extension.                                                                             |
-| `clean`           | `false`        | Remove generated output before writing.                                                               |
-| `bare`            | `false`        | Emit unthemed HTML without navigation.                                                                |
-| `render`          | —              | JSX component that owns the whole document.                                                           |
-| `lang`            | `"en"`         | `lang` attribute on `<html>` (bare mode).                                                             |
-| `head`            | —              | Raw markup appended to `<head>` (bare mode).                                                          |
-| `bodyStart`       | —              | Raw markup after `<body>` (bare mode).                                                                |
-| `bodyEnd`         | —              | Raw markup before `</body>` (bare mode).                                                              |
-| `siteName`        | —              | Suffix for `<title>` and OG site name.                                                                |
-| `siteUrl`         | —              | Origin used for absolute OG URLs, canonical, and hreflang. See [SEO](./seo.md).                       |
-| `headValidation`  | `false`        | `warn` or `strict` for invalid head descriptors. See [SEO](./seo.md).                                 |
-| `ogImage`         | —              | Static fallback OG image URL.                                                                         |
-| `generateOgImage` | `false`        | Per-page OG images (see below).                                                                       |
-| `lastUpdated`     | `false`        | Show the git last-commit time per page.                                                               |
-| `contributors`    | `false`        | Unique git authors per page. See [Contributors](./contributors.md).                                   |
-| `pagination`      | `false`        | Previous/next links after the article.                                                                |
-| `breadcrumbs`     | `false`        | Trail from the site root through sidebar ancestors.                                                   |
-| `jsonLd`          | `false`        | JSON-LD for TechArticle / WebSite / BreadcrumbList.                                                   |
-| `readerChrome`    | `false`        | Copy, outbound-link icons, and back-to-top.                                                           |
-| `localeSwitcher`  | `false`        | Header locale dropdown when i18n locales are set.                                                     |
-| `a11y`            | `false`        | Skip link and print styles.                                                                           |
-| `notFound`        | `false`        | Themed 404 page. See [Custom 404](./not-found.md).                                                    |
-| `team`            | `false`        | Member cards on `layout: team`. See [Team](./team.md).                                                |
-| `blog`            | `false`        | Paginated index, authors, tags, archive, optional external feeds. See [Blog](./blog.md).              |
-| `sectionIndex`    | `false`        | Generated listings for directories without `index.md`. See [Section index pages](./section-index.md). |
-| `pageChrome`      | `false`        | Honor per-page frontmatter chrome flags.                                                              |
-| `markdownSource`  | `false`        | Publish original Markdown beside each page. See [Markdown source companions](./markdown-source.md).   |
-| `theme`           | `defaultTheme` | Theme configuration via `defineTheme()`.                                                              |
-| `navigation`      | derived        | Explicit navigation groups instead of the file tree.                                                  |
+| Option            | Default        | Purpose                                                                                                    |
+| ----------------- | -------------- | ---------------------------------------------------------------------------------------------------------- |
+| `enabled`         | `true`         | Set `ssg: false` to keep only `.md` modules. Import [component styles](./component-styles.md) in the host. |
+| `extension`       | `".html"`      | Generated page extension.                                                                                  |
+| `routePrefix`     | —              | Mount page routes under a path without changing `base` or `outDir`.                                        |
+| `clean`           | `false`        | Remove generated output before writing.                                                                    |
+| `bare`            | `false`        | Emit unthemed HTML without navigation.                                                                     |
+| `render`          | —              | JSX component that owns the whole document.                                                                |
+| `lang`            | `"en"`         | `lang` attribute on `<html>` (bare mode).                                                                  |
+| `head`            | —              | Raw markup appended to `<head>` (bare mode).                                                               |
+| `bodyStart`       | —              | Raw markup after `<body>` (bare mode).                                                                     |
+| `bodyEnd`         | —              | Raw markup before `</body>` (bare mode).                                                                   |
+| `siteName`        | —              | Suffix for `<title>` and OG site name.                                                                     |
+| `siteUrl`         | —              | Origin used for absolute OG URLs, canonical, and hreflang. See [SEO](./seo.md).                            |
+| `headValidation`  | `false`        | `warn` or `strict` for invalid head descriptors. See [SEO](./seo.md).                                      |
+| `ogImage`         | —              | Static fallback OG image URL.                                                                              |
+| `generateOgImage` | `false`        | Per-page OG images (see below).                                                                            |
+| `lastUpdated`     | `false`        | Show the git last-commit time per page.                                                                    |
+| `contributors`    | `false`        | Unique git authors per page. See [Contributors](./contributors.md).                                        |
+| `pagination`      | `false`        | Previous/next links after the article.                                                                     |
+| `breadcrumbs`     | `false`        | Trail from the site root through sidebar ancestors.                                                        |
+| `jsonLd`          | `false`        | JSON-LD for TechArticle / WebSite / BreadcrumbList.                                                        |
+| `readerChrome`    | `false`        | Copy, outbound-link icons, and back-to-top.                                                                |
+| `localeSwitcher`  | `false`        | Header locale dropdown when i18n locales are set.                                                          |
+| `a11y`            | `false`        | Skip link and print styles.                                                                                |
+| `notFound`        | `false`        | Themed 404 page. See [Custom 404](./not-found.md).                                                         |
+| `team`            | `false`        | Member cards on `layout: team`. See [Team](./team.md).                                                     |
+| `blog`            | `false`        | Paginated index, authors, tags, archive, optional external feeds. See [Blog](./blog.md).                   |
+| `sectionIndex`    | `false`        | Generated listings for directories without `index.md`. See [Section index pages](./section-index.md).      |
+| `pageChrome`      | `false`        | Honor per-page frontmatter chrome flags.                                                                   |
+| `markdownSource`  | `false`        | Publish original Markdown beside each page. See [Markdown source companions](./markdown-source.md).        |
+| `theme`           | `defaultTheme` | Theme configuration via `defineTheme()`.                                                                   |
+| `navigation`      | derived        | Explicit navigation groups instead of the file tree.                                                       |
+
+`ssg.routePrefix` mounts Markdown page routes under a path such as `/blog`
+without changing the deployment `base` or moving root host files. `blog`,
+`/blog`, and `/blog/` all mount under `/blog`. Page HTML and page-level assets
+follow the prefix; `_redirects`, `_headers`, root feeds, and the sitemap index
+stay at `outDir`. `base` stays the public URL prefix. A frontmatter
+`permalink` still wins when [permalinks](./permalinks.md) are enabled.
+
+```ts
+oxContent({
+  srcDir: "content/blog",
+  outDir: "build",
+  ssg: { routePrefix: "/blog" },
+  redirects: { netlify: true },
+  feeds: { path: "/" },
+});
+```
+
+That writes `build/blog/first-post/index.html` while `build/_redirects` and
+`build/feed.xml` stay at the deployment root.
 
 Theming — colors, fonts, header, footer, sidebar, custom CSS, and the opt-in
 page outline (`theme.aside`, default `false`) — is a topic of its own: see

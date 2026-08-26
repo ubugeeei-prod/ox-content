@@ -80,7 +80,6 @@ describe("versioned SSG navigation", () => {
         redirects: {
           enabled: true,
           map: { "/old-guide": "/getting-started" },
-          netlify: false,
           headers: false,
           json: false,
           allowExternal: false,
