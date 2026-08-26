@@ -204,6 +204,7 @@ export function createDocsResolvedOptions(
       pm: false,
       spotify: false,
       appleMusic: false,
+      speakerDeck: false,
       audio: false,
       video: false,
       stackBlitz: false,

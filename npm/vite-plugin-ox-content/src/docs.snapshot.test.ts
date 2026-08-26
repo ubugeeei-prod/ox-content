@@ -52,6 +52,10 @@ describe("docs generation snapshots", () => {
       ...base,
       embeds: { ...base.embeds, appleMusic: true },
     };
+    const withSpeakerDeck = {
+      ...base,
+      embeds: { ...base.embeds, speakerDeck: true },
+    };
     const withNativeAv = {
       ...base,
       embeds: { ...base.embeds, audio: true, video: true },
@@ -66,14 +70,15 @@ describe("docs generation snapshots", () => {
       },
     };
 
-    const [stackBlitz, appleMusic, nativeAv, codeAnnotations] = await Promise.all([
+    const [stackBlitz, appleMusic, speakerDeck, nativeAv, codeAnnotations] = await Promise.all([
       renderDocsContent("docs/content/examples/stackblitz-embed.md", withStackBlitz),
       renderDocsContent("docs/content/examples/apple-music-embed.md", withAppleMusic),
+      renderDocsContent("docs/content/examples/speaker-deck-embed.md", withSpeakerDeck),
       renderDocsContent("docs/content/examples/audio-video-embed.md", withNativeAv),
       renderDocsContent("docs/content/examples/code-annotations.md", withAnnotations),
     ]);
 
-    expect({ stackBlitz, appleMusic, nativeAv, codeAnnotations }).toMatchSnapshot();
+    expect({ stackBlitz, appleMusic, speakerDeck, nativeAv, codeAnnotations }).toMatchSnapshot();
   });
 });
 

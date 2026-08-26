@@ -208,6 +208,7 @@ function createResolvedOptions(overrides: Partial<ResolvedOptions> = {}): Resolv
       pm: false,
       spotify: false,
       appleMusic: false,
+      speakerDeck: false,
       stackBlitz: false,
       twitter: false,
       bluesky: false,

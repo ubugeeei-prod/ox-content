@@ -6,7 +6,6 @@ import { transformMarkdown } from "./transform";
 import type { ResolvedOptions } from "./types";
 
 const repoRoot = resolve(dirname(fileURLToPath(import.meta.url)), "../../..");
-
 describe("transformMarkdown", () => {
   it("enables MDX from the resource id and honors explicit overrides", async () => {
     const source = "import Card from './Card'\n\n<Card>Visible copy</Card>\n";
@@ -34,7 +33,6 @@ describe("transformMarkdown", () => {
       "docs/guide.md",
       createResolvedOptions(),
     );
-
     expect(result.frontmatter).toEqual({
       title: "Guide",
       meta: { tags: ["rust"], draft: false },
@@ -258,6 +256,7 @@ describe("transformMarkdown", () => {
           pm: {},
           spotify: false,
           appleMusic: false,
+          speakerDeck: false,
           stackBlitz: false,
           twitter: false,
           bluesky: false,
@@ -332,6 +331,7 @@ describe("transformMarkdown", () => {
           pm: false,
           spotify: true,
           appleMusic: false,
+          speakerDeck: false,
           stackBlitz: false,
           twitter: false,
           bluesky: false,

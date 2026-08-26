@@ -2219,6 +2219,14 @@ export interface BuiltinEmbedOptions {
   appleMusic?: boolean;
 
   /**
+   * Render `<SpeakerDeck url="https://speakerdeck.com/...">` cards.
+   * Player URLs and oEmbed-resolved share URLs render a lazy iframe plus
+   * title/author metadata. Fetch or parse failures become a link card.
+   * @default false
+   */
+  speakerDeck?: boolean;
+
+  /**
    * Render `<Audio src="https://...">` native audio players.
    * @default false
    */
@@ -2277,6 +2285,7 @@ export interface ResolvedBuiltinEmbedOptions {
   pm: BuiltinPmOptions | false;
   spotify: boolean;
   appleMusic: boolean;
+  speakerDeck: boolean;
   audio?: boolean;
   video?: boolean;
   stackBlitz: boolean;

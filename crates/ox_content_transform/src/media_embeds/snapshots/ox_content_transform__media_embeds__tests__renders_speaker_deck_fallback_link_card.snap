@@ -1,0 +1,5 @@
+---
+source: crates/ox_content_transform/src/media_embeds/tests.rs
+expression: html
+---
+<a class="ox-speaker-deck ox-speaker-deck--fallback" href="https://speakerdeck.com/jane/my-cool-talk" target="_blank" rel="noopener noreferrer"><img class="ox-speaker-deck__preview" src="https://files.speakerdeck.com/presentations/abcdef1234567890/slide.jpg" alt="" loading="lazy" decoding="async"><span class="ox-speaker-deck__title">My Cool Talk</span><span class="ox-speaker-deck__author">jane</span></a>

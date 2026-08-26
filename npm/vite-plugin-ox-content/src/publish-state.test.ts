@@ -331,6 +331,7 @@ function options(root: string, enabled: boolean): ResolvedOptions {
       pm: false,
       spotify: false,
       appleMusic: false,
+      speakerDeck: false,
       stackBlitz: false,
       twitter: false,
       bluesky: false,

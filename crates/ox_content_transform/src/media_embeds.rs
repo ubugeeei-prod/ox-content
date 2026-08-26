@@ -2,6 +2,7 @@ mod apple_music;
 mod html;
 mod native;
 mod render;
+mod speaker_deck;
 #[cfg(test)]
 mod tests;
 
@@ -13,6 +14,7 @@ use native::{render_audio, render_video};
 use render::{
     render_bluesky, render_spotify, render_stackblitz, render_tweet, render_webcontainer,
 };
+use speaker_deck::render_speaker_deck;
 
 pub fn transform_media_embeds(html: &str, options: Option<&MediaEmbedsOptions>) -> String {
     let Some(options) = options else {
@@ -28,6 +30,9 @@ pub fn transform_media_embeds(html: &str, options: Option<&MediaEmbedsOptions>) 
     }
     if options.apple_music.unwrap_or(false) && contains_ci(&current, "<applemusic") {
         current = transform_component(&current, "applemusic", render_apple_music);
+    }
+    if options.speaker_deck.unwrap_or(false) && contains_ci(&current, "<speakerdeck") {
+        current = transform_component(&current, "speakerdeck", render_speaker_deck);
     }
     if options.audio.unwrap_or(false) && current.contains("<Audio") {
         current = transform_pascal_component(&current, "Audio", render_audio);
@@ -56,6 +61,7 @@ pub fn transform_media_embeds(html: &str, options: Option<&MediaEmbedsOptions>) 
 fn has_enabled_embed(options: &MediaEmbedsOptions) -> bool {
     options.spotify.unwrap_or(false)
         || options.apple_music.unwrap_or(false)
+        || options.speaker_deck.unwrap_or(false)
         || options.audio.unwrap_or(false)
         || options.video.unwrap_or(false)
         || options.stack_blitz.unwrap_or(false)

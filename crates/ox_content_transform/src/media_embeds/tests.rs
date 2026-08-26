@@ -90,6 +90,41 @@ fn leaves_apple_music_source_when_disabled_or_rejected() {
 }
 
 #[test]
+fn renders_resolved_speaker_deck_card() {
+    let html = transform_media_embeds(
+        r#"<SpeakerDeck url="https://speakerdeck.com/player/abcdef1234567890" title="My Talk" author="Jane Doe"></SpeakerDeck>"#,
+        Some(&MediaEmbedsOptions { speaker_deck: Some(true), ..Default::default() }),
+    );
+    insta::assert_snapshot!(html);
+}
+
+#[test]
+fn renders_speaker_deck_fallback_link_card() {
+    let html = transform_media_embeds(
+        r#"<SpeakerDeck url="https://speakerdeck.com/jane/my-cool-talk" preview="https://files.speakerdeck.com/presentations/abcdef1234567890/slide.jpg"></SpeakerDeck>"#,
+        Some(&MediaEmbedsOptions { speaker_deck: Some(true), ..Default::default() }),
+    );
+    insta::assert_snapshot!(html);
+}
+
+#[test]
+fn leaves_speaker_deck_when_disabled_or_rejected() {
+    let input = r#"<SpeakerDeck url="https://speakerdeck.com/jane/my-cool-talk"></SpeakerDeck>"#;
+    assert_eq!(transform_media_embeds(input, Some(&MediaEmbedsOptions::default())), input);
+
+    let enabled = MediaEmbedsOptions { speaker_deck: Some(true), ..Default::default() };
+    for rejected in [
+        r#"<SpeakerDeck url="javascript:alert(1)"></SpeakerDeck>"#,
+        r#"<SpeakerDeck url="data:text/html,hi"></SpeakerDeck>"#,
+        r#"<SpeakerDeck url="http://speakerdeck.com/jane/talk"></SpeakerDeck>"#,
+        r#"<SpeakerDeck url="https://speakerdeck.com.evil.com/jane/talk"></SpeakerDeck>"#,
+        r#"<SpeakerDeck url="https://user:pass@speakerdeck.com/jane/talk"></SpeakerDeck>"#,
+    ] {
+        assert_eq!(transform_media_embeds(rejected, Some(&enabled)), rejected);
+    }
+}
+
+#[test]
 fn renders_native_audio_and_video_players() {
     let enabled = MediaEmbedsOptions { audio: Some(true), video: Some(true), ..Default::default() };
     let audio = transform_media_embeds(

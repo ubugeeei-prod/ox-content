@@ -15,6 +15,7 @@ const BLOCK_EMBED_CLASSES = new Set([
   "ox-ogp-simple",
   "ox-spotify",
   "ox-apple-music",
+  "ox-speaker-deck",
   "ox-audio",
   "ox-video",
   "ox-stackblitz",
@@ -29,6 +30,7 @@ const BLOCK_EMBED_TAGS = new Set([
   "ogcard",
   "spotify",
   "applemusic",
+  "speakerdeck",
   "audio",
   "video",
   "stackblitz",
@@ -61,10 +63,10 @@ export function isBlockEmbedElement(node: ElementContent): node is Element {
 function shouldNormalizeBlockEmbeds(html: string): boolean {
   return (
     /<p[\s>]/i.test(html) &&
-    (/\box-(?:apple-music|audio|bluesky|github|ogp|spotify|stackblitz|tweet|video|webcontainer|youtube)\b/i.test(
+    (/\box-(?:apple-music|audio|bluesky|github|ogp|speaker-deck|spotify|stackblitz|tweet|video|webcontainer|youtube)\b/i.test(
       html,
     ) ||
-      /<(?:applemusic|audio|bluesky|github|ogcard|spotify|stackblitz|tweet|video|webcontainer|xpost|youtube)[\s/>]/i.test(
+      /<(?:applemusic|audio|bluesky|github|ogcard|speakerdeck|spotify|stackblitz|tweet|video|webcontainer|xpost|youtube)[\s/>]/i.test(
         html,
       ))
   );

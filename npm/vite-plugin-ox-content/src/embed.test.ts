@@ -130,6 +130,7 @@ describe("builtin embed input hardening", () => {
             pm: false,
             spotify: false,
             appleMusic: false,
+            speakerDeck: false,
             stackBlitz: false,
             twitter: false,
             bluesky: false,
@@ -241,6 +242,7 @@ describe("builtin embed input hardening", () => {
       [
         '<Spotify url="https://open.spotify.com/track/abc123"></Spotify>',
         '<AppleMusic url="https://music.apple.com/gb/album/1989-taylors-version/1708308989"></AppleMusic>',
+        '<SpeakerDeck url="https://speakerdeck.com/player/abcdef1234567890" title="My Talk" author="Jane Doe"></SpeakerDeck>',
         '<StackBlitz url="https://stackblitz.com/edit/vitejs-vite"></StackBlitz>',
         '<Tweet id="123">static text</Tweet>',
       ].join(""),
@@ -249,6 +251,7 @@ describe("builtin embed input hardening", () => {
         openGraph: false,
         spotify: true,
         appleMusic: true,
+        speakerDeck: true,
         stackBlitz: true,
         twitter: true,
       },

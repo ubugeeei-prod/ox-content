@@ -109,7 +109,7 @@ export type {
 };
 
 const SELF_CLOSING_EMBED_TAG =
-  /<(GitHub|OgCard|Tweet|XPost|Bluesky|Spotify|AppleMusic|Audio|Video|StackBlitz|WebContainer|YouTube|NotByAI)((?:[^>"']|"[^"]*"|'[^']*')*?)\s*\/>(?:\s*<\/\1\s*>)?/gi;
+  /<(GitHub|OgCard|Tweet|XPost|Bluesky|Spotify|AppleMusic|SpeakerDeck|Audio|Video|StackBlitz|WebContainer|YouTube|NotByAI)((?:[^>"']|"[^"]*"|'[^']*')*?)\s*\/>(?:\s*<\/\1\s*>)?/gi;
 
 /**
  * Custom embed tags are not HTML void elements, so a self-closing authoring
@@ -145,6 +145,7 @@ export interface TransformAllOptions {
   githubToken?: string;
   spotify?: boolean;
   appleMusic?: boolean;
+  speakerDeck?: boolean;
   audio?: boolean;
   video?: boolean;
   stackBlitz?: boolean;
@@ -171,6 +172,7 @@ export async function transformAllPlugins(
     githubToken,
     spotify = false,
     appleMusic = false,
+    speakerDeck = false,
     audio = false,
     video = false,
     stackBlitz = false,
@@ -219,6 +221,7 @@ export async function transformAllPlugins(
   const mediaOptions = {
     spotify,
     appleMusic,
+    speakerDeck,
     audio,
     video,
     stackBlitz,
@@ -251,6 +254,7 @@ export async function transformBuiltinEmbeds(
     pm?: PmOptions | false;
     spotify?: boolean;
     appleMusic?: boolean;
+    speakerDeck?: boolean;
     audio?: boolean;
     video?: boolean;
     stackBlitz?: boolean;
@@ -286,6 +290,7 @@ export async function transformBuiltinEmbeds(
   const mediaOptions: MediaEmbedOptions = {
     spotify: options.spotify,
     appleMusic: options.appleMusic,
+    speakerDeck: options.speakerDeck,
     audio: options.audio,
     video: options.video,
     stackBlitz: options.stackBlitz,

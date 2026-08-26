@@ -1324,6 +1324,12 @@ export interface JsMediaEmbedsOptions {
    */
   appleMusic?: boolean
   /**
+   * Render `<SpeakerDeck>` embeds.
+   *
+   * Default: `false`.
+   */
+  speakerDeck?: boolean
+  /**
    * Render `<StackBlitz>` embeds.
    *
    * Default: `false`.

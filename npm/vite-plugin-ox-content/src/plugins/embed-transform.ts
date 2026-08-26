@@ -21,6 +21,7 @@ export const RESERVED_BUILTIN_COMPONENTS = [
   "Bluesky",
   "Spotify",
   "AppleMusic",
+  "SpeakerDeck",
   "Audio",
   "Video",
   "StackBlitz",

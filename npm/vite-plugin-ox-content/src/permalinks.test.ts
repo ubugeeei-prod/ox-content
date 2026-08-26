@@ -14,7 +14,6 @@ import { buildSsg } from "./ssg";
 import type { ResolvedOptions } from "./types";
 
 const tempDirs: string[] = [];
-
 afterEach(async () => {
   await Promise.all(tempDirs.splice(0).map((dir) => fs.rm(dir, { recursive: true, force: true })));
 });
@@ -328,6 +327,7 @@ function ssgOptions(overrides: Partial<ResolvedOptions> = {}): ResolvedOptions {
       pm: false,
       spotify: false,
       appleMusic: false,
+      speakerDeck: false,
       stackBlitz: false,
       twitter: false,
       bluesky: false,

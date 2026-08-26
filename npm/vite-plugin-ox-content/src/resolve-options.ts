@@ -121,6 +121,7 @@ export function resolveBuiltinEmbedOptions(
       pm: false,
       spotify: false,
       appleMusic: false,
+      speakerDeck: false,
       audio: false,
       video: false,
       stackBlitz: false,
@@ -136,6 +137,7 @@ export function resolveBuiltinEmbedOptions(
     pm: resolvePmOptions(options?.pm),
     spotify: options?.spotify === true,
     appleMusic: options?.appleMusic === true,
+    speakerDeck: options?.speakerDeck === true,
     audio: options?.audio === true,
     video: options?.video === true,
     stackBlitz: options?.stackBlitz === true,
@@ -144,13 +146,11 @@ export function resolveBuiltinEmbedOptions(
     webContainer: options?.webContainer === true,
   };
 }
-
 function resolveSingleEmbedOptions<T extends object>(options: boolean | T | undefined): T | false {
   if (options === false) return false;
   if (options === true || options === undefined) return {} as T;
   return options;
 }
-
 function resolveTwitterEmbedOptions(
   options: boolean | TwitterEmbedOptions | undefined,
 ): TwitterEmbedOptions | false {

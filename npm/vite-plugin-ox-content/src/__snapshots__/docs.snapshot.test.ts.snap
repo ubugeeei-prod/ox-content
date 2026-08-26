@@ -460,6 +460,37 @@ as authored markup. Video accepts <code>poster</code>, <code>captions</code> / n
 <code>title</code>, <code>transcript</code>, <code>download</code>, and <code>width</code> / <code>height</code> for aspect-ratio
 reservation. Native controls stay labeled.</p>
 ",
+  "speakerDeck": "<h1 id="speaker-deck-embed">Speaker Deck Embed</h1>
+<p>Speaker Deck embeds are opt-in. A player URL or oEmbed-resolved share URL
+renders title, author, and a lazy iframe. Fetch or parse failures become a
+safe link card.</p>
+<pre><code class="language-ts">import { oxContent } from "@ox-content/vite-plugin";
+
+export default {
+  plugins: [
+    oxContent({
+      embeds: {
+        speakerDeck: true,
+      },
+    }),
+  ],
+};
+</code></pre>
+<p>Resolved player URL (no network request):</p>
+<pre><code class="language-html">&#x3C;SpeakerDeck
+  url="https://speakerdeck.com/player/abcdef1234567890"
+  title="My Talk"
+  author="Jane Doe"
+>&#x3C;/SpeakerDeck>
+</code></pre>
+<figure class="ox-speaker-deck"><iframe class="ox-speaker-deck" src="https://speakerdeck.com/player/abcdef1234567890" title="My Talk" width="100%" height="480" loading="lazy" allowfullscreen sandbox="allow-scripts allow-same-origin allow-popups allow-popups-to-escape-sandbox allow-presentation" referrerpolicy="strict-origin-when-cross-origin"></iframe><figcaption class="ox-speaker-deck__meta"><a href="https://speakerdeck.com/player/abcdef1234567890" target="_blank" rel="noopener noreferrer"><strong class="ox-speaker-deck__title">My Talk</strong><span class="ox-speaker-deck__author">Jane Doe</span></a></figcaption></figure>
+<p>Share URLs (<code>https://speakerdeck.com/{user}/{slug}</code>) fetch oEmbed metadata at
+build time and inject the player id, title, and author. <code>javascript:</code> and
+<code>data:</code> URLs are rejected and stay as authored markup.</p>
+<p>The iframe is lazy-loaded with <code>sandbox</code> and
+<code>referrerpolicy="strict-origin-when-cross-origin"</code>. Pages that set a
+Content-Security-Policy need <code>frame-src https://speakerdeck.com</code>.</p>
+",
   "stackBlitz": "<h1 id="stackblitz-embed">StackBlitz Embed</h1>
 <p>StackBlitz embeds are opt-in through the built-in embed options.</p>
 <pre><code class="language-ts">import { oxContent } from "@ox-content/vite-plugin";

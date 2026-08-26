@@ -15,6 +15,11 @@ pub struct JsMediaEmbedsOptions {
     /// Default: `false`.
     pub apple_music: Option<bool>,
 
+    /// Render `<SpeakerDeck>` embeds.
+    ///
+    /// Default: `false`.
+    pub speaker_deck: Option<bool>,
+
     /// Render `<StackBlitz>` embeds.
     ///
     /// Default: `false`.
@@ -51,6 +56,7 @@ impl From<JsMediaEmbedsOptions> for MediaEmbedsOptions {
         Self {
             spotify: value.spotify,
             apple_music: value.apple_music,
+            speaker_deck: value.speaker_deck,
             audio: value.audio,
             video: value.video,
             stack_blitz: value.stack_blitz,

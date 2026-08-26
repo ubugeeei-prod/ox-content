@@ -103,6 +103,7 @@ pub(super) fn generate_html_inner(
             "ox-webcontainer",
             "ox-spotify",
             "ox-apple-music",
+            "ox-speaker-deck",
             "ox-audio",
             "ox-video",
             "ox-stackblitz",

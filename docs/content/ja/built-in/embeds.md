@@ -7,19 +7,20 @@ description: Markdown 中の HTML 風タグで書く GitHub / OG カード、パ
 
 埋め込みは Markdown 中の HTML 風タグで、変換時に静的 HTML へ展開されます。静的マークアップだけを出す 2 つは既定でオン、それ以外はオプトインです。
 
-| 埋め込み                 | オプション            | 既定    | 書き方                             |
-| ------------------------ | --------------------- | ------- | ---------------------------------- |
-| GitHub カード            | `embeds.github`       | `true`  | `<GitHub repo="owner/name" />`     |
-| OG リンクカード          | `embeds.openGraph`    | `true`  | `<OgCard url="https://..." />`     |
-| パッケージマネージャタブ | `embeds.pm`           | `false` | `<pm>npm install pkg</pm>`         |
-| Twitter / X              | `embeds.twitter`      | `false` | `<Tweet />` または `<XPost />`     |
-| Bluesky                  | `embeds.bluesky`      | `false` | `<Bluesky />`                      |
-| Spotify                  | `embeds.spotify`      | `false` | `<Spotify url="https://..." />`    |
-| Apple Music              | `embeds.appleMusic`   | `false` | `<AppleMusic url="https://..." />` |
-| Audio                    | `embeds.audio`        | `false` | `<Audio src="https://..." />`      |
-| Video                    | `embeds.video`        | `false` | `<Video src="https://..." />`      |
-| StackBlitz               | `embeds.stackBlitz`   | `false` | `<StackBlitz url="https://..." />` |
-| WebContainer             | `embeds.webContainer` | `false` | `<WebContainer />`                 |
+| 埋め込み                 | オプション            | 既定    | 書き方                              |
+| ------------------------ | --------------------- | ------- | ----------------------------------- |
+| GitHub カード            | `embeds.github`       | `true`  | `<GitHub repo="owner/name" />`      |
+| OG リンクカード          | `embeds.openGraph`    | `true`  | `<OgCard url="https://..." />`      |
+| パッケージマネージャタブ | `embeds.pm`           | `false` | `<pm>npm install pkg</pm>`          |
+| Twitter / X              | `embeds.twitter`      | `false` | `<Tweet />` または `<XPost />`      |
+| Bluesky                  | `embeds.bluesky`      | `false` | `<Bluesky />`                       |
+| Spotify                  | `embeds.spotify`      | `false` | `<Spotify url="https://..." />`     |
+| Apple Music              | `embeds.appleMusic`   | `false` | `<AppleMusic url="https://..." />`  |
+| Speaker Deck             | `embeds.speakerDeck`  | `false` | `<SpeakerDeck url="https://..." />` |
+| Audio                    | `embeds.audio`        | `false` | `<Audio src="https://..." />`       |
+| Video                    | `embeds.video`        | `false` | `<Video src="https://..." />`       |
+| StackBlitz               | `embeds.stackBlitz`   | `false` | `<StackBlitz url="https://..." />`  |
+| WebContainer             | `embeds.webContainer` | `false` | `<WebContainer />`                  |
 
 タブと YouTube 埋め込みは `embeds` オプションの外です。SSG ビルドと dev preview では常に処理され、設定は不要です。同じ執筆モデルなので [下](#タブ) で扱います。
 
@@ -305,6 +306,24 @@ oxContent({
 `music.apple.com` の共有 URL は `embed.music.apple.com` に書き換えられ、ストアフロントとパス、曲選択の `i=` クエリは残します。すでに埋め込み用の `embed.music.apple.com` URL も、同じホスト／パス検査のあと受け付けます。HTTPS でない URL、似せたホスト、認証情報、フラグメント、不正なパスは iframe にせず、書いたまま残します。
 
 プレーヤーは第三者 iframe なので、オプションは既定でオフです。Content-Security-Policy を設定しているサイトでは、プレーヤーを読み込むために `frame-src https://embed.music.apple.com`（または同等の `child-src`）が必要です。書き方の詳細は [Apple Music Embed](/examples/apple-music-embed.md) を見てください。
+
+## Speaker Deck
+
+`embeds.speakerDeck` は、プレーヤー URL か oEmbed メタデータが解決できたとき遅延 iframe を描画し、取得や解析に失敗したときは安全なリンクカードに落とします。
+
+```mdx
+<SpeakerDeck
+  url="https://speakerdeck.com/player/abcdef1234567890"
+  title="My Talk"
+  author="Jane Doe"
+/>
+```
+
+<SpeakerDeck url="https://speakerdeck.com/player/abcdef1234567890" title="My Talk" author="Jane Doe" />
+
+`speakerdeck.com/{user}/{slug}` の共有 URL はビルド時に [oEmbed](https://oembed.com/) で `title` / `author_name` / プレーヤー ID / サムネイルを取ります。すでに埋め込み用の `speakerdeck.com/player/{id}` はネットワークなしで描画します。`javascript:` と `data:` URL は書いたまま残します。
+
+oEmbed 取得やプレーヤー ID の解析に失敗したときは、元の HTTPS Speaker Deck URL を指すフォールバックリンクカードになります。iframe は遅延読み込みで、`sandbox` と `referrerpolicy="strict-origin-when-cross-origin"` を付けます。Content-Security-Policy を設定しているサイトでは `frame-src https://speakerdeck.com` が必要です。詳細は [Speaker Deck Embed](/examples/speaker-deck-embed.md) を見てください。
 
 ## Audio / Video
 

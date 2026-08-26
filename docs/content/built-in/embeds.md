@@ -9,19 +9,20 @@ Embeds are HTML-like tags in Markdown that expand into static HTML at
 transform time. Two are enabled by default because they produce plain static
 markup; everything else is opt-in.
 
-| Embed                | Option                | Default | Authoring form                     |
-| -------------------- | --------------------- | ------- | ---------------------------------- |
-| GitHub card          | `embeds.github`       | `true`  | `<GitHub repo="owner/name" />`     |
-| Open Graph link card | `embeds.openGraph`    | `true`  | `<OgCard url="https://..." />`     |
-| Package manager tabs | `embeds.pm`           | `false` | `<pm>npm install pkg</pm>`         |
-| Twitter/X            | `embeds.twitter`      | `false` | `<Tweet />` or `<XPost />`         |
-| Bluesky              | `embeds.bluesky`      | `false` | `<Bluesky />`                      |
-| Spotify              | `embeds.spotify`      | `false` | `<Spotify url="https://..." />`    |
-| Apple Music          | `embeds.appleMusic`   | `false` | `<AppleMusic url="https://..." />` |
-| Audio                | `embeds.audio`        | `false` | `<Audio src="https://..." />`      |
-| Video                | `embeds.video`        | `false` | `<Video src="https://..." />`      |
-| StackBlitz           | `embeds.stackBlitz`   | `false` | `<StackBlitz url="https://..." />` |
-| WebContainer         | `embeds.webContainer` | `false` | `<WebContainer />`                 |
+| Embed                | Option                | Default | Authoring form                      |
+| -------------------- | --------------------- | ------- | ----------------------------------- |
+| GitHub card          | `embeds.github`       | `true`  | `<GitHub repo="owner/name" />`      |
+| Open Graph link card | `embeds.openGraph`    | `true`  | `<OgCard url="https://..." />`      |
+| Package manager tabs | `embeds.pm`           | `false` | `<pm>npm install pkg</pm>`          |
+| Twitter/X            | `embeds.twitter`      | `false` | `<Tweet />` or `<XPost />`          |
+| Bluesky              | `embeds.bluesky`      | `false` | `<Bluesky />`                       |
+| Spotify              | `embeds.spotify`      | `false` | `<Spotify url="https://..." />`     |
+| Apple Music          | `embeds.appleMusic`   | `false` | `<AppleMusic url="https://..." />`  |
+| Speaker Deck         | `embeds.speakerDeck`  | `false` | `<SpeakerDeck url="https://..." />` |
+| Audio                | `embeds.audio`        | `false` | `<Audio src="https://..." />`       |
+| Video                | `embeds.video`        | `false` | `<Video src="https://..." />`       |
+| StackBlitz           | `embeds.stackBlitz`   | `false` | `<StackBlitz url="https://..." />`  |
+| WebContainer         | `embeds.webContainer` | `false` | `<WebContainer />`                  |
 
 Tabs and YouTube embeds are not part of the `embeds` option: they are always
 processed in SSG builds and dev preview, with no configuration needed. They are
@@ -401,6 +402,34 @@ Sites that set a Content-Security-Policy need
 `frame-src https://embed.music.apple.com` (or the equivalent `child-src`)
 before the player can load. See [Apple Music Embed](../examples/apple-music-embed.md)
 for authoring details.
+
+## Speaker Deck
+
+`embeds.speakerDeck` renders a lazy Speaker Deck player when a player URL or
+oEmbed metadata can be resolved, and a safe link card when fetch or parse
+fails:
+
+```mdx
+<SpeakerDeck
+  url="https://speakerdeck.com/player/abcdef1234567890"
+  title="My Talk"
+  author="Jane Doe"
+/>
+```
+
+<SpeakerDeck url="https://speakerdeck.com/player/abcdef1234567890" title="My Talk" author="Jane Doe" />
+
+Share URLs on `speakerdeck.com/{user}/{slug}` fetch [oEmbed](https://oembed.com/)
+metadata at build time (`title`, `author_name`, player id, and thumbnail when
+present). Already-embedded `speakerdeck.com/player/{id}` URLs render without a
+network request. `javascript:` and `data:` URLs stay as authored markup.
+
+When oEmbed fetch or player-id parse fails, the output is a fallback link card
+that still points at the original HTTPS Speaker Deck URL. The iframe is
+lazy-loaded, sandboxed, and uses `referrerpolicy="strict-origin-when-cross-origin"`.
+Sites that set a Content-Security-Policy need
+`frame-src https://speakerdeck.com`. See
+[Speaker Deck Embed](../examples/speaker-deck-embed.md).
 
 ## Audio and Video
 

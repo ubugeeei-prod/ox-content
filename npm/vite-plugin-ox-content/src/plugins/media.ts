@@ -1,4 +1,5 @@
 import { importNapiModule } from "../napi";
+import { enrichSpeakerDeckEmbeds } from "./speaker-deck";
 import { transformFetchedTweets } from "./twitter";
 import type { TwitterEmbedOptions } from "./twitter";
 
@@ -14,6 +15,12 @@ export interface MediaEmbedOptions {
    * @default false
    */
   appleMusic?: boolean;
+
+  /**
+   * Render `<SpeakerDeck>` embeds.
+   * @default false
+   */
+  speakerDeck?: boolean;
 
   /**
    * Render `<Audio>` native players.
@@ -65,12 +72,16 @@ export async function transformMediaEmbeds(
   if (typeof options.twitter === "object") {
     result = await transformFetchedTweets(result, options.twitter);
   }
+  if (options.speakerDeck) {
+    result = await enrichSpeakerDeckEmbeds(result);
+  }
   if (!hasMediaMarker(result)) return result;
 
   const mod = await importNapiModule();
   return mod.transformMediaEmbeds(result, {
     spotify: options.spotify,
     appleMusic: options.appleMusic,
+    speakerDeck: options.speakerDeck,
     audio: options.audio,
     video: options.video,
     stackBlitz: options.stackBlitz,
@@ -84,6 +95,7 @@ function hasEnabledMediaEmbed(options: MediaEmbedOptions): boolean {
   return Boolean(
     options.spotify ||
     options.appleMusic ||
+    options.speakerDeck ||
     options.audio ||
     options.video ||
     options.stackBlitz ||
@@ -95,7 +107,8 @@ function hasEnabledMediaEmbed(options: MediaEmbedOptions): boolean {
 
 function hasMediaMarker(html: string): boolean {
   return (
-    /<(spotify|applemusic|stackblitz|tweet|xpost|bluesky|webcontainer)[\s/>]/i.test(html) ||
-    /<(Audio|Video)[\s/>]/.test(html)
+    /<(spotify|applemusic|speakerdeck|stackblitz|tweet|xpost|bluesky|webcontainer)[\s/>]/i.test(
+      html,
+    ) || /<(Audio|Video)[\s/>]/.test(html)
   );
 }

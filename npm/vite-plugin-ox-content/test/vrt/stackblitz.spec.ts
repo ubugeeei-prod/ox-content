@@ -14,6 +14,7 @@ test("stackblitz markdown renders as an iframe embed", async ({ page }) => {
         pm: false,
         spotify: false,
         appleMusic: false,
+        speakerDeck: false,
         stackBlitz: true,
         twitter: false,
         bluesky: false,
