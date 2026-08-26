@@ -89,6 +89,15 @@ oxContent({
 });
 ```
 
+The plugin then emits `.md` modules only. Import official component CSS in
+the host that renders `html` — see
+[Component styles](../built-in/component-styles.md).
+
+```css
+@import "@ox-content/vite-plugin/styles/core.css";
+@import "@ox-content/vite-plugin/styles/social.css";
+```
+
 ## Bare Mode
 
 For benchmarking or when using custom post-processing, use bare mode to output minimal HTML without navigation or styles:

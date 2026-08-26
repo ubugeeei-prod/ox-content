@@ -101,7 +101,7 @@ fn generate_html_inner(
     // Build CSS as named sections instead of one anonymous blob. Shared,
     // content-addressed extraction can then pull out only the sections that are
     // globally cacheable and keep page-specific or relative-url CSS inline.
-    let mut css_sections = vec![wrap_css_section("base", SSG_CSS)];
+    let mut css_sections = vec![wrap_css_section("base", SSG_CSS.as_str())];
 
     if view_transitions_enabled(theme) {
         css_sections.push(wrap_css_section("mpa-navigation", MPA_NAVIGATION_CSS));

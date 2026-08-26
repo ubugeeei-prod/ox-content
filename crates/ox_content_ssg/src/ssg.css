@@ -1069,38 +1069,7 @@ a:hover {
 .content .ox-badge--required {
   --octc-badge-accent: #c2410c;
 }
-.content .ox-magic-link {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.26em;
-  max-width: 100%;
-  padding: 0.08em 0.38em 0.08em 0.24em;
-  border: 1px solid color-mix(in srgb, var(--octc-color-border) 88%, transparent);
-  border-radius: 0.42em;
-  background: color-mix(in srgb, var(--octc-color-bg-alt) 82%, var(--octc-color-bg) 18%);
-  color: inherit;
-  line-height: 1;
-  text-decoration: none;
-  vertical-align: -0.08em;
-}
-.content .ox-magic-link:hover {
-  border-color: color-mix(in srgb, var(--octc-color-primary) 45%, var(--octc-color-border));
-}
-.content .ox-magic-link:focus-visible {
-  outline: 2px solid color-mix(in srgb, var(--octc-color-primary) 72%, transparent);
-  outline-offset: 2px;
-}
-.content .ox-magic-link__image {
-  width: 1em;
-  height: 1em;
-  border-radius: 999px;
-  object-fit: cover;
-  flex: 0 0 auto;
-}
-.content .ox-magic-link__label {
-  font-weight: 600;
-  font-size: 0.9em;
-}
+/* @include magic-links.css */
 .content .ox-figure {
   margin: 1.25rem 0;
 }
