@@ -250,7 +250,7 @@ Generate table of contents.
 ### embeds
 
 - Type: `BuiltinEmbedOptions | false`
-- Default: `{ github: true, openGraph: true, pm: false, spotify: false, stackBlitz: false, twitter: false, bluesky: false, webContainer: false }`
+- Default: `{ github: true, openGraph: true, pm: false, spotify: false, appleMusic: false, stackBlitz: false, twitter: false, bluesky: false, webContainer: false }`
 
 Built-in static embeds are rendered at transform time, with no client-side JavaScript.
 Non-standard embeds are opt-in.

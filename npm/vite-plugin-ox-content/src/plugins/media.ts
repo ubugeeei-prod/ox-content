@@ -10,6 +10,12 @@ export interface MediaEmbedOptions {
   spotify?: boolean;
 
   /**
+   * Render `<AppleMusic>` embeds.
+   * @default false
+   */
+  appleMusic?: boolean;
+
+  /**
    * Render `<StackBlitz>` embeds.
    * @default false
    */
@@ -52,6 +58,7 @@ export async function transformMediaEmbeds(
   const mod = await importNapiModule();
   return mod.transformMediaEmbeds(result, {
     spotify: options.spotify,
+    appleMusic: options.appleMusic,
     stackBlitz: options.stackBlitz,
     twitter: Boolean(options.twitter),
     bluesky: options.bluesky,
@@ -62,6 +69,7 @@ export async function transformMediaEmbeds(
 function hasEnabledMediaEmbed(options: MediaEmbedOptions): boolean {
   return Boolean(
     options.spotify ||
+    options.appleMusic ||
     options.stackBlitz ||
     options.twitter ||
     options.bluesky ||
@@ -70,5 +78,5 @@ function hasEnabledMediaEmbed(options: MediaEmbedOptions): boolean {
 }
 
 function hasMediaMarker(html: string): boolean {
-  return /<(spotify|stackblitz|tweet|xpost|bluesky|webcontainer)[\s/>]/i.test(html);
+  return /<(spotify|applemusic|stackblitz|tweet|xpost|bluesky|webcontainer)[\s/>]/i.test(html);
 }

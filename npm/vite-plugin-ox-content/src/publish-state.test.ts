@@ -329,6 +329,7 @@ function options(root: string, enabled: boolean): ResolvedOptions {
       openGraph: {},
       pm: false,
       spotify: false,
+      appleMusic: false,
       stackBlitz: false,
       twitter: false,
       bluesky: false,

@@ -327,6 +327,7 @@ function ssgOptions(overrides: Partial<ResolvedOptions> = {}): ResolvedOptions {
       openGraph: {},
       pm: false,
       spotify: false,
+      appleMusic: false,
       stackBlitz: false,
       twitter: false,
       bluesky: false,

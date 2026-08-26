@@ -96,7 +96,14 @@ pub(super) fn generate_html_inner(
     }
     if page_content_contains_any(
         &page_data.content,
-        &["ox-tweet", "ox-bluesky", "ox-webcontainer", "ox-spotify", "ox-stackblitz"],
+        &[
+            "ox-tweet",
+            "ox-bluesky",
+            "ox-webcontainer",
+            "ox-spotify",
+            "ox-apple-music",
+            "ox-stackblitz",
+        ],
     ) {
         css_sections.push(wrap_css_section("plugin-social", SOCIAL_CSS));
     }

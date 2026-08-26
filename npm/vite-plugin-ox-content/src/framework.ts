@@ -124,6 +124,7 @@ export function createFrameworkMarkdownOptions(options: FrameworkMarkdownOptions
       openGraph: options.embeds?.openGraph ?? {},
       pm: false,
       spotify: false,
+      appleMusic: false,
       stackBlitz: false,
       twitter: false,
       bluesky: false,
