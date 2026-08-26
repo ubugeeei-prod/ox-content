@@ -42,6 +42,7 @@ you can load compact Tweet chrome without the full-card sheet.
 | `styles/tabs.css`         | Tabs and package-manager tabs                                                                                  |
 | `styles/mermaid.css`      | Mermaid diagrams                                                                                               |
 | `styles/graphviz.css`     | Graphviz DOT diagrams                                                                                          |
+| `styles/citations.css`    | Citation links and generated bibliography sections                                                             |
 | `styles/not-by-ai.css`    | `<NotByAI />` authorship badge                                                                                 |
 | `styles/all.css`          | The feature sheets above, in that order                                                                        |
 

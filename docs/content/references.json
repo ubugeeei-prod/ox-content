@@ -1,0 +1,38 @@
+[
+  {
+    "id": "rfc9110",
+    "title": "HTTP Semantics",
+    "author": [
+      {
+        "given": "Roy T.",
+        "family": "Fielding"
+      },
+      {
+        "given": "Mark",
+        "family": "Nottingham"
+      },
+      {
+        "given": "Julian",
+        "family": "Reschke"
+      }
+    ],
+    "issued": {
+      "date-parts": [[2022]]
+    },
+    "container-title": "RFC 9110",
+    "URL": "https://www.rfc-editor.org/rfc/rfc9110"
+  },
+  {
+    "id": "commonmark",
+    "title": "CommonMark Spec",
+    "author": [
+      {
+        "literal": "CommonMark contributors"
+      }
+    ],
+    "issued": {
+      "date-parts": [[2024]]
+    },
+    "URL": "https://spec.commonmark.org"
+  }
+]

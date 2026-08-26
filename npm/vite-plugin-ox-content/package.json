@@ -63,6 +63,7 @@
     "./styles/tabs.css": "./dist/styles/tabs.css",
     "./styles/mermaid.css": "./dist/styles/mermaid.css",
     "./styles/graphviz.css": "./dist/styles/graphviz.css",
+    "./styles/citations.css": "./dist/styles/citations.css",
     "./styles/not-by-ai.css": "./dist/styles/not-by-ai.css"
   },
   "publishConfig": {

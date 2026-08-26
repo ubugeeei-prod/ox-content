@@ -138,6 +138,7 @@ export default defineConfig(({ mode }) => {
                       { text: "Heading Permalinks", link: "/built-in/heading-permalinks.md" },
                       { text: "Syntax Extensions", link: "/built-in/syntax-extensions.md" },
                       { text: "Cross References", link: "/built-in/cross-references.md" },
+                      { text: "Citations", link: "/built-in/citations.md" },
                       { text: "Custom Containers", link: "/built-in/containers.md" },
                       { text: "Cards", link: "/built-in/cards.md" },
                       { text: "Step Lists", link: "/built-in/steps.md" },
@@ -266,8 +267,6 @@ export default defineConfig(({ mode }) => {
 
         // Opt-in authoring features used by the Built-in Features guides,
         // so those pages can render live examples inline.
-        // (wikiLinks and attrs stay off: both also rewrite `[[...]]` / `{...}`
-        // inside raw HTML <code> emitted by the generated API reference.)
         headingPermalinks: true,
         emojiShortcodes: true,
         math: true,
@@ -284,6 +283,10 @@ export default defineConfig(({ mode }) => {
               image: "https://github.com/oxc-project.png",
             },
           },
+        },
+        citations: {
+          bibliography: "references.json",
+          rootDir: fileURLToPath(new URL("content", import.meta.url)),
         },
         images: true,
         codeImports: true,
@@ -312,7 +315,6 @@ export default defineConfig(({ mode }) => {
           video: true,
         },
         mermaid: true,
-
         // API documentation generation (like cargo doc)
         docs: {
           enabled: true,
@@ -335,14 +337,12 @@ export default defineConfig(({ mode }) => {
         outDir: "dist/docs",
       }),
     ],
-
     server: {
       port: 4173,
     },
     preview: {
       port: 4173,
     },
-
     build: {
       outDir: "dist/docs",
     },

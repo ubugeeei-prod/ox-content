@@ -39,6 +39,7 @@ export const STYLE_ENTRIES = /** @type {const} */ ([
   { name: "tabs.css", sources: ["plugins/tabs.css"] },
   { name: "mermaid.css", sources: ["plugins/mermaid.css"] },
   { name: "graphviz.css", sources: ["plugins/graphviz.css"] },
+  { name: "citations.css", sources: ["plugins/citations.css"] },
   { name: "not-by-ai.css", sources: ["plugins/not-by-ai.css"] },
 ]);
 

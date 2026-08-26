@@ -9,6 +9,7 @@ import * as fs from "node:fs/promises";
 import * as path from "node:path";
 import { buildSearchIndex, writeSearchIndex } from "./search";
 import type {
+  ResolvedCitationsOptions,
   ResolvedConditionalBlockOptions,
   ResolvedPublishStateOptions,
   ResolvedVersionEntry,
@@ -200,6 +201,7 @@ export async function writeSnapshotSearchIndex(input: {
   publishState?: ResolvedPublishStateOptions;
   mdx?: boolean;
   conditionalBlocks?: ResolvedConditionalBlockOptions;
+  citations?: ResolvedCitationsOptions;
 }): Promise<string | undefined> {
   const prefix = sanitizePrefix(input.prefix);
   if (!prefix) {
@@ -215,6 +217,7 @@ export async function writeSnapshotSearchIndex(input: {
     [],
     input.mdx,
     input.conditionalBlocks,
+    input.citations,
   );
   await fs.mkdir(destDir, { recursive: true });
   await writeSearchIndex(json, destDir);

@@ -20,7 +20,21 @@ import type {
   CrossReferencesOptions,
   ResolvedCrossReferencesOptions,
 } from "./cross-references";
+import type {
+  BibliographyEntry,
+  CitationReference,
+  CitationsOptions,
+  ResolvedCitationsOptions,
+} from "./citation-types";
 import type { ThemeComponent } from "./theme-renderer";
+
+export type {
+  BibliographyEntry,
+  CitationFailureMode,
+  CitationReference,
+  CitationsOptions,
+  ResolvedCitationsOptions,
+} from "./citation-types";
 
 // =============================================================================
 // Entry Page Types (VitePress-like)
@@ -1797,6 +1811,16 @@ export interface OxContentOptions {
   xrefs?: boolean | CrossReferencesOptions;
 
   /**
+   * Opt-in bibliography-backed citation references.
+   *
+   * References such as `[@rfc9110]` and `[@smith2024; @doe2023]` become
+   * links to generated bibliography entries loaded from local CSL JSON files.
+   *
+   * @default false
+   */
+  citations?: boolean | CitationsOptions;
+
+  /**
    * Opt-in `{badge:variant}` inline badges.
    *
    * Passing `true` or an options object enables the built-in variants.
@@ -2266,6 +2290,7 @@ export interface ResolvedOptions {
   emojiShortcodes: ResolvedEmojiShortcodeOptions;
   attrs: ResolvedAttrsOptions;
   crossReferences: ResolvedCrossReferencesOptions;
+  citations: ResolvedCitationsOptions;
   badges: ResolvedBadgeOptions;
   /**
    * Present after `resolveOptions`. Omitted in hand-built fixtures means off.
@@ -3961,6 +3986,16 @@ export interface TransformResult {
    * Labeled cross-reference targets collected during the Markdown transform.
    */
   crossReferences: CrossReferenceEntry[];
+
+  /**
+   * Citation references collected during the Markdown transform.
+   */
+  citations: CitationReference[];
+
+  /**
+   * Bibliography entries used by this document.
+   */
+  bibliography: BibliographyEntry[];
 }
 
 /**

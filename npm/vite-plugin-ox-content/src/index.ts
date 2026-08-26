@@ -47,6 +47,13 @@ export type {
   ResolvedCrossReferencesOptions,
 } from "./cross-references";
 export type {
+  BibliographyEntry,
+  CitationFailureMode,
+  CitationReference,
+  CitationsOptions,
+  ResolvedCitationsOptions,
+} from "./citations";
+export type {
   CodeAnnotationSyntax,
   CodeAnnotationsOptions,
   ResolvedCodeAnnotationsOptions,
@@ -604,6 +611,7 @@ function createSearchPlugin(resolvedOptions: ResolvedOptions, getRoot: () => str
           notFoundSearchExcludeIds(resolvedOptions.ssg.notFound),
           resolvedOptions.mdx,
           resolvedOptions.conditionalBlocks,
+          resolvedOptions.citations,
         );
         console.log("[ox-content] Search index built");
       } catch (err) {
@@ -650,6 +658,7 @@ function createSearchPlugin(resolvedOptions: ResolvedOptions, getRoot: () => str
               notFoundSearchExcludeIds(resolvedOptions.ssg.notFound),
               resolvedOptions.mdx,
               resolvedOptions.conditionalBlocks,
+              resolvedOptions.citations,
             );
             stale = false;
           }

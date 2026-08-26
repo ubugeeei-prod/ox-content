@@ -1988,6 +1988,7 @@ async function applyDocumentationVersions(
           publishState: context.options.publishState,
           mdx: context.options.mdx,
           conditionalBlocks: context.options.conditionalBlocks,
+          citations: context.options.citations,
         });
       } catch (err) {
         const message = err instanceof Error ? err.message : String(err);

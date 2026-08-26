@@ -15,6 +15,7 @@ everywhere until a site explicitly enables an extension.
 | `attrs`           | `boolean` / `AttrsOptions`           | `false` |
 | `crossReferences` | `boolean` / `CrossReferencesOptions` | `false` |
 | `xrefs`           | Alias for `crossReferences`          | `false` |
+| `citations`       | `boolean` / `CitationsOptions`       | `false` |
 | `cjkEmphasis`     | `boolean`                            | `false` |
 | `magicLinks`      | `boolean` / `MagicLinkOptions`       | `false` |
 | `notByAi`         | `boolean` / `NotByAiOptions`         | `false` |
@@ -203,6 +204,12 @@ Opt-in `@sec-*`, `@fig-*`, and `@tbl-*` references link to labeled headings,
 figures, images, and tables. Off by default. See
 [Cross References](./cross-references.md).
 
+## Citations
+
+Opt-in `[@key]` and `[@key; -@other]` references link to generated bibliography
+entries loaded from local CSL JSON. Off by default. See
+[Citations](./citations.md).
+
 ## NotByAI Badge
 
 Opt-in `<NotByAI />` emits a static human-authorship disclosure. It is not a
@@ -231,6 +238,7 @@ Opt-in `Term` / `: definition` glossary lists. Off by default. See
 - [Magic Links](./magic-links.md) — configurable GitHub, alias, and URL links.
 - [Cross References](./cross-references.md) — generated labels for sections,
   figures, and tables.
+- [Citations](./citations.md) — generated bibliography-backed references.
 - [Keyboard Keys](./keyboard-keys.md) — `{kbd:Ctrl+K}` shortcut markup.
 - [Abbreviations](./abbreviations.md) — `*[TERM]:` glossary expansion.
 - [Definition Lists](./definition-lists.md) — opt-in `Term` / `: definition`

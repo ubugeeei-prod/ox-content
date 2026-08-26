@@ -1,6 +1,7 @@
 import type { CrossReferenceKind } from "./cross-reference-types";
 
 const PROTECTED_TEXT_RE = /<!--[\s\S]*?-->|<(pre|code|script|style|textarea|a)\b[\s\S]*?<\/\1>/gi;
+const CITATION_LIKE_GROUP_RE = /\[([^\]\n]+)\]/g;
 const TAG_RE = /(<[^>]+>)/g;
 
 export function transformText(html: string, replacer: (text: string) => string): string {
@@ -13,6 +14,23 @@ export function transformText(html: string, replacer: (text: string) => string):
     cursor = start + match[0].length;
   }
   return output + transformTextOutsideTags(html.slice(cursor), replacer);
+}
+
+export function transformTextOutsideCitationGroups(
+  text: string,
+  replacer: (text: string) => string,
+): string {
+  let output = "";
+  let cursor = 0;
+  for (const match of text.matchAll(CITATION_LIKE_GROUP_RE)) {
+    const start = match.index ?? 0;
+    const body = (match[1] ?? "").trim();
+    if (!body.startsWith("@") && !body.startsWith("-@")) continue;
+    output += replacer(text.slice(cursor, start));
+    output += match[0];
+    cursor = start + match[0].length;
+  }
+  return output + replacer(text.slice(cursor));
 }
 
 export function findFirstImageWithId(body: string): {

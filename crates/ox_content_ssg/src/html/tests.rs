@@ -21,6 +21,7 @@ fn snapshot_text(value: &str) -> String {
 
 mod abbr;
 mod aside;
+mod citations;
 mod contributors;
 mod image_gallery;
 mod lazy_widgets;
@@ -79,6 +80,7 @@ fn default_theme_surfaces_stay_flat() {
         super::FILE_TREE_CSS,
         super::IMAGE_GALLERY_CSS,
         super::TIMELINE_CSS,
+        super::CITATIONS_CSS,
         super::not_by_ai::NOT_BY_AI_CSS,
         super::KBD_CSS,
         super::ABBR_CSS,

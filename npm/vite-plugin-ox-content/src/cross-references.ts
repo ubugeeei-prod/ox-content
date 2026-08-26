@@ -12,6 +12,7 @@ import {
   shouldTrackTarget,
   textContent,
   transformText,
+  transformTextOutsideCitationGroups,
 } from "./cross-reference-html";
 import type {
   CrossReferenceEntry,
@@ -45,8 +46,7 @@ const disabled: ResolvedCrossReferencesOptions = {
   labels: { figure: "Figure", table: "Table", section: "Section" },
 };
 
-const TEXT_REFERENCE_RE = /(^|[^\w@/])@([A-Za-z][A-Za-z0-9_-]*)\b/g;
-
+const TEXT_REFERENCE_RE = /(^|[^\w@/[])@([A-Za-z][A-Za-z0-9_-]*)\b/g;
 export function resolveCrossReferencesOptions(
   options: OxContentOptions["crossReferences"],
 ): ResolvedOptions["crossReferences"] {
@@ -275,28 +275,39 @@ function replaceReferences(
   diagnostics: CrossReferenceDiagnostic[],
 ): string {
   return transformText(html, (text) => {
-    return text.replace(TEXT_REFERENCE_RE, (full, prefix: string, id: string) => {
-      const expected = expectedKind(id);
-      if (!expected) return full;
+    return transformTextOutsideCitationGroups(text, (segment) =>
+      replaceReferenceSegment(segment, options, targets, diagnostics),
+    );
+  });
+}
 
-      const target = targets.get(id);
-      if (!target) {
-        diagnostics.push({
-          policy: options.missing,
-          message: `missing cross-reference target "${id}"`,
-        });
-        return full;
-      }
-      if (target.kind !== expected) {
-        diagnostics.push({
-          policy: options.mismatches,
-          message: `cross-reference "${id}" expects ${expected} but found ${target.kind}`,
-        });
-        return full;
-      }
+function replaceReferenceSegment(
+  text: string,
+  options: ResolvedCrossReferencesOptions,
+  targets: Map<string, CrossReferenceTarget>,
+  diagnostics: CrossReferenceDiagnostic[],
+): string {
+  return text.replace(TEXT_REFERENCE_RE, (full, prefix: string, id: string) => {
+    const expected = expectedKind(id);
+    if (!expected) return full;
 
-      return `${prefix}<a class="ox-xref ox-xref-${target.kind}" href="${target.href}" data-ox-xref-id="${escapeAttr(target.id)}" data-ox-xref-kind="${target.kind}">${escapeHtml(target.text)}</a>`;
-    });
+    const target = targets.get(id);
+    if (!target) {
+      diagnostics.push({
+        policy: options.missing,
+        message: `missing cross-reference target "${id}"`,
+      });
+      return full;
+    }
+    if (target.kind !== expected) {
+      diagnostics.push({
+        policy: options.mismatches,
+        message: `cross-reference "${id}" expects ${expected} but found ${target.kind}`,
+      });
+      return full;
+    }
+
+    return `${prefix}<a class="ox-xref ox-xref-${target.kind}" href="${target.href}" data-ox-xref-id="${escapeAttr(target.id)}" data-ox-xref-kind="${target.kind}">${escapeHtml(target.text)}</a>`;
   });
 }
 

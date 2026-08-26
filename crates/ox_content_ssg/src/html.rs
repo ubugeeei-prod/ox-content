@@ -245,6 +245,9 @@ const MERMAID_CSS: &str = include_str!("plugins/mermaid.css");
 /// CSS styles for Graphviz plugin.
 const GRAPHVIZ_CSS: &str = include_str!("plugins/graphviz.css");
 
+/// CSS styles for bibliography-backed citations.
+const CITATIONS_CSS: &str = include_str!("plugins/citations.css");
+
 /// CSS styles for Island plugin.
 const ISLAND_CSS: &str = include_str!("plugins/island.css");
 

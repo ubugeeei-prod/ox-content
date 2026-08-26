@@ -28,9 +28,9 @@ use super::utils::{
     page_content_contains_any, wrap_css_section,
 };
 use super::{
-    CONTRIBUTORS_CSS, ENTRY_CSS, FILE_TREE_CSS, GITHUB_CSS, GRAPHVIZ_CSS, IMAGE_GALLERY_CSS,
-    ISLAND_CSS, MERMAID_CSS, NavGroup, OGP_CSS, PageData, PageTemplate, SOCIAL_CSS,
-    SOCIAL_TWEET_FULL_CSS, SSG_CSS, SsgConfig, TABS_CSS, TIMELINE_CSS, YOUTUBE_CSS,
+    CITATIONS_CSS, CONTRIBUTORS_CSS, ENTRY_CSS, FILE_TREE_CSS, GITHUB_CSS, GRAPHVIZ_CSS,
+    IMAGE_GALLERY_CSS, ISLAND_CSS, MERMAID_CSS, NavGroup, OGP_CSS, PageData, PageTemplate,
+    SOCIAL_CSS, SOCIAL_TWEET_FULL_CSS, SSG_CSS, SsgConfig, TABS_CSS, TIMELINE_CSS, YOUTUBE_CSS,
 };
 
 pub(super) struct GeneratedPage {
@@ -120,6 +120,9 @@ pub(super) fn generate_html_inner(
     }
     if page_content_contains_any(&page_data.content, &["ox-graphviz"]) {
         css_sections.push(wrap_css_section("plugin-graphviz", GRAPHVIZ_CSS));
+    }
+    if page_content_contains_any(&page_data.content, &["ox-cite", "ox-bibliography"]) {
+        css_sections.push(wrap_css_section("plugin-citations", CITATIONS_CSS));
     }
     if page_content_contains_any(&page_data.content, &["data-ox-island", "ox-island"]) {
         css_sections.push(wrap_css_section("plugin-island", ISLAND_CSS));
