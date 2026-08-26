@@ -41,6 +41,7 @@ you can load compact Tweet chrome without the full-card sheet.
 | `styles/youtube.css`      | YouTube embeds                                                                     |
 | `styles/tabs.css`         | Tabs and package-manager tabs                                                      |
 | `styles/mermaid.css`      | Mermaid diagrams                                                                   |
+| `styles/not-by-ai.css`    | `<NotByAI />` authorship badge                                                     |
 | `styles/all.css`          | The feature sheets above, in that order                                            |
 
 Feature sheets that use `var(--octc-*)` expect `core.css` first, or the same
@@ -95,6 +96,7 @@ return markup, and you import the official sheets for the features you enabled.
 
 - [Site Generation](./site-generation.md)
 - [Magic Links](./magic-links.md)
+- [NotByAI Badge](./not-by-ai.md)
 - [Embeds](./embeds.md)
 - [Twitter/X Embed](../examples/twitter-embed.md)
 - [@ox-content/vite-plugin](../packages/vite-plugin-ox-content.md)

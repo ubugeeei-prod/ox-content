@@ -68,8 +68,13 @@ oxContent({
 
 バッジは公式のライト / ダーク SVG を含みます。組み込み SSG の CSS は
 `prefers-color-scheme` とホストのカラースキームクラス（`[data-theme]`、
-`.dark`、`.light`）で切り替えます。カスタムホストは、コンポーネント CSS
-export が使える場合に同じスタイルシートを import できます。
+`.dark`、`.light`）で切り替えます。カスタムホストは同じシートを import します。
+
+```css
+@import "@ox-content/vite-plugin/styles/not-by-ai.css";
+```
+
+[コンポーネント CSS](./component-styles.md) を見てください。
 
 ## サイト側プリプロセッサからの移行
 

@@ -69,8 +69,13 @@ static markup; `NotByAI` is reserved so MDX does not turn it into an island.
 
 The badge includes official light and dark SVGs. Built-in SSG CSS switches
 them with `prefers-color-scheme` and host scheme classes (`[data-theme]`,
-`.dark`, `.light`). Custom hosts can import the same stylesheet when the
-component CSS export is available.
+`.dark`, `.light`). Custom hosts import the same sheet:
+
+```css
+@import "@ox-content/vite-plugin/styles/not-by-ai.css";
+```
+
+See [Component styles](./component-styles.md).
 
 ## Migrating from a site preprocessor
 
