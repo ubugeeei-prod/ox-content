@@ -29,6 +29,11 @@ ox-content-mdc-check --format json docs/page.mdc
 
 Exit code is `1` when any diagnostic was emitted or any file failed to read.
 
+`ox-content-mdc-check` skips YAML frontmatter so CLI and `ox-content-lsp`
+report the same codes, 1-based ranges, and messages. JSON output includes
+`code` values such as `mdc-unquoted-prop`, `mdc-mismatched-tag`,
+`mdc-orphan-close`, and `mdc-unclosed-tag`.
+
 ## Component registry
 
 Editors load a JSON file describing every MDC component used by the

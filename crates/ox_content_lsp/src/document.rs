@@ -1,28 +1,53 @@
 use std::path::Path;
 
-use tower_lsp::lsp_types::{Position, Range};
+use tower_lsp::lsp_types::{Position, Range, TextDocumentContentChangeEvent};
 
 #[derive(Clone, Debug)]
 pub struct TextDocumentState {
     text: String,
     line_offsets: Vec<usize>,
+    version: i32,
 }
 
 impl TextDocumentState {
     #[must_use]
     pub fn new(text: String) -> Self {
-        let mut line_offsets = vec![0];
-        for (index, ch) in text.char_indices() {
-            if ch == '\n' {
-                line_offsets.push(index + 1);
-            }
-        }
-        Self { text, line_offsets }
+        Self::with_version(text, 0)
+    }
+
+    #[must_use]
+    pub fn with_version(text: String, version: i32) -> Self {
+        let line_offsets = line_offsets(&text);
+        Self { text, line_offsets, version }
     }
 
     #[must_use]
     pub fn text(&self) -> &str {
         &self.text
+    }
+
+    #[must_use]
+    pub fn version(&self) -> i32 {
+        self.version
+    }
+
+    pub fn apply_changes(&mut self, changes: &[TextDocumentContentChangeEvent], version: i32) {
+        for change in changes {
+            self.apply_change(change);
+        }
+        self.version = version;
+    }
+
+    fn apply_change(&mut self, change: &TextDocumentContentChangeEvent) {
+        match change.range {
+            Some(range) => {
+                let start = self.position_to_offset(range.start);
+                let end = self.position_to_offset(range.end).max(start);
+                self.text.replace_range(start..end, &change.text);
+            }
+            None => self.text.clone_from(&change.text),
+        }
+        self.line_offsets = line_offsets(&self.text);
     }
 
     #[must_use]
@@ -139,6 +164,16 @@ pub fn is_markdown_path(path: &Path) -> bool {
     })
 }
 
+fn line_offsets(text: &str) -> Vec<usize> {
+    let mut offsets = vec![0];
+    for (index, ch) in text.char_indices() {
+        if ch == '\n' {
+            offsets.push(index + 1);
+        }
+    }
+    offsets
+}
+
 #[must_use]
 pub fn is_mdx_path(path: &Path) -> bool {
     path.extension()
@@ -156,5 +191,39 @@ mod path_tests {
         assert!(is_markdown_path(Path::new("guide.MDX")));
         assert!(is_mdx_path(Path::new("guide.MDX")));
         assert!(!is_mdx_path(Path::new("guide.md")));
+    }
+
+    #[test]
+    fn incremental_change_updates_text_and_version() {
+        let mut document = TextDocumentState::with_version("See [missing](./a.md).\n".into(), 1);
+        document.apply_changes(
+            &[TextDocumentContentChangeEvent {
+                range: Some(Range {
+                    start: Position { line: 0, character: 14 },
+                    end: Position { line: 0, character: 20 },
+                }),
+                range_length: None,
+                text: "./b.md".into(),
+            }],
+            2,
+        );
+        assert_eq!(document.version(), 2);
+        assert_eq!(document.text(), "See [missing](./b.md).\n");
+    }
+
+    #[test]
+    fn full_change_replaces_the_document() {
+        let mut document = TextDocumentState::with_version("old\n".into(), 1);
+        document.apply_changes(
+            &[TextDocumentContentChangeEvent {
+                range: None,
+                range_length: None,
+                text: "# New\n".into(),
+            }],
+            3,
+        );
+        assert_eq!(document.version(), 3);
+        assert_eq!(document.text(), "# New\n");
+        assert_eq!(document.line_count(), 2);
     }
 }

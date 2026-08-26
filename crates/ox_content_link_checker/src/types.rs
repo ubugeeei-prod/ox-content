@@ -2,6 +2,19 @@ use std::path::PathBuf;
 
 use serde::Serialize;
 
+pub const CODE_MISSING_FILE: &str = "link-missing-file";
+pub const CODE_MISSING_ANCHOR: &str = "link-missing-anchor";
+pub const CODE_CROSS_FILE_ANCHOR: &str = "link-cross-file-anchor";
+pub const CODE_UNRESOLVED: &str = "link-unresolved";
+pub const CODE_UNCLASSIFIED: &str = "link-unclassified";
+pub const CODE_IO_READ: &str = "link-io-read";
+pub const CODE_SITE_OUTSIDE_BASE: &str = "link-site-outside-base";
+pub const CODE_SITE_ESCAPES_ROOT: &str = "link-site-escapes-root";
+pub const CODE_SITE_MISSING: &str = "link-site-missing";
+pub const CODE_SITE_MISSING_ANCHOR: &str = "link-site-missing-anchor";
+pub const CODE_SITE_NON_HTML_FRAGMENT: &str = "link-site-non-html-fragment";
+pub const CODE_SITE_REDIRECT: &str = "link-site-redirect";
+
 /// Kind of link target that resolution can produce.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]
 #[serde(rename_all = "kebab-case")]
@@ -31,6 +44,7 @@ pub enum Severity {
 #[derive(Debug, Clone, PartialEq, Eq, Serialize)]
 pub struct Diagnostic {
     pub severity: Severity,
+    pub code: String,
     pub message: String,
     pub line: u32,
     pub column: u32,

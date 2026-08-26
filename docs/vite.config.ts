@@ -238,6 +238,7 @@ export default defineConfig(({ mode }) => {
                     link: "/packages/vite-plugin-ox-content-solid.md",
                   },
                   { text: "i18n Package", link: "/packages/i18n.md" },
+                  { text: "Checker and Language Server", link: "/packages/lsp.md" },
                   { text: "Code Play", link: "/packages/code-play.md" },
                 ],
               },

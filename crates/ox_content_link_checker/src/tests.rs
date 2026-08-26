@@ -56,6 +56,7 @@ fn self_anchor_is_validated_against_headings() {
     assert_eq!(diagnostics.len(), 1, "{diagnostics:?}");
     assert_eq!(diagnostics[0].target, "#nope");
     assert_eq!(diagnostics[0].kind, LinkKind::Anchor);
+    assert_eq!(diagnostics[0].code, CODE_MISSING_ANCHOR);
 }
 
 #[test]
@@ -66,6 +67,7 @@ fn missing_relative_file_is_reported_with_resolved_path() {
     assert_eq!(diagnostics.len(), 1, "{diagnostics:?}");
     insta::assert_snapshot!(diagnostic_snapshot(&diagnostics[0], &dir));
     assert_eq!(diagnostics[0].kind, LinkKind::File);
+    assert_eq!(diagnostics[0].code, CODE_MISSING_FILE);
 }
 
 #[test]
@@ -100,6 +102,7 @@ fn cross_file_anchor_emits_warning_until_followup_lands() {
     let diagnostics = run("[hop](./other.md#section)\n", dir.join("doc.md"));
     assert_eq!(diagnostics.len(), 1, "{diagnostics:?}");
     assert_eq!(diagnostics[0].severity, Severity::Warning);
+    assert_eq!(diagnostics[0].code, CODE_CROSS_FILE_ANCHOR);
     insta::assert_snapshot!(diagnostic_snapshot(&diagnostics[0], &dir));
 }
 
