@@ -2,6 +2,7 @@ use askama::Template;
 
 use super::a11y::A11Y_CSS;
 use super::breadcrumbs::resolve_breadcrumbs;
+use super::content_css::push_content_plugin_css;
 use super::entry::generate_entry_html;
 use super::footer::{FOOTER_CSS, generate_footer_html};
 use super::head::{HeadDiagnostic, RenderedHead, render_themed_head};
@@ -25,9 +26,9 @@ use super::utils::{
     page_content_contains_any, wrap_css_section,
 };
 use super::{
-    CONTRIBUTORS_CSS, ENTRY_CSS, FILE_TREE_CSS, GITHUB_CSS, ISLAND_CSS, MERMAID_CSS, NavGroup,
-    OGP_CSS, PageData, PageTemplate, SOCIAL_CSS, SOCIAL_TWEET_FULL_CSS, SSG_CSS, SSG_JS, SsgConfig,
-    TABS_CSS, TABS_JS, YOUTUBE_CSS,
+    CONTRIBUTORS_CSS, ENTRY_CSS, GITHUB_CSS, ISLAND_CSS, MERMAID_CSS, NavGroup, OGP_CSS, PageData,
+    PageTemplate, SOCIAL_CSS, SOCIAL_TWEET_FULL_CSS, SSG_CSS, SSG_JS, SsgConfig, TABS_CSS, TABS_JS,
+    YOUTUBE_CSS,
 };
 
 /// Themed HTML plus page-head diagnostics.
@@ -149,9 +150,7 @@ fn generate_html_inner(
     if page_content_contains_any(&page_data.content, &["ox-section-index"]) {
         css_sections.push(wrap_css_section("section-index", SECTION_INDEX_CSS));
     }
-    if page_content_contains_any(&page_data.content, &["ox-file-tree"]) {
-        css_sections.push(wrap_css_section("file-tree", FILE_TREE_CSS));
-    }
+    push_content_plugin_css(&mut css_sections, &page_data.content);
     push_heading_permalink_css(&mut css_sections, &page_data.content);
     if has_footer {
         css_sections.push(wrap_css_section("footer", footer_css));

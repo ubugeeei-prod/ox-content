@@ -40,6 +40,8 @@ pub struct TransformOptions {
     pub steps: Option<StepsOptions>,
     /// Opt-in `{badge:variant}` inline badges. Disabled when omitted.
     pub badges: Option<BadgeOptions>,
+    /// Opt-in `{kbd:...}` inline keyboard keys. Disabled when omitted.
+    pub keyboard_keys: Option<KeyboardKeysOptions>,
     /// Opt-in `{link:...}` rich magic links. Disabled when omitted.
     pub magic_links: Option<MagicLinkOptions>,
     /// Opt-in figures, captions, and lazy images. Disabled when omitted.
@@ -53,6 +55,13 @@ pub struct TransformOptions {
 #[derive(Clone, Default)]
 pub struct BadgeOptions {
     pub enabled: Option<bool>,
+}
+
+#[derive(Clone, Default)]
+pub struct KeyboardKeysOptions {
+    pub enabled: Option<bool>,
+    pub aliases: Option<FxHashMap<String, String>>,
+    pub style: Option<String>,
 }
 
 #[derive(Clone, Default)]

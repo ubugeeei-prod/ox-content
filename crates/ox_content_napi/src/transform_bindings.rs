@@ -15,6 +15,7 @@ mod code_blocks;
 mod embed_types;
 mod feature_options;
 mod file_tree_options;
+mod keyboard_keys_options;
 mod magic_link_options;
 mod math_options;
 mod steps_options;
@@ -31,6 +32,7 @@ pub use feature_options::{
     JsImageOptions, JsIncludeOptions, JsMediaEmbedsOptions, JsSanitizeOptions, JsWikiLinkOptions,
 };
 pub use file_tree_options::JsFileTreeOptions;
+pub use keyboard_keys_options::JsKeyboardKeysOptions;
 pub use magic_link_options::{JsMagicLinkAlias, JsMagicLinkImageOverride, JsMagicLinkOptions};
 pub use math_options::JsMathOptions;
 pub use steps_options::JsStepsOptions;

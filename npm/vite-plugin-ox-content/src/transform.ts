@@ -292,6 +292,12 @@ interface JsTransformOptions {
     enabled?: boolean;
   };
 
+  keyboardKeys?: {
+    enabled?: boolean;
+    aliases?: Record<string, string>;
+    style?: string;
+  };
+
   magicLinks?: {
     enabled?: boolean;
     aliases?: Record<string, { href: string; label?: string; image?: string }>;
@@ -604,6 +610,13 @@ export async function transformMarkdown(
       : undefined,
     attributes: options.attrs?.enabled ? { enabled: true } : undefined,
     badges: options.badges?.enabled ? { enabled: true } : undefined,
+    keyboardKeys: options.keyboardKeys?.enabled
+      ? {
+          enabled: true,
+          aliases: options.keyboardKeys.aliases,
+          style: options.keyboardKeys.style,
+        }
+      : undefined,
     magicLinks: options.magicLinks?.enabled
       ? {
           enabled: true,

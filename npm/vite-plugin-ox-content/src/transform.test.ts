@@ -156,6 +156,29 @@ describe("transformMarkdown", () => {
     expect(enabledResult.html).not.toContain("{badge:tip}");
   });
 
+  it("leaves {kbd} markup literal unless opted in", async () => {
+    const markdown = "{kbd:Ctrl+K}";
+
+    const defaultResult = await transformMarkdown(
+      markdown,
+      "docs/keyboard-keys.md",
+      createResolvedOptions(),
+    );
+    expect(defaultResult.html).not.toContain("ox-kbd");
+    expect(defaultResult.html).toContain("{kbd:Ctrl+K}");
+
+    const enabledResult = await transformMarkdown(
+      markdown,
+      "docs/keyboard-keys.md",
+      createResolvedOptions({
+        keyboardKeys: { enabled: true, aliases: {}, style: "words" },
+      }),
+    );
+    expect(enabledResult.html).toContain('<kbd class="ox-kbd ox-kbd--combo">');
+    expect(enabledResult.html).toContain('<kbd class="ox-kbd__key">Ctrl</kbd>');
+    expect(enabledResult.html).not.toContain("{kbd:");
+  });
+
   it("leaves {link} markup literal unless opted in", async () => {
     const markdown = "{link:@ryoppippi}";
 
