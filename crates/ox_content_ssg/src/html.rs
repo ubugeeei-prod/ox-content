@@ -251,6 +251,9 @@ const FILE_TREE_CSS: &str =
 /// CSS styles for opt-in `{kbd:...}` keyboard keys.
 const KBD_CSS: &str = include_str!("plugins/kbd.css");
 
+/// CSS styles for opt-in abbreviation / glossary `<abbr>` markup.
+const ABBR_CSS: &str = include_str!("plugins/abbr.css");
+
 /// CSS styles for opt-in definition lists.
 const DEFINITION_LIST_CSS: &str = include_str!("plugins/definition-lists.css");
 

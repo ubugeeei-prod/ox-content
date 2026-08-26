@@ -305,6 +305,12 @@ interface JsTransformOptions {
     style?: string;
   };
 
+  abbreviations?: {
+    enabled?: boolean;
+    terms?: Record<string, string>;
+    firstUseOnly?: boolean;
+  };
+
   definitionLists?: {
     enabled?: boolean;
   };
@@ -639,6 +645,13 @@ export async function transformMarkdown(
           enabled: true,
           aliases: options.keyboardKeys.aliases,
           style: options.keyboardKeys.style,
+        }
+      : undefined,
+    abbreviations: options.abbreviations?.enabled
+      ? {
+          enabled: true,
+          terms: options.abbreviations.terms,
+          firstUseOnly: options.abbreviations.firstUseOnly,
         }
       : undefined,
     definitionLists: options.definitionLists?.enabled ? { enabled: true } : undefined,

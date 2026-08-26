@@ -339,6 +339,28 @@ export interface JsA11y {
   skipLinkLabel?: string
 }
 
+/** Opt-in abbreviation and glossary expansion. */
+export interface JsAbbreviationsOptions {
+  /**
+   * Enable `*[TERM]: expansion` and config-term rewriting.
+   *
+   * Default: `false`.
+   */
+  enabled?: boolean
+  /**
+   * Central glossary terms. Keys are matched with Unicode word boundaries.
+   *
+   * Default: `{}`.
+   */
+  terms?: Record<string, string>
+  /**
+   * Wrap only the first occurrence of each term.
+   *
+   * Default: `false` (every occurrence).
+   */
+  firstUseOnly?: boolean
+}
+
 /** Attribute syntax transform options. */
 export interface JsAttrsOptions {
   /**
@@ -2344,6 +2366,12 @@ export interface JsTransformOptions {
    * Default: disabled.
    */
   keyboardKeys?: JsKeyboardKeysOptions
+  /**
+   * Opt-in abbreviation and glossary expansion.
+   *
+   * Default: disabled.
+   */
+  abbreviations?: JsAbbreviationsOptions
   /**
    * Opt-in PHP Markdown Extra / mdBook-style definition lists.
    *
