@@ -1,5 +1,184 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
+exports[`transformMarkdownWithReact > discovers nested, expression, and fragment islands from the MDX AST 1`] = `
+"
+import React, { useEffect, useRef, createElement } from 'react';
+import { createRoot } from 'react-dom/client';
+import { initIslands, readIslandSlotHtml } from '@ox-content/islands';
+import Callout from '../src/components/Callout.tsx';
+import Badge from '../src/components/Badge.tsx';
+
+export const frontmatter = {};
+
+const rawHtml = "<div class=\\"ox-island\\" data-ox-island=\\"Callout\\"><h1 id=\\"title\\">Title</h1>\\n<div class=\\"ox-island\\" data-ox-island=\\"Badge\\" data-ox-props=\\"{&quot;expressions&quot;:{},&quot;props&quot;:{&quot;title&quot;:&quot;hi&quot;},&quot;spreads&quot;:[]}\\"><script type=\\"application/json\\">{\\"expressions\\":{},\\"props\\":{\\"title\\":\\"hi\\"},\\"spreads\\":[]}</script></div>\\n</div>\\n";
+const components = {
+  Callout,
+  Badge,
+};
+
+function createReactHydrate() {
+  const mountedRoots = [];
+
+  return (element, props) => {
+    const componentName = element.dataset.oxIsland;
+    const Component = components[componentName];
+    if (!Component) return;
+
+    const islandContent = readIslandSlotHtml(element);
+    const vnode = islandContent
+      ? createElement(
+          Component,
+          props,
+          createElement('div', { dangerouslySetInnerHTML: { __html: islandContent } })
+        )
+      : createElement(Component, props);
+
+    const root = createRoot(element);
+    root.render(vnode);
+    mountedRoots.push(root);
+
+    return () => root.unmount();
+  };
+}
+
+export default function MarkdownContent() {
+  const containerRef = useRef(null);
+
+  useEffect(() => {
+    if (!containerRef.current) return;
+    const controller = initIslands(createReactHydrate(), {
+      selector: '.ox-content [data-ox-island]',
+    });
+    return () => controller.destroy();
+  }, []);
+
+  return createElement('div', {
+    className: 'ox-content',
+    ref: containerRef,
+    dangerouslySetInnerHTML: { __html: rawHtml },
+  });
+}
+"
+`;
+
+exports[`transformMarkdownWithReact > discovers nested, expression, and fragment islands from the MDX AST 2`] = `
+"
+import React, { useEffect, useRef, createElement } from 'react';
+import { createRoot } from 'react-dom/client';
+import { initIslands, readIslandSlotHtml } from '@ox-content/islands';
+import Alert from '../src/components/Alert.tsx';
+
+export const frontmatter = {};
+
+const rawHtml = "<div class=\\"ox-island\\" data-ox-island=\\"Alert\\" data-ox-props=\\"{&quot;expressions&quot;:{&quot;count&quot;:&quot;count + 1&quot;,&quot;title&quot;:&quot;foo&quot;},&quot;props&quot;:{},&quot;spreads&quot;:[]}\\"><script type=\\"application/json\\">{\\"expressions\\":{\\"count\\":\\"count + 1\\",\\"title\\":\\"foo\\"},\\"props\\":{},\\"spreads\\":[]}</script></div>\\n";
+const components = {
+  Alert,
+};
+
+function createReactHydrate() {
+  const mountedRoots = [];
+
+  return (element, props) => {
+    const componentName = element.dataset.oxIsland;
+    const Component = components[componentName];
+    if (!Component) return;
+
+    const islandContent = readIslandSlotHtml(element);
+    const vnode = islandContent
+      ? createElement(
+          Component,
+          props,
+          createElement('div', { dangerouslySetInnerHTML: { __html: islandContent } })
+        )
+      : createElement(Component, props);
+
+    const root = createRoot(element);
+    root.render(vnode);
+    mountedRoots.push(root);
+
+    return () => root.unmount();
+  };
+}
+
+export default function MarkdownContent() {
+  const containerRef = useRef(null);
+
+  useEffect(() => {
+    if (!containerRef.current) return;
+    const controller = initIslands(createReactHydrate(), {
+      selector: '.ox-content [data-ox-island]',
+    });
+    return () => controller.destroy();
+  }, []);
+
+  return createElement('div', {
+    className: 'ox-content',
+    ref: containerRef,
+    dangerouslySetInnerHTML: { __html: rawHtml },
+  });
+}
+"
+`;
+
+exports[`transformMarkdownWithReact > discovers nested, expression, and fragment islands from the MDX AST 3`] = `
+"
+import React, { useEffect, useRef, createElement } from 'react';
+import { createRoot } from 'react-dom/client';
+import { initIslands, readIslandSlotHtml } from '@ox-content/islands';
+import Alert from '../src/components/Alert.tsx';
+
+export const frontmatter = {};
+
+const rawHtml = "<div class=\\"ox-island\\" data-ox-island=\\"Alert\\" data-ox-props=\\"{&quot;expressions&quot;:{},&quot;props&quot;:{&quot;tone&quot;:&quot;info&quot;},&quot;spreads&quot;:[]}\\"><script type=\\"application/json\\">{\\"expressions\\":{},\\"props\\":{\\"tone\\":\\"info\\"},\\"spreads\\":[]}</script></div>\\n";
+const components = {
+  Alert,
+};
+
+function createReactHydrate() {
+  const mountedRoots = [];
+
+  return (element, props) => {
+    const componentName = element.dataset.oxIsland;
+    const Component = components[componentName];
+    if (!Component) return;
+
+    const islandContent = readIslandSlotHtml(element);
+    const vnode = islandContent
+      ? createElement(
+          Component,
+          props,
+          createElement('div', { dangerouslySetInnerHTML: { __html: islandContent } })
+        )
+      : createElement(Component, props);
+
+    const root = createRoot(element);
+    root.render(vnode);
+    mountedRoots.push(root);
+
+    return () => root.unmount();
+  };
+}
+
+export default function MarkdownContent() {
+  const containerRef = useRef(null);
+
+  useEffect(() => {
+    if (!containerRef.current) return;
+    const controller = initIslands(createReactHydrate(), {
+      selector: '.ox-content [data-ox-island]',
+    });
+    return () => controller.destroy();
+  }, []);
+
+  return createElement('div', {
+    className: 'ox-content',
+    ref: containerRef,
+    dangerouslySetInnerHTML: { __html: rawHtml },
+  });
+}
+"
+`;
+
 exports[`transformMarkdownWithReact > honors disabled built-in embeds from framework options 1`] = `
 "
 import React, { createElement } from 'react';

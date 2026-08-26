@@ -1,5 +1,202 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
+exports[`transformMarkdownWithVue > discovers nested, expression, and fragment islands from the MDX AST 1`] = `
+"
+import { h, ref, onMounted, onBeforeUnmount, defineComponent, render } from 'vue';
+import { initIslands, readIslandSlotHtml } from '@ox-content/islands';
+import Callout from '../src/components/Callout.vue';
+import Badge from '../src/components/Badge.vue';
+
+export const frontmatter = {};
+
+const rawHtml = "<div class=\\"ox-island\\" data-ox-island=\\"Callout\\"><h1 id=\\"title\\">Title</h1>\\n<div class=\\"ox-island\\" data-ox-island=\\"Badge\\" data-ox-props=\\"{&quot;expressions&quot;:{},&quot;props&quot;:{&quot;title&quot;:&quot;hi&quot;},&quot;spreads&quot;:[]}\\"><script type=\\"application/json\\">{\\"expressions\\":{},\\"props\\":{\\"title\\":\\"hi\\"},\\"spreads\\":[]}</script></div>\\n</div>\\n";
+const components = {
+  Callout,
+  Badge,
+};
+
+function createVueHydrate(container) {
+  const mountedTargets = [];
+
+  return (element, props) => {
+    const componentName = element.dataset.oxIsland;
+    const Component = components[componentName];
+    if (!Component) return;
+
+    const islandContent = readIslandSlotHtml(element);
+    const children = islandContent
+      ? { default: () => h('div', { innerHTML: islandContent }) }
+      : undefined;
+
+    const vnode = h(Component, props, children);
+    render(vnode, element);
+    mountedTargets.push(element);
+
+    return () => render(null, element);
+  };
+}
+
+export default defineComponent({
+  name: 'MarkdownContent',
+  setup(_, { expose }) {
+    const container = ref(null);
+    let controller;
+
+    onMounted(() => {
+      if (container.value) {
+        controller = initIslands(createVueHydrate(container.value), {
+          selector: '.ox-content [data-ox-island]',
+        });
+      }
+    });
+
+    onBeforeUnmount(() => {
+      if (controller) controller.destroy();
+    });
+
+    expose({ frontmatter });
+
+    return () =>
+      h('div', {
+        class: 'ox-content',
+        ref: container,
+        innerHTML: rawHtml,
+      });
+  },
+});
+"
+`;
+
+exports[`transformMarkdownWithVue > discovers nested, expression, and fragment islands from the MDX AST 2`] = `
+"
+import { h, ref, onMounted, onBeforeUnmount, defineComponent, render } from 'vue';
+import { initIslands, readIslandSlotHtml } from '@ox-content/islands';
+import Alert from '../src/components/Alert.vue';
+
+export const frontmatter = {};
+
+const rawHtml = "<div class=\\"ox-island\\" data-ox-island=\\"Alert\\" data-ox-props=\\"{&quot;expressions&quot;:{&quot;count&quot;:&quot;count + 1&quot;,&quot;title&quot;:&quot;foo&quot;},&quot;props&quot;:{},&quot;spreads&quot;:[]}\\"><script type=\\"application/json\\">{\\"expressions\\":{\\"count\\":\\"count + 1\\",\\"title\\":\\"foo\\"},\\"props\\":{},\\"spreads\\":[]}</script></div>\\n";
+const components = {
+  Alert,
+};
+
+function createVueHydrate(container) {
+  const mountedTargets = [];
+
+  return (element, props) => {
+    const componentName = element.dataset.oxIsland;
+    const Component = components[componentName];
+    if (!Component) return;
+
+    const islandContent = readIslandSlotHtml(element);
+    const children = islandContent
+      ? { default: () => h('div', { innerHTML: islandContent }) }
+      : undefined;
+
+    const vnode = h(Component, props, children);
+    render(vnode, element);
+    mountedTargets.push(element);
+
+    return () => render(null, element);
+  };
+}
+
+export default defineComponent({
+  name: 'MarkdownContent',
+  setup(_, { expose }) {
+    const container = ref(null);
+    let controller;
+
+    onMounted(() => {
+      if (container.value) {
+        controller = initIslands(createVueHydrate(container.value), {
+          selector: '.ox-content [data-ox-island]',
+        });
+      }
+    });
+
+    onBeforeUnmount(() => {
+      if (controller) controller.destroy();
+    });
+
+    expose({ frontmatter });
+
+    return () =>
+      h('div', {
+        class: 'ox-content',
+        ref: container,
+        innerHTML: rawHtml,
+      });
+  },
+});
+"
+`;
+
+exports[`transformMarkdownWithVue > discovers nested, expression, and fragment islands from the MDX AST 3`] = `
+"
+import { h, ref, onMounted, onBeforeUnmount, defineComponent, render } from 'vue';
+import { initIslands, readIslandSlotHtml } from '@ox-content/islands';
+import Alert from '../src/components/Alert.vue';
+
+export const frontmatter = {};
+
+const rawHtml = "<div class=\\"ox-island\\" data-ox-island=\\"Alert\\" data-ox-props=\\"{&quot;expressions&quot;:{},&quot;props&quot;:{&quot;tone&quot;:&quot;info&quot;},&quot;spreads&quot;:[]}\\"><script type=\\"application/json\\">{\\"expressions\\":{},\\"props\\":{\\"tone\\":\\"info\\"},\\"spreads\\":[]}</script></div>\\n";
+const components = {
+  Alert,
+};
+
+function createVueHydrate(container) {
+  const mountedTargets = [];
+
+  return (element, props) => {
+    const componentName = element.dataset.oxIsland;
+    const Component = components[componentName];
+    if (!Component) return;
+
+    const islandContent = readIslandSlotHtml(element);
+    const children = islandContent
+      ? { default: () => h('div', { innerHTML: islandContent }) }
+      : undefined;
+
+    const vnode = h(Component, props, children);
+    render(vnode, element);
+    mountedTargets.push(element);
+
+    return () => render(null, element);
+  };
+}
+
+export default defineComponent({
+  name: 'MarkdownContent',
+  setup(_, { expose }) {
+    const container = ref(null);
+    let controller;
+
+    onMounted(() => {
+      if (container.value) {
+        controller = initIslands(createVueHydrate(container.value), {
+          selector: '.ox-content [data-ox-island]',
+        });
+      }
+    });
+
+    onBeforeUnmount(() => {
+      if (controller) controller.destroy();
+    });
+
+    expose({ frontmatter });
+
+    return () =>
+      h('div', {
+        class: 'ox-content',
+        ref: container,
+        innerHTML: rawHtml,
+      });
+  },
+});
+"
+`;
+
 exports[`transformMarkdownWithVue > honors disabled built-in embeds from framework options 1`] = `
 "
 import { h, ref, defineComponent } from 'vue';

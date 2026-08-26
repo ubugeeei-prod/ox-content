@@ -54,6 +54,7 @@ describe("transformMarkdownWithSvelte", () => {
     expect(nested.code).toContain("Callout");
     expect(nested.code).toContain("Badge");
     expect(nested.code).toContain("initIslands");
+    expect(nested.code).toMatchSnapshot();
 
     const expr = await transformMarkdownWithSvelte(
       "<Alert title={foo} count={count + 1} />\n",
@@ -62,6 +63,7 @@ describe("transformMarkdownWithSvelte", () => {
     );
     expect(expr.usedComponents).toEqual(["Alert"]);
     expect(expr.code).toContain("Alert");
+    expect(expr.code).toMatchSnapshot();
 
     const fragment = await transformMarkdownWithSvelte(
       '<>\n<Alert tone="info" />\n</>\n',
@@ -69,6 +71,7 @@ describe("transformMarkdownWithSvelte", () => {
       createOptions(),
     );
     expect(fragment.usedComponents).toEqual(["Alert"]);
+    expect(fragment.code).toMatchSnapshot();
   });
 
   it("keeps fenced JSX literal and skips unregistered MDX components", async () => {
