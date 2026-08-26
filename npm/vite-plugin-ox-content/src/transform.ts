@@ -51,6 +51,7 @@ import { applyTypedHover } from "./typed-hover";
 import { resolveMdxForFilePath } from "./markdown";
 import { toJsDataTableOptions } from "./data-table-options";
 import { toJsFileTreeOptions } from "./file-tree-options";
+import { toJsImageGalleryOptions } from "./image-gallery-options";
 import { toJsPartialsOptions } from "./partials-options";
 
 /**
@@ -332,6 +333,12 @@ interface JsTransformOptions {
   images?: {
     enabled?: boolean;
     lazy?: boolean;
+  };
+  imageGalleries?: {
+    enabled?: boolean;
+    lazy?: boolean;
+    missingAlt?: "error" | "warn" | "ignore";
+    empty?: "error" | "warn" | "ignore";
   };
 
   cjkEmphasis?: boolean;
@@ -684,6 +691,7 @@ export async function transformMarkdown(
           lazy: options.images.lazy,
         }
       : undefined,
+    imageGalleries: toJsImageGalleryOptions(options.imageGalleries, options.images),
     cjkEmphasis: options.cjkEmphasis ?? false,
     codeImports: options.codeImports?.enabled
       ? {

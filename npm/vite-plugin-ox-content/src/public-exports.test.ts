@@ -44,6 +44,7 @@ describe("public export surface", () => {
       "resolveTaxonomiesOptions",
       "resolveVersionsOptions",
       "resolveResourcesOptions",
+      "resolveImageGalleryOptions",
       "resolveTeamOptions",
       "resolveSiteMapsOptions",
       "resolveMarkdownSourceOptions",

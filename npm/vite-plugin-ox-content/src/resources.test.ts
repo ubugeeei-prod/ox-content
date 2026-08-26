@@ -197,6 +197,33 @@ describe("buildSsg resources", () => {
     expect(pngSize(copied)).toEqual({ width: 8, height: 8 });
   });
 
+  it("copies images referenced from opt-in galleries", async () => {
+    const root = await makeSite({
+      "guide.md": [
+        "# Guide",
+        "",
+        '::: gallery title="Screenshots"',
+        '![Hero](./hero.png?width=4 "Hero view")',
+        ":::",
+        "",
+      ].join("\n"),
+      "hero.png": samplePng(8, 8),
+    });
+    const result = await buildSsg(
+      {
+        ...enabledOptions(resolveResourcesOptions(true)),
+        imageGalleries: { enabled: true, missingAlt: "error", empty: "error" },
+      },
+      root,
+    );
+    expect(result.errors).toEqual([]);
+
+    const html = await fs.readFile(pageHtml(root, "guide"), "utf8");
+    expect(html).toContain('class="ox-image-gallery"');
+    expect(html).toMatch(/src="hero\.[a-f0-9]{12}\.png"/);
+    expect(result.files.some((file) => /hero\.[a-f0-9]{12}\.png$/.test(file))).toBe(true);
+  });
+
   it("resizes, crops, and converts format at build time", async () => {
     const root = await makeSite({
       "guide.md": [

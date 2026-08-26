@@ -2,6 +2,7 @@ import * as path from "node:path";
 import { applyCollectionRoutes } from "./apply-permalinks";
 import { toJsDataTableOptions } from "./data-table-options";
 import { toJsFileTreeOptions } from "./file-tree-options";
+import { toJsImageGalleryOptions } from "./image-gallery-options";
 import { toJsPartialsOptions } from "./partials-options";
 import { generateCollectionsModule } from "./collections-runtime";
 import { importNapiModule } from "./napi";
@@ -68,6 +69,12 @@ type NativeTransformOptions = {
     types?: Record<string, { title?: string; tag?: string }>;
   };
   images?: { enabled?: boolean; lazy?: boolean };
+  imageGalleries?: {
+    enabled?: boolean;
+    lazy?: boolean;
+    missingAlt?: "error" | "warn" | "ignore";
+    empty?: "error" | "warn" | "ignore";
+  };
   cjkEmphasis?: boolean;
   codeImports?: { enabled?: boolean; rootDir?: string };
   includes?: { enabled?: boolean; rootDir?: string };
@@ -272,6 +279,7 @@ function createNativeTransformOptions(options: ResolvedOptions): NativeTransform
           lazy: options.images.lazy,
         }
       : undefined,
+    imageGalleries: toJsImageGalleryOptions(options.imageGalleries, options.images),
     cjkEmphasis: options.cjkEmphasis ?? false,
     codeImports: options.codeImports?.enabled
       ? {

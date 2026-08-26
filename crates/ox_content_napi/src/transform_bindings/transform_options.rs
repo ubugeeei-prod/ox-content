@@ -5,9 +5,9 @@ use ox_content_transform::{MathOptions, TransformOptions};
 use super::{
     JsAbbreviationsOptions, JsAttrsOptions, JsBadgeOptions, JsCardOptions, JsCodeGroupOptions,
     JsCodeImportOptions, JsContainerOptions, JsDataTableOptions, JsDefinitionListOptions,
-    JsEditThisPageOptions, JsEmojiShortcodeOptions, JsFileTreeOptions, JsImageOptions,
-    JsIncludeOptions, JsKeyboardKeysOptions, JsMagicLinkOptions, JsMathOptions, JsNotByAiOptions,
-    JsPartialsOptions, JsSanitizeOptions, JsStepsOptions, JsWikiLinkOptions,
+    JsEditThisPageOptions, JsEmojiShortcodeOptions, JsFileTreeOptions, JsImageGalleryOptions,
+    JsImageOptions, JsIncludeOptions, JsKeyboardKeysOptions, JsMagicLinkOptions, JsMathOptions,
+    JsNotByAiOptions, JsPartialsOptions, JsSanitizeOptions, JsStepsOptions, JsWikiLinkOptions,
 };
 
 /// Transform options for JavaScript.
@@ -234,6 +234,11 @@ pub struct JsTransformOptions {
     /// Default: disabled.
     pub images: Option<JsImageOptions>,
 
+    /// Opt-in static `::: gallery` image groups.
+    ///
+    /// Default: disabled.
+    pub image_galleries: Option<JsImageGalleryOptions>,
+
     /// Opt-in `::: card` / `::: link-card` / `::: card-grid` blocks.
     ///
     /// Default: disabled.
@@ -298,6 +303,7 @@ impl From<JsTransformOptions> for TransformOptions {
             definition_lists: value.definition_lists.map(Into::into),
             magic_links: value.magic_links.map(Into::into),
             images: value.images.map(Into::into),
+            image_galleries: value.image_galleries.map(Into::into),
             cards: value.cards.map(Into::into),
             math: match value.math {
                 Some(Either::A(enabled)) => Some(MathOptions { enabled: Some(enabled) }),

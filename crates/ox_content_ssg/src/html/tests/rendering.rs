@@ -2,7 +2,7 @@ use super::super::nav::generate_nav_html;
 use super::super::utils::{format_last_updated, generate_toc_html, html_locale_attrs};
 use super::super::*;
 
-fn page(
+pub(super) fn page(
     title: &str,
     description: Option<&str>,
     content: &str,
@@ -29,7 +29,7 @@ fn page(
     }
 }
 
-fn config(site_name: &str, base: &str, locale: Option<&str>) -> SsgConfig {
+pub(super) fn config(site_name: &str, base: &str, locale: Option<&str>) -> SsgConfig {
     SsgConfig {
         site_name: site_name.to_string(),
         base: base.to_string(),

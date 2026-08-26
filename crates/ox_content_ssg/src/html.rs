@@ -248,6 +248,9 @@ const CONTRIBUTORS_CSS: &str = include_str!("html/contributors.css");
 const FILE_TREE_CSS: &str =
     concat!(include_str!("html/file_tree.css"), include_str!("html/data_tables.css"));
 
+/// CSS for opt-in static image galleries.
+const IMAGE_GALLERY_CSS: &str = include_str!("html/image_gallery.css");
+
 /// CSS styles for opt-in `{kbd:...}` keyboard keys.
 const KBD_CSS: &str = include_str!("plugins/kbd.css");
 

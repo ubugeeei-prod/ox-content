@@ -1783,6 +1783,18 @@ export interface OxContentOptions {
   images?: boolean | ImageOptions;
 
   /**
+   * Opt-in static `::: gallery` image groups.
+   *
+   * Each non-empty line inside the block must be a Markdown image, optionally
+   * as a list item. Image titles become item captions, and the block title or
+   * caption metadata becomes the gallery caption. Passing `true` or `{}`
+   * enables strict empty-gallery and missing-alt diagnostics.
+   *
+   * @default false
+   */
+  imageGalleries?: boolean | ImageGalleryOptions;
+
+  /**
    * Opt-in page-bundle resources and build-time image processing.
    *
    * Off by default. `true` or `{}` treats each page directory as a bundle:
@@ -2133,6 +2145,10 @@ export interface ResolvedOptions {
   magicLinks?: ResolvedMagicLinkOptions;
   containers: ResolvedContainerOptions;
   images: ResolvedImageOptions;
+  /**
+   * Present after `resolveOptions`. Omitted in hand-built fixtures means off.
+   */
+  imageGalleries?: ResolvedImageGalleryOptions;
   codeImports: ResolvedCodeImportOptions;
   includes: ResolvedIncludeOptions;
   /**
@@ -2541,6 +2557,49 @@ export interface ImageOptions {
 export interface ResolvedImageOptions {
   enabled: boolean;
   lazy: boolean;
+}
+
+/**
+ * Options for opt-in static image galleries.
+ */
+export interface ImageGalleryOptions {
+  /**
+   * Enable `::: gallery` blocks.
+   *
+   * @default true when the options object is supplied.
+   */
+  enabled?: boolean;
+
+  /**
+   * Add `loading="lazy"` to gallery images.
+   *
+   * @default follows `images.lazy`, or true when `images` is disabled.
+   */
+  lazy?: boolean;
+
+  /**
+   * Diagnostics for image items without alt text.
+   *
+   * @default "error"
+   */
+  missingAlt?: "error" | "warn" | "ignore";
+
+  /**
+   * Diagnostics for galleries without image items.
+   *
+   * @default "error"
+   */
+  empty?: "error" | "warn" | "ignore";
+}
+
+/**
+ * Resolved image gallery transform options.
+ */
+export interface ResolvedImageGalleryOptions {
+  enabled: boolean;
+  lazy?: boolean;
+  missingAlt: "error" | "warn" | "ignore";
+  empty: "error" | "warn" | "ignore";
 }
 
 /**

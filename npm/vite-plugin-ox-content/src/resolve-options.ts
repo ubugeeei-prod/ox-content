@@ -9,6 +9,7 @@ import { resolveFileTreeOptions } from "./file-tree-options";
 import { resolveIconsOptions } from "./icons";
 import { resolveHeadingPermalinksOptions } from "./heading-permalinks-options";
 import { resolveI18nOptions } from "./i18n";
+import { resolveImageGalleryOptions } from "./image-gallery-options";
 import { resolveIncludeOptions } from "./include-options";
 import { resolvePartialsOptions } from "./partials-options";
 import { resolveAbbreviationsOptions } from "./abbreviations-options";
@@ -78,6 +79,7 @@ export function resolveOptions(options: OxContentOptions): ResolvedOptions {
     magicLinks: resolveMagicLinkOptions(options.magicLinks),
     containers: resolveContainerOptions(options.containers),
     images: resolveImageOptions(options.images),
+    imageGalleries: resolveImageGalleryOptions(options.imageGalleries),
     codeImports: resolveCodeImportOptions(options.codeImports),
     includes: resolveIncludeOptions(options.includes),
     partials: resolvePartialsOptions(options.partials),
@@ -158,7 +160,6 @@ function resolveTwitterEmbedOptions(
   if (options === true) return {};
   return options;
 }
-
 function resolvePmOptions(
   options: boolean | BuiltinPmOptions | undefined,
 ): BuiltinPmOptions | false {
@@ -189,7 +190,6 @@ export function resolveMathOptions(options: OxContentOptions["math"]): ResolvedO
   if (options === true) return { enabled: true };
   return { enabled: options.enabled ?? true };
 }
-
 function resolveAttrsOptions(options: OxContentOptions["attrs"]): ResolvedOptions["attrs"] {
   if (!options) return { enabled: false };
   if (options === true) return { enabled: true };

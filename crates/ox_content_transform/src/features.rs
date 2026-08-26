@@ -22,6 +22,7 @@ mod emoji;
 mod emoji_shortcodes;
 mod escape;
 mod file_tree;
+mod image_galleries;
 mod images;
 mod includes;
 mod keyboard_keys;
@@ -48,6 +49,7 @@ use edit::append_edit_this_page;
 use emoji_shortcodes::replace_emoji_shortcodes;
 pub(super) use escape::{escape_html_attr, escape_html_text};
 use file_tree::ResolvedFileTreeOptions;
+use image_galleries::ResolvedImageGalleryOptions;
 use images::ResolvedImageOptions;
 use includes::ResolvedIncludeOptions;
 use magic::ResolvedMagicLinks;
@@ -78,6 +80,7 @@ pub struct TransformFeatureOptions {
     abbreviations: Option<abbreviations::ResolvedAbbreviations>,
     magic_links: Option<ResolvedMagicLinks>,
     images: Option<ResolvedImageOptions>,
+    image_galleries: Option<ResolvedImageGalleryOptions>,
     math: bool,
     attributes: bool,
     edit_this_page: Option<ResolvedEditThisPageOptions>,
@@ -122,24 +125,17 @@ impl TransformFeatureOptions {
         let cards = cards::resolve(options.cards.as_ref());
         let steps = steps::resolve(options.steps.as_ref());
         let code_groups = code_groups::resolve(options.code_groups.as_ref());
+        let images = images::resolve(options.images.as_ref(), attributes);
+        let image_galleries =
+            image_galleries::resolve(options.image_galleries.as_ref(), attributes, images.as_ref());
         let mut containers = containers::resolve(options.containers.as_ref());
-        if (cards.is_some() || steps.is_some() || code_groups.is_some())
-            && let Some(containers) = containers.as_mut()
-        {
-            if cards.is_some() {
-                for name in cards::reserved_type_names() {
-                    containers.types.remove(*name);
-                }
-            }
-            if steps.is_some() {
-                containers.types.remove("steps");
-            }
-            if code_groups.is_some() {
-                for name in code_groups::reserved_type_names() {
-                    containers.types.remove(*name);
-                }
-            }
-        }
+        containers::remove_reserved_type_names(
+            &mut containers,
+            cards.as_ref().map(|_| cards::reserved_type_names()),
+            steps.is_some(),
+            code_groups.as_ref().map(|_| code_groups::reserved_type_names()),
+            image_galleries.is_some(),
+        );
         let includes = includes::resolve(options.includes.as_ref(), source_path);
         let partials = partials::resolve(options.partials.as_ref(), source_path);
         let file_tree = file_tree::resolve(options.file_tree.as_ref());
@@ -150,7 +146,6 @@ impl TransformFeatureOptions {
         let keyboard_keys = keyboard_keys::resolve(options.keyboard_keys.as_ref());
         let abbreviations = abbreviations::resolve(options.abbreviations.as_ref());
         let magic_links = magic::resolve(options.magic_links.as_ref());
-        let images = images::resolve(options.images.as_ref(), attributes);
         let math = math::resolve(options.math.as_ref());
         let edit_this_page = resolve_edit_this_page(
             options.edit_this_page.as_ref(),
@@ -176,6 +171,7 @@ impl TransformFeatureOptions {
             abbreviations,
             magic_links,
             images,
+            image_galleries,
             math,
             attributes,
             edit_this_page,
@@ -201,6 +197,7 @@ impl TransformFeatureOptions {
             || self.abbreviations.is_some()
             || self.magic_links.is_some()
             || self.images.is_some()
+            || self.image_galleries.is_some()
             || self.math
     }
 
@@ -264,6 +261,9 @@ pub fn preprocess_markdown<'a>(
     }
 
     if current.contains(":::") {
+        if let Some(galleries) = &options.image_galleries {
+            current = Cow::Owned(image_galleries::transform(&current, galleries, &mut errors));
+        }
         if options.cards.is_some() {
             current = Cow::Owned(cards::transform(&current));
         }

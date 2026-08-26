@@ -1103,6 +1103,34 @@ export interface JsI18NRuntimeLocale {
   dir?: string
 }
 
+/** Opt-in static `::: gallery` image groups. */
+export interface JsImageGalleryOptions {
+  /**
+   * Enable static image gallery blocks.
+   *
+   * Default: `false`.
+   */
+  enabled?: boolean
+  /**
+   * Add `loading="lazy"` to images inside galleries.
+   *
+   * Default: follows `images.lazy`, or `true` when `images` is disabled.
+   */
+  lazy?: boolean
+  /**
+   * Validation mode for images with empty alt text.
+   *
+   * Default: `"error"`.
+   */
+  missingAlt?: string
+  /**
+   * Validation mode for galleries without image items.
+   *
+   * Default: `"error"`.
+   */
+  empty?: string
+}
+
 /** Opt-in figures, captions, and lazy images. */
 export interface JsImageOptions {
   /**
@@ -2464,6 +2492,12 @@ export interface JsTransformOptions {
    * Default: disabled.
    */
   images?: JsImageOptions
+  /**
+   * Opt-in static `::: gallery` image groups.
+   *
+   * Default: disabled.
+   */
+  imageGalleries?: JsImageGalleryOptions
   /**
    * Opt-in `::: card` / `::: link-card` / `::: card-grid` blocks.
    *

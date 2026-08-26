@@ -7,9 +7,11 @@ use ox_content_transform::{
     WikiLinkOptions,
 };
 
+mod image_gallery_options;
 mod image_options;
 mod media_embeds_options;
 mod not_by_ai_options;
+pub use image_gallery_options::JsImageGalleryOptions;
 pub use image_options::JsImageOptions;
 pub use media_embeds_options::JsMediaEmbedsOptions;
 pub use not_by_ai_options::JsNotByAiOptions;

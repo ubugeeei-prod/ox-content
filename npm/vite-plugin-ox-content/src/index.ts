@@ -59,6 +59,8 @@ export type {
   ResolvedContainerOptions,
   ImageOptions,
   ResolvedImageOptions,
+  ImageGalleryOptions,
+  ResolvedImageGalleryOptions,
   ResourcesOptions,
   ResolvedResourcesOptions,
   CodeImportOptions,
@@ -661,6 +663,7 @@ export { resolveStepsOptions } from "./step-options";
 export { resolveCodeGroupOptions } from "./code-group-options";
 export { resolveFileTreeOptions } from "./file-tree-options";
 export { resolveDataTableOptions } from "./data-table-options";
+export { resolveImageGalleryOptions } from "./image-gallery-options";
 export { resolveHeadingPermalinksOptions } from "./heading-permalinks-options";
 export { resolveTypedHoverOptions } from "./typed-hover";
 

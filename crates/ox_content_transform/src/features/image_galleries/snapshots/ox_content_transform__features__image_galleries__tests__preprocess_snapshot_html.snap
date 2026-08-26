@@ -1,0 +1,11 @@
+---
+source: crates/ox_content_transform/src/features/image_galleries/tests.rs
+expression: source
+---
+<figure class="ox-image-gallery">
+<figcaption class="ox-image-gallery__caption">Screenshots</figcaption>
+<ul class="ox-image-gallery__items">
+<li class="ox-image-gallery__item"><figure class="ox-image-gallery__figure"><img src="/one.png" alt="One" loading="lazy"><figcaption class="ox-image-gallery__item-caption">First</figcaption></figure></li>
+<li class="ox-image-gallery__item"><figure class="ox-image-gallery__figure"><img src="/two.png" alt="Two" loading="lazy"></figure></li>
+</ul>
+</figure>

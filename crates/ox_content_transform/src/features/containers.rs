@@ -87,6 +87,29 @@ pub(super) fn resolve(options: Option<&ContainerOptions>) -> Option<ResolvedCont
     Some(ResolvedContainerOptions { types })
 }
 
+pub(super) fn remove_reserved_type_names(
+    options: &mut Option<ResolvedContainerOptions>,
+    cards: Option<&[&str]>,
+    steps: bool,
+    code_groups: Option<&[&str]>,
+    galleries: bool,
+) {
+    let Some(options) = options.as_mut() else {
+        return;
+    };
+    for names in [cards, code_groups].into_iter().flatten() {
+        for name in names {
+            options.types.remove(*name);
+        }
+    }
+    if steps {
+        options.types.remove("steps");
+    }
+    if galleries {
+        options.types.remove("gallery");
+    }
+}
+
 pub(super) fn transform(source: &str, options: &ResolvedContainerOptions) -> String {
     let mut out = String::with_capacity(source.len() + 64);
     let mut lines = source.split_inclusive('\n').peekable();

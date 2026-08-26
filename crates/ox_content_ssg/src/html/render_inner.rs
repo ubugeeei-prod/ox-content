@@ -28,9 +28,9 @@ use super::utils::{
     page_content_contains_any, wrap_css_section,
 };
 use super::{
-    CONTRIBUTORS_CSS, ENTRY_CSS, FILE_TREE_CSS, GITHUB_CSS, ISLAND_CSS, MERMAID_CSS, NavGroup,
-    OGP_CSS, PageData, PageTemplate, SOCIAL_CSS, SOCIAL_TWEET_FULL_CSS, SSG_CSS, SsgConfig,
-    TABS_CSS, YOUTUBE_CSS,
+    CONTRIBUTORS_CSS, ENTRY_CSS, FILE_TREE_CSS, GITHUB_CSS, IMAGE_GALLERY_CSS, ISLAND_CSS,
+    MERMAID_CSS, NavGroup, OGP_CSS, PageData, PageTemplate, SOCIAL_CSS, SOCIAL_TWEET_FULL_CSS,
+    SSG_CSS, SsgConfig, TABS_CSS, YOUTUBE_CSS,
 };
 
 pub(super) struct GeneratedPage {
@@ -131,6 +131,9 @@ pub(super) fn generate_html_inner(
     }
     if page_content_contains_any(&page_data.content, &["ox-file-tree", "ox-data-table"]) {
         css_sections.push(wrap_css_section("file-tree", FILE_TREE_CSS));
+    }
+    if page_content_contains_any(&page_data.content, &["ox-image-gallery"]) {
+        css_sections.push(wrap_css_section("image-gallery", IMAGE_GALLERY_CSS));
     }
     push_not_by_ai_css(&mut css_sections, &page_data.content);
     push_content_plugin_css(&mut css_sections, &page_data.content);

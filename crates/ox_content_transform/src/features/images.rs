@@ -62,14 +62,14 @@ pub(super) fn replace_images(segment: &str, options: &ResolvedImageOptions, out:
     out.push_str(&segment[cursor..]);
 }
 
-struct ParsedImage<'a> {
-    alt: &'a str,
-    src: Option<&'a str>,
-    caption: Option<&'a str>,
-    attrs: Option<ParsedAttrs>,
-    width: Option<String>,
-    height: Option<String>,
-    end: usize,
+pub(super) struct ParsedImage<'a> {
+    pub(super) alt: &'a str,
+    pub(super) src: Option<&'a str>,
+    pub(super) caption: Option<&'a str>,
+    pub(super) attrs: Option<ParsedAttrs>,
+    pub(super) width: Option<String>,
+    pub(super) height: Option<String>,
+    pub(super) end: usize,
 }
 
 #[derive(Default)]
@@ -84,7 +84,10 @@ fn is_indented_code_segment(segment: &str) -> bool {
     segment.starts_with('\t') || segment.starts_with("    ")
 }
 
-fn parse_image<'a>(input: &'a str, options: &ResolvedImageOptions) -> Option<ParsedImage<'a>> {
+pub(super) fn parse_image<'a>(
+    input: &'a str,
+    options: &ResolvedImageOptions,
+) -> Option<ParsedImage<'a>> {
     let rest = input.strip_prefix("![")?;
     let (alt, after_alt) = split_balanced(rest, b'[', b']')?;
     let after_alt = after_alt.strip_prefix('(')?;
@@ -290,7 +293,7 @@ fn emit_image(out: &mut String, options: &ResolvedImageOptions, image: &ParsedIm
     }
 }
 
-fn unescape_markdown(value: &str) -> String {
+pub(super) fn unescape_markdown(value: &str) -> String {
     let mut out = String::with_capacity(value.len());
     let mut chars = value.chars();
     while let Some(ch) = chars.next() {

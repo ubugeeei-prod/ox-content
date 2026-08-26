@@ -56,6 +56,8 @@ pub struct TransformOptions {
     pub magic_links: Option<MagicLinkOptions>,
     /// Opt-in figures, captions, and lazy images. Disabled when omitted.
     pub images: Option<ImageOptions>,
+    /// Opt-in static `::: gallery` image groups. Disabled when omitted.
+    pub image_galleries: Option<ImageGalleryOptions>,
     /// Opt-in `::: card` / `::: link-card` / `::: card-grid` blocks. Disabled when omitted.
     pub cards: Option<CardOptions>,
     /// Opt-in `file-tree` fences. Disabled when omitted.
@@ -122,6 +124,14 @@ pub struct MagicLinkImageOverride {
 pub struct ImageOptions {
     pub enabled: Option<bool>,
     pub lazy: Option<bool>,
+}
+
+#[derive(Clone, Default)]
+pub struct ImageGalleryOptions {
+    pub enabled: Option<bool>,
+    pub lazy: Option<bool>,
+    pub missing_alt: Option<String>,
+    pub empty: Option<String>,
 }
 
 #[derive(Clone, Default)]

@@ -22,6 +22,7 @@ fn snapshot_text(value: &str) -> String {
 mod abbr;
 mod aside;
 mod contributors;
+mod image_gallery;
 mod lazy_widgets;
 mod mobile_css;
 mod mpa_navigation;
@@ -75,6 +76,7 @@ fn default_theme_surfaces_stay_flat() {
         super::SSG_CSS.as_str(),
         super::CONTRIBUTORS_CSS,
         super::FILE_TREE_CSS,
+        super::IMAGE_GALLERY_CSS,
         super::not_by_ai::NOT_BY_AI_CSS,
         super::KBD_CSS,
         super::ABBR_CSS,
