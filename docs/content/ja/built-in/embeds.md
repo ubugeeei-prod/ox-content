@@ -180,6 +180,8 @@ pnpm vite preview</code></pre>
 
 `label` 属性のない `<tab>` は `Tab 1`、`Tab 2` のように落ちます。
 
+隣り合うコード例は、手書きの `<tabs>` よりオプトインの `::: code-group` を使ってください。[コードグループ](./code-groups.md) を見てください。
+
 ## YouTube
 
 YouTube 埋め込みは SSG ビルドと dev preview で常に処理されます。iframe はプライバシー強化モード（`youtube-nocookie.com`）と遅延読み込みが既定です。

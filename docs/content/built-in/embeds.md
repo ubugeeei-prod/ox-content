@@ -212,6 +212,9 @@ pnpm vite preview</code></pre>
 A `<tab>` without a `label` attribute falls back to `Tab 1`, `Tab 2`, and so
 on.
 
+For adjacent code samples, prefer the opt-in `::: code-group` form instead of
+hand-written `<tabs>`. See [Code Groups](./code-groups.md).
+
 ## YouTube
 
 YouTube embeds are always processed in SSG builds and dev preview. The iframe
