@@ -637,9 +637,10 @@ function createSearchPlugin(resolvedOptions: ResolvedOptions, getRoot: () => str
 export {
   resolveBadgeOptions,
   resolveBuiltinEmbedOptions,
+  resolveKeyboardKeysOptions,
   resolveMathOptions,
-  resolveNotByAiOptions,
 } from "./resolve-options";
+export { resolveNotByAiOptions } from "./not-by-ai-options";
 export { resolveCardOptions } from "./card-options";
 export { resolveIncludeOptions } from "./include-options";
 export { resolveStepsOptions } from "./step-options";

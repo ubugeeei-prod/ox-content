@@ -104,6 +104,7 @@ fetch はしません。URL を書くだけです。`imageOverrides` は exact �
 
 - [構文拡張](./syntax-extensions.md)
 - [インラインバッジ](./badges.md)
+- [キーボードキー](./keyboard-keys.md)
 - [コンポーネント CSS](./component-styles.md)
 - [組み込み機能の一覧](../built-in-features.md)
 - [markdown-it-magic-link](https://github.com/antfu/markdown-it-magic-link)

@@ -44,6 +44,8 @@ pub struct TransformOptions {
     pub badges: Option<BadgeOptions>,
     /// Opt-in `<NotByAI />` authorship badge. Disabled when omitted.
     pub not_by_ai: Option<NotByAiOptions>,
+    /// Opt-in `{kbd:...}` inline keyboard keys. Disabled when omitted.
+    pub keyboard_keys: Option<KeyboardKeysOptions>,
     /// Opt-in `{link:...}` rich magic links. Disabled when omitted.
     pub magic_links: Option<MagicLinkOptions>,
     /// Opt-in figures, captions, and lazy images. Disabled when omitted.
@@ -64,6 +66,13 @@ pub struct NotByAiOptions {
     pub enabled: Option<bool>,
     pub label: Option<String>,
     pub href: Option<String>,
+}
+
+#[derive(Clone, Default)]
+pub struct KeyboardKeysOptions {
+    pub enabled: Option<bool>,
+    pub aliases: Option<FxHashMap<String, String>>,
+    pub style: Option<String>,
 }
 
 #[derive(Clone, Default)]

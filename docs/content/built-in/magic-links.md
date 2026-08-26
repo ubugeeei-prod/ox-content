@@ -105,6 +105,7 @@ re-parse per name. There is no client JavaScript.
 
 - [Syntax Extensions](./syntax-extensions.md)
 - [Inline Badges](./badges.md)
+- [Keyboard Keys](./keyboard-keys.md)
 - [Component styles](./component-styles.md)
 - [Built-in Features overview](../built-in-features.md)
 - [markdown-it-magic-link](https://github.com/antfu/markdown-it-magic-link)

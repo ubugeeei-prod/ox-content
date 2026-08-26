@@ -41,6 +41,11 @@ type NativeTransformOptions = {
   attributes?: { enabled?: boolean };
   badges?: { enabled?: boolean };
   notByAi?: { enabled?: boolean; label?: string; href?: string };
+  keyboardKeys?: {
+    enabled?: boolean;
+    aliases?: Record<string, string>;
+    style?: string;
+  };
   magicLinks?: {
     enabled?: boolean;
     aliases?: Record<string, { href: string; label?: string; image?: string }>;
@@ -213,6 +218,13 @@ function createNativeTransformOptions(options: ResolvedOptions): NativeTransform
           enabled: true,
           label: options.notByAi.label,
           href: options.notByAi.href,
+        }
+      : undefined,
+    keyboardKeys: options.keyboardKeys?.enabled
+      ? {
+          enabled: true,
+          aliases: options.keyboardKeys.aliases,
+          style: options.keyboardKeys.style,
         }
       : undefined,
     magicLinks: options.magicLinks?.enabled

@@ -253,6 +253,28 @@ fn test_html_locale_attrs_use_current_locale_and_direction() {
     insta::assert_snapshot!(super::snapshot_text(&html));
 }
 #[test]
+fn kbd_css_is_included_only_when_ox_kbd_is_present() {
+    let config = config("Test Site", "/", None);
+    let with = generate_html(
+        &page(
+            "Kbd",
+            None,
+            r#"<p><kbd class="ox-kbd"><kbd class="ox-kbd__key">K</kbd></kbd></p>"#,
+            vec![],
+            None,
+            "kbd",
+        ),
+        &[],
+        &config,
+    );
+    assert!(with.contains("ox-content:css:plugin-kbd:start"), "{with}");
+    assert!(with.contains(".ox-kbd"), "{with}");
+    let without =
+        generate_html(&page("Plain", None, "<p>no keys</p>", vec![], None, "plain"), &[], &config);
+    assert!(!without.contains("plugin-kbd"), "{without}");
+}
+
+#[test]
 fn test_generate_toc_html_escapes_entries() {
     let html = generate_toc_html(&[TocEntry {
         depth: 2,

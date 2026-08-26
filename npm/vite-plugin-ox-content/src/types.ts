@@ -1712,6 +1712,18 @@ export interface OxContentOptions {
   notByAi?: boolean | NotByAiOptions;
 
   /**
+   * Opt-in `{kbd:...}` inline keyboard keys.
+   *
+   * Passing `true` or an options object enables `{kbd:Ctrl+K}` and
+   * `{kbd:Cmd Shift P}`. Key labels are HTML-escaped. Fenced, indented,
+   * inline, and raw code, plus HTML comments, are skipped. Aliases come
+   * from build config, not the runtime user agent.
+   *
+   * @default false
+   */
+  keyboardKeys?: boolean | KeyboardKeysOptions;
+
+  /**
    * Opt-in `{link:...}` rich magic links.
    *
    * Passing `true` or an options object enables GitHub-user, alias, and
@@ -2058,6 +2070,7 @@ export interface ResolvedOptions {
    * Present after `resolveOptions`. Omitted in hand-built fixtures means off.
    */
   notByAi?: ResolvedNotByAiOptions;
+  keyboardKeys?: ResolvedKeyboardKeysOptions;
   /**
    * Present after `resolveOptions`. Omitted in hand-built fixtures means off.
    */
@@ -2240,6 +2253,38 @@ export interface ResolvedNotByAiOptions {
   enabled: boolean;
   label: string;
   href: string;
+}
+
+/**
+ * Options for opt-in `{kbd:...}` inline keyboard keys.
+ */
+export interface KeyboardKeysOptions {
+  /**
+   * Enable the keyboard-key transform when an options object is supplied.
+   *
+   * @default true
+   */
+  enabled?: boolean;
+  /**
+   * Build-time aliases. Keys are matched case-insensitively and override
+   * the built-in `cmd` / `ctrl` table.
+   */
+  aliases?: Record<string, string>;
+  /**
+   * Built-in alias labels. `"words"` emits `Command`; `"symbols"` emits `⌘`.
+   *
+   * @default "words"
+   */
+  style?: "words" | "symbols";
+}
+
+/**
+ * Resolved inline keyboard-key transform options.
+ */
+export interface ResolvedKeyboardKeysOptions {
+  enabled: boolean;
+  aliases: Record<string, string>;
+  style: "words" | "symbols";
 }
 
 /**

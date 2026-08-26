@@ -10,6 +10,7 @@ import { resolveHeadingPermalinksOptions } from "./heading-permalinks-options";
 import { resolveI18nOptions } from "./i18n";
 import { resolveIncludeOptions } from "./include-options";
 import { resolveMagicLinkOptions } from "./magic-link-options";
+import { resolveNotByAiOptions } from "./not-by-ai-options";
 import { normalizeMarkdownExtensions } from "./markdown";
 import { resolveOgImageOptions } from "./og-image";
 import { resolveCascadeOptions, resolvePermalinksOptions } from "./permalinks";
@@ -68,6 +69,7 @@ export function resolveOptions(options: OxContentOptions): ResolvedOptions {
     attrs: resolveAttrsOptions(options.attrs),
     badges: resolveBadgeOptions(options.badges),
     notByAi: resolveNotByAiOptions(options.notByAi),
+    keyboardKeys: resolveKeyboardKeysOptions(options.keyboardKeys),
     magicLinks: resolveMagicLinkOptions(options.magicLinks),
     containers: resolveContainerOptions(options.containers),
     images: resolveImageOptions(options.images),
@@ -189,22 +191,15 @@ export function resolveBadgeOptions(
   return { enabled: options.enabled ?? true };
 }
 
-const DEFAULT_NOT_BY_AI_LABEL = "Written by human, not by AI";
-const DEFAULT_NOT_BY_AI_HREF = "https://notbyai.fyi";
-
-export function resolveNotByAiOptions(
-  options: OxContentOptions["notByAi"],
-): ResolvedOptions["notByAi"] {
-  if (!options) {
-    return { enabled: false, label: DEFAULT_NOT_BY_AI_LABEL, href: DEFAULT_NOT_BY_AI_HREF };
-  }
-  if (options === true) {
-    return { enabled: true, label: DEFAULT_NOT_BY_AI_LABEL, href: DEFAULT_NOT_BY_AI_HREF };
-  }
+export function resolveKeyboardKeysOptions(
+  options: OxContentOptions["keyboardKeys"],
+): NonNullable<ResolvedOptions["keyboardKeys"]> {
+  if (!options) return { enabled: false, aliases: {}, style: "words" };
+  if (options === true) return { enabled: true, aliases: {}, style: "words" };
   return {
     enabled: options.enabled ?? true,
-    label: options.label?.trim() || DEFAULT_NOT_BY_AI_LABEL,
-    href: options.href?.trim() || DEFAULT_NOT_BY_AI_HREF,
+    aliases: options.aliases ?? {},
+    style: options.style === "symbols" ? "symbols" : "words",
   };
 }
 

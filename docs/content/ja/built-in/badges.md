@@ -54,4 +54,5 @@ API {badge:tip}Beta{/badge} — the `token` field is {badge:required}required{/b
 
 - [NotByAI バッジ](./not-by-ai.md) — 人の執筆開示。状態ラベルではない
 - [カスタムコンテナ](./containers.md)
+- [キーボードキー](./keyboard-keys.md)
 - [組み込み機能の一覧](../built-in-features.md)
