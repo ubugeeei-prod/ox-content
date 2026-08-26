@@ -35,6 +35,15 @@ export type ComponentsMap = Record<string, string>;
 export type ComponentsOption = ComponentsMap | string | string[];
 
 /**
+ * Opt-in build-time props for MDX documents imported as Svelte components.
+ *
+ * Keep this disabled for static content documents. Enable it when a custom
+ * `ssg: false` host renders `.mdx` files as page templates and passes data
+ * through Svelte component props during SSR.
+ */
+export type MdxDocumentPropsOption = boolean;
+
+/**
  * Svelte integration plugin options.
  *
  * This extends the core ox-content options with Svelte component registration
@@ -105,6 +114,19 @@ export interface SvelteIntegrationOptions extends OxContentOptions {
    * runtime from `@ox-content/vite-plugin`.
    */
   renderIsland?: RenderIslandFn;
+
+  /**
+   * Resolve MDX text expressions and component expression props from Svelte
+   * component props at render time.
+   *
+   * This is off by default so normal `.mdx` documents keep their static,
+   * no-evaluation output. When enabled, only identifiers and dotted property
+   * paths are accepted, for example `{title}` and `items={posts}`. Missing
+   * props throw a deterministic SSR error.
+   *
+   * @default false
+   */
+  mdxDocumentProps?: MdxDocumentPropsOption;
 }
 
 /**
@@ -210,6 +232,8 @@ export interface ResolvedSvelteOptions {
   mdx?: boolean;
   root?: string;
   renderIsland?: RenderIslandFn;
+  mdxDocumentProps: boolean;
+  ssr?: boolean;
 }
 
 export interface SvelteTransformResult {

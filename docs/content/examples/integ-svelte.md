@@ -23,8 +23,11 @@ export default defineConfig({
     svelte(),
     oxContentSvelte({
       srcDir: "docs",
+      ssg: false,
       // Auto-discover all Svelte components
       components: "./src/components/*.svelte",
+      // Opt in when .mdx files are rendered as custom page templates.
+      mdxDocumentProps: true,
     }),
   ],
 });
@@ -81,6 +84,35 @@ export default defineConfig({
   Be careful with this feature!
 </Alert>
 ```
+
+## MDX Page Template Props
+
+Custom `ssg: false` hosts can opt in to render build-time props from `.mdx`
+documents during Svelte SSR:
+
+```mdx
+import PostList from "./PostList.svelte";
+
+# Page Template
+
+Hello {title}.
+
+<PostList items={items} />
+```
+
+```svelte
+<script>
+  import PageTemplate from '../docs/page-template.mdx';
+
+  const posts = [{ title: 'Ox Content with Svelte', href: '/posts/svelte' }];
+</script>
+
+<PageTemplate title="Blog" items={posts} />
+```
+
+Only identifiers and dotted property paths are resolved from Svelte component
+props. Missing values throw a deterministic SSR error instead of rendering an
+empty string.
 
 ## Svelte 5 Features
 

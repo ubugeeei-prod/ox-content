@@ -59,6 +59,7 @@ export type {
   ComponentsOption,
   ComponentsMap,
   BuiltinEmbedOptions,
+  MdxDocumentPropsOption,
   GitHubEmbedOptions,
   OpenGraphEmbedOptions,
   ResolvedBuiltinEmbedOptions,
@@ -116,7 +117,7 @@ export function oxContentSvelte(options: SvelteIntegrationOptions = {}): PluginO
       }
     },
 
-    async transform(code, id) {
+    async transform(code, id, transformOptions) {
       if (!isMarkdownFilePath(id, resolved.extensions)) {
         return null;
       }
@@ -126,6 +127,7 @@ export function oxContentSvelte(options: SvelteIntegrationOptions = {}): PluginO
         components: Object.fromEntries(componentMap),
         root: config.root,
         renderIsland: options.renderIsland,
+        ssr: transformOptions?.ssr,
       });
 
       return {
@@ -225,6 +227,7 @@ function resolveSvelteOptions(
     runes: options.runes ?? true,
     embeds: resolveBuiltinEmbedOptions(options.embeds),
     mdx: options.mdx,
+    mdxDocumentProps: options.mdxDocumentProps ?? false,
   };
 }
 

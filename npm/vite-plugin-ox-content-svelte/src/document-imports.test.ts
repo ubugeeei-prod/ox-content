@@ -134,6 +134,7 @@ function createOptions(overrides: Partial<ResolvedSvelteOptions> = {}): Resolved
     runes: true,
     embeds: { github: false, openGraph: false },
     root: "/repo",
+    mdxDocumentProps: false,
     ...overrides,
-  };
+  } as ResolvedSvelteOptions;
 }

@@ -1,6 +1,12 @@
 <script>
   // Import Markdown document as Svelte component
   import IndexDoc from '../docs/index.md';
+  import PageTemplate from '../docs/page-template.mdx';
+
+  const posts = [
+    { title: 'Ox Content with Svelte', href: '/posts/ox-content-svelte' },
+    { title: 'MDX page templates', href: '/posts/mdx-page-templates' },
+  ];
 </script>
 
 <div class="app">
@@ -10,6 +16,7 @@
   </header>
   <main>
     <IndexDoc />
+    <PageTemplate title="Blog" pathname="/blog" items={posts} />
   </main>
 </div>
 

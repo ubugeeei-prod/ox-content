@@ -7,8 +7,10 @@ export default defineConfig({
     svelte(),
     oxContentSvelte({
       srcDir: "docs",
+      ssg: false,
       // Auto-discover components using glob pattern
       components: "./src/components/*.svelte",
+      mdxDocumentProps: true,
     }),
   ],
 });
