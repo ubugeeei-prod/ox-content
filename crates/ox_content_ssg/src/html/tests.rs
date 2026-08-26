@@ -19,6 +19,7 @@ fn snapshot_text(value: &str) -> String {
     rendered
 }
 
+mod abbr;
 mod aside;
 mod contributors;
 mod lazy_widgets;
@@ -76,6 +77,7 @@ fn default_theme_surfaces_stay_flat() {
         super::FILE_TREE_CSS,
         super::not_by_ai::NOT_BY_AI_CSS,
         super::KBD_CSS,
+        super::ABBR_CSS,
         super::DEFINITION_LIST_CSS,
         super::header_chrome::HEADER_CHROME_CSS,
         super::heading_permalinks::HEADING_PERMALINK_CSS,

@@ -10,6 +10,7 @@ import { resolveIconsOptions } from "./icons";
 import { resolveHeadingPermalinksOptions } from "./heading-permalinks-options";
 import { resolveI18nOptions } from "./i18n";
 import { resolveIncludeOptions } from "./include-options";
+import { resolveAbbreviationsOptions } from "./abbreviations-options";
 import { resolveMagicLinkOptions } from "./magic-link-options";
 import { resolveDefinitionListOptions } from "./definition-list-options";
 import { resolveNotByAiOptions } from "./not-by-ai-options";
@@ -33,9 +34,7 @@ import { resolveTypedHoverOptions } from "./typed-hover";
 import type { BuiltinPmOptions, OxContentOptions, ResolvedOptions } from "./types";
 import { resolveVersionsOptions } from "./versions";
 
-/**
- * Resolves plugin options with defaults.
- */
+/** Resolves plugin options with defaults. */
 export function resolveOptions(options: OxContentOptions): ResolvedOptions {
   return {
     srcDir: options.srcDir ?? "content",
@@ -74,6 +73,7 @@ export function resolveOptions(options: OxContentOptions): ResolvedOptions {
     badges: resolveBadgeOptions(options.badges),
     notByAi: resolveNotByAiOptions(options.notByAi),
     keyboardKeys: resolveKeyboardKeysOptions(options.keyboardKeys),
+    abbreviations: resolveAbbreviationsOptions(options.abbreviations),
     definitionLists: resolveDefinitionListOptions(options.definitionLists),
     magicLinks: resolveMagicLinkOptions(options.magicLinks),
     containers: resolveContainerOptions(options.containers),

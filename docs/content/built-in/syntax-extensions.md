@@ -17,6 +17,7 @@ everywhere until a site explicitly enables an extension.
 | `magicLinks`      | `boolean` / `MagicLinkOptions`      | `false` |
 | `notByAi`         | `boolean` / `NotByAiOptions`        | `false` |
 | `keyboardKeys`    | `boolean` / `KeyboardKeysOptions`   | `false` |
+| `abbreviations`   | `boolean` / `AbbreviationsOptions`  | `false` |
 | `definitionLists` | `boolean` / `DefinitionListOptions` | `false` |
 
 ## Emoji Shortcodes
@@ -204,6 +205,11 @@ status badge. Off by default. See [NotByAI Badge](./not-by-ai.md).
 Opt-in `{kbd:Ctrl+K}` and `{kbd:Cmd Shift P}` semantic shortcuts. Off by
 default. See [Keyboard Keys](./keyboard-keys.md).
 
+## Abbreviations
+
+Opt-in `*[LSP]: Language Server Protocol` glossary expansion. Off by
+default. See [Abbreviations](./abbreviations.md).
+
 ## Definition Lists
 
 Opt-in `Term` / `: definition` glossary lists. Off by default. See
@@ -216,5 +222,6 @@ Opt-in `Term` / `: definition` glossary lists. Off by default. See
 - [Code Blocks](./code-blocks.md) — annotation and import syntax for fences.
 - [Magic Links](./magic-links.md) — configurable GitHub, alias, and URL links.
 - [Keyboard Keys](./keyboard-keys.md) — `{kbd:Ctrl+K}` shortcut markup.
+- [Abbreviations](./abbreviations.md) — `*[TERM]:` glossary expansion.
 - [Definition Lists](./definition-lists.md) — opt-in `Term` / `: definition`
   glossaries.

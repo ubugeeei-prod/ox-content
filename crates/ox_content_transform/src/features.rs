@@ -6,6 +6,7 @@ use std::path::PathBuf;
 
 use crate::TransformOptions;
 
+mod abbreviations;
 mod attr_tokens;
 mod attributes;
 mod badges;
@@ -72,6 +73,7 @@ pub struct TransformFeatureOptions {
     badges: bool,
     not_by_ai: Option<not_by_ai::ResolvedNotByAi>,
     keyboard_keys: Option<keyboard_keys::ResolvedKeyboardKeys>,
+    abbreviations: Option<abbreviations::ResolvedAbbreviations>,
     magic_links: Option<ResolvedMagicLinks>,
     images: Option<ResolvedImageOptions>,
     math: bool,
@@ -143,6 +145,7 @@ impl TransformFeatureOptions {
         let badges = badges::resolve(options.badges.as_ref());
         let not_by_ai = not_by_ai::resolve(options.not_by_ai.as_ref());
         let keyboard_keys = keyboard_keys::resolve(options.keyboard_keys.as_ref());
+        let abbreviations = abbreviations::resolve(options.abbreviations.as_ref());
         let magic_links = magic::resolve(options.magic_links.as_ref());
         let images = images::resolve(options.images.as_ref(), attributes);
         let math = math::resolve(options.math.as_ref());
@@ -166,6 +169,7 @@ impl TransformFeatureOptions {
             badges,
             not_by_ai,
             keyboard_keys,
+            abbreviations,
             magic_links,
             images,
             math,
@@ -189,6 +193,7 @@ impl TransformFeatureOptions {
             || self.badges
             || self.not_by_ai.is_some()
             || self.keyboard_keys.is_some()
+            || self.abbreviations.is_some()
             || self.magic_links.is_some()
             || self.images.is_some()
             || self.math
@@ -295,6 +300,7 @@ pub fn preprocess_markdown<'a>(
     }
 
     math::apply(&mut current, options.math);
+    abbreviations::apply(&mut current, options.abbreviations.as_ref());
 
     PreprocessResult { source: current, errors }
 }

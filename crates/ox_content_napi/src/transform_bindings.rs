@@ -8,6 +8,7 @@ use ox_content_transform::{
 
 use crate::{JsSourceOptions, JsSourceOrigin, PreparedSourceResult, TocEntry, TransformResult};
 
+mod abbreviations_options;
 mod async_task;
 mod badge_options;
 mod card_options;
@@ -24,6 +25,7 @@ mod math_options;
 mod steps_options;
 mod transform_options;
 
+pub use abbreviations_options::JsAbbreviationsOptions;
 pub use async_task::TransformTask;
 pub use badge_options::JsBadgeOptions;
 pub use card_options::JsCardOptions;

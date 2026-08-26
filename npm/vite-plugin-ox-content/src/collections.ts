@@ -47,6 +47,11 @@ type NativeTransformOptions = {
     aliases?: Record<string, string>;
     style?: string;
   };
+  abbreviations?: {
+    enabled?: boolean;
+    terms?: Record<string, string>;
+    firstUseOnly?: boolean;
+  };
   definitionLists?: {
     enabled?: boolean;
   };
@@ -234,6 +239,13 @@ function createNativeTransformOptions(options: ResolvedOptions): NativeTransform
           enabled: true,
           aliases: options.keyboardKeys.aliases,
           style: options.keyboardKeys.style,
+        }
+      : undefined,
+    abbreviations: options.abbreviations?.enabled
+      ? {
+          enabled: true,
+          terms: options.abbreviations.terms,
+          firstUseOnly: options.abbreviations.firstUseOnly,
         }
       : undefined,
     definitionLists: options.definitionLists?.enabled ? { enabled: true } : undefined,

@@ -33,6 +33,8 @@ inline**.
 | [Inline Badges](./built-in/badges.md)                       | Opt-in `{badge:tip}` status labels in headings or prose                     |
 | [NotByAI Badge](./built-in/not-by-ai.md)                    | Opt-in static human-authorship disclosure (`<NotByAI />`)                   |
 | [Keyboard Keys](./built-in/keyboard-keys.md)                | Opt-in `{kbd:Ctrl+K}` semantic shortcut markup                              |
+| [Abbreviations](./built-in/abbreviations.md)                | Opt-in `*[TERM]:` glossary expansion into accessible `<abbr>`               |
+| [Definition Lists](./built-in/definition-lists.md)          | Opt-in `Term` / `: definition` glossary lists                               |
 | [Magic Links](./built-in/magic-links.md)                    | Opt-in `{link:@user}` / alias / `label\|url` rich links with avatars        |
 | [Images](./built-in/images.md)                              | Opt-in figures, captions, lazy loading, and safe dimensions                 |
 | [Page resources](./built-in/resources.md)                   | Opt-in page-bundle assets with resize, crop, and format transforms          |
@@ -92,7 +94,7 @@ inline**.
 | Syntax highlight   | `highlight`                                                                                                                                                        | `false`              | [Code Blocks](./built-in/code-blocks.md)                    |
 | Code authoring     | `codeAnnotations`, `codeImports`                                                                                                                                   | `false`              | [Code Blocks](./built-in/code-blocks.md)                    |
 | Code groups        | `codeGroups`                                                                                                                                                       | `false`              | [Code Groups](./built-in/code-groups.md)                    |
-| Extra syntax       | `wikiLinks`, `emojiShortcodes`, `attrs`, `cjkEmphasis`, `containers`, `badges`, `notByAi`, `keyboardKeys`, `definitionLists`, `magicLinks`                         | `false`              | [Syntax Extensions](./built-in/syntax-extensions.md)        |
+| Extra syntax       | `wikiLinks`, `emojiShortcodes`, `attrs`, `cjkEmphasis`, `containers`, `badges`, `notByAi`, `keyboardKeys`, `abbreviations`, `definitionLists`, `magicLinks`        | `false`              | [Syntax Extensions](./built-in/syntax-extensions.md)        |
 | File includes      | `includes`                                                                                                                                                         | `false`              | [File Includes](./built-in/includes.md)                     |
 | Cards              | `cards`                                                                                                                                                            | `false`              | [Cards](./built-in/cards.md)                                |
 | Step lists         | `steps`                                                                                                                                                            | `false`              | [Step Lists](./built-in/steps.md)                           |
