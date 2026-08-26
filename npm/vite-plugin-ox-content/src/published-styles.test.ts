@@ -19,6 +19,7 @@ const DOCUMENTED_STYLE_IMPORTS = [
   "youtube.css",
   "tabs.css",
   "mermaid.css",
+  "graphviz.css",
   "not-by-ai.css",
   "all.css",
 ] as const;
@@ -41,6 +42,7 @@ const CRATE_SOURCES: Record<
   "youtube.css": ["plugins/youtube.css"],
   "tabs.css": ["plugins/tabs.css"],
   "mermaid.css": ["plugins/mermaid.css"],
+  "graphviz.css": ["plugins/graphviz.css"],
   "not-by-ai.css": ["plugins/not-by-ai.css"],
 };
 

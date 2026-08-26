@@ -242,6 +242,9 @@ const SOCIAL_TWEET_FULL_CSS: &str = concat!(
 /// CSS styles for Mermaid plugin.
 const MERMAID_CSS: &str = include_str!("plugins/mermaid.css");
 
+/// CSS styles for Graphviz plugin.
+const GRAPHVIZ_CSS: &str = include_str!("plugins/graphviz.css");
+
 /// CSS styles for Island plugin.
 const ISLAND_CSS: &str = include_str!("plugins/island.css");
 

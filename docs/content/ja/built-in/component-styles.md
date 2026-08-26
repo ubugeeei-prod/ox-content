@@ -42,6 +42,7 @@ import なので、コンパクトな Tweet だけ載せてフルカード用シ
 | `styles/youtube.css`      | YouTube 埋め込み                                                                                              |
 | `styles/tabs.css`         | タブとパッケージマネージャタブ                                                                                |
 | `styles/mermaid.css`      | Mermaid 図                                                                                                    |
+| `styles/graphviz.css`     | Graphviz DOT 図                                                                                               |
 | `styles/not-by-ai.css`    | `<NotByAI />` 執筆開示バッジ                                                                                  |
 | `styles/all.css`          | 上の機能シートをこの順で全部                                                                                  |
 

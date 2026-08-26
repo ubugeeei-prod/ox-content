@@ -1412,8 +1412,8 @@ async function transformSsgPage(
 }
 
 async function transformSsgHtml(html: string, options: ResolvedOptions): Promise<string> {
-  // Mermaid SVGs are protected before plugin transforms because some transforms
-  // still use HTML parser/stringifier steps that can corrupt SVG foreignObject
+  // Static diagram SVGs are protected before plugin transforms because some
+  // transforms still use HTML parser/stringifier steps that can corrupt SVG
   // markup. The protect/restore pair keeps the rest of the pipeline free to
   // operate on normal HTML strings.
   const { html: protectedHtml, svgs: mermaidSvgs } = protectMermaidSvgs(html);

@@ -31,7 +31,13 @@ import type { OxContentOptions, ResolvedOptions } from "./types";
 import { resolveOptions } from "./resolve-options";
 
 export type { OxContentOptions } from "./types";
-export type { RedditEmbedOptions, TwitterEmbedOptions } from "./plugins";
+export type {
+  GraphvizFailureMode,
+  GraphvizOptions,
+  RedditEmbedOptions,
+  ResolvedGraphvizOptions,
+  TwitterEmbedOptions,
+} from "./plugins";
 export type {
   CodeAnnotationSyntax,
   CodeAnnotationsOptions,
@@ -1015,6 +1021,9 @@ export {
   transformRedditEmbeds,
   parseRedditPostReference,
   transformMermaidStatic,
+  clearGraphvizCache,
+  resolveGraphvizOptions,
+  transformGraphvizStatic,
   mermaidClientScript,
   transformAllPlugins,
 } from "./plugins";
@@ -1032,6 +1041,9 @@ export type {
   RedditPostData,
   RedditPostReference,
   MermaidOptions,
+  GraphvizFailureMode,
+  GraphvizOptions,
+  ResolvedGraphvizOptions,
   TransformAllOptions,
 } from "./plugins";
 

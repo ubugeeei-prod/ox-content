@@ -8,6 +8,7 @@ import { resolveDocsOptions } from "./docs";
 import { resolveFeedsOptions } from "./feeds";
 import { resolveDataTableOptions } from "./data-table-options";
 import { resolveFileTreeOptions } from "./file-tree-options";
+import { resolveGraphvizOptions } from "./plugins/graphviz";
 import { resolveIconsOptions } from "./icons";
 import { resolveHeadingPermalinksOptions } from "./heading-permalinks-options";
 import { resolveI18nOptions } from "./i18n";
@@ -101,6 +102,7 @@ export function resolveOptions(options: OxContentOptions): ResolvedOptions {
     typedHover: resolveTypedHoverOptions(options.typedHover),
     docsTests: resolveDocsTestOptions(options.docsTests),
     mermaid: options.mermaid ?? false,
+    graphviz: resolveGraphvizOptions(options.graphviz),
     math: resolveMathOptions(options.math),
     frontmatter: options.frontmatter ?? true,
     toc: options.toc ?? true,

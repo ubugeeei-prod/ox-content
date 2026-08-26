@@ -79,6 +79,14 @@ import {
   type RedditPostReference,
 } from "./reddit";
 import { transformMermaidStatic, mermaidClientScript, type MermaidOptions } from "./mermaid";
+import {
+  clearGraphvizCache,
+  resolveGraphvizOptions,
+  transformGraphvizStatic,
+  type GraphvizFailureMode,
+  type GraphvizOptions,
+  type ResolvedGraphvizOptions,
+} from "./graphviz";
 import { normalizeBlockEmbedParagraphs } from "./block-structure";
 import {
   documentLocalComponentNames,
@@ -121,6 +129,9 @@ export {
   transformRedditEmbeds,
   parseRedditPostReference,
   transformMermaidStatic,
+  clearGraphvizCache,
+  resolveGraphvizOptions,
+  transformGraphvizStatic,
   mermaidClientScript,
   normalizeBlockEmbedParagraphs,
   restoreReservedBuiltinIslands,
@@ -159,7 +170,10 @@ export type {
   ProviderVideoEmbedOptions,
   ResolvedProviderVideoEmbedOptions,
   VideoProviderReference,
+  GraphvizFailureMode,
   MermaidOptions,
+  GraphvizOptions,
+  ResolvedGraphvizOptions,
 };
 
 const SELF_CLOSING_EMBED_TAG =
@@ -196,6 +210,7 @@ export interface TransformAllOptions extends MediaEmbedOptions {
   ogp?: boolean | OgpOptions;
   openGraph?: boolean | OgpOptions;
   mermaid?: boolean;
+  graphviz?: boolean | GraphvizOptions;
   githubToken?: string;
 }
 
@@ -214,6 +229,7 @@ export async function transformAllPlugins(
     ogp,
     openGraph,
     mermaid = true,
+    graphviz = false,
     githubToken,
     spotify = false,
     appleMusic = false,
@@ -309,6 +325,9 @@ export async function transformAllPlugins(
   // 5. Mermaid (requires mermaid library)
   if (mermaid) {
     result = await transformMermaidStatic(result);
+  }
+  if (graphviz) {
+    result = await transformGraphvizStatic(result, graphviz);
   }
 
   return result;

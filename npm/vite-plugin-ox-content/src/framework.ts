@@ -90,6 +90,7 @@ export function createFrameworkMarkdownOptions(options: FrameworkMarkdownOptions
     autolinks: options.gfm,
     highlight: false,
     mermaid: false,
+    graphviz: false,
     math: {
       enabled:
         options.math === true ||

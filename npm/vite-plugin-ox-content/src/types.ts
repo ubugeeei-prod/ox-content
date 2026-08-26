@@ -5,11 +5,13 @@
 import type { ThemeConfig, ResolvedThemeConfig } from "./theme";
 import type {
   GitHubOptions,
+  GraphvizOptions,
   OgpOptions,
   ProviderArticleEmbedOptions,
   ProviderPackageEmbedOptions,
   ProviderPlaygroundEmbedOptions,
   ProviderVideoEmbedOptions,
+  ResolvedGraphvizOptions,
   RedditEmbedOptions,
   TwitterEmbedOptions,
 } from "./plugins";
@@ -2086,6 +2088,14 @@ export interface OxContentOptions {
   mermaid?: boolean;
 
   /**
+   * Render `dot` / `graphviz` fenced blocks to static SVG with Graphviz.
+   * Pass an object to configure the renderer command and failure policy.
+   *
+   * @default false
+   */
+  graphviz?: boolean | GraphvizOptions;
+
+  /**
    * Enable `$…$` inline and `$$…$$` block math.
    *
    * Currency-like `$` runs, fenced code, indented code, and inline code stay
@@ -2288,6 +2298,7 @@ export interface ResolvedOptions {
   typedHover?: ResolvedTypedHoverOptions;
   docsTests: ResolvedDocsTestOptions;
   mermaid: boolean;
+  graphviz: ResolvedGraphvizOptions | false;
   math: ResolvedMathOptions;
   frontmatter: boolean;
   toc: boolean;

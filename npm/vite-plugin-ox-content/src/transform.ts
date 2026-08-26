@@ -38,6 +38,7 @@ import type { MdxImport, ResolvedOptions, TocEntry, TransformResult } from "./ty
 import { highlightPageHtml } from "./highlight";
 import { importNapiModule } from "./napi";
 import { transformMermaidStatic } from "./plugins/mermaid";
+import { prepareGraphvizFences, restoreGraphvizPlaceholders } from "./plugins/graphviz";
 import { renderKatexMath } from "./plugins/math";
 import {
   documentLocalComponentNames,
@@ -630,8 +631,11 @@ export async function transformMarkdown(
   // Use Rust-based transformation, including frontmatter preparation.
   runCodeBlockLint(source, napi, options);
   await runCodeBlockTypecheck(source, options);
+  const graphviz = options.graphviz
+    ? await prepareGraphvizFences(source, options.graphviz)
+    : { markdown: source, replacements: new Map<string, string>() };
 
-  const result = napi.transform(source, {
+  const result = napi.transform(graphviz.markdown, {
     gfm: options.gfm,
     mdx: resolveMdxForFilePath(filePath, options.mdx),
     footnotes: options.footnotes,
@@ -751,7 +755,9 @@ export async function transformMarkdown(
 
   // Normalize before the first rehype pass (highlighting), which would
   // otherwise reparse a self-closing embed tag as an unclosed element.
-  let html = normalizeSelfClosingEmbeds(result.html);
+  let html = normalizeSelfClosingEmbeds(
+    restoreGraphvizPlaceholders(result.html, graphviz.replacements),
+  );
   const frontmatter = parseFrontmatterJson(result.frontmatter);
 
   const toc = options.toc ? result.toc.map(normalizeTocEntry) : [];
@@ -761,7 +767,7 @@ export async function transformMarkdown(
     html = await transformMermaidStatic(html);
   }
 
-  // Protect mermaid SVGs from rehype processing (which corrupts <br /> in foreignObjects)
+  // Protect generated static SVGs from rehype processing.
   const { html: protectedHtml, svgs } = protectMermaidSvgs(html);
   html = protectedHtml;
 
