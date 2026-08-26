@@ -69,6 +69,37 @@ fn collects_export_names_without_evaluating_initializers() {
 }
 
 #[test]
+fn collects_type_only_imports_and_export_declarations() {
+    let meta = parse_doc(
+        "import type Props from './Props'\n\
+         import { type ChartData, Series as ChartSeries } from './chart'\n\
+         export type PageData = { title: string }\n\
+         export interface TocEntry { text: string }\n\
+         export enum LayoutKind { Docs }\n\
+         export async function load() {}\n\
+         export class ViewModel {}\n",
+    );
+
+    assert_eq!(
+        meta.imports,
+        vec![
+            MdxImport {
+                source: "./Props".into(),
+                specifiers: vec![spec("default", "Props", MdxImportSpecifierKind::Default)],
+            },
+            MdxImport {
+                source: "./chart".into(),
+                specifiers: vec![
+                    spec("ChartData", "ChartData", MdxImportSpecifierKind::Named),
+                    spec("Series", "ChartSeries", MdxImportSpecifierKind::Named),
+                ],
+            },
+        ]
+    );
+    assert_eq!(meta.exports, vec!["PageData", "TocEntry", "LayoutKind", "load", "ViewModel"]);
+}
+
+#[test]
 fn collects_unique_component_names_and_skips_fragments() {
     let meta = parse_doc(
         "<Alert />\n\

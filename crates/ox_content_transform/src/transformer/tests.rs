@@ -69,6 +69,35 @@ fn mdx_transform_option_reaches_the_parser_and_renderer() {
 }
 
 #[test]
+fn mdx_renderer_handles_expression_props_and_nested_components() {
+    let transformer = MarkdownTransformer::from_options(&TransformOptions {
+        mdx: Some(true),
+        gfm: Some(true),
+        ..Default::default()
+    });
+    let result = transformer.transform(
+        "import Card from './Card'\n\
+         import { Badge } from './Badge'\n\
+         export const count = 2\n\n\
+         # MDX Edge\n\n\
+         <Card title=\"Docs\" count={count} data-kind=\"guide\">\n\
+         \n\
+         **Bold** copy\n\
+         \n\
+         <Badge label=\"beta\" />\n\
+         \n\
+         </Card>\n\n\
+         Text <Inline value={true} /> after.\n",
+    );
+
+    assert!(result.errors.is_empty(), "unexpected transform errors: {:?}", result.errors);
+    assert_eq!(result.imports.len(), 2);
+    assert_eq!(result.exports, vec!["count"]);
+    assert_eq!(result.components, vec!["Card", "Badge", "Inline"]);
+    insta::assert_snapshot!(result.html);
+}
+
+#[test]
 fn leaves_non_frontmatter_documents_untouched() {
     let (content, frontmatter) = super::parse_frontmatter("# Hello");
 

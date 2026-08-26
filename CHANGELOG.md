@@ -9,6 +9,7 @@
 ### Bug Fixes
 
 - preserve attrs on inline links and transformed images (#935)
+- expand MDX parser and renderer edge-case coverage (#894)
 - soften code copy button (#920)
 - avoid empty table stretch columns (#919)
 - keep block embeds out of generated paragraphs (#936)
