@@ -1,5 +1,6 @@
 import { resolveBlogOptions } from "./blog";
 import { resolveCardOptions } from "./card-options";
+import { resolveCodeGroupOptions } from "./code-group-options";
 import { resolveCollectionsOptions } from "./collections";
 import { resolveDocsOptions } from "./docs";
 import { resolveFeedsOptions } from "./feeds";
@@ -71,6 +72,7 @@ export function resolveOptions(options: OxContentOptions): ResolvedOptions {
     includes: resolveIncludeOptions(options.includes),
     cards: resolveCardOptions(options.cards),
     steps: resolveStepsOptions(options.steps),
+    codeGroups: resolveCodeGroupOptions(options.codeGroups),
     fileTree: resolveFileTreeOptions(options.fileTree),
     sanitize: resolveSanitizeOptions(options.sanitize),
     editThisPage: resolveEditThisPageOptions(options.editThisPage),

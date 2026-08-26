@@ -19,6 +19,7 @@ description: フェンス付きコードブロック向けのシンタックス�
 | `highlight`       | `boolean`                            | `false` |
 | `codeAnnotations` | `boolean` / `CodeAnnotationsOptions` | `false` |
 | `codeImports`     | `boolean` / `CodeImportOptions`      | `false` |
+| `codeGroups`      | `boolean` / `CodeGroupOptions`       | `false` |
 
 ## シンタックスハイライト
 
@@ -260,8 +261,13 @@ oxContent({
 `<<<` 参照はフェンス付きコードブロックの中でも解決されるので、リテラルに見せたいときは
 （このページのように）インラインコードで構文を引用してください。
 
+## コードグループ
+
+隣り合う JS / TS / shell の別例は、`codeGroups` をオンにしてフェンスを `::: code-group` で囲みます。手書きの `<tabs>` は不要です。タイトルは ` ```ts [label] ` かフェンス meta です。[コードグループ](./code-groups.md) を見てください。
+
 ## 関連
 
+- [コードグループ](./code-groups.md) — VitePress 風のグループ化フェンス。
 - [品質チェック](./quality-checks.md) — コードブロック自体を lint、型チェック、テストする。
 - [型ホバー](./typed-hover.md) — `twoslash` フェンスのビルド時 TypeScript 型オーバーレイ。
 - [コード注釈の例](/examples/code-annotations.md)

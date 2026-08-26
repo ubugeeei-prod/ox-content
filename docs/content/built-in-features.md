@@ -34,6 +34,7 @@ inline**.
 | [Images](./built-in/images.md)                              | Opt-in figures, captions, lazy loading, and safe dimensions                 |
 | [Page resources](./built-in/resources.md)                   | Opt-in page-bundle assets with resize, crop, and format transforms          |
 | [Code Blocks](./built-in/code-blocks.md)                    | Syntax highlighting, code annotations, code imports                         |
+| [Code Groups](./built-in/code-groups.md)                    | Opt-in VitePress-style `::: code-group` fence tabs                          |
 | [Embeds](./built-in/embeds.md)                              | GitHub cards, OG cards, package-manager tabs, tabs, YouTube, social cards   |
 | [Mermaid Diagrams](./built-in/mermaid.md)                   | Diagram fences rendered to static SVG                                       |
 | [Math](./built-in/math.md)                                  | Opt-in `$…$` / `$$…$$` typeset with optional KaTeX                          |
@@ -84,6 +85,7 @@ inline**.
 | Opt-in embeds      | `embeds.pm`, `embeds.twitter`, `embeds.bluesky`, `embeds.spotify`, `embeds.stackBlitz`, `embeds.webContainer` | `false`              | [Embeds](./built-in/embeds.md)                              |
 | Syntax highlight   | `highlight`                                                                                                   | `false`              | [Code Blocks](./built-in/code-blocks.md)                    |
 | Code authoring     | `codeAnnotations`, `codeImports`                                                                              | `false`              | [Code Blocks](./built-in/code-blocks.md)                    |
+| Code groups        | `codeGroups`                                                                                                  | `false`              | [Code Groups](./built-in/code-groups.md)                    |
 | Extra syntax       | `wikiLinks`, `emojiShortcodes`, `attrs`, `cjkEmphasis`, `containers`, `badges`, `magicLinks`                  | `false`              | [Syntax Extensions](./built-in/syntax-extensions.md)        |
 | File includes      | `includes`                                                                                                    | `false`              | [File Includes](./built-in/includes.md)                     |
 | Cards              | `cards`                                                                                                       | `false`              | [Cards](./built-in/cards.md)                                |
