@@ -31,6 +31,7 @@ impl Default for SanitizeConfig {
                 "iframe",
                 "img",
                 "input",
+                "kbd",
                 "li",
                 "nav",
                 "ol",

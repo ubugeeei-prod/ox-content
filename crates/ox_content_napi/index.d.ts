@@ -1108,6 +1108,28 @@ export interface JsJsonLdPublisher {
   url?: string
 }
 
+/** Opt-in `{kbd:...}` inline keyboard keys. */
+export interface JsKeyboardKeysOptions {
+  /**
+   * Enable `{kbd:Ctrl+K}` expansion.
+   *
+   * Default: `false`.
+   */
+  enabled?: boolean
+  /**
+   * Build-time key aliases. Keys are matched case-insensitively.
+   *
+   * Default: `{}`.
+   */
+  aliases?: Record<string, string>
+  /**
+   * Label style for built-in aliases: `"words"` or `"symbols"`.
+   *
+   * Default: `"words"`.
+   */
+  style?: string
+}
+
 /** Locale information for the locale switcher. */
 export interface JsLocaleInfo {
   /** BCP 47 locale tag. */
@@ -2246,6 +2268,12 @@ export interface JsTransformOptions {
    * Default: disabled.
    */
   badges?: JsBadgeOptions
+  /**
+   * Opt-in `{kbd:...}` inline keyboard keys.
+   *
+   * Default: disabled.
+   */
+  keyboardKeys?: JsKeyboardKeysOptions
   /**
    * Opt-in `{link:...}` rich magic links.
    *

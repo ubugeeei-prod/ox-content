@@ -6,6 +6,7 @@ mod a11y;
 mod aside;
 mod bare;
 mod breadcrumbs;
+mod content_css;
 mod entry;
 mod footer;
 mod head;
@@ -243,6 +244,9 @@ const CONTRIBUTORS_CSS: &str = include_str!("html/contributors.css");
 
 /// CSS styles for opt-in `file-tree` fences.
 const FILE_TREE_CSS: &str = include_str!("html/file_tree.css");
+
+/// CSS styles for opt-in `{kbd:...}` keyboard keys.
+const KBD_CSS: &str = include_str!("plugins/kbd.css");
 
 /// JavaScript for SSG pages.
 const SSG_JS: &str = include_str!("ssg.js");
