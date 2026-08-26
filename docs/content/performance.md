@@ -334,15 +334,15 @@ Each major surface has a measured baseline and either a target or an explicit
 no-op. Numbers are from the 2026-08-26 Blacksmith reports cited above, not from
 a local laptop run.
 
-| Area | Baseline | Target or no-op |
-| --- | --- | --- |
-| Fixture build time | Default shell ~370–430 ms; cold runs near 750 ms | Ceiling 5 s. No tighter gate: #1003 swung the same fixture +45% with no output-size change. |
-| Runtime parse/render | large `@ox-content/napi` parse ~5.3k–6.1k ops/sec, parse+render ~6.5k–7.3k | Floors 2500 / 4000 ops/sec. Keep beating `pulldown-cmark` on the published parse+render tables. |
-| Bundle gzip | bare 5.8 KB, default 31.4 KB, +Vue 53.9 KB | Keep default under 48 KB. Shared chunks already beat VitePress default (717.2 KB). Measured no-op for extra default-shell splits: 5 requests vs VitePress 21. |
-| Rendered HTML gzip | bare 2.9 KB, default/Vue 9.8 KB | Ceiling 16 KB for the default shell. |
-| Initial requests | bare 1, default/Vue 5 | Ceiling 8. Do not add blocking requests to the default fixture. |
-| Published package weight | Not measured by `measure.mjs` | No-op: CI gates generated site output, not npm tarball weight. |
-| Search / embeds / Code Play / MDX islands | Fixture apps do not enable these | No-op: keep feature payloads out of the 31.4 KB default-shell number until a fixture exercises them. |
+| Area                                      | Baseline                                                                   | Target or no-op                                                                                                                                               |
+| ----------------------------------------- | -------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Fixture build time                        | Default shell ~370–430 ms; cold runs near 750 ms                           | Ceiling 5 s. No tighter gate: #1003 swung the same fixture +45% with no output-size change.                                                                   |
+| Runtime parse/render                      | large `@ox-content/napi` parse ~5.3k–6.1k ops/sec, parse+render ~6.5k–7.3k | Floors 2500 / 4000 ops/sec. Keep beating `pulldown-cmark` on the published parse+render tables.                                                               |
+| Bundle gzip                               | bare 5.8 KB, default 31.4 KB, +Vue 53.9 KB                                 | Keep default under 48 KB. Shared chunks already beat VitePress default (717.2 KB). Measured no-op for extra default-shell splits: 5 requests vs VitePress 21. |
+| Rendered HTML gzip                        | bare 2.9 KB, default/Vue 9.8 KB                                            | Ceiling 16 KB for the default shell.                                                                                                                          |
+| Initial requests                          | bare 1, default/Vue 5                                                      | Ceiling 8. Do not add blocking requests to the default fixture.                                                                                               |
+| Published package weight                  | Not measured by `measure.mjs`                                              | No-op: CI gates generated site output, not npm tarball weight.                                                                                                |
+| Search / embeds / Code Play / MDX islands | Fixture apps do not enable these                                           | No-op: keep feature payloads out of the 31.4 KB default-shell number until a fixture exercises them.                                                          |
 
 ## Reproduce
 
