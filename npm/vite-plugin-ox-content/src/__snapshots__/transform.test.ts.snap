@@ -49,7 +49,7 @@ exports[`transformMarkdown > runs opt-in native transforms without changing defa
 `;
 
 exports[`transformMarkdown > sanitizes after opt-in embeds are rendered 1`] = `
-"<p><iframe class="ox-spotify" src="https://open.spotify.com/embed/track/abc123" width="100%" height="352" loading="lazy" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" referrerpolicy="strict-origin-when-cross-origin"></iframe></p>
+"<iframe class="ox-spotify" src="https://open.spotify.com/embed/track/abc123" width="100%" height="352" loading="lazy" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" referrerpolicy="strict-origin-when-cross-origin"></iframe>
 
 "
 `;

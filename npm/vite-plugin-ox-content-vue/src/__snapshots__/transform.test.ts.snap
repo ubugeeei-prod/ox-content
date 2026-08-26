@@ -6,7 +6,7 @@ import { h, ref, defineComponent } from 'vue';
 
 export const frontmatter = {};
 
-const rawHtml = "<p><GitHub repo=\\"ubugeeei-prod/ox-content\\"></GitHub></p>\\n";
+const rawHtml = "<github repo=\\"ubugeeei-prod/ox-content\\"></github>\\n";
 
 export default defineComponent({
   name: 'MarkdownContent',

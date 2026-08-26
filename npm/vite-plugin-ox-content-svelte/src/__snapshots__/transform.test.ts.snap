@@ -10,7 +10,7 @@ export default function Embed_md($$anchor, $$props) {
 	$.push($$props, true);
 
 	const frontmatter = {};
-	const rawHtml = "<p><GitHub repo=\\"ubugeeei-prod/ox-content\\"></GitHub></p>\\n";
+	const rawHtml = "<github repo=\\"ubugeeei-prod/ox-content\\"></github>\\n";
 	var $$exports = { frontmatter };
 	var div = root();
 

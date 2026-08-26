@@ -10,6 +10,7 @@
 
 - soften code copy button (#920)
 - avoid empty table stretch columns (#919)
+- keep block embeds out of generated paragraphs (#936)
 - restore typed hover overlays (#918)
 - contain mobile menu scrolling (#915)
 - highlight WebContainer examples as MDX (#914)

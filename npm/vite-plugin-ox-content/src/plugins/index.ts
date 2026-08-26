@@ -47,6 +47,7 @@ import {
   type OgpOptions,
 } from "./ogp";
 import { transformMermaidStatic, mermaidClientScript, type MermaidOptions } from "./mermaid";
+import { normalizeBlockEmbedParagraphs } from "./block-structure";
 
 export {
   transformTabs,
@@ -75,6 +76,7 @@ export {
   prefetchOgpData,
   transformMermaidStatic,
   mermaidClientScript,
+  normalizeBlockEmbedParagraphs,
 };
 
 export type {
@@ -158,7 +160,7 @@ export async function transformAllPlugins(
     webContainer = false,
   } = options;
 
-  let result = normalizeSelfClosingEmbeds(html);
+  let result = await normalizeBlockEmbedParagraphs(normalizeSelfClosingEmbeds(html));
   const ogpOptions = openGraph ?? ogp ?? true;
 
   // Order matters: process in dependency order
@@ -200,6 +202,8 @@ export async function transformAllPlugins(
     result = await transformMediaEmbeds(result, mediaOptions);
   }
 
+  result = await normalizeBlockEmbedParagraphs(result);
+
   // 5. Mermaid (requires mermaid library)
   if (mermaid) {
     result = await transformMermaidStatic(result);
@@ -224,7 +228,7 @@ export async function transformBuiltinEmbeds(
     webContainer?: boolean;
   },
 ): Promise<string> {
-  let result = normalizeSelfClosingEmbeds(html);
+  let result = await normalizeBlockEmbedParagraphs(normalizeSelfClosingEmbeds(html));
 
   if (options.github) {
     result = await transformGitHub(result, undefined, {
@@ -252,5 +256,5 @@ export async function transformBuiltinEmbeds(
     result = await transformMediaEmbeds(result, mediaOptions);
   }
 
-  return result;
+  return normalizeBlockEmbedParagraphs(result);
 }
