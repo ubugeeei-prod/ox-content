@@ -1,0 +1,113 @@
+name: Nightly Rust experiments
+
+# Opt-in rustc experiment lanes. This workflow is not a required check.
+# Stable CI (.github/workflows/ci.yml) remains the release gate.
+#
+# NIGHTLY_TOOLCHAIN is a dated pin so a red run is attributable to one
+# compiler. To bump it: change the env value below (keep the rust-toolchain
+# action comment in sync) and dispatch this workflow from the Actions tab.
+# Flag names are not hardcoded blindly — each lane probes `rustc -Z help`
+# and validates the preferred -Z value, then fails with rustc's
+# accepted-values list if the name moved.
+
+on:
+  workflow_dispatch:
+  schedule:
+    # Daily 07:00 UTC, after typical nightly toolchain publish.
+    - cron: "0 7 * * *"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}
+  cancel-in-progress: true
+
+env:
+  CARGO_TERM_COLOR: always
+  # Dated pin so failures are diagnosable. Bump this (and the matching
+  # rust-toolchain comment) when refreshing the experiment snapshot.
+  NIGHTLY_TOOLCHAIN: nightly-2026-08-25
+
+jobs:
+  experiment:
+    name: ${{ matrix.lane.name }}
+    runs-on: blacksmith-32vcpu-ubuntu-2404
+    strategy:
+      fail-fast: false
+      matrix:
+        lane:
+          # Polonius Alpha is the nightly default as of nightly-2026-08-06
+          # (`-Zpolonius=off` vs `-Zpolonius=next`). Pass `next` explicitly
+          # and log rustc + flags even when it is already the default.
+          - name: Polonius Alpha
+            id: polonius
+            flag: polonius
+            preferred: next
+          # Next-gen trait solver is the nightly default as of ~2026-08-21.
+          # `-Znext-solver=globally` is the current enable-everywhere value;
+          # disable is `-Znext-solver=coherence`. Probe before using it.
+          - name: Next-gen trait solver
+            id: next-solver
+            flag: next-solver
+            preferred: globally
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@29eef336d9b2848a0b548edc03f92a220660cdb8 # nightly-2026-08-25
+        with:
+          toolchain: ${{ env.NIGHTLY_TOOLCHAIN }}
+
+      - name: Mount sticky cache
+        uses: ./.github/actions/mount-sticky-cache
+        with:
+          key-prefix: ${{ github.repository }}-nightly-rust-experiments-${{ matrix.lane.id }}
+          cargo: "true"
+          target: target
+
+      - name: Record rustc and resolve experiment flags
+        env:
+          EXPERIMENT_FLAG: ${{ matrix.lane.flag }}
+          PREFERRED_VALUE: ${{ matrix.lane.preferred }}
+        run: |
+          set -euo pipefail
+
+          echo "=== pinned toolchain ==="
+          echo "NIGHTLY_TOOLCHAIN=${NIGHTLY_TOOLCHAIN}"
+          echo "EXPERIMENT_FLAG=${EXPERIMENT_FLAG}"
+          echo "PREFERRED_VALUE=${PREFERRED_VALUE}"
+
+          echo "=== rustc -vV ==="
+          rustc -vV
+
+          echo "=== rustc -Z help (experiment flags) ==="
+          help_out="$(rustc -Z help 2>&1)" || true
+          if ! printf '%s\n' "$help_out" | grep -E "[[:space:]]${EXPERIMENT_FLAG}(=|[[:space:]])"; then
+            echo "::error::rustc -Z help on ${NIGHTLY_TOOLCHAIN} does not list '${EXPERIMENT_FLAG}'."
+            echo "Bump NIGHTLY_TOOLCHAIN or update the experiment flag name. Full -Z help:"
+            printf '%s\n' "$help_out"
+            exit 1
+          fi
+
+          # rustc parses -Z even with -vV. An invalid value prints the accepted list.
+          echo "=== validating -Z${EXPERIMENT_FLAG}=${PREFERRED_VALUE} ==="
+          if ! rustc -Z "${EXPERIMENT_FLAG}=${PREFERRED_VALUE}" -vV \
+            >/tmp/rustc-flag.out 2>/tmp/rustc-flag.err; then
+            echo "::error::-Z${EXPERIMENT_FLAG}=${PREFERRED_VALUE} is not accepted on ${NIGHTLY_TOOLCHAIN}."
+            echo "Update the lane preferred value from rustc's accepted-values list:"
+            cat /tmp/rustc-flag.err
+            exit 1
+          fi
+
+          {
+            echo "RUSTFLAGS=-Z${EXPERIMENT_FLAG}=${PREFERRED_VALUE}"
+          } >> "$GITHUB_ENV"
+
+          echo "=== experiment flags ==="
+          echo "RUSTFLAGS=-Z${EXPERIMENT_FLAG}=${PREFERRED_VALUE}"
+
+      - name: cargo check --workspace --all-targets
+        run: cargo check --workspace --all-targets
