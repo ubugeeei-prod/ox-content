@@ -3,6 +3,7 @@ import type { BuiltinPmOptions, OxContentOptions, ResolvedOptions } from "./type
 import { normalizeProviderArticleOptions } from "./plugins/provider-articles";
 import { normalizeProviderPackageOptions } from "./plugins/provider-packages";
 import { normalizeProviderPlaygroundOptions } from "./plugins/provider-playgrounds";
+import { normalizeProviderVideoOptions } from "./plugins/provider-videos";
 
 export function resolveBuiltinEmbedOptions(
   options: OxContentOptions["embeds"],
@@ -26,6 +27,8 @@ export function resolveBuiltinEmbedOptions(
       zenn: false,
       packageRegistry: false,
       playgrounds: false,
+      vimeo: false,
+      twitch: false,
       discord: false,
       fediverse: false,
       facebook: false,
@@ -53,6 +56,8 @@ export function resolveBuiltinEmbedOptions(
     zenn: normalizeProviderArticleOptions(options?.zenn),
     packageRegistry: normalizeProviderPackageOptions(options?.packageRegistry),
     playgrounds: normalizeProviderPlaygroundOptions(options?.playgrounds),
+    vimeo: normalizeProviderVideoOptions(options?.vimeo),
+    twitch: normalizeProviderVideoOptions(options?.twitch),
     discord: options?.discord === true,
     fediverse: options?.fediverse === true,
     facebook: options?.facebook === true,

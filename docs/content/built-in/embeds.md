@@ -22,6 +22,8 @@ markup; everything else is opt-in.
 | Zenn                 | `embeds.zenn`            | `false` | `<Zenn url="https://..." />`        |
 | Package registries   | `embeds.packageRegistry` | `false` | `<NpmPackage url="https://..." />`  |
 | Playgrounds          | `embeds.playgrounds`     | `false` | `<CodePen url="https://..." />`     |
+| Vimeo                | `embeds.vimeo`           | `false` | `<Vimeo url="https://..." />`       |
+| Twitch               | `embeds.twitch`          | `false` | `<Twitch url="https://..." />`      |
 | Discord              | `embeds.discord`         | `false` | `<Discord url="https://..." />`     |
 | Fediverse            | `embeds.fediverse`       | `false` | `<Mastodon url="https://..." />`    |
 | Facebook             | `embeds.facebook`        | `false` | `<Facebook url="https://..." />`    |
@@ -63,6 +65,8 @@ export default {
         zenn: true,
         packageRegistry: true,
         playgrounds: true,
+        vimeo: true,
+        twitch: { iframe: true, parent: "docs.example.com" },
       },
     }),
   ],
@@ -438,17 +442,20 @@ likes="21k"
 ## Provider Cards
 
 `embeds.googleMaps`, `embeds.qiita`, `embeds.zenn`,
-`embeds.packageRegistry`, `embeds.playgrounds`, `embeds.discord`,
-`embeds.fediverse`, `embeds.facebook`, `embeds.threads`, and
-`embeds.instagram` render static provider cards. `qiita: true`, `zenn: true`,
-`packageRegistry: true`, and CodePen playground cards fetch public metadata at
-build time; set `{ fetch: false }` to render link cards without network access.
-Playground iframe URLs are added only with `playgrounds: { iframe: true }`.
+`embeds.packageRegistry`, `embeds.playgrounds`, `embeds.vimeo`,
+`embeds.twitch`, `embeds.discord`, `embeds.fediverse`, `embeds.facebook`,
+`embeds.threads`, and `embeds.instagram` render static provider cards.
+`qiita: true`, `zenn: true`, `packageRegistry: true`, Vimeo cards, and CodePen
+playground cards fetch public metadata at build time; set `{ fetch: false }` to
+render link cards without network access. Playground and video iframe URLs are
+added only with `{ iframe: true }`. Twitch iframes also require a `parent`
+domain, for example `twitch: { iframe: true, parent: "docs.example.com" }`.
 Other provider cards do not fetch metadata or load third-party scripts by
 default. Authors can pass stable metadata with attributes such as `title`,
 `author`, `avatar`, `date`, `dateLabel`, `tags`, `likes`, `reposts`,
 `replies`, `server`, `channel`, `address`, `image`, `version`, `license`,
-`repository`, `downloads`, `stars`, `language`, and `runtime`.
+`repository`, `downloads`, `stars`, `language`, `runtime`, `duration`,
+`status`, and `views`.
 
 ```mdx
 <GoogleMaps
@@ -478,6 +485,14 @@ default. Authors can pass stable metadata with attributes such as `title`,
 
 <Observable url="https://observablehq.com/@d3/bar-chart" />
 
+<Vimeo url="https://vimeo.com/123456789" />
+
+<Twitch url="https://www.twitch.tv/videos/40464143" />
+
+<Twitch url="https://clips.twitch.tv/FriendlySlug" />
+
+<Twitch url="https://www.twitch.tv/twitchdev" />
+
 <Mastodon
   url="https://mastodon.social/@docs/111"
   author="@docs@mastodon.social"
@@ -491,11 +506,12 @@ default. Authors can pass stable metadata with attributes such as `title`,
 
 | Option     | Default   | Purpose                                          |
 | ---------- | --------- | ------------------------------------------------ |
-| `fetch`    | `true`    | Fetch article/package/playground metadata.       |
+| `fetch`    | `true`    | Fetch article/package/playground/video metadata. |
 | `timeout`  | `10000`   | Metadata request timeout in milliseconds.        |
 | `cache`    | `true`    | Cache fetched metadata in memory for this build. |
 | `cacheTTL` | `3600000` | Freshness window in milliseconds.                |
-| `iframe`   | `false`   | Add lazy playground iframe URLs when supported.  |
+| `iframe`   | `false`   | Add lazy playground/video iframe URLs.           |
+| `parent`   | `[]`      | Twitch iframe parent domain or domains.          |
 
 `<Fediverse>`, `<Mastodon>`, `<Misskey>`, and `<Mixi2>` share the
 `embeds.fediverse` option. Google Maps accepts an optional safe Google Maps
@@ -506,6 +522,11 @@ schemes, credentials, non-provider hosts, and unavailable metadata fall back to
 the authored tag or a link-only card instead of failing the build; failed
 package metadata fetches also emit an `[ox-content]` warning with the status or
 error reason.
+Vimeo cards use Vimeo's public oEmbed endpoint for metadata. Twitch cards avoid
+authenticated API calls by default; pass `title`, `channel`, `duration`,
+`status`, `views`, or `image` when you want richer static metadata. Twitch
+player URLs are only generated when a safe `parent` domain is configured,
+matching Twitch's embed requirements.
 
 ## Spotify
 

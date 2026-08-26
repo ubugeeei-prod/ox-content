@@ -1431,6 +1431,18 @@ export interface JsMediaEmbedsOptions {
    */
   playgrounds?: boolean
   /**
+   * Render `<Vimeo>` video cards.
+   *
+   * Default: `false`.
+   */
+  vimeo?: boolean
+  /**
+   * Render `<Twitch>` video, clip, and channel cards.
+   *
+   * Default: `false`.
+   */
+  twitch?: boolean
+  /**
    * Render `<Discord>` static invite/message cards.
    *
    * Default: `false`.

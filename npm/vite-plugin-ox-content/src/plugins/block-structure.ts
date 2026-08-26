@@ -30,6 +30,15 @@ const BLOCK_EMBED_TAGS = new Set([
   "googlemaps",
   "qiita",
   "zenn",
+  "npmpackage",
+  "cratesio",
+  "pypi",
+  "dockerhub",
+  "codepen",
+  "jsfiddle",
+  "observable",
+  "vimeo",
+  "twitch",
   "discord",
   "fediverse",
   "mastodon",
@@ -78,7 +87,7 @@ function shouldNormalizeBlockEmbeds(html: string): boolean {
     (/\box-(?:apple-music|audio|bluesky|github|ogp|provider-card|speaker-deck|spotify|stackblitz|tweet|video|webcontainer|youtube)\b/i.test(
       html,
     ) ||
-      /<(?:applemusic|audio|bluesky|discord|facebook|fediverse|github|googlemaps|instagram|mastodon|misskey|mixi2|ogcard|qiita|speakerdeck|spotify|stackblitz|threads|tweet|video|webcontainer|xpost|youtube|zenn)[\s/>]/i.test(
+      /<(?:applemusic|audio|bluesky|codepen|cratesio|discord|dockerhub|facebook|fediverse|github|googlemaps|instagram|jsfiddle|mastodon|misskey|mixi2|npmpackage|observable|ogcard|pypi|qiita|speakerdeck|spotify|stackblitz|threads|twitch|tweet|video|vimeo|webcontainer|xpost|youtube|zenn)[\s/>]/i.test(
         html,
       ))
   );

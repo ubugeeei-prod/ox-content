@@ -14,6 +14,11 @@ import {
   normalizeProviderPlaygroundOptions,
   type ProviderPlaygroundEmbedOptions,
 } from "./provider-playgrounds";
+import {
+  enrichProviderVideoEmbeds,
+  normalizeProviderVideoOptions,
+  type ProviderVideoEmbedOptions,
+} from "./provider-videos";
 import { enrichSpeakerDeckEmbeds } from "./speaker-deck";
 import { transformRedditEmbeds, type RedditEmbedOptions } from "./reddit";
 import { transformFetchedTweets } from "./twitter";
@@ -110,6 +115,20 @@ export interface MediaEmbedOptions {
   playgrounds?: boolean | ProviderPlaygroundEmbedOptions;
 
   /**
+   * Render `<Vimeo>` static video cards.
+   * Pass `{ iframe: true }` to add lazy player iframe URLs.
+   * @default false
+   */
+  vimeo?: boolean | ProviderVideoEmbedOptions;
+
+  /**
+   * Render `<Twitch>` static video, clip, and channel cards.
+   * Pass `{ iframe: true, parent: "example.com" }` to add Twitch player iframes.
+   * @default false
+   */
+  twitch?: boolean | ProviderVideoEmbedOptions;
+
+  /**
    * Render `<Discord>` static invite/message cards.
    * @default false
    */
@@ -185,6 +204,12 @@ export async function transformMediaEmbeds(
       normalizeProviderPlaygroundOptions(options.playgrounds),
     );
   }
+  if (options.vimeo || options.twitch) {
+    result = await enrichProviderVideoEmbeds(result, {
+      vimeo: normalizeProviderVideoOptions(options.vimeo),
+      twitch: normalizeProviderVideoOptions(options.twitch),
+    });
+  }
   if (!hasMediaMarker(result)) return result;
 
   const mod = await importNapiModule();
@@ -202,6 +227,8 @@ export async function transformMediaEmbeds(
     zenn: Boolean(options.zenn),
     packageRegistry: Boolean(options.packageRegistry),
     playgrounds: Boolean(options.playgrounds),
+    vimeo: Boolean(options.vimeo),
+    twitch: Boolean(options.twitch),
     discord: options.discord,
     fediverse: options.fediverse,
     facebook: options.facebook,
@@ -227,6 +254,8 @@ function hasEnabledMediaEmbed(options: MediaEmbedOptions): boolean {
     options.zenn ||
     options.packageRegistry ||
     options.playgrounds ||
+    options.vimeo ||
+    options.twitch ||
     options.discord ||
     options.fediverse ||
     options.facebook ||
@@ -238,7 +267,7 @@ function hasEnabledMediaEmbed(options: MediaEmbedOptions): boolean {
 
 function hasMediaMarker(html: string): boolean {
   return (
-    /<(spotify|applemusic|speakerdeck|stackblitz|tweet|xpost|reddit|bluesky|googlemaps|qiita|zenn|npmpackage|cratesio|pypi|dockerhub|codepen|jsfiddle|observable|discord|fediverse|mastodon|misskey|mixi2|facebook|threads|instagram|webcontainer)[\s/>]/i.test(
+    /<(spotify|applemusic|speakerdeck|stackblitz|tweet|xpost|reddit|bluesky|googlemaps|qiita|zenn|npmpackage|cratesio|pypi|dockerhub|codepen|jsfiddle|observable|vimeo|twitch|discord|fediverse|mastodon|misskey|mixi2|facebook|threads|instagram|webcontainer)[\s/>]/i.test(
       html,
     ) || /<(Audio|Video)[\s/>]/.test(html)
   );

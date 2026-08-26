@@ -5,6 +5,7 @@ import { normalizeSelfClosingEmbeds, transformAllPlugins, transformBuiltinEmbeds
 import { clearProviderArticleCache } from "./provider-articles";
 import { clearProviderPackageCache } from "./provider-packages";
 import { clearProviderPlaygroundCache } from "./provider-playgrounds";
+import { clearProviderVideoCache } from "./provider-videos";
 
 const originalFetch = globalThis.fetch;
 
@@ -13,6 +14,7 @@ afterEach(() => {
   clearProviderArticleCache();
   clearProviderPackageCache();
   clearProviderPlaygroundCache();
+  clearProviderVideoCache();
 });
 
 describe("provider-grade static embed cards", () => {
@@ -29,6 +31,8 @@ describe("provider-grade static embed cards", () => {
         '<CodePen url="https://codepen.io/ubugeeei/pen/abc123" title="Card demo" />',
         '<JSFiddle url="https://jsfiddle.net/ubugeeei/abc123/2/" title="Fiddle demo" />',
         '<Observable url="https://observablehq.com/@d3/bar-chart" title="Bar chart" />',
+        '<Vimeo url="https://vimeo.com/123456789" title="Vimeo demo" />',
+        '<Twitch url="https://www.twitch.tv/videos/40464143" title="Twitch VOD" parent="docs.example.com" />',
         '<Discord url="https://discord.gg/abc123" server="Ox Content" channel="announcements" />',
         '<Mastodon url="https://mastodon.social/@docs/111" author="@docs@mastodon.social">Fediverse release note.</Mastodon>',
         '<Facebook url="https://www.facebook.com/example/posts/123" title="Launch note" />',
@@ -44,6 +48,8 @@ describe("provider-grade static embed cards", () => {
         zenn: { fetch: false },
         packageRegistry: { fetch: false },
         playgrounds: { fetch: false },
+        vimeo: { fetch: false },
+        twitch: { iframe: true },
         discord: true,
         fediverse: true,
         facebook: true,
@@ -62,13 +68,16 @@ describe("provider-grade static embed cards", () => {
     expect(html).toContain("ox-provider-card--codepen");
     expect(html).toContain("ox-provider-card--jsfiddle");
     expect(html).toContain("ox-provider-card--observable");
+    expect(html).toContain("ox-provider-card--vimeo");
+    expect(html).toContain("ox-provider-card--twitch");
+    expect(html).toContain("https://player.twitch.tv/?video=v40464143");
     expect(html).toContain("ox-provider-card--discord");
     expect(html).toContain("ox-provider-card--mastodon");
     expect(html).toContain("ox-provider-card--facebook");
     expect(html).toContain("ox-provider-card--threads");
     expect(html).toContain("ox-provider-card--instagram");
     expect(html).not.toMatch(
-      /<\/(?:GoogleMaps|Qiita|Zenn|NpmPackage|CratesIo|PyPI|DockerHub|CodePen|JSFiddle|Observable|Discord|Mastodon|Facebook|Threads|Instagram)>/,
+      /<\/(?:GoogleMaps|Qiita|Zenn|NpmPackage|CratesIo|PyPI|DockerHub|CodePen|JSFiddle|Observable|Vimeo|Twitch|Discord|Mastodon|Facebook|Threads|Instagram)>/,
     );
   });
 
@@ -79,6 +88,10 @@ describe("provider-grade static embed cards", () => {
     });
     expect(resolveBuiltinEmbedOptions({ packageRegistry: true }).packageRegistry).toEqual({});
     expect(resolveBuiltinEmbedOptions({ playgrounds: true }).playgrounds).toEqual({});
+    expect(resolveBuiltinEmbedOptions({ vimeo: true }).vimeo).toEqual({});
+    expect(resolveBuiltinEmbedOptions({ twitch: { parent: "docs.example.com" } }).twitch).toEqual({
+      parent: "docs.example.com",
+    });
   });
 
   it("enriches Qiita and Zenn article metadata before static rendering", async () => {

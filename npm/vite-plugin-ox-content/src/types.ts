@@ -9,6 +9,7 @@ import type {
   ProviderArticleEmbedOptions,
   ProviderPackageEmbedOptions,
   ProviderPlaygroundEmbedOptions,
+  ProviderVideoEmbedOptions,
   RedditEmbedOptions,
   TwitterEmbedOptions,
 } from "./plugins";
@@ -2429,6 +2430,20 @@ export interface BuiltinEmbedOptions {
   playgrounds?: boolean | ProviderPlaygroundEmbedOptions;
 
   /**
+   * Render `<Vimeo>` as static video cards.
+   * Pass `{ iframe: true }` to include lazy player iframe URLs.
+   * @default false
+   */
+  vimeo?: boolean | ProviderVideoEmbedOptions;
+
+  /**
+   * Render `<Twitch>` as static video, clip, and channel cards.
+   * Pass `{ iframe: true, parent: "example.com" }` to include Twitch iframes.
+   * @default false
+   */
+  twitch?: boolean | ProviderVideoEmbedOptions;
+
+  /**
    * Render `<Discord>` as static invite/message cards.
    * @default false
    */
@@ -2497,6 +2512,8 @@ export interface ResolvedBuiltinEmbedOptions {
   zenn?: ProviderArticleEmbedOptions | false;
   packageRegistry?: ProviderPackageEmbedOptions | false;
   playgrounds?: ProviderPlaygroundEmbedOptions | false;
+  vimeo?: ProviderVideoEmbedOptions | false;
+  twitch?: ProviderVideoEmbedOptions | false;
   discord?: boolean;
   fediverse?: boolean;
   facebook?: boolean;

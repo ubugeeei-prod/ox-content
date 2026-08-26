@@ -30,6 +30,8 @@ export const RESERVED_BUILTIN_COMPONENTS = [
   "CodePen",
   "JSFiddle",
   "Observable",
+  "Vimeo",
+  "Twitch",
   "Discord",
   "Fediverse",
   "Mastodon",

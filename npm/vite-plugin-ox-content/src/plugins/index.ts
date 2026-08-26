@@ -27,6 +27,11 @@ import type {
   ProviderPlaygroundEmbedOptions,
   ResolvedProviderPlaygroundEmbedOptions,
 } from "./provider-playgrounds";
+import type {
+  ProviderVideoEmbedOptions,
+  ResolvedProviderVideoEmbedOptions,
+  VideoProviderReference,
+} from "./provider-videos";
 import {
   createSyndicationToken,
   parseTweetReference,
@@ -151,11 +156,14 @@ export type {
   ResolvedProviderPackageEmbedOptions,
   ProviderPlaygroundEmbedOptions,
   ResolvedProviderPlaygroundEmbedOptions,
+  ProviderVideoEmbedOptions,
+  ResolvedProviderVideoEmbedOptions,
+  VideoProviderReference,
   MermaidOptions,
 };
 
 const SELF_CLOSING_EMBED_TAG =
-  /<(GitHub|OgCard|Tweet|XPost|Reddit|Bluesky|GoogleMaps|Qiita|Zenn|NpmPackage|CratesIo|PyPI|DockerHub|CodePen|JSFiddle|Observable|Discord|Fediverse|Mastodon|Misskey|Mixi2|Facebook|Threads|Instagram|Spotify|AppleMusic|SpeakerDeck|Audio|Video|StackBlitz|WebContainer|YouTube|NotByAI)((?:[^>"']|"[^"]*"|'[^']*')*?)\s*\/>(?:\s*<\/\1\s*>)?/gi;
+  /<(GitHub|OgCard|Tweet|XPost|Reddit|Bluesky|GoogleMaps|Qiita|Zenn|NpmPackage|CratesIo|PyPI|DockerHub|CodePen|JSFiddle|Observable|Vimeo|Twitch|Discord|Fediverse|Mastodon|Misskey|Mixi2|Facebook|Threads|Instagram|Spotify|AppleMusic|SpeakerDeck|Audio|Video|StackBlitz|WebContainer|YouTube|NotByAI)((?:[^>"']|"[^"]*"|'[^']*')*?)\s*\/>(?:\s*<\/\1\s*>)?/gi;
 
 /**
  * Custom embed tags are not HTML void elements, so a self-closing authoring
@@ -221,6 +229,8 @@ export async function transformAllPlugins(
     zenn = false,
     packageRegistry = false,
     playgrounds = false,
+    vimeo = false,
+    twitch = false,
     discord = false,
     fediverse = false,
     facebook = false,
@@ -281,6 +291,8 @@ export async function transformAllPlugins(
     zenn,
     packageRegistry,
     playgrounds,
+    vimeo,
+    twitch,
     discord,
     fediverse,
     facebook,
@@ -352,6 +364,8 @@ export async function transformBuiltinEmbeds(
     zenn: options.zenn,
     packageRegistry: options.packageRegistry,
     playgrounds: options.playgrounds,
+    vimeo: options.vimeo,
+    twitch: options.twitch,
     discord: options.discord,
     fediverse: options.fediverse,
     facebook: options.facebook,

@@ -20,6 +20,8 @@ description: Markdown 中の HTML 風タグで書く GitHub / OG カード、パ
 | Zenn                     | `embeds.zenn`            | `false` | `<Zenn url="https://..." />`        |
 | パッケージ registry      | `embeds.packageRegistry` | `false` | `<NpmPackage url="https://..." />`  |
 | Playgrounds              | `embeds.playgrounds`     | `false` | `<CodePen url="https://..." />`     |
+| Vimeo                    | `embeds.vimeo`           | `false` | `<Vimeo url="https://..." />`       |
+| Twitch                   | `embeds.twitch`          | `false` | `<Twitch url="https://..." />`      |
 | Discord                  | `embeds.discord`         | `false` | `<Discord url="https://..." />`     |
 | Fediverse                | `embeds.fediverse`       | `false` | `<Mastodon url="https://..." />`    |
 | Facebook                 | `embeds.facebook`        | `false` | `<Facebook url="https://..." />`    |
@@ -56,6 +58,8 @@ export default {
         zenn: true,
         packageRegistry: true,
         playgrounds: true,
+        vimeo: true,
+        twitch: { iframe: true, parent: "docs.example.com" },
       },
     }),
   ],
@@ -341,19 +345,20 @@ oxContent({
 ## プロバイダカード
 
 `embeds.googleMaps`、`embeds.qiita`、`embeds.zenn`、
-`embeds.packageRegistry`、`embeds.discord`、`embeds.fediverse`、
-`embeds.playgrounds`、`embeds.discord`、`embeds.fediverse`、
-`embeds.facebook`、`embeds.threads`、`embeds.instagram` は静的な
-プロバイダカードを描画します。`qiita: true`、`zenn: true`、
-`packageRegistry: true`、CodePen playground card はビルド時に public metadata
-を取得します。ネットワークなしのリンクカードにしたいときは `{ fetch: false }`
-を渡します。playground iframe URL は `playgrounds: { iframe: true }` のときだけ
-追加されます。それ以外のプロバイダカードは既定で metadata fetch も
+`embeds.packageRegistry`、`embeds.playgrounds`、`embeds.vimeo`、
+`embeds.twitch`、`embeds.discord`、`embeds.fediverse`、`embeds.facebook`、
+`embeds.threads`、`embeds.instagram` は静的なプロバイダカードを描画します。
+`qiita: true`、`zenn: true`、`packageRegistry: true`、Vimeo card、CodePen
+playground card はビルド時に public metadata を取得します。ネットワークなしの
+リンクカードにしたいときは `{ fetch: false }` を渡します。playground/video
+iframe URL は `{ iframe: true }` のときだけ追加されます。Twitch iframe には
+`twitch: { iframe: true, parent: "docs.example.com" }` のような `parent` domain も
+必要です。それ以外のプロバイダカードは既定で metadata fetch も
 第三者スクリプトも使いません。
 `title`、`author`、`avatar`、`date`、`dateLabel`、`tags`、`likes`、
 `reposts`、`replies`、`server`、`channel`、`address`、`image`、`version`、
-`license`、`repository`、`downloads`、`stars`、`language`、`runtime` などの属性で
-安定した metadata を渡せます。
+`license`、`repository`、`downloads`、`stars`、`language`、`runtime`、`duration`、
+`status`、`views` などの属性で安定した metadata を渡せます。
 
 ```mdx
 <GoogleMaps
@@ -383,6 +388,14 @@ oxContent({
 
 <Observable url="https://observablehq.com/@d3/bar-chart" />
 
+<Vimeo url="https://vimeo.com/123456789" />
+
+<Twitch url="https://www.twitch.tv/videos/40464143" />
+
+<Twitch url="https://clips.twitch.tv/FriendlySlug" />
+
+<Twitch url="https://www.twitch.tv/twitchdev" />
+
 <Mastodon
   url="https://mastodon.social/@docs/111"
   author="@docs@mastodon.social"
@@ -394,13 +407,14 @@ oxContent({
 </Mastodon>
 ```
 
-| オプション | 既定      | 目的                                            |
-| ---------- | --------- | ----------------------------------------------- |
-| `fetch`    | `true`    | 記事 / package / playground metadata を取る。   |
-| `timeout`  | `10000`   | metadata リクエストのタイムアウト（ミリ秒）。   |
-| `cache`    | `true`    | このビルド中に取った metadata をメモリに残す。  |
-| `cacheTTL` | `3600000` | キャッシュの鮮度期間（ミリ秒）。                |
-| `iframe`   | `false`   | 対応 playground の lazy iframe URL を追加する。 |
+| オプション | 既定      | 目的                                                  |
+| ---------- | --------- | ----------------------------------------------------- |
+| `fetch`    | `true`    | 記事 / package / playground / video metadata を取る。 |
+| `timeout`  | `10000`   | metadata リクエストのタイムアウト（ミリ秒）。         |
+| `cache`    | `true`    | このビルド中に取った metadata をメモリに残す。        |
+| `cacheTTL` | `3600000` | キャッシュの鮮度期間（ミリ秒）。                      |
+| `iframe`   | `false`   | playground/video の lazy iframe URL を追加する。      |
+| `parent`   | `[]`      | Twitch iframe の parent domain。                      |
 
 `<Fediverse>`、`<Mastodon>`、`<Misskey>`、`<Mixi2>` は
 `embeds.fediverse` を共有します。Google Maps は安全な Google Maps `embed`
@@ -410,6 +424,11 @@ package registry カードは npm、crates.io、PyPI、Docker Hub の package UR
 認証情報つき URL、別 host の URL、取得できない metadata は、ビルドを落とさず
 元のタグかリンクカードへフォールバックします。package metadata fetch の失敗時は、
 status や error reason を含む `[ox-content]` warning も出します。
+Vimeo card は Vimeo の public oEmbed endpoint から metadata を取得します。
+Twitch card は既定では認証 API を呼ばないため、よりリッチな静的 metadata が必要なときは
+`title`、`channel`、`duration`、`status`、`views`、`image` を渡します。
+Twitch player URL は Twitch の embed 要件に合わせ、安全な `parent` domain が設定された
+ときだけ生成されます。
 
 ## Spotify
 

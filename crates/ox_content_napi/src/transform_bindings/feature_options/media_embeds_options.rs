@@ -60,6 +60,16 @@ pub struct JsMediaEmbedsOptions {
     /// Default: `false`.
     pub playgrounds: Option<bool>,
 
+    /// Render `<Vimeo>` video cards.
+    ///
+    /// Default: `false`.
+    pub vimeo: Option<bool>,
+
+    /// Render `<Twitch>` video, clip, and channel cards.
+    ///
+    /// Default: `false`.
+    pub twitch: Option<bool>,
+
     /// Render `<Discord>` static invite/message cards.
     ///
     /// Default: `false`.
@@ -117,6 +127,8 @@ impl From<JsMediaEmbedsOptions> for MediaEmbedsOptions {
             zenn: value.zenn,
             package_registry: value.package_registry,
             playgrounds: value.playgrounds,
+            vimeo: value.vimeo,
+            twitch: value.twitch,
             discord: value.discord,
             fediverse: value.fediverse,
             facebook: value.facebook,

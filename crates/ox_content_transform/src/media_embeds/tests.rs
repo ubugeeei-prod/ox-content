@@ -93,6 +93,21 @@ fn renders_playground_cards() {
 }
 
 #[test]
+fn renders_video_provider_cards() {
+    let enabled =
+        MediaEmbedsOptions { vimeo: Some(true), twitch: Some(true), ..Default::default() };
+    let html = transform_media_embeds(
+        r#"<Vimeo url="https://vimeo.com/123456789" title="Vimeo demo" author="Vimeo Staff" duration="1:30" image="https://i.vimeocdn.com/video/123.jpg" embed="https://player.vimeo.com/video/123456789?dnt=1">A video fallback.</Vimeo>
+<Twitch url="https://www.twitch.tv/videos/40464143" title="Twitch VOD" channel="twitchdev" duration="2:00:00" embed="https://player.twitch.tv/?video=v40464143&parent=docs.example.com&autoplay=false"></Twitch>
+<Twitch url="https://clips.twitch.tv/FriendlySlug" status="Clip"></Twitch>
+<Twitch url="https://www.twitch.tv/twitchdev" live="offline"></Twitch>"#,
+        Some(&enabled),
+    );
+
+    insta::assert_snapshot!(html);
+}
+
+#[test]
 fn leaves_provider_cards_when_disabled_or_rejected() {
     let input = r#"<Qiita url="https://qiita.com/ubugeeei/items/abcdef123456"></Qiita>"#;
     assert_eq!(transform_media_embeds(input, Some(&MediaEmbedsOptions::default())), input);
@@ -103,6 +118,8 @@ fn leaves_provider_cards_when_disabled_or_rejected() {
         zenn: Some(true),
         package_registry: Some(true),
         playgrounds: Some(true),
+        vimeo: Some(true),
+        twitch: Some(true),
         discord: Some(true),
         fediverse: Some(true),
         facebook: Some(true),
@@ -121,6 +138,9 @@ fn leaves_provider_cards_when_disabled_or_rejected() {
         r#"<CodePen url="https://codepen.io.evil/ubugeeei/pen/abc123"></CodePen>"#,
         r#"<JSFiddle url="http://jsfiddle.net/ubugeeei/abc123"></JSFiddle>"#,
         r#"<Observable url="https://observablehq.com/docs"></Observable>"#,
+        r#"<Vimeo url="https://vimeo.com.evil/123456789"></Vimeo>"#,
+        r#"<Twitch url="http://www.twitch.tv/videos/40464143"></Twitch>"#,
+        r#"<Twitch url="https://www.twitch.tv/directory"></Twitch>"#,
         r#"<Discord url="https://evil.example/channels/1"></Discord>"#,
         r#"<Facebook url="https://facebook.com.evil.example/post"></Facebook>"#,
         r#"<Threads url="http://threads.net/@example/post/abc"></Threads>"#,

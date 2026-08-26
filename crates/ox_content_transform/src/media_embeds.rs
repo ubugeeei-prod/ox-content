@@ -8,6 +8,7 @@ mod render;
 mod speaker_deck;
 #[cfg(test)]
 mod tests;
+mod video_cards;
 
 use crate::{MediaEmbedsOptions, html_scan::find_ci};
 
@@ -24,6 +25,7 @@ use render::{
     render_bluesky, render_spotify, render_stackblitz, render_tweet, render_webcontainer,
 };
 use speaker_deck::render_speaker_deck;
+use video_cards::{render_twitch, render_vimeo};
 
 pub fn transform_media_embeds(html: &str, options: Option<&MediaEmbedsOptions>) -> String {
     let Some(options) = options else {
@@ -95,6 +97,12 @@ pub fn transform_media_embeds(html: &str, options: Option<&MediaEmbedsOptions>) 
             current = transform_component(&current, "observable", render_observable);
         }
     }
+    if options.vimeo.unwrap_or(false) && contains_ci(&current, "<vimeo") {
+        current = transform_component(&current, "vimeo", render_vimeo);
+    }
+    if options.twitch.unwrap_or(false) && contains_ci(&current, "<twitch") {
+        current = transform_component(&current, "twitch", render_twitch);
+    }
     if options.discord.unwrap_or(false) && contains_ci(&current, "<discord") {
         current = transform_component(&current, "discord", render_discord);
     }
@@ -141,6 +149,8 @@ fn has_enabled_embed(options: &MediaEmbedsOptions) -> bool {
         || options.zenn.unwrap_or(false)
         || options.package_registry.unwrap_or(false)
         || options.playgrounds.unwrap_or(false)
+        || options.vimeo.unwrap_or(false)
+        || options.twitch.unwrap_or(false)
         || options.discord.unwrap_or(false)
         || options.fediverse.unwrap_or(false)
         || options.facebook.unwrap_or(false)
