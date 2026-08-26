@@ -1056,14 +1056,14 @@ export interface ResolvedRedirectsOptions {
 export type FeedFormat = "rss" | "atom" | "json";
 
 /**
- * Opt-in RSS / Atom / JSON Feed files written during SSG.
+ * One feed's formats, source, output path, and channel metadata.
  */
-export interface FeedsOptions {
+export interface FeedChannelOptions {
   /**
    * Feed formats to write.
    * @default ["rss", "atom", "json"]
    */
-  formats?: FeedFormat[];
+  formats?: readonly FeedFormat[];
 
   /**
    * Named collection to publish. Defaults to `content`, or the first
@@ -1082,17 +1082,63 @@ export interface FeedsOptions {
    * @default "/"
    */
   path?: string;
+
+  /** Channel title. Defaults to the SSG site name. */
+  title?: string;
+
+  /** Channel description. Defaults to the SSG site description. */
+  description?: string;
+
+  /** Channel language (`en`, `ja`, …). Omitted when unset. */
+  language?: string;
+
+  /** Channel image URL (RSS image / Atom logo / JSON Feed icon). */
+  image?: string;
+
+  /** Favicon URL (Atom icon / JSON Feed favicon). */
+  favicon?: string;
+
+  /** Copyright / rights notice. Omitted from JSON Feed. */
+  copyright?: string;
+}
+
+/**
+ * Opt-in RSS / Atom / JSON Feed files written during SSG.
+ *
+ * A single object is one default feed. A named record or array writes
+ * multiple feeds with their own paths and channel metadata.
+ */
+export type FeedsOptions =
+  | FeedChannelOptions
+  | readonly FeedChannelOptions[]
+  | { [name: string]: FeedChannelOptions };
+
+/**
+ * One resolved feed channel.
+ */
+export interface ResolvedFeedChannel {
+  name?: string;
+  formats: readonly FeedFormat[];
+  collection?: string;
+  limit: number;
+  path: string;
+  title?: string;
+  description?: string;
+  language?: string;
+  image?: string;
+  favicon?: string;
+  copyright?: string;
 }
 
 /**
  * Resolved feed options.
+ *
+ * Legacy `true` / single-object configs keep one channel on the top-level
+ * fields. A named record or array also sets `feeds` to every channel.
  */
-export interface ResolvedFeedsOptions {
+export interface ResolvedFeedsOptions extends ResolvedFeedChannel {
   enabled: boolean;
-  formats: FeedFormat[];
-  collection?: string;
-  limit: number;
-  path: string;
+  feeds?: ResolvedFeedChannel[];
 }
 
 /**
