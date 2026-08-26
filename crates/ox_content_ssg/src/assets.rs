@@ -154,6 +154,63 @@ mod tests {
         insta::assert_debug_snapshot!(result);
     }
 
+    #[test]
+    fn feature_js_sections_emit_only_needed_script_srcs() {
+        let pages = vec![
+            GeneratedHtmlPage {
+                input_path: "plain.md".to_string(),
+                output_path: "/tmp/site/plain/index.html".to_string(),
+                html: format_sectioned_page("Plain", false),
+            },
+            GeneratedHtmlPage {
+                input_path: "tabs.md".to_string(),
+                output_path: "/tmp/site/tabs/index.html".to_string(),
+                html: format_sectioned_page("Tabs", true),
+            },
+        ];
+
+        let result = externalize_shared_page_assets(pages, "/tmp/site", "/docs/");
+        let plain = &result.pages[0].html;
+        let tabs = &result.pages[1].html;
+
+        assert!(plain.contains("ox-content-core-"), "{plain}");
+        assert!(!plain.contains("ox-content-search-"), "{plain}");
+        assert!(!plain.contains("ox-content-tabs-"), "{plain}");
+        assert!(!plain.contains("ox-code-play"), "{plain}");
+        assert!(!plain.contains("island"), "{plain}");
+        assert!(tabs.contains("ox-content-tabs-"), "{tabs}");
+        assert!(
+            result.assets.iter().any(|asset| asset.public_path.contains("ox-content-search-")),
+            "{result:?}"
+        );
+    }
+
+    fn format_sectioned_page(title: &str, tabs: bool) -> String {
+        let tabs_js = if tabs {
+            "// ox-content:js:tabs:start\nconst tabs = true;\n// ox-content:js:tabs:end\n"
+        } else {
+            ""
+        };
+        format!(
+            r#"<!doctype html>
+<html>
+<head></head>
+<body>
+  <h1>{title}</h1>
+  <!-- ox-content:scripts:start -->
+  <script>// ox-content:js:core:start
+const boot = "__OX_CONTENT_SEARCH_CHUNK__";
+// ox-content:search:start
+const searchData = true;
+// ox-content:search:end
+// ox-content:js:core:end
+{tabs_js}</script>
+  <!-- ox-content:scripts:end -->
+</body>
+</html>"#
+        )
+    }
+
     fn format_page(title: &str) -> String {
         format!(
             r#"<!doctype html>

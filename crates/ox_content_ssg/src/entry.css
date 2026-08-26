@@ -156,7 +156,7 @@
 }
 
 .hero-action-brand {
-  color: #ffffff;
+  color: var(--octc-color-on-primary);
   background: var(--octc-color-primary);
   border-color: var(--octc-color-primary);
 }
@@ -165,7 +165,7 @@
   background: var(--octc-color-primary-hover);
   border-color: var(--octc-color-primary-hover);
   text-decoration: none;
-  color: #ffffff;
+  color: var(--octc-color-on-primary);
 }
 
 .hero-action-alt {
@@ -228,7 +228,7 @@
   width: 3rem;
   height: 3rem;
   font-size: 1.25rem;
-  color: #ffffff;
+  color: var(--octc-color-on-primary);
   border-radius: 4px;
   background: color-mix(in srgb, var(--octc-color-primary) 88%, #8ec9ff);
   flex-shrink: 0;
@@ -249,7 +249,7 @@
   mask-repeat: no-repeat;
   -webkit-mask-position: center;
   mask-position: center;
-  background-color: #ffffff;
+  background-color: var(--octc-color-on-primary);
 }
 
 .feature-card .feature-body {

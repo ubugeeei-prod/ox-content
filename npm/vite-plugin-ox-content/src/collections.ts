@@ -52,6 +52,9 @@ type NativeTransformOptions = {
     terms?: Record<string, string>;
     firstUseOnly?: boolean;
   };
+  definitionLists?: {
+    enabled?: boolean;
+  };
   magicLinks?: {
     enabled?: boolean;
     aliases?: Record<string, { href: string; label?: string; image?: string }>;
@@ -245,6 +248,7 @@ function createNativeTransformOptions(options: ResolvedOptions): NativeTransform
           firstUseOnly: options.abbreviations.firstUseOnly,
         }
       : undefined,
+    definitionLists: options.definitionLists?.enabled ? { enabled: true } : undefined,
     magicLinks: options.magicLinks?.enabled
       ? {
           enabled: true,

@@ -311,6 +311,10 @@ interface JsTransformOptions {
     firstUseOnly?: boolean;
   };
 
+  definitionLists?: {
+    enabled?: boolean;
+  };
+
   magicLinks?: {
     enabled?: boolean;
     aliases?: Record<string, { href: string; label?: string; image?: string }>;
@@ -650,6 +654,7 @@ export async function transformMarkdown(
           firstUseOnly: options.abbreviations.firstUseOnly,
         }
       : undefined,
+    definitionLists: options.definitionLists?.enabled ? { enabled: true } : undefined,
     magicLinks: options.magicLinks?.enabled
       ? {
           enabled: true,

@@ -561,3 +561,27 @@ export default defineTheme({
   css: `.header { border-bottom: 2px solid var(--octc-color-primary); }`,
 });
 ```
+
+## Default theme quality
+
+The built-in stylesheet (`ssg.css`) is the quality floor every skin and scheme
+composes onto. Override these tokens instead of hardcoding a second set of
+values:
+
+| Token                                                               | Role                                               |
+| ------------------------------------------------------------------- | -------------------------------------------------- |
+| `--octc-focus-ring` / `--octc-focus-offset`                         | Shared `:focus-visible` ring                       |
+| `--octc-motion-base` / `--octc-motion-ease`                         | Default motion; off under `prefers-reduced-motion` |
+| `--octc-code-pad-*` / `--octc-table-cell-pad-*`                     | Code frame and table cell spacing                  |
+| `--octc-touch-target`                                               | Mobile nav hit area                                |
+| `--octc-color-on-primary`                                           | Ink on brand fills (hero, announcement)            |
+| `--octc-color-tip` / `--octc-color-warning` / `--octc-color-danger` | Status chrome                                      |
+
+`html` smooth-scrolling is gated behind `prefers-reduced-motion: no-preference`.
+Code-line dim blur and nav chevron transitions turn off when motion is reduced.
+PR benchmarks still report default theme CSS/JS size — prefer retuning these
+tokens over adding chrome.
+
+**Out of scope here:** self-hosted fonts, Iconify CSS, tweet/full-card styling,
+print stylesheets, and per-skin gallery screenshot refreshes. File those as
+focused follow-ups when they regress.

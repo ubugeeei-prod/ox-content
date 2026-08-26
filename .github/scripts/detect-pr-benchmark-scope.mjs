@@ -26,6 +26,7 @@ const TEST_ONLY_PATTERNS = [
 ];
 
 const BUNDLE_PATTERNS = [
+  /^benchmarks\/perf-budgets\.json$/,
   /^benchmarks\/bundle-size\//,
   /^crates\//,
   /^npm\//,

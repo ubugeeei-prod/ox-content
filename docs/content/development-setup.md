@@ -185,6 +185,19 @@ vp run bench:parse
 vp run bench:bundle
 ```
 
+Absolute ceilings for fixture bundle gzip, rendered HTML gzip, build time,
+initial requests, and runtime floors live in `benchmarks/perf-budgets.json`.
+After a JSON sweep, check them with:
+
+```bash
+node benchmarks/bundle-size/measure.mjs --json /tmp/bundle.json
+node benchmarks/bundle-size/check-budgets.mjs --bundle /tmp/bundle.json
+```
+
+The PR Benchmark job runs that checker on head measurements. Raise a ceiling
+in the same PR as the intentional growth, or apply the
+`benchmark-regression-accepted` label. See [Performance](./performance.md).
+
 For committed benchmark tables and charts, use the Blacksmith-backed docs
 refresh workflow instead of a local machine:
 

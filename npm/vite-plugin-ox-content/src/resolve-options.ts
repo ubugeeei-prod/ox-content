@@ -12,6 +12,7 @@ import { resolveI18nOptions } from "./i18n";
 import { resolveIncludeOptions } from "./include-options";
 import { resolveAbbreviationsOptions } from "./abbreviations-options";
 import { resolveMagicLinkOptions } from "./magic-link-options";
+import { resolveDefinitionListOptions } from "./definition-list-options";
 import { resolveNotByAiOptions } from "./not-by-ai-options";
 
 export { resolveNotByAiOptions } from "./not-by-ai-options";
@@ -75,6 +76,7 @@ export function resolveOptions(options: OxContentOptions): ResolvedOptions {
     notByAi: resolveNotByAiOptions(options.notByAi),
     keyboardKeys: resolveKeyboardKeysOptions(options.keyboardKeys),
     abbreviations: resolveAbbreviationsOptions(options.abbreviations),
+    definitionLists: resolveDefinitionListOptions(options.definitionLists),
     magicLinks: resolveMagicLinkOptions(options.magicLinks),
     containers: resolveContainerOptions(options.containers),
     images: resolveImageOptions(options.images),

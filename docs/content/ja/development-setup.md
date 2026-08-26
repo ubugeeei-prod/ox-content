@@ -183,6 +183,15 @@ vp run bench:parse
 vp run bench:bundle
 ```
 
+フィクスチャのバンドル gzip、描画 HTML gzip、ビルド時間、初期リクエスト、実行時下限の絶対天井は `benchmarks/perf-budgets.json` にあります。JSON 掃引のあとに次で確認します。
+
+```bash
+node benchmarks/bundle-size/measure.mjs --json /tmp/bundle.json
+node benchmarks/bundle-size/check-budgets.mjs --bundle /tmp/bundle.json
+```
+
+PR Benchmark ジョブは head の測定に対してこの検査を走らせます。意図した増大は同じ PR で天井を上げるか、`benchmark-regression-accepted` ラベルを付けます。[パフォーマンス](./performance.md) を見てください。
+
 コミットするベンチマーク表とチャートには、手元のマシンではなく Blacksmith ベースの docs 更新ワークフローを使ってください。
 
 ```bash

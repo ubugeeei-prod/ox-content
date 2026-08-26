@@ -17,6 +17,7 @@ description: オプトインの執筆構文 — 絵文字ショートコード�
 | `notByAi`         | `boolean` / `NotByAiOptions`        | `false` |
 | `keyboardKeys`    | `boolean` / `KeyboardKeysOptions`   | `false` |
 | `abbreviations`   | `boolean` / `AbbreviationsOptions`  | `false` |
+| `definitionLists` | `boolean` / `DefinitionListOptions` | `false` |
 
 ## 絵文字ショートコード
 
@@ -177,6 +178,11 @@ A**強調。**B
 オプトインの `*[LSP]: Language Server Protocol` 用語展開です。既定はオフです。
 詳細は [略語・用語集](./abbreviations.md) を見てください。
 
+## 定義リスト
+
+オプトインの `Term` / `: definition` 用語リストです。既定はオフです。詳細は
+[定義リスト](./definition-lists.md) を見てください。
+
 ## 関連
 
 - [Markdown の土台](./markdown.md) — これらの拡張が乗る既定構文。
@@ -184,3 +190,5 @@ A**強調。**B
 - [マジックリンク](./magic-links.md) — GitHub・エイリアス・URL の設定可能なリンク。
 - [キーボードキー](./keyboard-keys.md) — `{kbd:Ctrl+K}` ショートカット。
 - [略語・用語集](./abbreviations.md) — `*[TERM]:` 用語展開。
+- [定義リスト](./definition-lists.md) — オプトインの `Term` / `: definition`
+  用語集。

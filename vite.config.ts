@@ -151,7 +151,7 @@ export default defineConfig({
       "test:code-play": task("vp exec --filter @ox-content/code-play -- vp test src"),
       "test:publish-targets": task("vp test scripts/verify-publish-targets.test.ts"),
       "test:benchmark-scripts": task(
-        "vp test benchmarks/bundle-size/compare-pr-benchmark.test.ts benchmarks/bundle-size/pr-benchmark-scope.test.ts benchmarks/bundle-size/run-pr-benchmark.test.ts",
+        "vp test benchmarks/bundle-size/compare-pr-benchmark.test.ts benchmarks/bundle-size/pr-benchmark-scope.test.ts benchmarks/bundle-size/run-pr-benchmark.test.ts benchmarks/bundle-size/check-budgets.test.ts",
       ),
       "test:editor-publish-scripts": task("vp test scripts/publish-editor-extensions.test.ts"),
       "build:vite-plugin": task("vp run --filter @ox-content/vite-plugin build", {

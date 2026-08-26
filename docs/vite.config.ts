@@ -148,6 +148,7 @@ export default defineConfig(({ mode }) => {
                       { text: "NotByAI Badge", link: "/built-in/not-by-ai.md" },
                       { text: "Keyboard Keys", link: "/built-in/keyboard-keys.md" },
                       { text: "Abbreviations", link: "/built-in/abbreviations.md" },
+                      { text: "Definition Lists", link: "/built-in/definition-lists.md" },
                       { text: "Magic Links", link: "/built-in/magic-links.md" },
                       { text: "Images", link: "/built-in/images.md" },
                       { text: "Page resources", link: "/built-in/resources.md" },
@@ -274,6 +275,7 @@ export default defineConfig(({ mode }) => {
         notByAi: true,
         keyboardKeys: true,
         abbreviations: true,
+        definitionLists: true,
         magicLinks: {
           aliases: {
             Oxc: {

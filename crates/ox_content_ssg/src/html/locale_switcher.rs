@@ -22,7 +22,9 @@ pub(super) fn render_locale_switcher(config: &SsgConfig) -> String {
         .unwrap_or_default();
     let mut html =
         String::from("<nav class=\"ox-header-select ox-locale-switcher\" aria-label=\"Language\">");
-    html.push_str("<button type=\"button\" aria-expanded=\"false\" aria-haspopup=\"true\">");
+    html.push_str(
+        "<button type=\"button\" disabled aria-expanded=\"false\" aria-haspopup=\"true\">",
+    );
     html.push_str(&current_name);
     html.push_str("</button><ul class=\"ox-header-select-menu\">");
     for locale in locales {

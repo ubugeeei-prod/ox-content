@@ -6,12 +6,15 @@
  * Measures production build time for various documentation frameworks.
  */
 
-import { execSync } from "child_process";
-import { existsSync, rmSync } from "fs";
-import { join } from "path";
+import { execSync } from "node:child_process";
+import { existsSync, rmSync, writeFileSync } from "node:fs";
+import { cpus, totalmem } from "node:os";
+import { dirname, join } from "node:path";
+import { fileURLToPath } from "node:url";
 
-const APPS_DIR = "./apps";
-const ITERATIONS = 3; // Number of iterations to average
+const APPS_DIR = join(dirname(fileURLToPath(import.meta.url)), "apps");
+const ITERATIONS = 3;
+const options = parseOptions(process.argv.slice(2));
 
 const apps = [
   { name: "ox-content (bare)", dir: "ox-content-bare", buildCmd: "npm run build" },
@@ -22,6 +25,40 @@ const apps = [
   { name: "Astro", dir: "astro", buildCmd: "npm run build" },
   { name: "Astro + Vue", dir: "astro-vue", buildCmd: "npm run build" },
 ];
+
+function parseOptions(args) {
+  const parsed = { jsonPath: null };
+
+  for (let index = 0; index < args.length; index++) {
+    const arg = args[index];
+    if (arg === "--json") {
+      parsed.jsonPath = readOptionValue(args, ++index, "--json");
+      continue;
+    }
+    if (arg.startsWith("--json=")) {
+      parsed.jsonPath = arg.slice("--json=".length);
+      if (!parsed.jsonPath) {
+        throw new Error("--json requires a file path");
+      }
+      continue;
+    }
+    if (arg === "--help" || arg === "-h") {
+      console.log("Usage: node build-time-benchmark.mjs [--json <path>]");
+      process.exit(0);
+    }
+    throw new Error(`Unknown argument: ${arg}`);
+  }
+
+  return parsed;
+}
+
+function readOptionValue(args, index, optionName) {
+  const value = args[index];
+  if (!value || value.startsWith("--")) {
+    throw new Error(`${optionName} requires a file path`);
+  }
+  return value;
+}
 
 function cleanDist(appDir) {
   const distPaths = [join(appDir, "dist"), join(appDir, ".vitepress/dist"), join(appDir, ".astro")];
@@ -40,12 +77,25 @@ function measureBuildTime(appDir, buildCmd) {
       stdio: "pipe",
       env: { ...process.env, NODE_ENV: "production" },
     });
-    const end = performance.now();
-    return end - start;
+    return performance.now() - start;
   } catch (error) {
     console.error(`Build failed in ${appDir}:`, error.message);
     return null;
   }
+}
+
+function collectEnvironment() {
+  const cpuList = cpus();
+  return {
+    node: process.version,
+    platform: process.platform,
+    arch: process.arch,
+    ci: process.env.CI === "true",
+    runnerLabel: process.env.OX_CONTENT_BENCHMARK_RUNNER ?? null,
+    cpuModel: cpuList[0]?.model ?? null,
+    cpuCount: cpuList.length,
+    totalMemoryGB: Number((totalmem() / 1024 ** 3).toFixed(2)),
+  };
 }
 
 async function runBenchmark() {
@@ -67,7 +117,6 @@ async function runBenchmark() {
 
     const times = [];
     for (let i = 0; i < ITERATIONS; i++) {
-      // Clean dist before each build
       cleanDist(appDir);
 
       const time = measureBuildTime(appDir, app.buildCmd);
@@ -96,16 +145,13 @@ async function runBenchmark() {
     }
   }
 
-  // Sort by average time
   results.sort((a, b) => a.avg - b.avg);
 
-  // Calculate ratio relative to fastest (ox-content bare)
   const baseline = results.find((r) => r.name === "ox-content (bare)")?.avg || results[0]?.avg;
 
   console.log("\n\nResults (sorted by build time):");
   console.log("================================\n");
 
-  // Calculate column widths
   const nameWidth = Math.max(9, ...results.map((r) => r.name.length));
   const avgWidth = 8;
   const minWidth = 8;
@@ -136,6 +182,25 @@ async function runBenchmark() {
   console.log(`- Average of ${ITERATIONS} builds per framework`);
   console.log("- Disk cache cleared between builds");
   console.log("- Same markdown content used across all frameworks");
+
+  if (options.jsonPath) {
+    writeFileSync(
+      options.jsonPath,
+      `${JSON.stringify(
+        {
+          name: "Build Time Benchmark",
+          generatedAt: new Date().toISOString(),
+          iterations: ITERATIONS,
+          environment: collectEnvironment(),
+          baseline,
+          results,
+        },
+        null,
+        2,
+      )}\n`,
+    );
+    console.log(`\nWrote build time JSON to ${options.jsonPath}`);
+  }
 }
 
 runBenchmark().catch(console.error);

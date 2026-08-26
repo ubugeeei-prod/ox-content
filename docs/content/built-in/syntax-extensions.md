@@ -18,6 +18,7 @@ everywhere until a site explicitly enables an extension.
 | `notByAi`         | `boolean` / `NotByAiOptions`        | `false` |
 | `keyboardKeys`    | `boolean` / `KeyboardKeysOptions`   | `false` |
 | `abbreviations`   | `boolean` / `AbbreviationsOptions`  | `false` |
+| `definitionLists` | `boolean` / `DefinitionListOptions` | `false` |
 
 ## Emoji Shortcodes
 
@@ -209,6 +210,11 @@ default. See [Keyboard Keys](./keyboard-keys.md).
 Opt-in `*[LSP]: Language Server Protocol` glossary expansion. Off by
 default. See [Abbreviations](./abbreviations.md).
 
+## Definition Lists
+
+Opt-in `Term` / `: definition` glossary lists. Off by default. See
+[Definition Lists](./definition-lists.md).
+
 ## Related
 
 - [Markdown Baseline](./markdown.md) — the default syntax these extensions
@@ -217,3 +223,5 @@ default. See [Abbreviations](./abbreviations.md).
 - [Magic Links](./magic-links.md) — configurable GitHub, alias, and URL links.
 - [Keyboard Keys](./keyboard-keys.md) — `{kbd:Ctrl+K}` shortcut markup.
 - [Abbreviations](./abbreviations.md) — `*[TERM]:` glossary expansion.
+- [Definition Lists](./definition-lists.md) — opt-in `Term` / `: definition`
+  glossaries.

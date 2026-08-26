@@ -48,6 +48,8 @@ pub struct TransformOptions {
     pub keyboard_keys: Option<KeyboardKeysOptions>,
     /// Opt-in abbreviation / glossary expansion. Disabled when omitted.
     pub abbreviations: Option<AbbreviationsOptions>,
+    /// Opt-in PHP Markdown Extra / mdBook-style definition lists. Disabled when omitted.
+    pub definition_lists: Option<DefinitionListOptions>,
     /// Opt-in `{link:...}` rich magic links. Disabled when omitted.
     pub magic_links: Option<MagicLinkOptions>,
     /// Opt-in figures, captions, and lazy images. Disabled when omitted.
@@ -84,6 +86,11 @@ pub struct AbbreviationsOptions {
     pub enabled: Option<bool>,
     pub terms: Option<FxHashMap<String, String>>,
     pub first_use_only: Option<bool>,
+}
+
+#[derive(Clone, Default)]
+pub struct DefinitionListOptions {
+    pub enabled: Option<bool>,
 }
 
 #[derive(Clone, Default)]
