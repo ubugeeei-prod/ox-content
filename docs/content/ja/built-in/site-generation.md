@@ -50,39 +50,39 @@ export default defineConfig({
 });
 ```
 
-| オプション        | 既定           | 目的                                                                                                     |
-| ----------------- | -------------- | -------------------------------------------------------------------------------------------------------- |
-| `enabled`         | `true`         | `.md` モジュールだけ残すときは `ssg: false`。                                                            |
-| `extension`       | `".html"`      | 生成ページの拡張子。                                                                                     |
-| `routePrefix`     | —              | `base` や `outDir` を変えずにページルートをマウントする。                                                |
-| `clean`           | `false`        | 書き出す前に生成物を消す。                                                                               |
-| `bare`            | `false`        | ナビなしの、テーマなし HTML を出す。                                                                     |
-| `render`          | —              | 文書全体を所有する JSX コンポーネント。                                                                  |
-| `lang`            | `"en"`         | `<html>` の `lang` 属性（bare モード）。                                                                 |
-| `head`            | —              | `<head>` に足す生マークアップ（bare モード）。                                                           |
-| `bodyStart`       | —              | `<body>` の直後に足す生マークアップ（bare モード）。                                                     |
-| `bodyEnd`         | —              | `</body>` の直前に足す生マークアップ（bare モード）。                                                    |
-| `siteName`        | —              | `<title>` の接尾辞と OG サイト名。                                                                       |
-| `siteUrl`         | —              | 絶対 OG URL、canonical、hreflang に使うオリジン。[SEO](./seo.md)。                                       |
-| `headValidation`  | `false`        | 不正な head デスクリプタの `warn` / `strict`。[SEO](./seo.md)。                                          |
-| `ogImage`         | —              | 静的フォールバックの OG 画像 URL。                                                                       |
-| `generateOgImage` | `false`        | ページごとの OG 画像（後述）。                                                                           |
-| `lastUpdated`     | `false`        | ページごとの git 最終コミット時刻を出す。                                                                |
-| `contributors`    | `false`        | ページごとの一意な git 作者。[コントリビューター](./contributors.md) を見てください。                    |
-| `pagination`      | `false`        | 記事のあとに前へ / 次へリンク。                                                                          |
-| `breadcrumbs`     | `false`        | サイトルートからサイドバー祖先までの道筋。                                                               |
-| `jsonLd`          | `false`        | TechArticle / WebSite / BreadcrumbList の JSON-LD。                                                      |
-| `readerChrome`    | `false`        | コピー、外部リンクアイコン、先頭へ戻る。                                                                 |
-| `localeSwitcher`  | `false`        | i18n ロケールがあるときのヘッダーロケールドロップダウン。                                                |
-| `a11y`            | `false`        | スキップリンクと印刷スタイル。                                                                           |
-| `notFound`        | `false`        | テーマ付き 404。 [カスタム 404](./not-found.md) を見てください。                                         |
-| `team`            | `false`        | `layout: team` のメンバーカード。[チーム](./team.md) を見てください。                                    |
-| `blog`            | `false`        | ページ送り索引、著者、タグ、アーカイブ、任意の外部フィード。[ブログ](./blog.md) を見てください。         |
-| `sectionIndex`    | `false`        | `index.md` がないディレクトリ向けの生成一覧。[セクション索引ページ](./section-index.md) を見てください。 |
-| `pageChrome`      | `false`        | ページ単位の frontmatter chrome フラグを尊重する。                                                       |
-| `markdownSource`  | `false`        | 各ページの横に元の Markdown を公開する。[Markdown ソースの併記](./markdown-source.md)。                  |
-| `theme`           | `defaultTheme` | `defineTheme()` によるテーマ設定。                                                                       |
-| `navigation`      | 派生           | ファイルツリーの代わりに明示的なナビグループ。                                                           |
+| オプション        | 既定           | 目的                                                                                                                 |
+| ----------------- | -------------- | -------------------------------------------------------------------------------------------------------------------- |
+| `enabled`         | `true`         | `.md` モジュールだけ残すときは `ssg: false`。ホスト側で [コンポーネント CSS](./component-styles.md) を import する。 |
+| `extension`       | `".html"`      | 生成ページの拡張子。                                                                                                 |
+| `routePrefix`     | —              | `base` や `outDir` を変えずにページルートをマウントする。                                                            |
+| `clean`           | `false`        | 書き出す前に生成物を消す。                                                                                           |
+| `bare`            | `false`        | ナビなしの、テーマなし HTML を出す。                                                                                 |
+| `render`          | —              | 文書全体を所有する JSX コンポーネント。                                                                              |
+| `lang`            | `"en"`         | `<html>` の `lang` 属性（bare モード）。                                                                             |
+| `head`            | —              | `<head>` に足す生マークアップ（bare モード）。                                                                       |
+| `bodyStart`       | —              | `<body>` の直後に足す生マークアップ（bare モード）。                                                                 |
+| `bodyEnd`         | —              | `</body>` の直前に足す生マークアップ（bare モード）。                                                                |
+| `siteName`        | —              | `<title>` の接尾辞と OG サイト名。                                                                                   |
+| `siteUrl`         | —              | 絶対 OG URL、canonical、hreflang に使うオリジン。[SEO](./seo.md)。                                                   |
+| `headValidation`  | `false`        | 不正な head デスクリプタの `warn` / `strict`。[SEO](./seo.md)。                                                      |
+| `ogImage`         | —              | 静的フォールバックの OG 画像 URL。                                                                                   |
+| `generateOgImage` | `false`        | ページごとの OG 画像（後述）。                                                                                       |
+| `lastUpdated`     | `false`        | ページごとの git 最終コミット時刻を出す。                                                                            |
+| `contributors`    | `false`        | ページごとの一意な git 作者。[コントリビューター](./contributors.md) を見てください。                                |
+| `pagination`      | `false`        | 記事のあとに前へ / 次へリンク。                                                                                      |
+| `breadcrumbs`     | `false`        | サイトルートからサイドバー祖先までの道筋。                                                                           |
+| `jsonLd`          | `false`        | TechArticle / WebSite / BreadcrumbList の JSON-LD。                                                                  |
+| `readerChrome`    | `false`        | コピー、外部リンクアイコン、先頭へ戻る。                                                                             |
+| `localeSwitcher`  | `false`        | i18n ロケールがあるときのヘッダーロケールドロップダウン。                                                            |
+| `a11y`            | `false`        | スキップリンクと印刷スタイル。                                                                                       |
+| `notFound`        | `false`        | テーマ付き 404。 [カスタム 404](./not-found.md) を見てください。                                                     |
+| `team`            | `false`        | `layout: team` のメンバーカード。[チーム](./team.md) を見てください。                                                |
+| `blog`            | `false`        | ページ送り索引、著者、タグ、アーカイブ、任意の外部フィード。[ブログ](./blog.md) を見てください。                     |
+| `sectionIndex`    | `false`        | `index.md` がないディレクトリ向けの生成一覧。[セクション索引ページ](./section-index.md) を見てください。             |
+| `pageChrome`      | `false`        | ページ単位の frontmatter chrome フラグを尊重する。                                                                   |
+| `markdownSource`  | `false`        | 各ページの横に元の Markdown を公開する。[Markdown ソースの併記](./markdown-source.md)。                              |
+| `theme`           | `defaultTheme` | `defineTheme()` によるテーマ設定。                                                                                   |
+| `navigation`      | 派生           | ファイルツリーの代わりに明示的なナビグループ。                                                                       |
 
 `ssg.routePrefix` はデプロイの `base` やルートのホストファイルを動かさずに、Markdown ページルートを `/blog` のようなパスへマウントします。`blog`、`/blog`、`/blog/` はどれも `/blog` 配下になります。ページ HTML とページ単位のアセットはプレフィックスに従い、`_redirects`、`_headers`、ルートのフィード、サイトマップ index は `outDir` に残ります。`base` は公開 URL のプレフィックスのままです。[パーマリンク](./permalinks.md) がオンのとき、frontmatter の `permalink` が勝ちます。
 

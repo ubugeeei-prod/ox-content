@@ -82,6 +82,10 @@ Output uses stable classes: `ox-magic-link`, `ox-magic-link--github` /
 `--alias` / `--url`, `ox-magic-link__image`, and `ox-magic-link__label`.
 The image is decorative (`alt=""`); the label is the accessible name.
 
+Custom `ssg: false` hosts should import
+`@ox-content/vite-plugin/styles/magic-links.css` (and usually `core.css` for
+`--octc-*` tokens). See [Component styles](./component-styles.md).
+
 ## Immunity
 
 Fenced, indented, and inline code, raw `<code>` / `<pre>` / `<script>` /
@@ -101,5 +105,6 @@ re-parse per name. There is no client JavaScript.
 
 - [Syntax Extensions](./syntax-extensions.md)
 - [Inline Badges](./badges.md)
+- [Component styles](./component-styles.md)
 - [Built-in Features overview](../built-in-features.md)
 - [markdown-it-magic-link](https://github.com/antfu/markdown-it-magic-link)
