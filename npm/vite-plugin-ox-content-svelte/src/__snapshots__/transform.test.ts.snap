@@ -1,5 +1,192 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
+exports[`transformMarkdownWithSvelte > discovers nested, expression, and fragment islands from the MDX AST 1`] = `
+"import 'svelte/internal/disclose-version';
+import * as $ from 'svelte/internal/client';
+import { createRawSnippet, onMount, mount, unmount } from 'svelte';
+import { initIslands, readIslandSlotHtml } from '@ox-content/islands';
+import Callout from '../src/components/Callout.svelte';
+import Badge from '../src/components/Badge.svelte';
+
+var root = $.from_html(\`<div class="ox-content svelte-1s4aub"></div>\`);
+
+export default function Nested_mdx($$anchor, $$props) {
+	$.push($$props, true);
+
+	const frontmatter = {};
+	const rawHtml = "<div class=\\"ox-island\\" data-ox-island=\\"Callout\\"><h1 id=\\"title\\">Title</h1>\\n<div class=\\"ox-island\\" data-ox-island=\\"Badge\\" data-ox-props=\\"{&quot;expressions&quot;:{},&quot;props&quot;:{&quot;title&quot;:&quot;hi&quot;},&quot;spreads&quot;:[]}\\"><script type=\\"application/json\\">{\\"expressions\\":{},\\"props\\":{\\"title\\":\\"hi\\"},\\"spreads\\":[]}<\\/script></div>\\n</div>\\n";
+	const components = { Callout, Badge };
+	let container;
+
+	function createSvelteHydrate() {
+		const mounted = [];
+
+		return (element, props) => {
+			const componentName = element.dataset.oxIsland;
+			const Component = components[componentName];
+
+			if (!Component) return;
+
+			const islandContent = readIslandSlotHtml(element);
+			const componentProps = { ...props };
+
+			if (islandContent) {
+				componentProps.children = createRawSnippet(() => ({ render: () => \`<div>\${islandContent}</div>\` }));
+			}
+
+			const instance = mount(Component, { target: element, props: componentProps });
+
+			mounted.push(instance);
+
+			return () => unmount(instance);
+		};
+	}
+
+	onMount(() => {
+		if (!container) return;
+
+		const controller = initIslands(createSvelteHydrate(), { selector: '.ox-content [data-ox-island]' });
+
+		return () => controller.destroy();
+	});
+
+	var $$exports = { frontmatter };
+	var div = root();
+
+	$.html(div, () => rawHtml, true);
+	$.reset(div);
+	$.bind_this(div, ($$value) => container = $$value, () => container);
+	$.append($$anchor, div);
+
+	return $.pop($$exports);
+}
+export const frontmatter = {};"
+`;
+
+exports[`transformMarkdownWithSvelte > discovers nested, expression, and fragment islands from the MDX AST 2`] = `
+"import 'svelte/internal/disclose-version';
+import * as $ from 'svelte/internal/client';
+import { createRawSnippet, onMount, mount, unmount } from 'svelte';
+import { initIslands, readIslandSlotHtml } from '@ox-content/islands';
+import Alert from '../src/components/Alert.svelte';
+
+var root = $.from_html(\`<div class="ox-content svelte-1wwhjsv"></div>\`);
+
+export default function Expr_mdx($$anchor, $$props) {
+	$.push($$props, true);
+
+	const frontmatter = {};
+	const rawHtml = "<div class=\\"ox-island\\" data-ox-island=\\"Alert\\" data-ox-props=\\"{&quot;expressions&quot;:{&quot;count&quot;:&quot;count + 1&quot;,&quot;title&quot;:&quot;foo&quot;},&quot;props&quot;:{},&quot;spreads&quot;:[]}\\"><script type=\\"application/json\\">{\\"expressions\\":{\\"count\\":\\"count + 1\\",\\"title\\":\\"foo\\"},\\"props\\":{},\\"spreads\\":[]}<\\/script></div>\\n";
+	const components = { Alert };
+	let container;
+
+	function createSvelteHydrate() {
+		const mounted = [];
+
+		return (element, props) => {
+			const componentName = element.dataset.oxIsland;
+			const Component = components[componentName];
+
+			if (!Component) return;
+
+			const islandContent = readIslandSlotHtml(element);
+			const componentProps = { ...props };
+
+			if (islandContent) {
+				componentProps.children = createRawSnippet(() => ({ render: () => \`<div>\${islandContent}</div>\` }));
+			}
+
+			const instance = mount(Component, { target: element, props: componentProps });
+
+			mounted.push(instance);
+
+			return () => unmount(instance);
+		};
+	}
+
+	onMount(() => {
+		if (!container) return;
+
+		const controller = initIslands(createSvelteHydrate(), { selector: '.ox-content [data-ox-island]' });
+
+		return () => controller.destroy();
+	});
+
+	var $$exports = { frontmatter };
+	var div = root();
+
+	$.html(div, () => rawHtml, true);
+	$.reset(div);
+	$.bind_this(div, ($$value) => container = $$value, () => container);
+	$.append($$anchor, div);
+
+	return $.pop($$exports);
+}
+export const frontmatter = {};"
+`;
+
+exports[`transformMarkdownWithSvelte > discovers nested, expression, and fragment islands from the MDX AST 3`] = `
+"import 'svelte/internal/disclose-version';
+import * as $ from 'svelte/internal/client';
+import { createRawSnippet, onMount, mount, unmount } from 'svelte';
+import { initIslands, readIslandSlotHtml } from '@ox-content/islands';
+import Alert from '../src/components/Alert.svelte';
+
+var root = $.from_html(\`<div class="ox-content svelte-19q2n2e"></div>\`);
+
+export default function Fragment_mdx($$anchor, $$props) {
+	$.push($$props, true);
+
+	const frontmatter = {};
+	const rawHtml = "<div class=\\"ox-island\\" data-ox-island=\\"Alert\\" data-ox-props=\\"{&quot;expressions&quot;:{},&quot;props&quot;:{&quot;tone&quot;:&quot;info&quot;},&quot;spreads&quot;:[]}\\"><script type=\\"application/json\\">{\\"expressions\\":{},\\"props\\":{\\"tone\\":\\"info\\"},\\"spreads\\":[]}<\\/script></div>\\n";
+	const components = { Alert };
+	let container;
+
+	function createSvelteHydrate() {
+		const mounted = [];
+
+		return (element, props) => {
+			const componentName = element.dataset.oxIsland;
+			const Component = components[componentName];
+
+			if (!Component) return;
+
+			const islandContent = readIslandSlotHtml(element);
+			const componentProps = { ...props };
+
+			if (islandContent) {
+				componentProps.children = createRawSnippet(() => ({ render: () => \`<div>\${islandContent}</div>\` }));
+			}
+
+			const instance = mount(Component, { target: element, props: componentProps });
+
+			mounted.push(instance);
+
+			return () => unmount(instance);
+		};
+	}
+
+	onMount(() => {
+		if (!container) return;
+
+		const controller = initIslands(createSvelteHydrate(), { selector: '.ox-content [data-ox-island]' });
+
+		return () => controller.destroy();
+	});
+
+	var $$exports = { frontmatter };
+	var div = root();
+
+	$.html(div, () => rawHtml, true);
+	$.reset(div);
+	$.bind_this(div, ($$value) => container = $$value, () => container);
+	$.append($$anchor, div);
+
+	return $.pop($$exports);
+}
+export const frontmatter = {};"
+`;
+
 exports[`transformMarkdownWithSvelte > honors disabled built-in embeds from framework options 1`] = `
 "import 'svelte/internal/disclose-version';
 import * as $ from 'svelte/internal/client';

@@ -56,6 +56,7 @@ describe("transformMarkdownWithVue", () => {
     expect(nested.code).toContain('data-ox-island=\\"Callout\\"');
     expect(nested.code).toContain('data-ox-island=\\"Badge\\"');
     expect(nested.code).toContain("readIslandSlotHtml");
+    expect(nested.code).toMatchSnapshot();
 
     const expr = await transformMarkdownWithVue(
       "<Alert title={foo} count={count + 1} />\n",
@@ -65,6 +66,7 @@ describe("transformMarkdownWithVue", () => {
     expect(expr.usedComponents).toEqual(["Alert"]);
     expect(expr.code).toContain('data-ox-island=\\"Alert\\"');
     expect(expr.code).toMatch(/count \+ 1|count \\u002b 1/);
+    expect(expr.code).toMatchSnapshot();
 
     const fragment = await transformMarkdownWithVue(
       '<>\n<Alert tone="info" />\n</>\n',
@@ -73,6 +75,7 @@ describe("transformMarkdownWithVue", () => {
     );
     expect(fragment.usedComponents).toEqual(["Alert"]);
     expect(fragment.code).toContain('data-ox-island=\\"Alert\\"');
+    expect(fragment.code).toMatchSnapshot();
   });
 
   it("keeps fenced JSX literal and skips unregistered MDX components", async () => {
