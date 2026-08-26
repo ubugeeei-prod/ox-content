@@ -34,9 +34,11 @@ const BUNDLE_PATTERNS = [
 
 const BENCHMARK_NEUTRAL_PATTERNS = [
   /^\.github\/(?:ISSUE_TEMPLATE|PULL_REQUEST_TEMPLATE)\//,
+  /^\.github\/scripts\/(?!(?:detect-pr-benchmark-scope|run-pr-benchmark|compare-pr-benchmark)\.mjs$)[^/]+\.mjs$/,
   /^\.github\/workflows\/(?!benchmark\.yml$)/,
   /^docs\//,
   /^examples\//,
+  /^scripts\/.*\.test\.ts$/,
   /^README\.md$/,
   /^CHANGELOG\.md$/,
   /^CHENGELOG\.md$/,
