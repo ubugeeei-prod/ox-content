@@ -1113,7 +1113,7 @@ export async function buildSsg(options: ResolvedOptions, root: string): Promise<
     generatedFiles.push(...(await copyKatexAssets(outDir)));
   }
   generatedFiles.push(
-    ...(await writeSelfHostedThemeFonts({ fonts: ssgOptions.theme.fonts, outDir, root })),
+    ...(await writeSelfHostedThemeFonts({ fonts: ssgOptions.theme?.fonts ?? {}, outDir, root })),
   );
 
   return {
