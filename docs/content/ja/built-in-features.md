@@ -26,6 +26,7 @@ Ox Content は、よく使うドキュメントの挙動を既定で載せ、非
 | [ファイル取り込み](./built-in/includes.md)               | オプトインの `<!-- @include -->`                                               |
 | [ファイルツリー](./built-in/file-tree.md)                | オプトインの静的ディレクトリ図                                                 |
 | [インラインバッジ](./built-in/badges.md)                 | オプトインの `{badge:tip}`                                                     |
+| [キーボードキー](./built-in/keyboard-keys.md)            | オプトインの `{kbd:Ctrl+K}` セマンティックなショートカット                     |
 | [マジックリンク](./built-in/magic-links.md)              | オプトインの `{link:@user}` / エイリアス / `label\|url` リッチリンク           |
 | [画像](./built-in/images.md)                             | 図、キャプション、遅延読み込み、安全な寸法                                     |
 | [ページリソース](./built-in/resources.md)                | ページバンドル資産とリサイズ・クロップ・形式変換                               |
@@ -83,7 +84,7 @@ Ox Content は、よく使うドキュメントの挙動を既定で載せ、非
 | 構文ハイライト       | `highlight`                                                                                                   | `false`            | [コードブロック](./built-in/code-blocks.md)              |
 | コード執筆           | `codeAnnotations`, `codeImports`                                                                              | `false`            | [コードブロック](./built-in/code-blocks.md)              |
 | コードグループ       | `codeGroups`                                                                                                  | `false`            | [コードグループ](./built-in/code-groups.md)              |
-| 追加構文             | `wikiLinks`, `emojiShortcodes`, `attrs`, `cjkEmphasis`, `containers`, `badges`, `magicLinks`                  | `false`            | [構文拡張](./built-in/syntax-extensions.md)              |
+| 追加構文             | `wikiLinks`, `emojiShortcodes`, `attrs`, `cjkEmphasis`, `containers`, `badges`, `keyboardKeys`, `magicLinks`  | `false`            | [構文拡張](./built-in/syntax-extensions.md)              |
 | ファイル取り込み     | `includes`                                                                                                    | `false`            | [ファイル取り込み](./built-in/includes.md)               |
 | カード               | `cards`                                                                                                       | `false`            | [カード](./built-in/cards.md)                            |
 | 手順リスト           | `steps`                                                                                                       | `false`            | [手順リスト](./built-in/steps.md)                        |

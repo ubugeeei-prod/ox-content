@@ -1,0 +1,18 @@
+.content .ox-kbd {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.2em;
+  font-family: var(--octc-font-mono);
+  font-size: 0.8125em;
+  line-height: 1.2;
+}
+.content .ox-kbd__key {
+  display: inline-block;
+  padding: 0.1em 0.4em;
+  border: 1px solid var(--octc-color-border);
+  border-radius: 4px;
+  background: var(--octc-color-bg-alt);
+  color: var(--octc-color-text);
+  font: inherit;
+  white-space: nowrap;
+}

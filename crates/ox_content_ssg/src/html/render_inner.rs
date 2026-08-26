@@ -2,6 +2,7 @@ use askama::Template;
 
 use super::a11y::A11Y_CSS;
 use super::breadcrumbs::resolve_breadcrumbs;
+use super::content_css::push_content_plugin_css;
 use super::entry::generate_entry_html;
 use super::footer::{FOOTER_CSS, generate_footer_html};
 use super::head::{RenderedHead, render_themed_head};
@@ -120,6 +121,7 @@ pub(super) fn generate_html_inner(
     if page_content_contains_any(&page_data.content, &["ox-file-tree"]) {
         css_sections.push(wrap_css_section("file-tree", FILE_TREE_CSS));
     }
+    push_content_plugin_css(&mut css_sections, &page_data.content);
     push_heading_permalink_css(&mut css_sections, &page_data.content);
     if has_footer {
         css_sections.push(wrap_css_section("footer", footer_css));
