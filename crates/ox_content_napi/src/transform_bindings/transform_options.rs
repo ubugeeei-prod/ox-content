@@ -5,8 +5,8 @@ use ox_content_transform::{MathOptions, TransformOptions};
 use super::{
     JsAttrsOptions, JsBadgeOptions, JsCardOptions, JsCodeImportOptions, JsContainerOptions,
     JsEditThisPageOptions, JsEmojiShortcodeOptions, JsFileTreeOptions, JsImageOptions,
-    JsIncludeOptions, JsMagicLinkOptions, JsMathOptions, JsSanitizeOptions, JsStepsOptions,
-    JsWikiLinkOptions,
+    JsIncludeOptions, JsMagicLinkOptions, JsMathOptions, JsNotByAiOptions, JsSanitizeOptions,
+    JsStepsOptions, JsWikiLinkOptions,
 };
 
 /// Transform options for JavaScript.
@@ -193,6 +193,11 @@ pub struct JsTransformOptions {
     /// Default: disabled.
     pub badges: Option<JsBadgeOptions>,
 
+    /// Opt-in `<NotByAI />` authorship badge.
+    ///
+    /// Default: disabled.
+    pub not_by_ai: Option<JsNotByAiOptions>,
+
     /// Opt-in `{link:...}` rich magic links.
     ///
     /// Default: disabled.
@@ -254,6 +259,7 @@ impl From<JsTransformOptions> for TransformOptions {
             includes: value.includes.map(Into::into),
             steps: value.steps.map(Into::into),
             badges: value.badges.map(Into::into),
+            not_by_ai: value.not_by_ai.map(Into::into),
             magic_links: value.magic_links.map(Into::into),
             images: value.images.map(Into::into),
             cards: value.cards.map(Into::into),

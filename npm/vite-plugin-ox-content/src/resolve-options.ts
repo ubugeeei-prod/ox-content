@@ -64,6 +64,7 @@ export function resolveOptions(options: OxContentOptions): ResolvedOptions {
     emojiShortcodes: resolveEmojiShortcodeOptions(options.emojiShortcodes),
     attrs: resolveAttrsOptions(options.attrs),
     badges: resolveBadgeOptions(options.badges),
+    notByAi: resolveNotByAiOptions(options.notByAi),
     magicLinks: resolveMagicLinkOptions(options.magicLinks),
     containers: resolveContainerOptions(options.containers),
     images: resolveImageOptions(options.images),
@@ -182,6 +183,25 @@ export function resolveBadgeOptions(
   if (!options) return { enabled: false };
   if (options === true) return { enabled: true };
   return { enabled: options.enabled ?? true };
+}
+
+const DEFAULT_NOT_BY_AI_LABEL = "Written by human, not by AI";
+const DEFAULT_NOT_BY_AI_HREF = "https://notbyai.fyi";
+
+export function resolveNotByAiOptions(
+  options: OxContentOptions["notByAi"],
+): ResolvedOptions["notByAi"] {
+  if (!options) {
+    return { enabled: false, label: DEFAULT_NOT_BY_AI_LABEL, href: DEFAULT_NOT_BY_AI_HREF };
+  }
+  if (options === true) {
+    return { enabled: true, label: DEFAULT_NOT_BY_AI_LABEL, href: DEFAULT_NOT_BY_AI_HREF };
+  }
+  return {
+    enabled: options.enabled ?? true,
+    label: options.label?.trim() || DEFAULT_NOT_BY_AI_LABEL,
+    href: options.href?.trim() || DEFAULT_NOT_BY_AI_HREF,
+  };
 }
 
 function resolveContainerOptions(

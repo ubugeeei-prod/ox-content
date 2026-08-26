@@ -58,5 +58,6 @@ HTML-escaped; fenced, indented, and inline code are not rewritten.
 
 ## Related
 
+- [NotByAI Badge](./not-by-ai.md) — human-authorship disclosure, not a status label
 - [Custom Containers](./containers.md)
 - [Built-in Features overview](../built-in-features.md)

@@ -15,6 +15,7 @@ everywhere until a site explicitly enables an extension.
 | `attrs`           | `boolean` / `AttrsOptions`          | `false` |
 | `cjkEmphasis`     | `boolean`                           | `false` |
 | `magicLinks`      | `boolean` / `MagicLinkOptions`      | `false` |
+| `notByAi`         | `boolean` / `NotByAiOptions`        | `false` |
 
 ## Emoji Shortcodes
 
@@ -190,6 +191,11 @@ and the reclassified character ranges.
 
 Opt-in `{link:@user}`, `{link:alias}`, and `{link:label|url}` rich links with
 optional avatars. Off by default. See [Magic Links](./magic-links.md).
+
+## NotByAI Badge
+
+Opt-in `<NotByAI />` emits a static human-authorship disclosure. It is not a
+status badge. Off by default. See [NotByAI Badge](./not-by-ai.md).
 
 ## Related
 

@@ -557,7 +557,7 @@ describe("SSG routePrefix", () => {
         redirects: {
           enabled: true,
           map: {},
-          netlify: true,
+          provider: "netlify",
           headers: false,
           json: false,
           allowExternal: false,

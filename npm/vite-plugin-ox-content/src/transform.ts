@@ -292,6 +292,12 @@ interface JsTransformOptions {
     enabled?: boolean;
   };
 
+  notByAi?: {
+    enabled?: boolean;
+    label?: string;
+    href?: string;
+  };
+
   magicLinks?: {
     enabled?: boolean;
     aliases?: Record<string, { href: string; label?: string; image?: string }>;
@@ -604,6 +610,13 @@ export async function transformMarkdown(
       : undefined,
     attributes: options.attrs?.enabled ? { enabled: true } : undefined,
     badges: options.badges?.enabled ? { enabled: true } : undefined,
+    notByAi: options.notByAi?.enabled
+      ? {
+          enabled: true,
+          label: options.notByAi.label,
+          href: options.notByAi.href,
+        }
+      : undefined,
     magicLinks: options.magicLinks?.enabled
       ? {
           enabled: true,

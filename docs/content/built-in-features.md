@@ -30,6 +30,7 @@ inline**.
 | [File Includes](./built-in/includes.md)                     | Opt-in `<!-- @include -->` Markdown fragments                               |
 | [File Tree](./built-in/file-tree.md)                        | Opt-in static `file-tree` directory diagrams                                |
 | [Inline Badges](./built-in/badges.md)                       | Opt-in `{badge:tip}` status labels in headings or prose                     |
+| [NotByAI Badge](./built-in/not-by-ai.md)                    | Opt-in static human-authorship disclosure (`<NotByAI />`)                   |
 | [Magic Links](./built-in/magic-links.md)                    | Opt-in `{link:@user}` / alias / `label\|url` rich links with avatars        |
 | [Images](./built-in/images.md)                              | Opt-in figures, captions, lazy loading, and safe dimensions                 |
 | [Page resources](./built-in/resources.md)                   | Opt-in page-bundle assets with resize, crop, and format transforms          |
@@ -83,7 +84,7 @@ inline**.
 | Opt-in embeds      | `embeds.pm`, `embeds.twitter`, `embeds.bluesky`, `embeds.spotify`, `embeds.stackBlitz`, `embeds.webContainer` | `false`              | [Embeds](./built-in/embeds.md)                              |
 | Syntax highlight   | `highlight`                                                                                                   | `false`              | [Code Blocks](./built-in/code-blocks.md)                    |
 | Code authoring     | `codeAnnotations`, `codeImports`                                                                              | `false`              | [Code Blocks](./built-in/code-blocks.md)                    |
-| Extra syntax       | `wikiLinks`, `emojiShortcodes`, `attrs`, `cjkEmphasis`, `containers`, `badges`, `magicLinks`                  | `false`              | [Syntax Extensions](./built-in/syntax-extensions.md)        |
+| Extra syntax       | `wikiLinks`, `emojiShortcodes`, `attrs`, `cjkEmphasis`, `containers`, `badges`, `notByAi`, `magicLinks`       | `false`              | [Syntax Extensions](./built-in/syntax-extensions.md)        |
 | File includes      | `includes`                                                                                                    | `false`              | [File Includes](./built-in/includes.md)                     |
 | Cards              | `cards`                                                                                                       | `false`              | [Cards](./built-in/cards.md)                                |
 | Step lists         | `steps`                                                                                                       | `false`              | [Step Lists](./built-in/steps.md)                           |

@@ -293,6 +293,7 @@ function ssgOptions(overrides: Partial<ResolvedOptions> = {}): ResolvedOptions {
     emojiShortcodes: { enabled: false, custom: {} },
     attrs: { enabled: false },
     badges: { enabled: false },
+    notByAi: { enabled: false, label: "Written by human, not by AI", href: "https://notbyai.fyi" },
     containers: { enabled: false, types: {} },
     images: { enabled: false, lazy: true },
     codeImports: { enabled: false },

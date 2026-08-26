@@ -35,6 +35,8 @@ Contribution summary:
   found during the ryoppippi.com Ox Content migration.
 - Helped validate the expected Twitter/X full-card visual contract through
   sveltweet.
+- The opt-in `<NotByAI />` authorship badge was requested and first shipped
+  in production during the ryoppippi.com Ox Content migration.
 
 ## Third-party attribution
 
@@ -51,3 +53,14 @@ The MIT copyright notice and permission notice for both projects are
 reproduced in `crates/ox_content_ssg/src/plugins/social-tweet-full.css`.
 
 X, Twitter, and related marks are trademarks of their respective owners.
+
+### Not By AI badge artwork
+
+The opt-in `<NotByAI />` badge vendors the official light and dark “Written
+by Human, Not By AI” SVGs from [Not By AI](https://notbyai.fyi). The copies
+are sanitized at vendoring time and inlined as static HTML. Ox Content does
+not load scripts or assets from notbyai.fyi at runtime.
+
+Not By AI and related marks are trademarks of their respective owners. See
+the [Not By AI usage guidelines](https://notbyai.fyi) for eligibility and
+commercial-use terms.

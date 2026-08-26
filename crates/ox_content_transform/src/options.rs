@@ -40,6 +40,8 @@ pub struct TransformOptions {
     pub steps: Option<StepsOptions>,
     /// Opt-in `{badge:variant}` inline badges. Disabled when omitted.
     pub badges: Option<BadgeOptions>,
+    /// Opt-in `<NotByAI />` authorship badge. Disabled when omitted.
+    pub not_by_ai: Option<NotByAiOptions>,
     /// Opt-in `{link:...}` rich magic links. Disabled when omitted.
     pub magic_links: Option<MagicLinkOptions>,
     /// Opt-in figures, captions, and lazy images. Disabled when omitted.
@@ -53,6 +55,13 @@ pub struct TransformOptions {
 #[derive(Clone, Default)]
 pub struct BadgeOptions {
     pub enabled: Option<bool>,
+}
+
+#[derive(Clone, Default)]
+pub struct NotByAiOptions {
+    pub enabled: Option<bool>,
+    pub label: Option<String>,
+    pub href: Option<String>,
 }
 
 #[derive(Clone, Default)]

@@ -217,4 +217,5 @@ stays unchanged.
   those ids.
 - [Syntax Extensions](./syntax-extensions.md) — opt-in authoring syntax on top
   of this baseline.
+- [NotByAI Badge](./not-by-ai.md) — opt-in static human-authorship disclosure.
 - [Built-in Features overview](../built-in-features.md)

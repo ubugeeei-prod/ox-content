@@ -46,6 +46,8 @@ export type {
   ResolvedAttrsOptions,
   BadgeOptions,
   ResolvedBadgeOptions,
+  NotByAiOptions,
+  ResolvedNotByAiOptions,
   MagicLinkOptions,
   MagicLinkAlias,
   MagicLinkImageOverride,
@@ -630,6 +632,7 @@ export {
   resolveBadgeOptions,
   resolveBuiltinEmbedOptions,
   resolveMathOptions,
+  resolveNotByAiOptions,
 } from "./resolve-options";
 export { resolveCardOptions } from "./card-options";
 export { resolveIncludeOptions } from "./include-options";
