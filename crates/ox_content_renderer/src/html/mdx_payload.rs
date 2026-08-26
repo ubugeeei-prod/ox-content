@@ -23,11 +23,22 @@ impl IslandPayload {
 
     pub(super) fn into_json_value(self) -> Value {
         let mut object = Map::new();
-        object.insert("props".into(), Value::Object(self.props));
-        object.insert("expressions".into(), Value::Object(self.expressions));
+        object.insert("expressions".into(), Value::Object(sorted_map(self.expressions)));
+        object.insert("props".into(), Value::Object(sorted_map(self.props)));
         object.insert("spreads".into(), Value::Array(self.spreads));
         Value::Object(object)
     }
+}
+
+fn sorted_map(map: Map<String, Value>) -> Map<String, Value> {
+    let mut entries = map.into_iter().collect::<Vec<_>>();
+    entries.sort_by(|(left, _), (right, _)| left.cmp(right));
+
+    let mut sorted = Map::new();
+    for (key, value) in entries {
+        sorted.insert(key, value);
+    }
+    sorted
 }
 
 pub(super) fn collect_island_payload(attributes: &[MdxJsxAttributeEntry<'_>]) -> IslandPayload {
@@ -97,7 +108,7 @@ mod tests {
         MdxJsxAttributeValueExpression, MdxJsxExpressionAttribute, Span,
     };
 
-    use super::{collect_island_payload, stringify_xss_safe};
+    use super::{IslandPayload, collect_island_payload, stringify_xss_safe};
 
     #[test]
     fn literals_and_json_expressions_become_props() {
@@ -150,6 +161,25 @@ mod tests {
         assert_eq!(payload.expressions["onClick"], "alert(1)");
         assert_eq!(payload.spreads, vec![serde_json::json!("...cardProps")]);
         assert!(payload.props.is_empty());
+    }
+
+    #[test]
+    fn serializes_payload_keys_in_a_stable_order() {
+        let mut payload = IslandPayload {
+            props: serde_json::Map::new(),
+            expressions: serde_json::Map::new(),
+            spreads: Vec::new(),
+        };
+        payload.props.insert("title".into(), serde_json::json!("Docs"));
+        payload.props.insert("data-kind".into(), serde_json::json!("guide"));
+        payload.expressions.insert("count".into(), serde_json::json!("count"));
+
+        let json = stringify_xss_safe(&payload.into_json_value());
+
+        assert_eq!(
+            json,
+            r#"{"expressions":{"count":"count"},"props":{"data-kind":"guide","title":"Docs"},"spreads":[]}"#
+        );
     }
 
     #[test]

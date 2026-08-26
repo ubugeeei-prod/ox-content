@@ -1,0 +1,9 @@
+---
+source: crates/ox_content_transform/src/transformer/tests.rs
+expression: result.html
+---
+<h1 id="mdx-edge">MDX Edge</h1>
+<div class="ox-island" data-ox-island="Card" data-ox-props="{&quot;expressions&quot;:{&quot;count&quot;:&quot;count&quot;},&quot;props&quot;:{&quot;data-kind&quot;:&quot;guide&quot;,&quot;title&quot;:&quot;Docs&quot;},&quot;spreads&quot;:[]}"><script type="application/json">{"expressions":{"count":"count"},"props":{"data-kind":"guide","title":"Docs"},"spreads":[]}</script><p><strong>Bold</strong> copy</p>
+<div class="ox-island" data-ox-island="Badge" data-ox-props="{&quot;expressions&quot;:{},&quot;props&quot;:{&quot;label&quot;:&quot;beta&quot;},&quot;spreads&quot;:[]}"><script type="application/json">{"expressions":{},"props":{"label":"beta"},"spreads":[]}</script></div>
+</div>
+<p>Text <span class="ox-island" data-ox-island="Inline" data-ox-props="{&quot;expressions&quot;:{},&quot;props&quot;:{&quot;value&quot;:true},&quot;spreads&quot;:[]}"><script type="application/json">{"expressions":{},"props":{"value":true},"spreads":[]}</script></span> after.</p>
