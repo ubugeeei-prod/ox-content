@@ -22,7 +22,7 @@ export const STYLE_ENTRIES = /** @type {const} */ ([
   { name: "magic-links.css", sources: ["plugins/magic-links.css"] },
   {
     name: "social.css",
-    sources: ["plugins/social.css", "plugins/social-twitter-rich.css"],
+    sources: ["plugins/social.css", "plugins/social-twitter-rich.css", "plugins/reddit.css"],
   },
   {
     name: "twitter-full.css",

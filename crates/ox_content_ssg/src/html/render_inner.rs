@@ -99,6 +99,7 @@ pub(super) fn generate_html_inner(
         &page_data.content,
         &[
             "ox-tweet",
+            "ox-reddit-card",
             "ox-bluesky",
             "ox-webcontainer",
             "ox-spotify",

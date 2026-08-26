@@ -337,6 +337,7 @@ async function renderPage(
     video: options.embeds.video,
     stackBlitz: options.embeds.stackBlitz,
     twitter: options.embeds.twitter,
+    reddit: options.embeds.reddit,
     bluesky: options.embeds.bluesky,
     webContainer: options.embeds.webContainer,
     mermaid: true,

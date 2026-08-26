@@ -130,6 +130,7 @@ export function createFrameworkMarkdownOptions(options: FrameworkMarkdownOptions
       video: false,
       stackBlitz: false,
       twitter: false,
+      reddit: false,
       bluesky: false,
       webContainer: false,
     },

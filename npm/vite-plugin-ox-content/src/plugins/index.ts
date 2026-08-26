@@ -46,6 +46,13 @@ import {
   type OgpData,
   type OgpOptions,
 } from "./ogp";
+import {
+  transformRedditEmbeds,
+  parseRedditPostReference,
+  type RedditEmbedOptions,
+  type RedditPostData,
+  type RedditPostReference,
+} from "./reddit";
 import { transformMermaidStatic, mermaidClientScript, type MermaidOptions } from "./mermaid";
 import { normalizeBlockEmbedParagraphs } from "./block-structure";
 import {
@@ -81,6 +88,8 @@ export {
   fetchOgpData,
   collectOgpUrls,
   prefetchOgpData,
+  transformRedditEmbeds,
+  parseRedditPostReference,
   transformMermaidStatic,
   mermaidClientScript,
   normalizeBlockEmbedParagraphs,
@@ -105,11 +114,14 @@ export type {
   GitHubOptions,
   OgpData,
   OgpOptions,
+  RedditEmbedOptions,
+  RedditPostData,
+  RedditPostReference,
   MermaidOptions,
 };
 
 const SELF_CLOSING_EMBED_TAG =
-  /<(GitHub|OgCard|Tweet|XPost|Bluesky|Spotify|AppleMusic|SpeakerDeck|Audio|Video|StackBlitz|WebContainer|YouTube|NotByAI)((?:[^>"']|"[^"]*"|'[^']*')*?)\s*\/>(?:\s*<\/\1\s*>)?/gi;
+  /<(GitHub|OgCard|Tweet|XPost|Reddit|Bluesky|Spotify|AppleMusic|SpeakerDeck|Audio|Video|StackBlitz|WebContainer|YouTube|NotByAI)((?:[^>"']|"[^"]*"|'[^']*')*?)\s*\/>(?:\s*<\/\1\s*>)?/gi;
 
 /**
  * Custom embed tags are not HTML void elements, so a self-closing authoring
@@ -150,6 +162,7 @@ export interface TransformAllOptions {
   video?: boolean;
   stackBlitz?: boolean;
   twitter?: boolean | TwitterEmbedOptions;
+  reddit?: boolean | RedditEmbedOptions;
   bluesky?: boolean;
   webContainer?: boolean;
 }
@@ -177,6 +190,7 @@ export async function transformAllPlugins(
     video = false,
     stackBlitz = false,
     twitter = false,
+    reddit = false,
     bluesky = false,
     webContainer = false,
   } = options;
@@ -226,6 +240,7 @@ export async function transformAllPlugins(
     video,
     stackBlitz,
     twitter,
+    reddit,
     bluesky,
     webContainer,
   };
@@ -259,6 +274,7 @@ export async function transformBuiltinEmbeds(
     video?: boolean;
     stackBlitz?: boolean;
     twitter?: boolean | TwitterEmbedOptions;
+    reddit?: boolean | RedditEmbedOptions;
     bluesky?: boolean;
     webContainer?: boolean;
     /**
@@ -295,6 +311,7 @@ export async function transformBuiltinEmbeds(
     video: options.video,
     stackBlitz: options.stackBlitz,
     twitter: options.twitter,
+    reddit: options.reddit,
     bluesky: options.bluesky,
     webContainer: options.webContainer,
   };

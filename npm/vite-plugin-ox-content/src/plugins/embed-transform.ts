@@ -18,6 +18,7 @@ export const RESERVED_BUILTIN_COMPONENTS = [
   "OgCard",
   "Tweet",
   "XPost",
+  "Reddit",
   "Bluesky",
   "Spotify",
   "AppleMusic",

@@ -254,7 +254,7 @@ Generate table of contents.
 ### embeds
 
 - Type: `BuiltinEmbedOptions | false`
-- Default: `{ github: true, openGraph: true, pm: false, spotify: false, appleMusic: false, speakerDeck: false, audio: false, video: false, stackBlitz: false, twitter: false, bluesky: false, webContainer: false }`
+- Default: `{ github: true, openGraph: true, pm: false, spotify: false, appleMusic: false, speakerDeck: false, audio: false, video: false, stackBlitz: false, twitter: false, reddit: false, bluesky: false, webContainer: false }`
 
 Built-in static embeds are rendered at transform time, with no client-side JavaScript.
 Non-standard embeds are opt-in.
@@ -287,6 +287,7 @@ oxContent({
       timeout: 5000,
     },
     pm: true,
+    reddit: true,
   },
 });
 ```

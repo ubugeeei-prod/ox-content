@@ -68,6 +68,15 @@ fn static_tweet_pages_ship_rich_card_css() {
 }
 
 #[test]
+fn reddit_pages_ship_social_css() {
+    let html =
+        generate_html(&page(r#"<article class="ox-reddit-card"></article>"#), &[], &config());
+    assert!(html.contains("ox-content:css:plugin-social:start"));
+    assert!(html.contains(".ox-reddit-card__subreddit"));
+    assert!(!html.contains("ox-content:css:plugin-social-tweet-full:start"));
+}
+
+#[test]
 fn full_tweet_pages_ship_gated_full_card_css() {
     let html = generate_html(
         &page(r#"<figure class="ox-tweet ox-tweet--fetched ox-tweet--full"></figure>"#),

@@ -3,7 +3,7 @@
  */
 
 import type { ThemeConfig, ResolvedThemeConfig } from "./theme";
-import type { GitHubOptions, OgpOptions, TwitterEmbedOptions } from "./plugins";
+import type { GitHubOptions, OgpOptions, RedditEmbedOptions, TwitterEmbedOptions } from "./plugins";
 import type { ThemeComponent } from "./theme-renderer";
 
 // =============================================================================
@@ -2253,6 +2253,13 @@ export interface BuiltinEmbedOptions {
   twitter?: boolean | TwitterEmbedOptions;
 
   /**
+   * Render `<Reddit>` as a static post card.
+   * Pass `{ fetch: false }` to skip metadata fetching and render a link-only card.
+   * @default false
+   */
+  reddit?: boolean | RedditEmbedOptions;
+
+  /**
    * Render `<Bluesky>` as static cards.
    * @default false
    */
@@ -2290,6 +2297,7 @@ export interface ResolvedBuiltinEmbedOptions {
   video?: boolean;
   stackBlitz: boolean;
   twitter: TwitterEmbedOptions | false;
+  reddit?: RedditEmbedOptions | false;
   bluesky: boolean;
   webContainer: boolean;
 }

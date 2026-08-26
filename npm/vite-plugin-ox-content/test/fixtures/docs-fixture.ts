@@ -209,6 +209,7 @@ export function createDocsResolvedOptions(
       video: false,
       stackBlitz: false,
       twitter: false,
+      reddit: false,
       bluesky: false,
       webContainer: false,
     },

@@ -33,7 +33,6 @@ import { resolveTaxonomiesOptions } from "./taxonomies";
 import { resolveTypedHoverOptions } from "./typed-hover";
 import type { BuiltinPmOptions, OxContentOptions, ResolvedOptions } from "./types";
 import { resolveVersionsOptions } from "./versions";
-
 /** Resolves plugin options with defaults. */
 export function resolveOptions(options: OxContentOptions): ResolvedOptions {
   return {
@@ -126,6 +125,7 @@ export function resolveBuiltinEmbedOptions(
       video: false,
       stackBlitz: false,
       twitter: false,
+      reddit: false,
       bluesky: false,
       webContainer: false,
     };
@@ -142,6 +142,7 @@ export function resolveBuiltinEmbedOptions(
     video: options?.video === true,
     stackBlitz: options?.stackBlitz === true,
     twitter: resolveTwitterEmbedOptions(options?.twitter),
+    reddit: options?.reddit === true ? {} : options?.reddit || false,
     bluesky: options?.bluesky === true,
     webContainer: options?.webContainer === true,
   };
@@ -158,7 +159,6 @@ function resolveTwitterEmbedOptions(
   if (options === true) return {};
   return options;
 }
-
 function resolvePmOptions(
   options: boolean | BuiltinPmOptions | undefined,
 ): BuiltinPmOptions | false {

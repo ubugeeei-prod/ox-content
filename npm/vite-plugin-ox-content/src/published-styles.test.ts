@@ -29,7 +29,7 @@ const CRATE_SOURCES: Record<
 > = {
   "core.css": ["ssg.css"],
   "magic-links.css": ["plugins/magic-links.css"],
-  "social.css": ["plugins/social.css", "plugins/social-twitter-rich.css"],
+  "social.css": ["plugins/social.css", "plugins/social-twitter-rich.css", "plugins/reddit.css"],
   "twitter-full.css": ["plugins/social-tweet-full.css", "plugins/social-tweet-full-media.css"],
   "ogp.css": ["plugins/ogp.css"],
   "github.css": ["plugins/github.css"],

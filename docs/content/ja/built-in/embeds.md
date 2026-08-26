@@ -13,6 +13,7 @@ description: Markdown 中の HTML 風タグで書く GitHub / OG カード、パ
 | OG リンクカード          | `embeds.openGraph`    | `true`  | `<OgCard url="https://..." />`      |
 | パッケージマネージャタブ | `embeds.pm`           | `false` | `<pm>npm install pkg</pm>`          |
 | Twitter / X              | `embeds.twitter`      | `false` | `<Tweet />` または `<XPost />`      |
+| Reddit                   | `embeds.reddit`       | `false` | `<Reddit url="https://..." />`      |
 | Bluesky                  | `embeds.bluesky`      | `false` | `<Bluesky />`                       |
 | Spotify                  | `embeds.spotify`      | `false` | `<Spotify url="https://..." />`     |
 | Apple Music              | `embeds.appleMusic`   | `false` | `<AppleMusic url="https://..." />`  |
@@ -39,6 +40,7 @@ export default {
         openGraph: { timeout: 5000 },
         pm: { sync: true },
         twitter: true,
+        reddit: true,
         bluesky: true,
       },
     }),
@@ -266,6 +268,34 @@ oxContent({
 ダウンロードしたメディアは自分のサイトから出すので、厳しい `img-src 'self'` CSP も動き続けます。動画とアニメーション GIF は、`downloadVideo` をオンにしない限り自前のポスターと Watch on X パーマリンクを使い、生成 HTML に `video.twimg.com` は出しません。削除済みや非公開の投稿は、ビルドを落とさずリンクのみのカードに落ちます。引用投稿が欠けていても、元の投稿カードは残します。フルカード用 CSS は `.ox-tweet--full` を描画するページにだけ載ります。フルカードのクロムは MIT ライセンスの [react-tweet](https://github.com/vercel/react-tweet) と [sveltweet](https://github.com/ryoppippi/sveltweet) の見た目の契約に従います。帰属は [クレジット](../credits.md) にあります。詳細は [Twitter/X Embed](/examples/twitter-embed.md) を見てください。
 独自ホストは `@ox-content/vite-plugin/styles/social.css` を、`appearance: "full"`
 なら `styles/twitter-full.css` も import します。[コンポーネント CSS](./component-styles.md) を見てください。
+
+## Reddit
+
+`embeds.reddit` は Reddit 投稿を静的カードとして描画します。オプトインで、Reddit のウィジェットスクリプトは読みません。`reddit: true` ではビルド時に投稿 JSON を取り、Reddit が返す subreddit、作者、タイトル、本文抜粋、スコア、コメント数、日時、画像プレビュー、元リンクを出します。
+
+```ts
+oxContent({
+  embeds: {
+    reddit: true,
+  },
+});
+```
+
+```mdx
+<Reddit url="https://www.reddit.com/r/webdev/comments/abc123/release_notes/" />
+```
+
+`reddit.com/r/{subreddit}/comments/{id}/{slug}` URL と `redd.it/{id}` 共有リンクは、出力前に `https://www.reddit.com/...` へ正規化します。新しい `/r/{subreddit}/s/{share}` 形式は、URL だけでは投稿 ID が分からないため、リンクのみのカードとして受け付けます。
+
+| オプション  | 既定                            | 目的                                           |
+| ----------- | ------------------------------- | ---------------------------------------------- |
+| `fetch`     | `true`                          | ビルド時に投稿メタデータを取る。               |
+| `timeout`   | `10000`                         | メタデータ要求のタイムアウト（ミリ秒）。       |
+| `cache`     | `true`                          | 取得したメタデータをこのビルドのメモリに残す。 |
+| `cacheTTL`  | `3600000`                       | 鮮度の窓（ミリ秒）。                           |
+| `userAgent` | `ox-content-reddit-bot/1.0 ...` | Reddit JSON エンドポイントに送る User-Agent。  |
+
+`reddit: { fetch: false }` にすると、ネットワークなしのリンクカードだけを描画します。削除済み、非公開、レート制限、その他の取得不能な投稿もビルドを落とさずリンクカードへ落ちます。未対応スキーム、認証情報付き URL、Reddit 以外のホスト、投稿ではないパスは `href="#"` のエラーカードになります。
 
 ## Bluesky
 

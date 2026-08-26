@@ -1,0 +1,110 @@
+/* Reddit post cards */
+.ox-reddit-card {
+  display: block;
+  margin: 1.5rem 0;
+  border: 1px solid color-mix(in srgb, var(--octc-color-border) 74%, transparent);
+  border-radius: 8px;
+  overflow: hidden;
+  background: var(--octc-color-bg);
+}
+
+.ox-reddit-card__main,
+.ox-reddit-card__original {
+  display: block;
+  color: var(--octc-color-text);
+  text-decoration: none;
+}
+
+.ox-reddit-card__main {
+  padding: 1rem;
+}
+
+.ox-reddit-card__main:hover,
+.ox-reddit-card__original:hover {
+  text-decoration: none;
+}
+
+.ox-reddit-card__header,
+.ox-reddit-card__meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.35rem 0.75rem;
+  color: var(--octc-color-text-muted);
+}
+
+.ox-reddit-card__header {
+  margin-bottom: 0.625rem;
+  font-size: 0.75rem;
+}
+
+.ox-reddit-card__network,
+.ox-reddit-card__subreddit,
+.ox-reddit-card__source,
+.ox-reddit-card__original {
+  font-weight: 600;
+}
+
+.ox-reddit-card__network {
+  color: #ff4500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.ox-reddit-card__subreddit,
+.ox-reddit-card__source,
+.ox-reddit-card__original {
+  color: var(--octc-color-primary);
+}
+
+.ox-reddit-card__author,
+.ox-reddit-card__time {
+  color: var(--octc-color-text-muted);
+}
+
+.ox-reddit-card__title {
+  margin: 0;
+  font-size: 1rem;
+  line-height: 1.35;
+  color: var(--octc-color-text);
+}
+
+.ox-reddit-card__body {
+  margin: 0.625rem 0 0;
+  font-size: 0.875rem;
+  line-height: 1.55;
+  color: var(--octc-color-text-muted);
+}
+
+.ox-reddit-card__image {
+  display: block;
+  width: 100%;
+  height: auto;
+  max-height: 420px;
+  margin-top: 0.875rem;
+  border: 1px solid color-mix(in srgb, var(--octc-color-border) 74%, transparent);
+  border-radius: 8px;
+  object-fit: cover;
+  background: var(--octc-color-bg-alt);
+}
+
+.ox-reddit-card__meta {
+  margin-top: 0.875rem;
+  font-size: 0.75rem;
+}
+
+.ox-reddit-card__metric strong {
+  color: var(--octc-color-text);
+}
+
+.ox-reddit-card__original {
+  padding: 0.625rem 1rem;
+  border-top: 1px solid color-mix(in srgb, var(--octc-color-border) 74%, transparent);
+  background: var(--octc-color-bg-alt);
+  font-size: 0.8125rem;
+}
+
+.ox-reddit-card--fallback,
+.ox-reddit-card.error {
+  border-style: dashed;
+}

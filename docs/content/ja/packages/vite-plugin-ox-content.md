@@ -257,7 +257,7 @@ oxContent({
 ### embeds
 
 - 型: `BuiltinEmbedOptions | false`
-- 既定: `{ github: true, openGraph: true, pm: false, spotify: false, appleMusic: false, speakerDeck: false, audio: false, video: false, stackBlitz: false, twitter: false, bluesky: false, webContainer: false }`
+- 既定: `{ github: true, openGraph: true, pm: false, spotify: false, appleMusic: false, speakerDeck: false, audio: false, video: false, stackBlitz: false, twitter: false, reddit: false, bluesky: false, webContainer: false }`
 
 組み込みの静的埋め込みは変換時に描画され、クライアント側 JavaScript は使いません。非標準の埋め込みはオプトインです。既定表と描画例の全体は [埋め込み](../built-in/embeds.md) を見てください。
 
@@ -287,6 +287,7 @@ oxContent({
       timeout: 5000,
     },
     pm: true,
+    reddit: true,
   },
 });
 ```

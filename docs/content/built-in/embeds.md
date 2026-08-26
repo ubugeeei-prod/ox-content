@@ -15,6 +15,7 @@ markup; everything else is opt-in.
 | Open Graph link card | `embeds.openGraph`    | `true`  | `<OgCard url="https://..." />`      |
 | Package manager tabs | `embeds.pm`           | `false` | `<pm>npm install pkg</pm>`          |
 | Twitter/X            | `embeds.twitter`      | `false` | `<Tweet />` or `<XPost />`          |
+| Reddit               | `embeds.reddit`       | `false` | `<Reddit url="https://..." />`      |
 | Bluesky              | `embeds.bluesky`      | `false` | `<Bluesky />`                       |
 | Spotify              | `embeds.spotify`      | `false` | `<Spotify url="https://..." />`     |
 | Apple Music          | `embeds.appleMusic`   | `false` | `<AppleMusic url="https://..." />`  |
@@ -46,6 +47,7 @@ export default {
         openGraph: { timeout: 5000 },
         pm: { sync: true },
         twitter: true,
+        reddit: true,
         bluesky: true,
       },
     }),
@@ -325,6 +327,46 @@ are in [Credits](../credits.md). See
 Custom hosts import `@ox-content/vite-plugin/styles/social.css` and, for
 `appearance: "full"`, `styles/twitter-full.css`. See
 [Component styles](./component-styles.md).
+
+## Reddit
+
+`embeds.reddit` renders Reddit posts as static cards. The provider is opt-in
+and never loads Reddit's widget script. With `reddit: true`, ox-content fetches
+the post JSON at build time and includes the subreddit, author, title, body
+excerpt, score, comment count, timestamp, image preview, and original link when
+Reddit returns them:
+
+```ts
+oxContent({
+  embeds: {
+    reddit: true,
+  },
+});
+```
+
+```mdx
+<Reddit url="https://www.reddit.com/r/webdev/comments/abc123/release_notes/" />
+```
+
+`reddit.com/r/{subreddit}/comments/{id}/{slug}` URLs and `redd.it/{id}` share
+links normalize to canonical `https://www.reddit.com/...` URLs before output.
+New Reddit `/r/{subreddit}/s/{share}` links are accepted as link-only cards
+because the post id is not present in the URL without following a remote
+redirect.
+
+| Option      | Default                         | Purpose                                          |
+| ----------- | ------------------------------- | ------------------------------------------------ |
+| `fetch`     | `true`                          | Fetch post metadata at build time.               |
+| `timeout`   | `10000`                         | Metadata request timeout in milliseconds.        |
+| `cache`     | `true`                          | Cache fetched metadata in memory for this build. |
+| `cacheTTL`  | `3600000`                       | Freshness window in milliseconds.                |
+| `userAgent` | `ox-content-reddit-bot/1.0 ...` | User agent sent to Reddit's JSON endpoint.       |
+
+Set `reddit: { fetch: false }` to render a privacy-conscious link card without
+network access. Deleted, private, rate-limited, or otherwise unavailable posts
+also fall back to the link card instead of failing the build. Unsupported
+schemes, credentials, non-Reddit hosts, and non-post paths render an error card
+with `href="#"`.
 
 ## Bluesky
 

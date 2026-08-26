@@ -1,5 +1,6 @@
 import { importNapiModule } from "../napi";
 import { enrichSpeakerDeckEmbeds } from "./speaker-deck";
+import { transformRedditEmbeds, type RedditEmbedOptions } from "./reddit";
 import { transformFetchedTweets } from "./twitter";
 import type { TwitterEmbedOptions } from "./twitter";
 
@@ -48,6 +49,12 @@ export interface MediaEmbedOptions {
   twitter?: boolean | TwitterEmbedOptions;
 
   /**
+   * Render `<Reddit>` static cards with build-time metadata fetch.
+   * @default false
+   */
+  reddit?: boolean | RedditEmbedOptions;
+
+  /**
    * Render `<Bluesky>` static cards.
    * @default false
    */
@@ -71,6 +78,12 @@ export async function transformMediaEmbeds(
   let result = html;
   if (typeof options.twitter === "object") {
     result = await transformFetchedTweets(result, options.twitter);
+  }
+  if (options.reddit) {
+    result = await transformRedditEmbeds(
+      result,
+      typeof options.reddit === "object" ? options.reddit : {},
+    );
   }
   if (options.speakerDeck) {
     result = await enrichSpeakerDeckEmbeds(result);
@@ -100,6 +113,7 @@ function hasEnabledMediaEmbed(options: MediaEmbedOptions): boolean {
     options.video ||
     options.stackBlitz ||
     options.twitter ||
+    options.reddit ||
     options.bluesky ||
     options.webContainer,
   );
@@ -107,7 +121,7 @@ function hasEnabledMediaEmbed(options: MediaEmbedOptions): boolean {
 
 function hasMediaMarker(html: string): boolean {
   return (
-    /<(spotify|applemusic|speakerdeck|stackblitz|tweet|xpost|bluesky|webcontainer)[\s/>]/i.test(
+    /<(spotify|applemusic|speakerdeck|stackblitz|tweet|xpost|reddit|bluesky|webcontainer)[\s/>]/i.test(
       html,
     ) || /<(Audio|Video)[\s/>]/.test(html)
   );
