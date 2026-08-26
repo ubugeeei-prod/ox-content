@@ -1,5 +1,10 @@
 import { afterEach, describe, expect, it } from "vite-plus/test";
-import { transformAllPlugins } from ".";
+import { normalizeSelfClosingEmbeds, transformAllPlugins } from ".";
+import {
+  filterReservedBuiltinComponentNames,
+  isReservedBuiltinComponent,
+  restoreReservedBuiltinIslands,
+} from "./embed-transform";
 import { transformPm } from "./pm";
 import { resetTabGroupCounter, transformTabs } from "./tabs";
 import { transformYouTube } from "./youtube";
@@ -152,5 +157,42 @@ describe("transformPm output", () => {
     resetTabGroupCounter();
     const html = `<p>Plain prose with a <a href="/x">link</a> and no embeds.</p>`;
     expect(await transformPm(html)).toBe(html);
+  });
+});
+
+describe("reserved built-in islands (#879)", () => {
+  it("consumes a leftover closer after a self-closing built-in tag", () => {
+    expect(normalizeSelfClosingEmbeds('<Tweet id="1234567890" /></Tweet>')).toBe(
+      '<Tweet id="1234567890"></Tweet>',
+    );
+    expect(normalizeSelfClosingEmbeds('<Tweet id="1234567890" />\n</Tweet>')).toBe(
+      '<Tweet id="1234567890"></Tweet>',
+    );
+    expect(normalizeSelfClosingEmbeds('<OgCard url="https://example.com" />\n<p>after</p>')).toBe(
+      '<OgCard url="https://example.com"></OgCard>\n<p>after</p>',
+    );
+  });
+
+  it("restores reserved MDX islands to embed tags", () => {
+    const html =
+      `<div class="ox-island" data-ox-island="Tweet" data-ox-props="{&quot;props&quot;:{&quot;id&quot;:&quot;1234567890&quot;},&quot;expressions&quot;:{},&quot;spreads&quot;:[]}">` +
+      `<script type="application/json">{"props":{"id":"1234567890"},"expressions":{},"spreads":[]}</script></div>`;
+
+    expect(restoreReservedBuiltinIslands(html)).toBe('<Tweet id="1234567890"></Tweet>');
+  });
+
+  it("keeps a document-local override as an island", () => {
+    const html =
+      `<div class="ox-island" data-ox-island="Tweet" data-ox-props="{&quot;props&quot;:{&quot;id&quot;:&quot;1&quot;},&quot;expressions&quot;:{},&quot;spreads&quot;:[]}">` +
+      `<script type="application/json">{"props":{"id":"1"},"expressions":{},"spreads":[]}</script></div>`;
+
+    expect(restoreReservedBuiltinIslands(html, ["Tweet"])).toBe(html);
+    expect(isReservedBuiltinComponent("Tweet")).toBe(true);
+    expect(isReservedBuiltinComponent("Card")).toBe(false);
+    expect(filterReservedBuiltinComponentNames(["Tweet", "Card"], ["Tweet"])).toEqual([
+      "Tweet",
+      "Card",
+    ]);
+    expect(filterReservedBuiltinComponentNames(["Tweet", "Card"])).toEqual(["Card"]);
   });
 });

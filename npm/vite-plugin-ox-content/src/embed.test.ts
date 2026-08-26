@@ -11,6 +11,7 @@ import {
 import { summarizeCommitMessage } from "./plugins/github/source";
 import { transformBuiltinEmbeds } from "./plugins";
 import { collectOgpUrls, isSafeOgpUrl, transformOgp } from "./plugins/ogp";
+import { renderMarkdown } from "./render-markdown";
 import { transformMarkdown } from "./transform";
 
 function mockGitHubSourceFetch(): typeof fetch {
@@ -251,5 +252,115 @@ describe("builtin embed input hardening", () => {
     );
 
     expect(html).toMatchSnapshot();
+  });
+});
+
+const issue879Options = {
+  ssg: false as const,
+  frontmatter: false,
+  highlight: false,
+  embeds: {
+    github: false,
+    openGraph: false,
+    twitter: true,
+    bluesky: false,
+  },
+  ogViewer: false,
+  search: false,
+  toc: false,
+};
+
+describe("built-in embeds vs MDX island lowering (#879)", () => {
+  it("renders Tweet in .md without a dangling closer", async () => {
+    const result = await renderMarkdown('<Tweet id="1234567890" />', "/virtual/article.md", {
+      ...issue879Options,
+      mdx: false,
+    });
+
+    expect(result.html).toContain("ox-tweet");
+    expect(result.html).not.toMatch(/<\/Tweet>/i);
+    expect(result.html).not.toContain('data-ox-island="Tweet"');
+  });
+
+  it("renders Tweet in .mdx as a built-in embed, not an island", async () => {
+    const result = await renderMarkdown('<Tweet id="1234567890" />', "/virtual/article.mdx", {
+      ...issue879Options,
+      mdx: true,
+    });
+
+    expect(result.html).toContain("ox-tweet");
+    expect(result.html).not.toContain('data-ox-island="Tweet"');
+    expect(result.html).not.toMatch(/<\/Tweet>/i);
+  });
+
+  it("sends PascalCase OgCard to the OGP path in both .md and .mdx", async () => {
+    const originalFetch = globalThis.fetch;
+    globalThis.fetch = (async () =>
+      ({
+        ok: true,
+        text: async () =>
+          `<html><head><title>Example Domain</title><meta property="og:title" content="Example Domain"></head></html>`,
+      }) as Response) as typeof fetch;
+
+    try {
+      const ogOptions = {
+        ssg: false as const,
+        frontmatter: false,
+        highlight: false,
+        embeds: {
+          github: false,
+          openGraph: { cache: false },
+          twitter: false,
+          bluesky: false,
+        },
+        ogViewer: false,
+        search: false,
+        toc: false,
+      };
+      const source = '<OgCard url="https://example.com" />';
+
+      const markdown = await renderMarkdown(source, "/virtual/article.md", {
+        ...ogOptions,
+        mdx: false,
+      });
+      const mdx = await renderMarkdown(source, "/virtual/article.mdx", {
+        ...ogOptions,
+        mdx: true,
+      });
+
+      for (const result of [markdown, mdx]) {
+        expect(result.html).toMatch(/ox-ogp-(?:card|simple)/);
+        expect(result.html).not.toContain('data-ox-island="OgCard"');
+        expect(result.html).not.toMatch(/<\/OgCard>/i);
+      }
+    } finally {
+      globalThis.fetch = originalFetch;
+    }
+  });
+
+  it("lets a document-local import override a built-in name", async () => {
+    const result = await renderMarkdown(
+      'import Tweet from "./Tweet"\n\n<Tweet id="1234567890" />\n',
+      "/virtual/article.mdx",
+      { ...issue879Options, mdx: true },
+    );
+
+    expect(result.html).toContain('data-ox-island="Tweet"');
+    expect(result.html).not.toContain("ox-tweet");
+    expect(result.components).toContain("Tweet");
+  });
+
+  it("keeps a Tweet inside a blockquote as valid block HTML", async () => {
+    const result = await renderMarkdown(
+      '> before\n>\n> <Tweet id="1234567890" />\n>\n> after\n',
+      "/virtual/article.md",
+      { ...issue879Options, mdx: false },
+    );
+
+    expect(result.html).toContain("<blockquote>");
+    expect(result.html).toContain("ox-tweet");
+    expect(result.html).not.toMatch(/<\/Tweet>/i);
+    expect(result.html).toMatch(/<blockquote>[\s\S]*<\/blockquote>/);
+    expect(result.html).not.toMatch(/<p>[\s\S]*<article class="ox-tweet"/);
   });
 });

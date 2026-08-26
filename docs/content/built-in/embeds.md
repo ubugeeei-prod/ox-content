@@ -24,6 +24,10 @@ Tabs and YouTube embeds are not part of the `embeds` option: they are always
 processed in SSG builds and dev preview, with no configuration needed. They are
 covered [below](#tabs) because they share the same authoring model.
 
+Documented PascalCase tags such as `<Tweet>` and `<OgCard>` work in both `.md`
+and `.mdx`. A document-local import of the same name (`import Tweet from
+"./Tweet"`) overrides the built-in and stays an MDX island.
+
 Disable every built-in embed with `embeds: false`, or configure embeds
 individually:
 
