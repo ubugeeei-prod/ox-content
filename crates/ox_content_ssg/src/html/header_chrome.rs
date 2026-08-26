@@ -111,7 +111,7 @@ fn render_nav_item(item: &HeaderNavItem) -> String {
     let children: String = item.items.iter().map(render_nav_item).collect();
     if !children.is_empty() {
         return format!(
-            "        <li class=\"header-nav-item header-nav-dropdown\">\n          <button type=\"button\" aria-expanded=\"false\" aria-haspopup=\"true\">{escaped}</button>\n          <ul class=\"header-nav-menu\">\n{children}          </ul>\n        </li>\n"
+            "        <li class=\"header-nav-item header-nav-dropdown\">\n          <button type=\"button\" disabled aria-expanded=\"false\" aria-haspopup=\"true\">{escaped}</button>\n          <ul class=\"header-nav-menu\">\n{children}          </ul>\n        </li>\n"
         );
     }
     let Some(href) = item.link.as_deref().map(str::trim).filter(|href| !href.is_empty()) else {
@@ -170,19 +170,6 @@ pub(super) fn push_header_chrome_css(
 ) {
     if header_chrome_needs_css(nav_html, announcement_html, chrome, markdown_source) {
         css_sections.push(wrap_css_section("header-chrome", HEADER_CHROME_CSS));
-    }
-}
-
-pub(super) fn push_header_chrome_js(
-    all_js: &mut String,
-    nav_html: &str,
-    announcement_html: &str,
-    locale_switcher_html: &str,
-    markdown_source: bool,
-) {
-    if header_chrome_needs_js(nav_html, announcement_html, locale_switcher_html, markdown_source) {
-        all_js.push('\n');
-        all_js.push_str(HEADER_CHROME_JS);
     }
 }
 

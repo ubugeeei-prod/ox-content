@@ -63,6 +63,7 @@ export function mountCodePlay(element: Element, options: { client?: CodePlayClie
   }
   element.replaceChildren(widget);
   element.dataset.oxCodePlayMounted = "true";
+  element.removeAttribute("inert");
   bindWidget(element, payload, client);
 }
 

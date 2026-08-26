@@ -1,4 +1,10 @@
 (() => {
+  const hydratedControls =
+    ".header-nav-dropdown > button, .ox-locale-switcher > button, [data-ox-copy-markdown]";
+  document.querySelectorAll(hydratedControls).forEach((button) => {
+    if (button instanceof HTMLButtonElement) button.disabled = false;
+  });
+
   const dropdownTriggers = ".header-nav-dropdown > button, .ox-locale-switcher > button";
   const openDropdowns =
     ".header-nav-dropdown > button[aria-expanded='true'], .ox-locale-switcher > button[aria-expanded='true'], .ox-version-switcher > button[aria-expanded='true']";

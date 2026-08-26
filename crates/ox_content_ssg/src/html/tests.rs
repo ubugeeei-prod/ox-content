@@ -21,6 +21,7 @@ fn snapshot_text(value: &str) -> String {
 
 mod aside;
 mod contributors;
+mod lazy_widgets;
 mod mobile_css;
 mod mpa_navigation;
 mod navigation_state;

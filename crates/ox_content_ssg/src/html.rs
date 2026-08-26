@@ -18,6 +18,7 @@ mod mpa_navigation;
 mod nav;
 mod not_by_ai;
 mod page;
+mod page_js;
 mod pagination;
 mod reader_chrome;
 mod render;
