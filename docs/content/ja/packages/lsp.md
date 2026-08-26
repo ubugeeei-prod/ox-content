@@ -51,5 +51,5 @@ cargo run -p ox_content_lsp --bin ox-content-lsp
 - `.mdx` のパースエラーは報告しますが、式の型チェックはしません。
 - i18n 診断は JavaScript/TypeScript ソースにだけ出し、Markdown のガターには混ぜません。
 
-[エディタ拡張ロードマップ](../editor-extension-roadmap.md) と
 [アーキテクチャ](../architecture.md) も参照してください。
+英語の [Editor Extension Roadmap](/editor-extension-roadmap.md) もあります。
