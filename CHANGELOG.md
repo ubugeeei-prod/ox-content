@@ -19,6 +19,10 @@
 - highlight WebContainer examples as MDX (#914)
 - keep browser cancellation responsive (#870)
 
+### Performance
+
+- skip PR benchmarks for test-only package edits (#851)
+
 ## [3.0.0-alpha.8] - 2026-08-25
 
 ### Bug Fixes
