@@ -1,0 +1,19 @@
+.content .ox-definition-list {
+  margin: 1.25rem 0;
+}
+.content .ox-definition-list > dt {
+  font-weight: 600;
+  margin-top: 0.85em;
+  color: var(--octc-color-text);
+}
+.content .ox-definition-list > dt:first-child {
+  margin-top: 0;
+}
+.content .ox-definition-list > dd {
+  margin: 0.35em 0 0.65em 1.25em;
+  color: var(--octc-color-text-muted);
+}
+.content .ox-definition-list > dt > p,
+.content .ox-definition-list > dd > p {
+  margin: 0.25em 0;
+}

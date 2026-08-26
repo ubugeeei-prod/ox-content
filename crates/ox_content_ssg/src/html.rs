@@ -250,6 +250,9 @@ const FILE_TREE_CSS: &str =
 /// CSS styles for opt-in `{kbd:...}` keyboard keys.
 const KBD_CSS: &str = include_str!("plugins/kbd.css");
 
+/// CSS styles for opt-in definition lists.
+const DEFINITION_LIST_CSS: &str = include_str!("plugins/definition-lists.css");
+
 /// JavaScript for SSG pages.
 const SSG_JS: &str = include_str!("ssg.js");
 

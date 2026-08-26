@@ -1724,6 +1724,18 @@ export interface OxContentOptions {
   keyboardKeys?: boolean | KeyboardKeysOptions;
 
   /**
+   * Opt-in PHP Markdown Extra / mdBook-style definition lists.
+   *
+   * Passing `true` or an options object turns
+   * `Term` / `: definition` source into semantic `<dl>` markup.
+   * Disabled when omitted. Fenced, indented, and inline code are skipped.
+   * Invalid or ambiguous forms stay ordinary paragraphs or lists.
+   *
+   * @default false
+   */
+  definitionLists?: boolean | DefinitionListOptions;
+
+  /**
    * Opt-in `{link:...}` rich magic links.
    *
    * Passing `true` or an options object enables GitHub-user, alias, and
@@ -2086,6 +2098,10 @@ export interface ResolvedOptions {
   /**
    * Present after `resolveOptions`. Omitted in hand-built fixtures means off.
    */
+  definitionLists?: ResolvedDefinitionListOptions;
+  /**
+   * Present after `resolveOptions`. Omitted in hand-built fixtures means off.
+   */
   magicLinks?: ResolvedMagicLinkOptions;
   containers: ResolvedContainerOptions;
   images: ResolvedImageOptions;
@@ -2239,6 +2255,25 @@ export interface BadgeOptions {
  * Resolved inline-badge transform options.
  */
 export interface ResolvedBadgeOptions {
+  enabled: boolean;
+}
+
+/**
+ * Options for opt-in PHP Markdown Extra / mdBook-style definition lists.
+ */
+export interface DefinitionListOptions {
+  /**
+   * Enable the definition-list transform when an options object is supplied.
+   *
+   * @default true
+   */
+  enabled?: boolean;
+}
+
+/**
+ * Resolved definition-list transform options.
+ */
+export interface ResolvedDefinitionListOptions {
   enabled: boolean;
 }
 

@@ -15,6 +15,7 @@ mod code_groups;
 mod code_imports;
 mod containers;
 mod data_tables;
+mod definition_lists;
 mod edit;
 mod emoji;
 mod emoji_shortcodes;
@@ -67,6 +68,7 @@ pub struct TransformFeatureOptions {
     code_groups: Option<ResolvedCodeGroupOptions>,
     file_tree: Option<ResolvedFileTreeOptions>,
     data_tables: Option<ResolvedDataTableOptions>,
+    definition_lists: Option<definition_lists::ResolvedDefinitionLists>,
     badges: bool,
     not_by_ai: Option<not_by_ai::ResolvedNotByAi>,
     keyboard_keys: Option<keyboard_keys::ResolvedKeyboardKeys>,
@@ -137,6 +139,7 @@ impl TransformFeatureOptions {
         let includes = includes::resolve(options.includes.as_ref(), source_path);
         let file_tree = file_tree::resolve(options.file_tree.as_ref());
         let data_tables = data_tables::resolve(options.data_tables.as_ref(), source_path);
+        let definition_lists = definition_lists::resolve(options.definition_lists.as_ref());
         let badges = badges::resolve(options.badges.as_ref());
         let not_by_ai = not_by_ai::resolve(options.not_by_ai.as_ref());
         let keyboard_keys = keyboard_keys::resolve(options.keyboard_keys.as_ref());
@@ -159,6 +162,7 @@ impl TransformFeatureOptions {
             code_groups,
             file_tree,
             data_tables,
+            definition_lists,
             badges,
             not_by_ai,
             keyboard_keys,
@@ -181,6 +185,7 @@ impl TransformFeatureOptions {
             || self.code_groups.is_some()
             || self.file_tree.is_some()
             || self.data_tables.is_some()
+            || self.definition_lists.is_some()
             || self.badges
             || self.not_by_ai.is_some()
             || self.keyboard_keys.is_some()
@@ -263,6 +268,9 @@ pub fn preprocess_markdown<'a>(
     }
     if let Some(tables) = &options.data_tables {
         current = Cow::Owned(data_tables::transform(&current, tables, &mut errors));
+    }
+    if options.definition_lists.is_some() && current.contains("\n:") {
+        current = Cow::Owned(definition_lists::transform(&current));
     }
     if options.badges && current.contains("{badge:") {
         let replaced = transform_markdown_text_segments(&current, |segment, out| {

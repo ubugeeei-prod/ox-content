@@ -47,6 +47,9 @@ type NativeTransformOptions = {
     aliases?: Record<string, string>;
     style?: string;
   };
+  definitionLists?: {
+    enabled?: boolean;
+  };
   magicLinks?: {
     enabled?: boolean;
     aliases?: Record<string, { href: string; label?: string; image?: string }>;
@@ -233,6 +236,7 @@ function createNativeTransformOptions(options: ResolvedOptions): NativeTransform
           style: options.keyboardKeys.style,
         }
       : undefined,
+    definitionLists: options.definitionLists?.enabled ? { enabled: true } : undefined,
     magicLinks: options.magicLinks?.enabled
       ? {
           enabled: true,

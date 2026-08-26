@@ -75,6 +75,7 @@ fn default_theme_surfaces_stay_flat() {
         super::FILE_TREE_CSS,
         super::not_by_ai::NOT_BY_AI_CSS,
         super::KBD_CSS,
+        super::DEFINITION_LIST_CSS,
         super::header_chrome::HEADER_CHROME_CSS,
         super::heading_permalinks::HEADING_PERMALINK_CSS,
         super::reader_chrome::READER_CHROME_CSS,

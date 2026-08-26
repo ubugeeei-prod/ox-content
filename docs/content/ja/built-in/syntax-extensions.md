@@ -16,6 +16,7 @@ description: オプトインの執筆構文 — 絵文字ショートコード�
 | `magicLinks`      | `boolean` / `MagicLinkOptions`      | `false` |
 | `notByAi`         | `boolean` / `NotByAiOptions`        | `false` |
 | `keyboardKeys`    | `boolean` / `KeyboardKeysOptions`   | `false` |
+| `definitionLists` | `boolean` / `DefinitionListOptions` | `false` |
 
 ## 絵文字ショートコード
 
@@ -171,9 +172,16 @@ A**強調。**B
 オプトインの `{kbd:Ctrl+K}` と `{kbd:Cmd Shift P}` です。既定はオフです。詳細は
 [キーボードキー](./keyboard-keys.md) を見てください。
 
+## 定義リスト
+
+オプトインの `Term` / `: definition` 用語リストです。既定はオフです。詳細は
+[定義リスト](./definition-lists.md) を見てください。
+
 ## 関連
 
 - [Markdown の土台](./markdown.md) — これらの拡張が乗る既定構文。
 - [コードブロック](./code-blocks.md) — フェンス向けの注釈と取り込み構文。
 - [マジックリンク](./magic-links.md) — GitHub・エイリアス・URL の設定可能なリンク。
 - [キーボードキー](./keyboard-keys.md) — `{kbd:Ctrl+K}` ショートカット。
+- [定義リスト](./definition-lists.md) — オプトインの `Term` / `: definition`
+  用語集。
