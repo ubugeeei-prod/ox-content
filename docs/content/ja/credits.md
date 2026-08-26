@@ -34,6 +34,8 @@ Markdown 属性とリッチなソーシャル埋め込みの見た目の同等�
 - sveltweet を通して、Twitter / X full card の見た目の契約の検証に協力しました。
 - ryoppippi.com の移行中に、組み込みテーマ向けのセルフホスト Web フォント取得を
   要望しました。
+- ryoppippi.com の移行中に、使った Iconify アイコン向けのセルフホスト CSS を
+  要望しました。
 
 ## 第三者の帰属
 

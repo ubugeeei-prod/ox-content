@@ -318,6 +318,7 @@ oxContent({
 - [リダイレクトとエイリアス](./redirects.md) — オプトインの静的 HTML リダイレクト。
 - [RSS / Atom / JSON フィード](./feeds.md) — オプトインのコレクションフィード。
 - [PWA マニフェストとサービスワーカー](./pwa.md) — オプトインのマニフェストと保守的なオフラインキャッシュ（クライアント JS を追加）。
+- [セルフホスト Iconify CSS](./icons.md) — 使った Iconify アイコン向けのオプトイン CSS マスク。
 - [テーマ](../theming.md) — SSG が使うテーマシステム。
 - [JSDoc から作る API ドキュメント](../jsdoc.md) — `docs` オプションの全体。
 - [国際化](../i18n.md) — SSG の上のロケール対応サイト。

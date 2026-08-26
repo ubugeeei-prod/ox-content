@@ -59,4 +59,5 @@ HTML-escaped; fenced, indented, and inline code are not rewritten.
 ## Related
 
 - [Custom Containers](./containers.md)
+- [Keyboard Keys](./keyboard-keys.md)
 - [Built-in Features overview](../built-in-features.md)

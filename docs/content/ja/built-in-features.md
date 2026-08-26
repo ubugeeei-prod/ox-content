@@ -27,6 +27,7 @@ Ox Content は、よく使うドキュメントの挙動を既定で載せ、非
 | [ファイルツリー](./built-in/file-tree.md)                | オプトインの静的ディレクトリ図                                                 |
 | [データテーブル](./built-in/data-tables.md)              | オプトインの `csv-table` / `json-table` 静的テーブル                           |
 | [インラインバッジ](./built-in/badges.md)                 | オプトインの `{badge:tip}`                                                     |
+| [キーボードキー](./built-in/keyboard-keys.md)            | オプトインの `{kbd:Ctrl+K}` セマンティックなショートカット                     |
 | [マジックリンク](./built-in/magic-links.md)              | オプトインの `{link:@user}` / エイリアス / `label\|url` リッチリンク           |
 | [画像](./built-in/images.md)                             | 図、キャプション、遅延読み込み、安全な寸法                                     |
 | [ページリソース](./built-in/resources.md)                | ページバンドル資産とリサイズ・クロップ・形式変換                               |
@@ -59,6 +60,7 @@ Ox Content は、よく使うドキュメントの挙動を既定で載せ、非
 | [RSS / Atom / JSON フィード](./built-in/feeds.md)        | コレクションからフィードを出力                                                 |
 | [ブログ](./built-in/blog.md)                             | ページ送り索引、著者、タグ、アーカイブ、任意の外部フィード                     |
 | [PWA マニフェストとサービスワーカー](./built-in/pwa.md)  | Web アプリマニフェストと保守的なオフラインキャッシュ（クライアント JS を追加） |
+| [セルフホスト Iconify CSS](./built-in/icons.md)          | 使った Iconify アイコンのオプトイン CSS マスク（api.iconify.design なし）      |
 | [タクソノミー](./built-in/taxonomies.md)                 | タグ / カテゴリの用語ページと関連ページ                                        |
 | [ドキュメントのバージョン管理](./built-in/versioning.md) | プレフィックス、凍結スナップショット、切替 UI                                  |
 | [チーム / メンバー](./built-in/team.md)                  | `layout: team` の静的カード                                                    |
@@ -83,7 +85,7 @@ Ox Content は、よく使うドキュメントの挙動を既定で載せ、非
 | 構文ハイライト       | `highlight`                                                                                                   | `false`            | [コードブロック](./built-in/code-blocks.md)              |
 | コード執筆           | `codeAnnotations`, `codeImports`                                                                              | `false`            | [コードブロック](./built-in/code-blocks.md)              |
 | コードグループ       | `codeGroups`                                                                                                  | `false`            | [コードグループ](./built-in/code-groups.md)              |
-| 追加構文             | `wikiLinks`, `emojiShortcodes`, `attrs`, `cjkEmphasis`, `containers`, `badges`, `magicLinks`                  | `false`            | [構文拡張](./built-in/syntax-extensions.md)              |
+| 追加構文             | `wikiLinks`, `emojiShortcodes`, `attrs`, `cjkEmphasis`, `containers`, `badges`, `keyboardKeys`, `magicLinks`  | `false`            | [構文拡張](./built-in/syntax-extensions.md)              |
 | ファイル取り込み     | `includes`                                                                                                    | `false`            | [ファイル取り込み](./built-in/includes.md)               |
 | カード               | `cards`                                                                                                       | `false`            | [カード](./built-in/cards.md)                            |
 | 手順リスト           | `steps`                                                                                                       | `false`            | [手順リスト](./built-in/steps.md)                        |
@@ -116,6 +118,7 @@ Ox Content は、よく使うドキュメントの挙動を既定で載せ、非
 | フィード             | `feeds`                                                                                                       | `false`            | [RSS / Atom / JSON フィード](./built-in/feeds.md)        |
 | ブログ               | `blog` / `ssg.blog`                                                                                           | `false`            | [ブログ](./built-in/blog.md)                             |
 | PWA                  | `pwa`                                                                                                         | `false`            | [PWA マニフェストとサービスワーカー](./built-in/pwa.md)  |
+| セルフホストアイコン | `icons`                                                                                                       | `false`            | [セルフホスト Iconify CSS](./built-in/icons.md)          |
 | ドキュメント版       | `versions`                                                                                                    | `false`            | [ドキュメントのバージョン管理](./built-in/versioning.md) |
 | タクソノミー         | `taxonomies`                                                                                                  | `false`            | [タクソノミー](./built-in/taxonomies.md)                 |
 | チームページ         | `ssg.team`                                                                                                    | `false`            | [チーム / メンバー](./built-in/team.md)                  |

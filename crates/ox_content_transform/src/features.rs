@@ -22,6 +22,7 @@ mod escape;
 mod file_tree;
 mod images;
 mod includes;
+mod keyboard_keys;
 mod magic;
 mod math;
 mod option_resolve;
@@ -66,6 +67,7 @@ pub struct TransformFeatureOptions {
     file_tree: Option<ResolvedFileTreeOptions>,
     data_tables: Option<ResolvedDataTableOptions>,
     badges: bool,
+    keyboard_keys: Option<keyboard_keys::ResolvedKeyboardKeys>,
     magic_links: Option<ResolvedMagicLinks>,
     images: Option<ResolvedImageOptions>,
     math: bool,
@@ -134,6 +136,7 @@ impl TransformFeatureOptions {
         let file_tree = file_tree::resolve(options.file_tree.as_ref());
         let data_tables = data_tables::resolve(options.data_tables.as_ref(), source_path);
         let badges = badges::resolve(options.badges.as_ref());
+        let keyboard_keys = keyboard_keys::resolve(options.keyboard_keys.as_ref());
         let magic_links = magic::resolve(options.magic_links.as_ref());
         let images = images::resolve(options.images.as_ref(), attributes);
         let math = math::resolve(options.math.as_ref());
@@ -154,6 +157,7 @@ impl TransformFeatureOptions {
             file_tree,
             data_tables,
             badges,
+            keyboard_keys,
             magic_links,
             images,
             math,
@@ -174,6 +178,7 @@ impl TransformFeatureOptions {
             || self.file_tree.is_some()
             || self.data_tables.is_some()
             || self.badges
+            || self.keyboard_keys.is_some()
             || self.magic_links.is_some()
             || self.images.is_some()
             || self.math
@@ -262,6 +267,7 @@ pub fn preprocess_markdown<'a>(
             current = Cow::Owned(replaced);
         }
     }
+    keyboard_keys::apply(&mut current, options.keyboard_keys.as_ref());
     if let Some(magic_links) = &options.magic_links
         && current.contains("{link:")
         && let Some(replaced) = magic::transform(&current, magic_links)

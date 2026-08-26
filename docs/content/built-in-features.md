@@ -31,6 +31,7 @@ inline**.
 | [File Tree](./built-in/file-tree.md)                        | Opt-in static `file-tree` directory diagrams                                |
 | [Data Tables](./built-in/data-tables.md)                    | Opt-in static tables from `csv-table` / `json-table` fences                 |
 | [Inline Badges](./built-in/badges.md)                       | Opt-in `{badge:tip}` status labels in headings or prose                     |
+| [Keyboard Keys](./built-in/keyboard-keys.md)                | Opt-in `{kbd:Ctrl+K}` semantic shortcut markup                              |
 | [Magic Links](./built-in/magic-links.md)                    | Opt-in `{link:@user}` / alias / `label\|url` rich links with avatars        |
 | [Images](./built-in/images.md)                              | Opt-in figures, captions, lazy loading, and safe dimensions                 |
 | [Page resources](./built-in/resources.md)                   | Opt-in page-bundle assets with resize, crop, and format transforms          |
@@ -63,6 +64,7 @@ inline**.
 | [RSS / Atom / JSON feeds](./built-in/feeds.md)              | Opt-in collection feeds written next to generated HTML                      |
 | [Blog](./built-in/blog.md)                                  | Opt-in paginated index, authors, tags, archive, and optional external feeds |
 | [PWA manifest and service worker](./built-in/pwa.md)        | Opt-in web app manifest and conservative offline cache (adds client JS)     |
+| [Self-hosted Iconify CSS](./built-in/icons.md)              | Opt-in CSS masks for used Iconify icons (no api.iconify.design)             |
 | [Taxonomies](./built-in/taxonomies.md)                      | Opt-in tag/category term pages and related-page lists                       |
 | [Documentation versioning](./built-in/versioning.md)        | Opt-in prefixes, frozen snapshots, and a header version dropdown            |
 | [Team / members page](./built-in/team.md)                   | Opt-in static member cards on `layout: team` pages                          |
@@ -87,7 +89,7 @@ inline**.
 | Syntax highlight   | `highlight`                                                                                                   | `false`              | [Code Blocks](./built-in/code-blocks.md)                    |
 | Code authoring     | `codeAnnotations`, `codeImports`                                                                              | `false`              | [Code Blocks](./built-in/code-blocks.md)                    |
 | Code groups        | `codeGroups`                                                                                                  | `false`              | [Code Groups](./built-in/code-groups.md)                    |
-| Extra syntax       | `wikiLinks`, `emojiShortcodes`, `attrs`, `cjkEmphasis`, `containers`, `badges`, `magicLinks`                  | `false`              | [Syntax Extensions](./built-in/syntax-extensions.md)        |
+| Extra syntax       | `wikiLinks`, `emojiShortcodes`, `attrs`, `cjkEmphasis`, `containers`, `badges`, `keyboardKeys`, `magicLinks`  | `false`              | [Syntax Extensions](./built-in/syntax-extensions.md)        |
 | File includes      | `includes`                                                                                                    | `false`              | [File Includes](./built-in/includes.md)                     |
 | Cards              | `cards`                                                                                                       | `false`              | [Cards](./built-in/cards.md)                                |
 | Step lists         | `steps`                                                                                                       | `false`              | [Step Lists](./built-in/steps.md)                           |
@@ -120,6 +122,7 @@ inline**.
 | Collection feeds   | `feeds`                                                                                                       | `false`              | [RSS / Atom / JSON feeds](./built-in/feeds.md)              |
 | Blog               | `blog` / `ssg.blog`                                                                                           | `false`              | [Blog](./built-in/blog.md)                                  |
 | PWA                | `pwa`                                                                                                         | `false`              | [PWA manifest and service worker](./built-in/pwa.md)        |
+| Self-hosted icons  | `icons`                                                                                                       | `false`              | [Self-hosted Iconify CSS](./built-in/icons.md)              |
 | Taxonomies         | `taxonomies`                                                                                                  | `false`              | [Taxonomies](./built-in/taxonomies.md)                      |
 | Versioning         | `versions`                                                                                                    | `false`              | [Documentation versioning](./built-in/versioning.md)        |
 | Team page          | `ssg.team`                                                                                                    | `false`              | [Team / members page](./built-in/team.md)                   |

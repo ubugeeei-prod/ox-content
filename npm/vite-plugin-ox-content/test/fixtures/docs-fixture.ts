@@ -141,6 +141,7 @@ export function createDocsResolvedOptions(
     emojiShortcodes: { enabled: false, custom: {} },
     attrs: { enabled: false },
     badges: { enabled: false },
+    keyboardKeys: { enabled: false, aliases: {}, style: "words" },
     containers: { enabled: false, types: {} },
     images: { enabled: false, lazy: true },
     codeImports: { enabled: false },
