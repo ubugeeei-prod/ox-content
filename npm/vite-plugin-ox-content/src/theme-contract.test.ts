@@ -245,6 +245,39 @@ describe("theme package contract", () => {
     expect(page).toMatch(/must not hard-code/i);
   });
 
+  it("locks the default theme quality token contract", () => {
+    const css = readFileSync(join(repoRoot, "crates/ox_content_ssg/src/ssg.css"), "utf8");
+    for (const token of [
+      "--octc-focus-ring:",
+      "--octc-focus-offset:",
+      "--octc-motion-base:",
+      "--octc-code-pad-inline:",
+      "--octc-table-cell-pad-inline:",
+      "--octc-touch-target:",
+      "--octc-color-on-primary:",
+    ]) {
+      expect(css, token).toContain(token);
+    }
+    expect(css).toContain(":focus-visible {\n  outline: var(--octc-focus-ring);");
+    expect(css).toMatch(
+      /@media \(prefers-reduced-motion: no-preference\) \{\n  html \{\n    scroll-behavior: smooth;/,
+    );
+    expect(css).toMatch(/@media \(prefers-reduced-motion: reduce\)/);
+  });
+
+  it("documents default theme quality and remaining follow-ups", () => {
+    for (const localePath of [
+      "docs/content/theme-presets.md",
+      "docs/content/ja/theme-presets.md",
+    ]) {
+      const page = readFileSync(join(repoRoot, localePath), "utf8");
+      expect(page, localePath).toMatch(/## Default theme quality|## デフォルトテーマの品質/);
+      expect(page, localePath).toMatch(/--octc-focus-ring/);
+      expect(page, localePath).toMatch(/prefers-reduced-motion/);
+      expect(page, localePath).toMatch(/out of scope|対象外/i);
+    }
+  });
+
   it("keeps color scheme previews synchronized with the palette catalog", () => {
     const expectedIds = paletteCatalog.palettes.map((palette) => palette.id);
     const packageIds = schemes

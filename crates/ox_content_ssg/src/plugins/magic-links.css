@@ -16,8 +16,8 @@
   border-color: color-mix(in srgb, var(--octc-color-primary) 45%, var(--octc-color-border));
 }
 .content .ox-magic-link:focus-visible {
-  outline: 2px solid color-mix(in srgb, var(--octc-color-primary) 72%, transparent);
-  outline-offset: 2px;
+  outline: var(--octc-focus-ring);
+  outline-offset: var(--octc-focus-offset);
 }
 .content .ox-magic-link__image {
   width: 1em;
