@@ -427,6 +427,16 @@ export interface JsCodeBlockLintOptions {
   trailingSpaces?: boolean
 }
 
+/** Opt-in `::: code-group` fence groups. */
+export interface JsCodeGroupOptions {
+  /**
+   * Enable VitePress-style `::: code-group` rewriting.
+   *
+   * Default: `false`.
+   */
+  enabled?: boolean
+}
+
 /** Code import / snippet injection options. */
 export interface JsCodeImportOptions {
   /**
@@ -2224,6 +2234,12 @@ export interface JsTransformOptions {
    * Default: disabled.
    */
   steps?: JsStepsOptions
+  /**
+   * Opt-in `::: code-group` fence groups.
+   *
+   * Default: disabled.
+   */
+  codeGroups?: JsCodeGroupOptions
   /**
    * Opt-in `{badge:variant}` inline badges.
    *

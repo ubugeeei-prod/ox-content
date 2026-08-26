@@ -30,6 +30,7 @@ Ox Content は、よく使うドキュメントの挙動を既定で載せ、非
 | [画像](./built-in/images.md)                             | 図、キャプション、遅延読み込み、安全な寸法                                     |
 | [ページリソース](./built-in/resources.md)                | ページバンドル資産とリサイズ・クロップ・形式変換                               |
 | [コードブロック](./built-in/code-blocks.md)              | ハイライト、注釈、ソース取り込み                                               |
+| [コードグループ](./built-in/code-groups.md)              | オプトインの VitePress 風 `::: code-group` フェンスタブ                        |
 | [埋め込み](./built-in/embeds.md)                         | GitHub / OG カード、パッケージマネージャタブ、YouTube、SNS                     |
 | [Mermaid](./built-in/mermaid.md)                         | フェンスを静的 SVG に描画                                                      |
 | [数式](./built-in/math.md)                               | オプトインの `$…$` / `$$…$$`。任意依存の KaTeX で組版                          |
@@ -80,6 +81,7 @@ Ox Content は、よく使うドキュメントの挙動を既定で載せ、非
 | オプトイン埋め込み   | `embeds.pm`, `embeds.twitter`, `embeds.bluesky`, `embeds.spotify`, `embeds.stackBlitz`, `embeds.webContainer` | `false`            | [埋め込み](./built-in/embeds.md)                         |
 | 構文ハイライト       | `highlight`                                                                                                   | `false`            | [コードブロック](./built-in/code-blocks.md)              |
 | コード執筆           | `codeAnnotations`, `codeImports`                                                                              | `false`            | [コードブロック](./built-in/code-blocks.md)              |
+| コードグループ       | `codeGroups`                                                                                                  | `false`            | [コードグループ](./built-in/code-groups.md)              |
 | 追加構文             | `wikiLinks`, `emojiShortcodes`, `attrs`, `cjkEmphasis`, `containers`, `badges`, `magicLinks`                  | `false`            | [構文拡張](./built-in/syntax-extensions.md)              |
 | ファイル取り込み     | `includes`                                                                                                    | `false`            | [ファイル取り込み](./built-in/includes.md)               |
 | カード               | `cards`                                                                                                       | `false`            | [カード](./built-in/cards.md)                            |

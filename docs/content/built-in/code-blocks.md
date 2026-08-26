@@ -19,6 +19,7 @@ On-demand **Run** / **Typecheck** for samples is a separate package,
 | `highlight`       | `boolean`                            | `false` |
 | `codeAnnotations` | `boolean` / `CodeAnnotationsOptions` | `false` |
 | `codeImports`     | `boolean` / `CodeImportOptions`      | `false` |
+| `codeGroups`      | `boolean` / `CodeGroupOptions`       | `false` |
 
 ## Syntax Highlighting
 
@@ -267,8 +268,15 @@ every page that imports it, and stale docs snippets stop being possible.
 syntax with inline code (as this page does) when you need to show it
 literally.
 
+## Code Groups
+
+For adjacent JS/TS/shell alternatives, opt in to `codeGroups` and wrap the
+fences in `::: code-group` instead of hand-writing `<tabs>`. Titles come
+from ` ```ts [label] ` or fence meta. See [Code Groups](./code-groups.md).
+
 ## Related
 
+- [Code Groups](./code-groups.md) — VitePress-style grouped fences.
 - [Quality Checks](./quality-checks.md) — lint, type-check, and test the code
   blocks themselves.
 - [Typed Hover](./typed-hover.md) — build-time TypeScript hover overlays on

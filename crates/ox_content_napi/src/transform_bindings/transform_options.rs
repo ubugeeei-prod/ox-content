@@ -3,10 +3,10 @@ use napi_derive::napi;
 use ox_content_transform::{MathOptions, TransformOptions};
 
 use super::{
-    JsAttrsOptions, JsBadgeOptions, JsCardOptions, JsCodeImportOptions, JsContainerOptions,
-    JsEditThisPageOptions, JsEmojiShortcodeOptions, JsFileTreeOptions, JsImageOptions,
-    JsIncludeOptions, JsMagicLinkOptions, JsMathOptions, JsSanitizeOptions, JsStepsOptions,
-    JsWikiLinkOptions,
+    JsAttrsOptions, JsBadgeOptions, JsCardOptions, JsCodeGroupOptions, JsCodeImportOptions,
+    JsContainerOptions, JsEditThisPageOptions, JsEmojiShortcodeOptions, JsFileTreeOptions,
+    JsImageOptions, JsIncludeOptions, JsMagicLinkOptions, JsMathOptions, JsSanitizeOptions,
+    JsStepsOptions, JsWikiLinkOptions,
 };
 
 /// Transform options for JavaScript.
@@ -188,6 +188,11 @@ pub struct JsTransformOptions {
     /// Default: disabled.
     pub steps: Option<JsStepsOptions>,
 
+    /// Opt-in `::: code-group` fence groups.
+    ///
+    /// Default: disabled.
+    pub code_groups: Option<JsCodeGroupOptions>,
+
     /// Opt-in `{badge:variant}` inline badges.
     ///
     /// Default: disabled.
@@ -253,6 +258,7 @@ impl From<JsTransformOptions> for TransformOptions {
             containers: value.containers.map(Into::into),
             includes: value.includes.map(Into::into),
             steps: value.steps.map(Into::into),
+            code_groups: value.code_groups.map(Into::into),
             badges: value.badges.map(Into::into),
             magic_links: value.magic_links.map(Into::into),
             images: value.images.map(Into::into),

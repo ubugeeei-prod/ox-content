@@ -1742,6 +1742,17 @@ export interface OxContentOptions {
   steps?: boolean | StepsOptions;
 
   /**
+   * Opt-in VitePress-style `::: code-group` fence groups.
+   *
+   * Passing `true` or `{}` enables rewriting labeled fences into the
+   * existing no-JS tab widget. Omitted or `false` leaves the source on
+   * the normal Markdown/container path.
+   *
+   * @default false
+   */
+  codeGroups?: boolean | CodeGroupOptions;
+
+  /**
    * Opt-in static directory trees from `file-tree` fences.
    *
    * Passing `true` or `{}` enables the transform. Names are escaped and never
@@ -1983,6 +1994,10 @@ export interface ResolvedOptions {
   includes: ResolvedIncludeOptions;
   cards: ResolvedCardOptions;
   steps: ResolvedStepsOptions;
+  /**
+   * Present after `resolveOptions`. Omitted in hand-built fixtures means off.
+   */
+  codeGroups?: ResolvedCodeGroupOptions;
   fileTree: ResolvedFileTreeOptions;
   sanitize: ResolvedSanitizeOptions;
   editThisPage: ResolvedEditThisPageOptions;
@@ -2508,6 +2523,25 @@ export interface StepsOptions {
  * Resolved step-list transform options.
  */
 export interface ResolvedStepsOptions {
+  enabled: boolean;
+}
+
+/**
+ * Options for opt-in `::: code-group` fence groups.
+ */
+export interface CodeGroupOptions {
+  /**
+   * Enable the code-group transform when an options object is supplied.
+   *
+   * @default true
+   */
+  enabled?: boolean;
+}
+
+/**
+ * Resolved code-group transform options.
+ */
+export interface ResolvedCodeGroupOptions {
   enabled: boolean;
 }
 
