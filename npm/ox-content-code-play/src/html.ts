@@ -1,6 +1,7 @@
 import { resolveLanguage } from "./catalog";
 import { DEFAULT_ENDPOINTS, DEFAULT_VIEWERS } from "./config";
 import { decodeHtml, escapeAttribute } from "./escape";
+import { parseCodePlayAttributes } from "./markdown";
 import { payloadTypecheckEnabled } from "./payload-factory";
 import type { PlaygroundEndpoints, PlayPayload } from "./types";
 
@@ -65,22 +66,19 @@ function upgradeCodePlayTags(html: string, options: HtmlEnhanceOptions): string 
     const code = decodeHtml(body).replace(/^\n/, "").replace(/\n$/, "");
     const definition = resolveLanguage(language);
     const endpoints = options.endpoints ?? DEFAULT_ENDPOINTS;
+    const playOptions = parseCodePlayAttributes(attrs);
     const payload = options.encodePayload({
       language: definition?.id ?? language,
       code,
+      title: playOptions.title,
       capabilities: {
         execute: true,
-        typecheck: payloadTypecheckEnabled(
-          /\btypecheck\b/i.test(attrs),
-          undefined,
-          definition,
-          endpoints,
-        ),
+        typecheck: payloadTypecheckEnabled(playOptions.typecheck, undefined, definition, endpoints),
       },
-      config: {},
-      viewers: { ...DEFAULT_VIEWERS },
-      ui: "default",
-      timeoutMs: 10_000,
+      config: { ...definition?.defaultConfig, ...playOptions.config },
+      viewers: { ...DEFAULT_VIEWERS, ...playOptions.viewers },
+      ui: playOptions.ui ?? "default",
+      timeoutMs: playOptions.timeoutMs ?? 10_000,
       endpoints,
     });
     return wrapWidget(

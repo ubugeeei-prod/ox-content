@@ -37,7 +37,7 @@ export interface TimingReport {
   phases: TimingPhase[];
 }
 
-export type RunStatus = "ok" | "error" | "timeout" | "cancelled" | "unsupported";
+export type RunStatus = "ok" | "error" | "offline" | "timeout" | "cancelled" | "unsupported";
 
 export interface Diagnostic {
   message: string;
@@ -67,6 +67,19 @@ export interface RunResult extends AdapterResult {
   stdout: string;
   /** Concatenated `stderr` chunks from `stdio`. */
   stderr: string;
+}
+
+export type RunAction = "execute" | "typecheck";
+
+export type RunActionPhase = "idle" | "running" | "result" | "error" | "offline";
+
+export interface RunActionState {
+  phase: RunActionPhase;
+  action?: RunAction;
+  result?: RunResult;
+  message?: string;
+  startedAtMs?: number;
+  finishedAtMs?: number;
 }
 
 export type ConfigFieldType = "string" | "boolean" | "select" | "number";
@@ -172,6 +185,7 @@ export interface SessionInput {
 export interface PlayPayload {
   language: string;
   code: string;
+  title?: string;
   capabilities: LanguageCapabilities;
   config: Record<string, unknown>;
   /** Per-language executor endpoint for remote language backends. */

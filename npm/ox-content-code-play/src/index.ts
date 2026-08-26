@@ -16,7 +16,15 @@ export { joinStream, selectStream, withStdioText } from "./stdio";
 export { createFetchTransport, createMemoryTransport } from "./transport";
 export { bootCodePlay } from "./boot";
 export { hydrateCodePlay, mountCodePlay } from "./hydrate";
-export { renderPlayUi } from "./ui";
+export {
+  errorRunActionState,
+  idleRunActionState,
+  readPlayPayload,
+  resultRunActionState,
+  runningRunActionState,
+  runPlayAction,
+} from "./hydrate-action";
+export { renderPlayUi, renderRunStatusText } from "./ui";
 export {
   renderConfigHtml,
   renderDiagnosticsHtml,
@@ -39,7 +47,11 @@ export type {
   LanguageEnable,
   PlayPayload,
   Provenance,
+  RunAction,
+  RunActionPhase,
+  RunActionState,
   RunResult,
+  RunStatus,
   SessionInput,
   StdioEvent,
   TimingReport,

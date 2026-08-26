@@ -40,6 +40,8 @@ export default {
 
 このプラグインは、パッケージインストールの上に乗る二段目のオプトインです。
 `play` のないフェンス、または一覧にない言語は、普通のハイライト付きブロックのままです。
+Code Play ブロックがないページには hydrate スクリプトは入りません。
+ビルド全体で Code Play を使わない場合は `ox-code-play.js` も出力されません。
 
 ## プラグインオプション
 
@@ -64,22 +66,31 @@ export default {
 フェンスに `play` を付けます。言語が対応しているときは `typecheck` も足せます。
 
 ````md
-```ts play
+```ts play typecheck play-title="Strict TypeScript" play-strict=false play-target=ESNext
 const n: number = 1;
 console.log(n);
 ```
 
-```rust play typecheck
+```rust play typecheck play-title="Release-mode Rust" play-mode=release
 fn main() {
     println!("ok");
 }
 ```
 ````
 
+`play-title` はウィジェットのラベルです。`play-compact` / `play-headless` は
+そのサンプルだけ UI プリセットを変え、`play-timeout=2500` はタイムアウトを変えます。
+`play-viewers=stdio,stderr,-timing` でビューアーを切り替えられます。
+`play-<config-key>=...` は言語ごとの config 値なので、TypeScript は
+`play-strict=false`、Rust は `play-edition=2021`、Go は `play-withVet=false`
+のように書けます。
+
 HTML / MDX 形式:
 
 ```html
-<CodePlay lang="python"> print("hello") </CodePlay>
+<CodePlay lang="ts" title="Loose TS" typecheck ui="compact" config-strict="false">
+  const n = 1;
+</CodePlay>
 ```
 
 ## Headless API
@@ -111,18 +122,23 @@ session.config; // editable language config
 テストでは `transport`（たとえば `createMemoryTransport`）を注入し、
 CI がライブのプレイグラウンドに触れないようにします。
 
-| フィールド        | 意味                                                        |
-| ----------------- | ----------------------------------------------------------- |
-| `run.status`      | `ok` / `error` / `timeout` / `cancelled` / `unsupported`    |
-| `run.stdio`       | タイムスタンプ付きの `stdin` / `stdout` / `stderr` イベント |
-| `run.stdout`      | 連結した stdout テキスト                                    |
-| `run.stderr`      | 連結した stderr テキスト                                    |
-| `run.diagnostics` | 任意の行 / 列付きのコンパイラ / ランタイムメッセージ        |
-| `run.provenance`  | どこでコンパイルし、どこで実行したか                        |
-| `run.timing`      | フェーズ時間と `totalMs`                                    |
-| `run.preview`     | バックエンドが UI のときのフレームワーク iframe `srcdoc`    |
-| `session.stdout`  | `lastResult.stdout` と同じ                                  |
-| `session.stderr`  | `lastResult.stderr` と同じ                                  |
+| フィールド        | 意味                                                                 |
+| ----------------- | -------------------------------------------------------------------- |
+| `run.status`      | `ok` / `error` / `offline` / `timeout` / `cancelled` / `unsupported` |
+| `run.stdio`       | タイムスタンプ付きの `stdin` / `stdout` / `stderr` イベント          |
+| `run.stdout`      | 連結した stdout テキスト                                             |
+| `run.stderr`      | 連結した stderr テキスト                                             |
+| `run.diagnostics` | 任意の行 / 列付きのコンパイラ / ランタイムメッセージ                 |
+| `run.provenance`  | どこでコンパイルし、どこで実行したか                                 |
+| `run.timing`      | フェーズ時間と `totalMs`                                             |
+| `run.preview`     | バックエンドが UI のときのフレームワーク iframe `srcdoc`             |
+| `session.stdout`  | `lastResult.stdout` と同じ                                           |
+| `session.stderr`  | `lastResult.stderr` と同じ                                           |
+
+独自 UI では、export されている `RunActionState` ヘルパー
+`idleRunActionState()`、`runningRunActionState(action)`、
+`resultRunActionState(action, result)` を使えます。transport や CORS の失敗は
+`status: "offline"` になり、コンパイル / ランタイムエラーとは別に扱えます。
 
 ## UI
 
@@ -132,7 +148,8 @@ CI がライブのプレイグラウンドに触れないようにします。
 | `compact`  | Run / type-check と stdio、stderr                               |
 | `headless` | DOM クロムなし。セッション API を使う                           |
 
-ビューアーは `viewers` で個別に切り替えられます。
+ビューアーは `viewers` で個別に切り替えられます。hydrate 後のウィジェットは
+polite なステータス領域、`aria-busy`、tab panel、矢印キーによるタブ移動を提供します。
 
 ## 言語
 

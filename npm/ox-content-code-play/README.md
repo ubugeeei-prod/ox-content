@@ -4,6 +4,7 @@ Opt-in Code Play plugin for Ox Content. It runs documentation samples on demand
 and exposes a headless API plus Headless / preset UI.
 
 Nothing runs until you install this package **and** enable specific languages.
+Pages without matching `play` blocks do not load `ox-code-play.js`.
 
 ## Install
 
@@ -33,20 +34,27 @@ export default {
 ## Authoring
 
 ````md
-```ts play
+```ts play typecheck play-title="Strict TypeScript" play-strict=false play-target=ESNext
 const n: number = 1;
 console.log(n);
 ```
 
-```rust play typecheck
+```rust play typecheck play-title="Release-mode Rust" play-mode=release
 fn main() {
     println!("ok");
 }
 ```
 ````
 
+Use `play-title`, `play-compact` / `play-headless`, `play-timeout=2500`,
+`play-viewers=stdio,stderr,-timing`, and `play-<config-key>=...` for one
+sample. The MDX-style `<CodePlay>` tag accepts `title`, `ui`, `timeout`,
+`viewers`, and `config-*` attributes.
+
 ```html
-<CodePlay lang="python"> print("hello") </CodePlay>
+<CodePlay lang="ts" title="Loose TS" typecheck ui="compact" config-strict="false">
+  const n = 1;
+</CodePlay>
 ```
 
 ## Headless API
@@ -65,6 +73,10 @@ run.stderr;
 run.provenance;
 run.timing;
 ```
+
+`run.status` is `ok`, `error`, `offline`, `timeout`, `cancelled`, or
+`unsupported`. Custom UIs can use the exported `RunActionState` helpers to
+model idle, running, result, error, and offline states.
 
 ## Security
 

@@ -1,11 +1,24 @@
 import { createCodePlay, type CodePlayClient } from "./client";
-import { readPlayPayload, runPlayAction } from "./hydrate-action";
+import {
+  errorRunActionState,
+  readPlayPayload,
+  resultRunActionState,
+  runningRunActionState,
+  runPlayAction,
+} from "./hydrate-action";
 import { decodePayload, encodePayload } from "./payload";
 import { errorMessage, errorResult } from "./result";
 import { CODE_PLAY_STYLES } from "./styles";
 import { JS_SANDBOX_FLAGS } from "./javascript-sandbox";
-import { applyActionBusy, renderPlayUi } from "./ui";
-import type { LanguageEnable, LanguageEnableOptions, PlayPayload, RunResult } from "./types";
+import { applyActionBusy, renderPlayUi, renderRunStatusText } from "./ui";
+import type {
+  LanguageEnable,
+  LanguageEnableOptions,
+  PlayPayload,
+  RunAction,
+  RunActionState,
+  RunResult,
+} from "./types";
 import {
   renderDiagnosticsHtml,
   renderProvenanceHtml,
@@ -20,6 +33,7 @@ export interface HydrateOptions {
 }
 
 const STYLE_ID = "ox-code-play-styles";
+let widgetId = 0;
 
 export function hydrateCodePlay(
   root: ParentNode = defaultRoot(),
@@ -65,6 +79,7 @@ export function mountCodePlay(element: Element, options: { client?: CodePlayClie
   element.dataset.oxCodePlayMounted = "true";
   element.removeAttribute("inert");
   bindWidget(element, payload, client);
+  prepareA11y(element);
 }
 
 function bindWidget(element: HTMLElement, payload: PlayPayload, client: CodePlayClient): void {
@@ -80,6 +95,11 @@ function bindWidget(element: HTMLElement, payload: PlayPayload, client: CodePlay
   runButton?.addEventListener("click", () => void run("execute"));
   checkButton?.addEventListener("click", () => void run("typecheck"));
   cancelButton?.addEventListener("click", () => session.cancel());
+  element.addEventListener("keydown", (event) => {
+    if (event.target instanceof HTMLElement && event.target.matches('[role="tab"]')) {
+      handleTabKeydown(element, event);
+    }
+  });
   element.addEventListener("click", (event) => {
     const target = event.target;
     if (!(target instanceof HTMLElement)) {
@@ -99,17 +119,31 @@ function bindWidget(element: HTMLElement, payload: PlayPayload, client: CodePlay
     current = { ...current, config: session.config };
   });
 
-  async function run(action: "execute" | "typecheck"): Promise<void> {
+  async function run(action: RunAction): Promise<void> {
     await runPlayAction({
       action: () => (action === "typecheck" ? session.typecheck() : session.run()),
-      setBusy: (busy) => applyActionBusy(element, busy),
-      onResult: (result) => paintResult(element, current, result),
-      onError: (error) => paintResult(element, current, errorResult(errorMessage(error))),
+      setBusy: (busy) => {
+        applyActionBusy(element, busy);
+        if (busy) {
+          paintRunState(element, runningRunActionState(action));
+        }
+      },
+      onResult: (result) => paintResult(element, current, result, action),
+      onError: (error) => {
+        paintRunState(element, errorRunActionState(action, error));
+        paintResult(element, current, errorResult(errorMessage(error)), action);
+      },
     });
   }
 }
 
-function paintResult(element: HTMLElement, _payload: PlayPayload, result: RunResult): void {
+function paintResult(
+  element: HTMLElement,
+  _payload: PlayPayload,
+  result: RunResult,
+  action: RunAction,
+): void {
+  paintRunState(element, resultRunActionState(action, result));
   const stdio = element.querySelector('[data-panel="stdio"]');
   if (stdio) {
     stdio.innerHTML = `${renderDiagnosticsHtml(result)}${renderStdioHtml(result.stdio)}`;
@@ -139,6 +173,16 @@ function paintResult(element: HTMLElement, _payload: PlayPayload, result: RunRes
   showPanel(element, resultPanelToShow(result, Boolean(stderr)));
 }
 
+function paintRunState(element: HTMLElement, state: RunActionState): void {
+  const widget = element.querySelector<HTMLElement>(".ox-code-play");
+  widget?.setAttribute("data-ox-run-state", state.phase);
+  widget?.setAttribute("aria-busy", state.phase === "running" ? "true" : "false");
+  const status = element.querySelector<HTMLElement>("[data-ox-status]");
+  if (status) {
+    status.textContent = renderRunStatusText(state);
+  }
+}
+
 export function resultPanelToShow(result: RunResult, hasStderrPanel: boolean): "stderr" | "stdio" {
   if (!hasStderrPanel) {
     return "stdio";
@@ -155,10 +199,9 @@ export function resultPanelToShow(result: RunResult, hasStderrPanel: boolean): "
 function showPanel(element: HTMLElement, panel: string): void {
   const compact = Boolean(element.querySelector(".ox-code-play--compact"));
   for (const tab of element.querySelectorAll("[data-ox-panel]")) {
-    tab.setAttribute(
-      "aria-selected",
-      tab.getAttribute("data-ox-panel") === panel ? "true" : "false",
-    );
+    const selected = tab.getAttribute("data-ox-panel") === panel;
+    tab.setAttribute("aria-selected", selected ? "true" : "false");
+    (tab as HTMLElement).tabIndex = selected ? 0 : -1;
   }
   for (const node of element.querySelectorAll<HTMLElement>(".ox-code-play__panel")) {
     const id = node.dataset.panel;
@@ -167,6 +210,57 @@ function showPanel(element: HTMLElement, panel: string): void {
       continue;
     }
     node.hidden = id !== panel;
+  }
+}
+
+function handleTabKeydown(element: HTMLElement, event: KeyboardEvent): void {
+  if (!["ArrowLeft", "ArrowRight", "Home", "End"].includes(event.key)) {
+    return;
+  }
+  const tabs = [...element.querySelectorAll<HTMLElement>("[data-ox-panel]")];
+  const current = tabs.indexOf(event.target as HTMLElement);
+  if (current === -1) {
+    return;
+  }
+  event.preventDefault();
+  const nextIndex =
+    event.key === "Home"
+      ? 0
+      : event.key === "End"
+        ? tabs.length - 1
+        : event.key === "ArrowRight"
+          ? (current + 1) % tabs.length
+          : (current - 1 + tabs.length) % tabs.length;
+  const next = tabs[nextIndex];
+  const panel = next?.dataset.oxPanel;
+  if (!next || !panel) {
+    return;
+  }
+  showPanel(element, panel);
+  next.focus();
+}
+
+function prepareA11y(element: HTMLElement): void {
+  const widget = element.querySelector<HTMLElement>(".ox-code-play");
+  if (!widget) {
+    return;
+  }
+  if (!widget.id) {
+    widget.id = `ox-code-play-${++widgetId}`;
+  }
+  for (const tab of element.querySelectorAll<HTMLElement>("[data-ox-panel]")) {
+    const panelName = tab.dataset.oxPanel;
+    const panel = panelName
+      ? element.querySelector<HTMLElement>(`[data-panel="${panelName}"]`)
+      : null;
+    if (!panelName || !panel) {
+      continue;
+    }
+    tab.id ||= `${widget.id}-${panelName}-tab`;
+    panel.id ||= `${widget.id}-${panelName}-panel`;
+    tab.setAttribute("aria-controls", panel.id);
+    panel.setAttribute("aria-labelledby", tab.id);
+    panel.removeAttribute("aria-label");
   }
 }
 

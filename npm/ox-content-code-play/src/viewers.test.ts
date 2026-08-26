@@ -2,7 +2,7 @@ import { describe, expect, it } from "vite-plus/test";
 import { DEFAULT_VIEWERS } from "./config";
 import { withStdioText } from "./stdio";
 import type { PlayPayload, RunResult } from "./types";
-import { actionBusyState, renderPlayUi } from "./ui";
+import { actionBusyState, renderPlayUi, renderRunStatusText } from "./ui";
 import { renderStderrHtml, renderStdioHtml } from "./viewers";
 
 function result(partial: Partial<RunResult> = {}): RunResult {
@@ -102,9 +102,14 @@ describe("stderr viewer", () => {
 
 describe("stderr UI flags", () => {
   it("adds a stderr tab and panel when viewers.stderr is enabled", () => {
-    const html = renderPlayUi({ payload: payload() });
+    const html = renderPlayUi({ payload: payload({ title: "Hello sample" }) });
+    expect(html).toContain('role="region"');
+    expect(html).toContain('aria-label="Hello sample (JavaScript)"');
+    expect(html).toContain('role="status"');
+    expect(html).toContain('aria-live="polite"');
     expect(html).toContain('data-ox-panel="stderr"');
     expect(html).toContain('data-panel="stderr"');
+    expect(html).toContain('role="tabpanel"');
     expect(html).toContain("Browser sandbox");
     expect(html).toContain("On demand");
     expect(html).toContain("No stderr.");
@@ -140,7 +145,21 @@ describe("stderr UI flags", () => {
     expect(actionBusyState("run", true)).toEqual({ disabled: true, hidden: false });
     const busy = renderPlayUi({ payload: payload(), busy: true });
     expect(busy).toMatch(/data-ox-action="run"[^>]*\bdisabled\b/);
+    expect(busy).toContain('aria-busy="true"');
     expect(busy).not.toMatch(/data-ox-action="cancel"[^>]*\bhidden\b/);
+  });
+
+  it("renders typed run-state labels for toolbar status", () => {
+    expect(renderRunStatusText({ phase: "idle" })).toBe("Ready");
+    expect(renderRunStatusText({ phase: "running", action: "typecheck" })).toBe("Typechecking");
+    expect(renderRunStatusText({ phase: "offline" })).toBe("Offline");
+    expect(renderRunStatusText({ phase: "error" })).toBe("Error");
+    expect(
+      renderPlayUi({
+        payload: payload(),
+        runState: { phase: "offline", message: "unreachable" },
+      }),
+    ).toContain('data-ox-run-state="offline"');
   });
 
   it("keeps the compact stderr panel visible and hides compact tabs", () => {

@@ -18,6 +18,7 @@ import {
   resolveClientFile,
   resolveHydrateSpecifier,
 } from "./plugin-client";
+import { writeClientAsset } from "./plugin-assets";
 import { proxy, typecheckProxy } from "./plugin-proxy";
 
 export type CodePlayPluginOptions = RawCodePlayOptions;
@@ -33,6 +34,9 @@ export function codePlay(options: CodePlayPluginOptions = {}): Plugin {
   let command: "build" | "serve" = "serve";
   let outDir = resolved.outDir;
   let root = process.cwd();
+  let needsClientAsset = false;
+  let emittedClientAsset = false;
+  let clientSource: string | undefined;
 
   const enhanceOptions = (
     matchFences?: Array<{ language: string; code: string; payload: string }>,
@@ -75,7 +79,11 @@ export function codePlay(options: CodePlayPluginOptions = {}): Plugin {
     transform(code, id) {
       if (!MARKDOWN_RE.test(id)) {
         if (code.includes("export const html = ") && code.includes("ox-code-play:")) {
-          return enhanceGeneratedModule(code, enhanceOptions());
+          const enhanced = enhanceGeneratedModule(code, enhanceOptions());
+          if (enhanced !== code) {
+            needsClientAsset = true;
+          }
+          return enhanced;
         }
         return null;
       }
@@ -86,7 +94,11 @@ export function codePlay(options: CodePlayPluginOptions = {}): Plugin {
         }
         return encodePayload(payloadFromFence(fence, resolved));
       });
-      return rewritten === code ? null : rewritten;
+      if (rewritten === code) {
+        return null;
+      }
+      needsClientAsset = true;
+      return rewritten;
     },
 
     configureServer(server) {
@@ -112,15 +124,19 @@ export function codePlay(options: CodePlayPluginOptions = {}): Plugin {
     },
 
     async generateBundle() {
-      const file = resolveClientFile();
-      if (!file || command !== "build") {
+      if (command !== "build" || !needsClientAsset) {
+        return;
+      }
+      const source = await loadClientSource();
+      if (!source) {
         return;
       }
       this.emitFile({
         type: "asset",
         fileName: "ox-code-play.js",
-        source: assertBrowserClientSource(await readFile(file, "utf8")),
+        source,
       });
+      emittedClientAsset = true;
     },
 
     async closeBundle() {
@@ -132,9 +148,28 @@ export function codePlay(options: CodePlayPluginOptions = {}): Plugin {
       if (!existsSync(srcDir) || !existsSync(destination)) {
         return;
       }
-      await enhanceWrittenPages(srcDir, destination, resolved, enhanceOptions);
+      const enhancedAny = await enhanceWrittenPages(srcDir, destination, resolved, enhanceOptions);
+      if (!enhancedAny) {
+        return;
+      }
+      needsClientAsset = true;
+      if (!emittedClientAsset) {
+        await writeClientAsset(destination, await loadClientSource());
+      }
     },
   };
+
+  async function loadClientSource(): Promise<string | undefined> {
+    if (clientSource) {
+      return clientSource;
+    }
+    const file = resolveClientFile();
+    if (!file) {
+      return undefined;
+    }
+    clientSource = assertBrowserClientSource(await readFile(file, "utf8"));
+    return clientSource;
+  }
 }
 
 function interceptHtml(
@@ -239,7 +274,8 @@ async function enhanceWrittenPages(
   enhance: (
     matchFences?: Array<{ language: string; code: string; payload: string }>,
   ) => HtmlEnhanceOptions,
-): Promise<void> {
+): Promise<boolean> {
+  let enhancedAny = false;
   for (const file of walkFiles(srcDir)) {
     if (!MARKDOWN_RE.test(file)) {
       continue;
@@ -269,8 +305,10 @@ async function enhanceWrittenPages(
     );
     if (enhanced !== html) {
       await writeFile(htmlPath, enhanced);
+      enhancedAny = true;
     }
   }
+  return enhancedAny;
 }
 
 function guessHtmlPath(file: string, srcDir: string, outDir: string): string | undefined {

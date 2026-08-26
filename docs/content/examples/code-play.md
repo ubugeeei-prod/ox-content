@@ -7,6 +7,8 @@ description: Opt-in on-demand sample execution with stdio, stderr, config, prove
 
 This page uses `@ox-content/code-play` with **JavaScript** and **TypeScript**
 enabled. Other languages stay ordinary fences until a site opts them in.
+Routes without a `play` fence stay ordinary docs pages and do not load
+`ox-code-play.js`.
 
 A copy-paste Vite app lives at
 [`examples/code-play`](https://github.com/ubugeeei-prod/ox-content/tree/main/examples/code-play)
@@ -42,15 +44,26 @@ TypeScript by stripping types into the sandbox iframe. The stdio, stderr,
 config, provenance, and timing tabs are the same objects the headless API
 returns. `console.warn` lands in `run.stderr`.
 
-```ts play typecheck
+```ts play typecheck play-title="Strict TypeScript" play-target=ESNext
 const message: string = "hello from Code Play";
 console.log(message);
 console.warn("this warning is a stderr chunk");
 ```
 
+## Per-sample config
+
+`play-<config-key>=...` overrides the language config for one sample. This
+sample intentionally disables strict TypeScript checking while keeping the
+page-level defaults strict.
+
+```ts play typecheck play-title="Loose TypeScript" play-strict=false play-compact
+const label = "works without an explicit type annotation";
+console.log(label.toUpperCase());
+```
+
 ## Live JavaScript sample
 
-```js play
+```js play play-title="JavaScript sum"
 function add(left, right) {
   return left + right;
 }
@@ -64,7 +77,7 @@ During `vite dev`, **Typecheck** should fail on this sample. On a published
 page the button is omitted unless `endpoints.typecheck` is set. **Run** still
 executes after types are stripped, so execute and type-check stay separate.
 
-```ts play typecheck
+```ts play typecheck play-title="Typecheck failure"
 const n: number = "not a number";
 console.log(n);
 ```
@@ -74,7 +87,7 @@ console.log(n);
 `throw` becomes a diagnostic and a stderr chunk. The stderr tab opens when the
 run produces stderr or an error diagnostic.
 
-```js play
+```js play play-title="Runtime error"
 console.log("before");
 throw new Error("boom from the example");
 ```
@@ -99,6 +112,8 @@ result.provenance.execute;
 result.timing.phases;
 ```
 
+`RunActionState` helpers model idle, running, result, error, and offline states
+for custom UIs. Transport/CORS failures return `status: "offline"`.
 `ui: "compact"` hides the tab list and keeps stdio plus stderr. `ui: "headless"`
 renders no chrome — use `createCodePlay()` from your own UI.
 

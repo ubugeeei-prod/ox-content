@@ -1,4 +1,4 @@
-import { mkdirSync, mkdtempSync, readFileSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { describe, expect, it } from "vite-plus/test";
@@ -65,6 +65,7 @@ describe("codePlay SSG HTML enhance", () => {
     const html = readFileSync(path.join(outDir, "index.html"), "utf8");
     expect(html).not.toContain("ox-code-play.js");
     expect(html).not.toContain("data-ox-code-play");
+    expect(existsSync(path.join(outDir, "ox-code-play.js"))).toBe(false);
   });
 
   it("omits TypeScript typecheck from written SSG payloads without an endpoint", async () => {

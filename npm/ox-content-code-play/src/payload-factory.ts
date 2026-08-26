@@ -9,6 +9,7 @@ export function payloadFromFence(fence: PlayFence, options: ResolvedCodePlayOpti
   const payload: PlayPayload = {
     language: definition?.id ?? fence.language,
     code: fence.code,
+    title: fence.title,
     capabilities: {
       execute: enabled?.execute ?? Boolean(definition?.capabilities.execute),
       typecheck: payloadTypecheckEnabled(
@@ -18,10 +19,10 @@ export function payloadFromFence(fence: PlayFence, options: ResolvedCodePlayOpti
         options.endpoints,
       ),
     },
-    config: { ...definition?.defaultConfig, ...enabled?.config },
-    viewers: options.viewers,
-    ui: options.ui,
-    timeoutMs: options.timeoutMs,
+    config: { ...definition?.defaultConfig, ...enabled?.config, ...fence.config },
+    viewers: { ...options.viewers, ...fence.viewers },
+    ui: fence.ui ?? options.ui,
+    timeoutMs: fence.timeoutMs ?? options.timeoutMs,
     endpoints: options.endpoints,
   };
   if (enabled?.endpoint) {

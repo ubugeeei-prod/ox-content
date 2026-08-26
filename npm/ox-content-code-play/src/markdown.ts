@@ -1,3 +1,13 @@
+import {
+  parseCodePlayAttributes,
+  parsePlayMeta,
+  readCodePlayAttribute,
+  splitPlayInfo,
+} from "./authoring";
+import type { CodePlayPreset, ViewerFlags } from "./types";
+
+export { parseCodePlayAttributes, parsePlayMeta, type ParsedPlayOptions } from "./authoring";
+
 export interface PlayFence {
   language: string;
   meta: string;
@@ -6,6 +16,11 @@ export interface PlayFence {
   start: number;
   end: number;
   typecheck: boolean;
+  title?: string;
+  config: Record<string, unknown>;
+  ui?: CodePlayPreset;
+  viewers?: Partial<ViewerFlags>;
+  timeoutMs?: number;
 }
 
 export interface ParsedFence {
@@ -39,7 +54,7 @@ export function parseTopLevelFences(source: string): ParsedFence[] {
     const indent = open[1] ?? "";
     const marker = open[2] ?? "```";
     const info = (open[3] ?? "").trim();
-    const [language = "", ...metaParts] = splitInfo(info);
+    const { language, meta } = readFenceInfo(info);
     const start = offset;
     index += 1;
     offset += line.length + 1;
@@ -52,7 +67,7 @@ export function parseTopLevelFences(source: string): ParsedFence[] {
         const raw = `${line}\n${body.join("\n")}${body.length > 0 ? "\n" : ""}${candidate}`;
         fences.push({
           language,
-          meta: metaParts.join(" "),
+          meta,
           code: body.join("\n"),
           raw,
           start,
@@ -76,22 +91,34 @@ export function parseTopLevelFences(source: string): ParsedFence[] {
 export function parsePlayFences(source: string): PlayFence[] {
   return parseTopLevelFences(source)
     .filter((fence) => hasToken(fence.meta, "play"))
-    .map((fence) => ({
-      language: fence.language,
-      meta: fence.meta,
-      code: fence.code,
-      raw: fence.raw,
-      start: fence.start,
-      end: fence.end,
-      typecheck: hasToken(fence.meta, "typecheck"),
-    }));
+    .map((fence) => {
+      const options = parsePlayMeta(fence.meta);
+      return {
+        language: fence.language,
+        meta: fence.meta,
+        code: fence.code,
+        raw: fence.raw,
+        start: fence.start,
+        end: fence.end,
+        typecheck: options.typecheck,
+        title: options.title,
+        config: options.config,
+        ui: options.ui,
+        viewers: options.viewers,
+        timeoutMs: options.timeoutMs,
+      };
+    });
 }
 
 export function stripPlayMeta(meta: string): string {
-  return meta
-    .split(/\s+/)
+  return splitPlayInfo(meta)
     .filter(
-      (token) => token && token !== "play" && token !== "typecheck" && !token.startsWith("play-"),
+      (token) =>
+        token &&
+        token !== "play" &&
+        token !== "typecheck" &&
+        !token.startsWith("play-") &&
+        !token.startsWith("play:"),
     )
     .join(" ");
 }
@@ -128,7 +155,9 @@ export function parseCodePlayTags(source: string): PlayFence[] {
   const pattern = /<CodePlay\b([^>]*)>([\s\S]*?)<\/CodePlay>/gi;
   for (const match of source.matchAll(pattern)) {
     const attrs = match[1] ?? "";
-    const language = readAttr(attrs, "lang") ?? readAttr(attrs, "language") ?? "text";
+    const language =
+      readCodePlayAttribute(attrs, "lang") ?? readCodePlayAttribute(attrs, "language") ?? "text";
+    const options = parseCodePlayAttributes(attrs);
     tags.push({
       language,
       meta: "play",
@@ -136,27 +165,28 @@ export function parseCodePlayTags(source: string): PlayFence[] {
       raw: match[0] ?? "",
       start: match.index ?? 0,
       end: (match.index ?? 0) + (match[0]?.length ?? 0),
-      typecheck: /\btypecheck\b/i.test(attrs),
+      typecheck: options.typecheck,
+      title: options.title,
+      config: options.config,
+      ui: options.ui,
+      viewers: options.viewers,
+      timeoutMs: options.timeoutMs,
     });
   }
   return tags;
 }
 
-function splitInfo(info: string): string[] {
-  return info.trim().split(/\s+/).filter(Boolean);
+function readFenceInfo(info: string): { language: string; meta: string } {
+  const match = /^(\S+)(?:\s+([\s\S]*))?$/.exec(info);
+  return { language: match?.[1] ?? "", meta: match?.[2]?.trim() ?? "" };
 }
 
 function hasToken(meta: string, token: string): boolean {
-  return meta.split(/\s+/).includes(token);
+  return splitPlayInfo(meta).includes(token);
 }
 
 function escapeRegExp(value: string): string {
   return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-}
-
-function readAttr(attrs: string, name: string): string | undefined {
-  const match = new RegExp(`(?:^|\\s)${name}\\s*=\\s*"([^"]+)"`, "i").exec(attrs);
-  return match?.[1];
 }
 
 function stripIndent(value: string): string {

@@ -1,7 +1,7 @@
 export const CODE_PLAY_STYLES = `
 .ox-code-play {
   border: 1px solid var(--octc-color-border, color-mix(in srgb, currentColor 16%, transparent));
-  border-radius: 12px;
+  border-radius: 8px;
   background: var(--octc-color-bg-alt, var(--octc-color-bg, Canvas));
   color: var(--octc-color-text, CanvasText);
   overflow: hidden;
@@ -15,10 +15,39 @@ export const CODE_PLAY_STYLES = `
   padding: 0.6rem 0.8rem;
   border-bottom: 1px solid var(--octc-color-border, color-mix(in srgb, currentColor 12%, transparent));
 }
+.ox-code-play__summary {
+  display: inline-flex;
+  flex: 1 1 12rem;
+  min-width: 9rem;
+  gap: 0.45rem;
+  align-items: baseline;
+}
 .ox-code-play__lang {
   font: 600 0.8rem/1.2 ui-sans-serif, system-ui, sans-serif;
-  margin-right: auto;
   color: var(--octc-color-text, CanvasText);
+}
+.ox-code-play__title {
+  min-width: 0;
+  overflow-wrap: anywhere;
+  font: 500 0.78rem/1.25 ui-sans-serif, system-ui, sans-serif;
+  opacity: 0.72;
+}
+.ox-code-play__status {
+  min-width: 5.25rem;
+  text-align: center;
+  border: 1px solid var(--octc-color-border, color-mix(in srgb, currentColor 16%, transparent));
+  border-radius: 6px;
+  padding: 0.18rem 0.5rem;
+  font: 650 0.68rem/1.25 ui-sans-serif, system-ui, sans-serif;
+  color: var(--octc-color-text, CanvasText);
+  background: var(--octc-color-bg, Canvas);
+}
+.ox-code-play[data-ox-run-state="running"] .ox-code-play__status {
+  color: var(--octc-color-primary, var(--octc-accent, #4f46e5));
+}
+.ox-code-play[data-ox-run-state="error"] .ox-code-play__status,
+.ox-code-play[data-ox-run-state="offline"] .ox-code-play__status {
+  color: var(--octc-danger, #b42318);
 }
 .ox-code-play__toolbar button {
   appearance: none;
@@ -31,6 +60,14 @@ export const CODE_PLAY_STYLES = `
   cursor: pointer;
 }
 .ox-code-play__toolbar button:disabled { opacity: 0.55; cursor: progress; }
+.ox-code-play__toolbar button:focus-visible,
+.ox-code-play__tabs button:focus-visible,
+.ox-code-play__field input:focus-visible,
+.ox-code-play__field select:focus-visible,
+.ox-code-play__panel:focus-visible {
+  outline: 2px solid var(--octc-color-primary, var(--octc-accent, #4f46e5));
+  outline-offset: 2px;
+}
 .ox-code-play__runtime {
   display: flex;
   flex-wrap: wrap;
@@ -46,7 +83,7 @@ export const CODE_PLAY_STYLES = `
   min-width: 7.5rem;
   padding: 0.35rem 0.5rem;
   border: 1px solid var(--octc-color-border, color-mix(in srgb, currentColor 14%, transparent));
-  border-radius: 8px;
+  border-radius: 6px;
   background: var(--octc-color-bg, Canvas);
 }
 .ox-code-play__runtime-chip span {
@@ -74,7 +111,7 @@ export const CODE_PLAY_STYLES = `
   background: transparent;
   color: var(--octc-color-text, CanvasText);
   padding: 0.35rem 0.55rem;
-  border-radius: 8px 8px 0 0;
+  border-radius: 6px 6px 0 0;
   font: 600 0.75rem/1.2 ui-sans-serif, system-ui, sans-serif;
   cursor: pointer;
 }
@@ -101,7 +138,7 @@ export const CODE_PLAY_STYLES = `
 .ox-code-play__field input, .ox-code-play__field select {
   font: inherit;
   padding: 0.3rem 0.45rem;
-  border-radius: 8px;
+  border-radius: 6px;
   border: 1px solid var(--octc-color-border, color-mix(in srgb, currentColor 18%, transparent));
   background: var(--octc-color-bg, Canvas);
   color: var(--octc-color-text, CanvasText);

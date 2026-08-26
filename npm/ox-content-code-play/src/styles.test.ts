@@ -17,4 +17,11 @@ describe("CODE_PLAY_STYLES", () => {
     expect(CODE_PLAY_STYLES).toContain(".ox-code-play__panel pre");
     expect(CODE_PLAY_STYLES).toContain("background: transparent !important");
   });
+
+  it("styles status and keyboard focus states", () => {
+    expect(CODE_PLAY_STYLES).toContain(".ox-code-play__status");
+    expect(CODE_PLAY_STYLES).toContain('[data-ox-run-state="offline"]');
+    expect(CODE_PLAY_STYLES).toContain(":focus-visible");
+    expect(CODE_PLAY_STYLES).toContain("border-radius: 8px");
+  });
 });

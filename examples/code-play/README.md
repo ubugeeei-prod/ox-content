@@ -16,6 +16,9 @@ corepack pnpm --filter ./examples/code-play build
 corepack pnpm --filter ./examples/code-play preview
 ```
 
+After `build`, `dist/plain.html` should not contain `ox-code-play.js`; only
+routes with `play` fences load the runtime.
+
 The plugin never executes samples during Markdown transform or SSG. Readers
 trigger **Run** in the browser. TypeScript **Typecheck** needs the Vite dev
 proxy or a reachable `endpoints.typecheck`.

@@ -1,6 +1,13 @@
 import { resolveLanguage } from "./catalog";
 import { escapeHtml } from "./escape";
-import type { CodePlayPreset, LanguageDefinition, PlayPayload, RunResult } from "./types";
+import { idleRunActionState } from "./hydrate-action";
+import type {
+  CodePlayPreset,
+  LanguageDefinition,
+  PlayPayload,
+  RunActionState,
+  RunResult,
+} from "./types";
 import {
   renderConfigHtml,
   renderDiagnosticsHtml,
@@ -14,6 +21,7 @@ export interface UiState {
   payload: PlayPayload;
   result?: RunResult;
   busy?: boolean;
+  runState?: RunActionState;
   panel?: "stdio" | "stderr" | "config" | "provenance" | "timing";
 }
 
@@ -25,24 +33,55 @@ export function renderPlayUi(state: UiState): string {
   }
   const panel = state.panel ?? "stdio";
   const canTypecheck = state.payload.capabilities.typecheck;
+  const runState =
+    state.runState ??
+    (state.busy ? { phase: "running" as const, action: "execute" as const } : idleRunActionState());
+  const isBusy = Boolean(state.busy) || runState.phase === "running";
   const tabs = renderTabs(state, panel);
   const viewers = state.payload.viewers;
-  return `<div class="ox-code-play ox-code-play--${preset}" data-ox-code-play-ui>
+  const label = widgetLabel(state.payload, definition);
+  return `<div class="ox-code-play ox-code-play--${preset}" data-ox-code-play-ui data-ox-run-state="${runState.phase}" role="region" aria-label="${escapeHtml(label)}" aria-busy="${isBusy ? "true" : "false"}">
   <div class="ox-code-play__toolbar">
-    <span class="ox-code-play__lang">${escapeHtml(definition?.name ?? state.payload.language)}</span>
-    <button type="button" data-ox-action="run"${actionButtonAttrs("run", Boolean(state.busy))}>Run</button>
-    ${canTypecheck ? `<button type="button" data-ox-action="typecheck"${actionButtonAttrs("typecheck", Boolean(state.busy))}>Typecheck</button>` : ""}
-    <button type="button" data-ox-action="cancel"${actionButtonAttrs("cancel", Boolean(state.busy))}>Cancel</button>
+    <span class="ox-code-play__summary"><span class="ox-code-play__lang">${escapeHtml(definition?.name ?? state.payload.language)}</span>${state.payload.title ? `<span class="ox-code-play__title">${escapeHtml(state.payload.title)}</span>` : ""}</span>
+    <span class="ox-code-play__status" data-ox-status role="status" aria-live="polite">${renderRunStatusText(runState)}</span>
+    <button type="button" data-ox-action="run" aria-label="${escapeHtml(`Run ${label}`)}"${actionButtonAttrs("run", Boolean(state.busy))}>Run</button>
+    ${canTypecheck ? `<button type="button" data-ox-action="typecheck" aria-label="${escapeHtml(`Typecheck ${label}`)}"${actionButtonAttrs("typecheck", Boolean(state.busy))}>Typecheck</button>` : ""}
+    <button type="button" data-ox-action="cancel" aria-label="${escapeHtml(`Cancel ${label}`)}"${actionButtonAttrs("cancel", Boolean(state.busy))}>Cancel</button>
   </div>
   ${renderRuntimeStrip(state.payload, definition)}
   <div class="ox-code-play__source"></div>
   ${tabs}
-  ${viewers.stdio ? `<div class="ox-code-play__panel" data-panel="stdio">${renderDiagnosticsHtml(state.result)}${renderStdioHtml(state.result?.stdio ?? [])}</div>` : ""}
-  ${viewers.stderr ? `<div class="ox-code-play__panel" data-panel="stderr"${hidden(panel, "stderr", preset)}>${renderStderrHtml(state.result)}</div>` : ""}
-  <div class="ox-code-play__panel" data-panel="config"${hidden(panel, "config", preset)}>${renderConfigHtml(definition?.configSchema ?? [], state.payload.config)}</div>
-  <div class="ox-code-play__panel" data-panel="provenance"${hidden(panel, "provenance", preset)}>${renderProvenanceHtml(state.result?.provenance)}</div>
-  <div class="ox-code-play__panel" data-panel="timing"${hidden(panel, "timing", preset)}>${renderTimingHtml(state.result?.timing)}</div>
+  ${viewers.stdio ? renderPanel("stdio", "Stdio", panel, preset, `${renderDiagnosticsHtml(state.result)}${renderStdioHtml(state.result?.stdio ?? [])}`) : ""}
+  ${viewers.stderr ? renderPanel("stderr", "Stderr", panel, preset, renderStderrHtml(state.result)) : ""}
+  ${viewers.config ? renderPanel("config", "Config", panel, preset, renderConfigHtml(definition?.configSchema ?? [], state.payload.config)) : ""}
+  ${viewers.provenance ? renderPanel("provenance", "Provenance", panel, preset, renderProvenanceHtml(state.result?.provenance)) : ""}
+  ${viewers.timing ? renderPanel("timing", "Timing", panel, preset, renderTimingHtml(state.result?.timing)) : ""}
 </div>`;
+}
+
+export function renderRunStatusText(state: RunActionState): string {
+  if (state.phase === "running") {
+    return state.action === "typecheck" ? "Typechecking" : "Running";
+  }
+  if (state.phase === "offline") {
+    return "Offline";
+  }
+  if (state.phase === "error") {
+    if (state.result?.status === "timeout") {
+      return "Timed out";
+    }
+    if (state.result?.status === "unsupported") {
+      return "Unsupported";
+    }
+    return "Error";
+  }
+  if (state.phase === "result") {
+    if (state.result?.status === "cancelled") {
+      return "Cancelled";
+    }
+    return "Done";
+  }
+  return "Ready";
 }
 
 function renderRuntimeStrip(
@@ -107,11 +146,11 @@ function renderTabs(state: UiState, panel: string): string {
   }
   const viewers = state.payload.viewers;
   const buttons = [
-    viewers.stdio ? tab("stdio", "stdio", panel) : "",
-    viewers.stderr ? tab("stderr", "stderr", panel) : "",
-    viewers.config ? tab("config", "config", panel) : "",
-    viewers.provenance ? tab("provenance", "provenance", panel) : "",
-    viewers.timing ? tab("timing", "timing", panel) : "",
+    viewers.stdio ? tab("stdio", "Stdio", panel) : "",
+    viewers.stderr ? tab("stderr", "Stderr", panel) : "",
+    viewers.config ? tab("config", "Config", panel) : "",
+    viewers.provenance ? tab("provenance", "Provenance", panel) : "",
+    viewers.timing ? tab("timing", "Timing", panel) : "",
   ]
     .filter(Boolean)
     .join("");
@@ -119,12 +158,13 @@ function renderTabs(state: UiState, panel: string): string {
 }
 
 function tab(id: string, label: string, selected: string): string {
-  return `<button type="button" role="tab" data-ox-panel="${id}" aria-selected="${selected === id ? "true" : "false"}">${label}</button>`;
+  const isSelected = selected === id;
+  return `<button type="button" role="tab" data-ox-panel="${id}" aria-selected="${isSelected ? "true" : "false"}" tabindex="${isSelected ? "0" : "-1"}">${label}</button>`;
 }
 
 export function actionButtonAttrs(action: string, busy: boolean): string {
   const state = actionBusyState(action, busy);
-  return `${state.disabled ? " disabled" : ""}${state.hidden ? " hidden" : ""}`;
+  return `${state.disabled ? ' disabled aria-disabled="true"' : ""}${state.hidden ? " hidden" : ""}`;
 }
 
 export function actionBusyState(
@@ -142,7 +182,21 @@ export function applyActionBusy(root: ParentNode, busy: boolean): void {
     const state = actionBusyState(button.dataset.oxAction ?? "", busy);
     button.disabled = state.disabled;
     button.hidden = state.hidden;
+    button.setAttribute("aria-disabled", state.disabled ? "true" : "false");
   }
+  for (const widget of queryPlayWidgets(root)) {
+    widget.setAttribute("aria-busy", busy ? "true" : "false");
+  }
+}
+
+function renderPanel(
+  id: string,
+  label: string,
+  current: string,
+  preset: CodePlayPreset,
+  html: string,
+): string {
+  return `<div class="ox-code-play__panel" role="tabpanel" tabindex="0" aria-label="${escapeHtml(label)}" data-panel="${id}"${hidden(current, id, preset)}>${html}</div>`;
 }
 
 function hidden(current: string, id: string, preset: CodePlayPreset): string {
@@ -150,4 +204,21 @@ function hidden(current: string, id: string, preset: CodePlayPreset): string {
     return "";
   }
   return current === id ? "" : " hidden";
+}
+
+function widgetLabel(payload: PlayPayload, definition: LanguageDefinition | undefined): string {
+  const language = definition?.name ?? payload.language;
+  return payload.title ? `${payload.title} (${language})` : `${language} Code Play`;
+}
+
+function queryPlayWidgets(root: ParentNode): HTMLElement[] {
+  const widgets = [...root.querySelectorAll<HTMLElement>(".ox-code-play")];
+  if (
+    typeof HTMLElement !== "undefined" &&
+    root instanceof HTMLElement &&
+    root.matches(".ox-code-play")
+  ) {
+    widgets.unshift(root);
+  }
+  return widgets;
 }

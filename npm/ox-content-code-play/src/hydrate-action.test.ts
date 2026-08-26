@@ -1,5 +1,11 @@
 import { describe, expect, it, vi } from "vite-plus/test";
-import { readPlayPayload, runPlayAction } from "./hydrate-action";
+import {
+  idleRunActionState,
+  readPlayPayload,
+  resultRunActionState,
+  runningRunActionState,
+  runPlayAction,
+} from "./hydrate-action";
 import { resultPanelToShow } from "./hydrate";
 import { encodePayload } from "./payload";
 import { DEFAULT_VIEWERS } from "./config";
@@ -57,6 +63,26 @@ describe("runPlayAction", () => {
     expect(setBusy.mock.calls.map((call) => call[0])).toEqual([true, false]);
     expect(errors).toHaveLength(1);
     expect(errors[0]).toBeInstanceOf(Error);
+  });
+});
+
+describe("run action states", () => {
+  it("models idle, running, ok, offline, and cancelled states", () => {
+    expect(idleRunActionState()).toEqual({ phase: "idle" });
+    expect(runningRunActionState("execute", 12)).toEqual({
+      phase: "running",
+      action: "execute",
+      startedAtMs: 12,
+    });
+    expect(resultRunActionState("execute", errorResult("ok", "code-play", "ok"), 20)).toEqual(
+      expect.objectContaining({ phase: "result", action: "execute", finishedAtMs: 20 }),
+    );
+    expect(
+      resultRunActionState("execute", errorResult("offline", "code-play", "offline"), 20),
+    ).toEqual(expect.objectContaining({ phase: "offline", message: "offline" }));
+    expect(
+      resultRunActionState("execute", errorResult("Run cancelled.", "code-play", "cancelled"), 20),
+    ).toEqual(expect.objectContaining({ phase: "result", message: "Run cancelled." }));
   });
 });
 

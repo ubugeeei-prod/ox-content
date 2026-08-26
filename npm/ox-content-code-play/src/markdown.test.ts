@@ -32,6 +32,21 @@ describe("markdown and viewers", () => {
     expect(stripPlayMeta(fences[0]?.meta ?? "")).toBe('annotate="highlight:1"');
   });
 
+  it("parses authoring options without preserving play-only metadata", () => {
+    const source = [
+      '```ts play typecheck play-title="Strict sample" play-compact play-timeout=2500 play-strict=false play-target=ESNext play-viewers=stdio,stderr,-timing annotate="highlight:1"',
+      "const live = 1;",
+      "```",
+    ].join("\n");
+    const fence = parsePlayFences(source)[0];
+    expect(fence?.title).toBe("Strict sample");
+    expect(fence?.ui).toBe("compact");
+    expect(fence?.timeoutMs).toBe(2500);
+    expect(fence?.config).toEqual({ strict: false, target: "ESNext" });
+    expect(fence?.viewers).toEqual({ stdio: true, stderr: true, timing: false });
+    expect(stripPlayMeta(fence?.meta ?? "")).toBe('annotate="highlight:1"');
+  });
+
   it("rewrites play fences to comments and parses CodePlay tags", () => {
     const options = resolveCodePlayOptions({ languages: { typescript: true } });
     const rewritten = rewritePlayFences("```ts play\nconst n = 1;\n```", (fence) =>
@@ -41,7 +56,21 @@ describe("markdown and viewers", () => {
     expect(rewritten).toContain("```ts\nconst n = 1;\n```");
 
     const tags = parseCodePlayTags(`<CodePlay lang="python" typecheck>\nprint(1)\n</CodePlay>`);
-    expect(tags[0]).toMatchObject({ language: "python", typecheck: true, code: "print(1)" });
+    expect(tags[0]).toMatchObject({
+      language: "python",
+      typecheck: true,
+      code: "print(1)",
+      config: {},
+    });
+    const configuredTags = parseCodePlayTags(
+      `<CodePlay lang="ts" title="Loose TS" ui="compact" timeout="3000" config-strict="false" config-with-vet="false">\nconst n = 1\n</CodePlay>`,
+    );
+    expect(configuredTags[0]).toMatchObject({
+      title: "Loose TS",
+      ui: "compact",
+      timeoutMs: 3000,
+      config: { strict: false, withVet: false },
+    });
   });
 
   it("wraps commented pre blocks and matching SSG fences in HTML", () => {
@@ -56,6 +85,7 @@ describe("markdown and viewers", () => {
           start: 0,
           end: 0,
           typecheck: false,
+          config: {},
         },
         options,
       ),
@@ -89,6 +119,7 @@ describe("markdown and viewers", () => {
           start: 0,
           end: 0,
           typecheck: false,
+          config: {},
         },
         resolveCodePlayOptions({ languages: { rust: true } }),
       ),
@@ -150,6 +181,7 @@ describe("markdown and viewers", () => {
         payload: {
           language: "typescript",
           code: "const n = 1;",
+          title: "Strict TS",
           capabilities: { execute: true, typecheck: true },
           config: { strict: true },
           viewers: { ...DEFAULT_VIEWERS },
@@ -158,6 +190,20 @@ describe("markdown and viewers", () => {
         },
       }),
     ).toContain("Typecheck");
+    expect(
+      renderPlayUi({
+        payload: {
+          language: "typescript",
+          code: "const n = 1;",
+          title: "Strict TS",
+          capabilities: { execute: true, typecheck: true },
+          config: { strict: true },
+          viewers: { ...DEFAULT_VIEWERS },
+          ui: "default",
+          timeoutMs: 1000,
+        },
+      }),
+    ).toContain('role="region"');
   });
 
   it("decodes the same payload it encodes", () => {

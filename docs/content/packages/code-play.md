@@ -41,6 +41,8 @@ export default {
 The plugin is a second opt-in layer on top of the package install. A fence
 without `play`, or a language that is not listed, stays an ordinary highlighted
 block.
+Pages without a matching Code Play block do not receive the hydration script,
+and builds that never use Code Play do not emit `ox-code-play.js`.
 
 ## Plugin options
 
@@ -65,22 +67,31 @@ block.
 Mark a fence with `play`. Add `typecheck` when the language supports it.
 
 ````md
-```ts play
+```ts play typecheck play-title="Strict TypeScript" play-strict=false play-target=ESNext
 const n: number = 1;
 console.log(n);
 ```
 
-```rust play typecheck
+```rust play typecheck play-title="Release-mode Rust" play-mode=release
 fn main() {
     println!("ok");
 }
 ```
 ````
 
+`play-title` labels the widget. `play-compact` / `play-headless` override
+the UI preset for one sample, `play-timeout=2500` overrides the timeout, and
+`play-viewers=stdio,stderr,-timing` toggles viewers. `play-<config-key>=...`
+sets one language config value for that sample, so TypeScript can use
+`play-strict=false`, Rust can use `play-edition=2021`, and Go can use
+`play-withVet=false`.
+
 HTML / MDX form:
 
 ```html
-<CodePlay lang="python"> print("hello") </CodePlay>
+<CodePlay lang="ts" title="Loose TS" typecheck ui="compact" config-strict="false">
+  const n = 1;
+</CodePlay>
 ```
 
 ## Headless API
@@ -112,18 +123,24 @@ returns `status: "cancelled"`. The default toolbar shows **Cancel** while a
 run is busy. Inject `transport` (for example `createMemoryTransport`) in
 tests so CI never hits a live playground.
 
-| Field             | Meaning                                                  |
-| ----------------- | -------------------------------------------------------- |
-| `run.status`      | `ok` / `error` / `timeout` / `cancelled` / `unsupported` |
-| `run.stdio`       | Timestamped `stdin` / `stdout` / `stderr` events         |
-| `run.stdout`      | Concatenated stdout text                                 |
-| `run.stderr`      | Concatenated stderr text                                 |
-| `run.diagnostics` | Compiler / runtime messages with optional line/col       |
-| `run.provenance`  | Where it compiled and where it ran                       |
-| `run.timing`      | Phase durations and `totalMs`                            |
-| `run.preview`     | Framework iframe `srcdoc` when the backend is UI         |
-| `session.stdout`  | Same as `lastResult.stdout`                              |
-| `session.stderr`  | Same as `lastResult.stderr`                              |
+| Field             | Meaning                                                              |
+| ----------------- | -------------------------------------------------------------------- |
+| `run.status`      | `ok` / `error` / `offline` / `timeout` / `cancelled` / `unsupported` |
+| `run.stdio`       | Timestamped `stdin` / `stdout` / `stderr` events                     |
+| `run.stdout`      | Concatenated stdout text                                             |
+| `run.stderr`      | Concatenated stderr text                                             |
+| `run.diagnostics` | Compiler / runtime messages with optional line/col                   |
+| `run.provenance`  | Where it compiled and where it ran                                   |
+| `run.timing`      | Phase durations and `totalMs`                                        |
+| `run.preview`     | Framework iframe `srcdoc` when the backend is UI                     |
+| `session.stdout`  | Same as `lastResult.stdout`                                          |
+| `session.stderr`  | Same as `lastResult.stderr`                                          |
+
+Custom UIs can use the exported `RunActionState` helpers:
+`idleRunActionState()`, `runningRunActionState(action)`, and
+`resultRunActionState(action, result)`. Transport and CORS failures use
+`status: "offline"` so they can be styled separately from compiler/runtime
+errors.
 
 ## UI
 
@@ -133,7 +150,9 @@ tests so CI never hits a live playground.
 | `compact`  | Run / type-check plus stdio and stderr                          |
 | `headless` | No DOM chrome; use the session API                              |
 
-Viewers can be toggled independently through `viewers`.
+Viewers can be toggled independently through `viewers`. The hydrated widget
+exposes a polite status region, `aria-busy`, tab panels, and arrow-key tab
+navigation.
 
 ## Languages
 

@@ -9,13 +9,20 @@ This site enables **JavaScript** and **TypeScript** only. Mark a fence with
 `play`. **Typecheck** shows during `vite dev`, or on a published page if you
 set `endpoints.typecheck`.
 
-```ts play typecheck
+See the [plain page](./plain.md) for a route with no Code Play runtime.
+
+```ts play typecheck play-title="Strict TypeScript" play-target=ESNext
 const message: string = "hello from examples/code-play";
 console.log(message);
 console.warn("stderr from console.warn");
 ```
 
-```js play
+```ts play typecheck play-title="Loose TypeScript" play-strict=false play-compact
+const label = "per-sample config";
+console.log(label);
+```
+
+```js play play-title="JavaScript sum"
 console.log(2 + 40);
 ```
 

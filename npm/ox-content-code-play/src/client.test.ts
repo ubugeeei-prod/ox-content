@@ -132,7 +132,7 @@ describe("createCodePlay", () => {
   it("explains browser CORS failures instead of a raw fetch TypeError", () => {
     const error = new TypeError("Failed to fetch");
     expect(friendlyTransportMessage(error)).toMatch(/CORS/);
-    expect(friendlyTransportMessage(new Error("offline"))).toBe("offline");
+    expect(friendlyTransportMessage(new Error("syntax error"))).toBe("syntax error");
   });
 
   it("does not run JavaScript through page-origin Function", () => {
@@ -148,7 +148,7 @@ describe("createCodePlay", () => {
     expect(resolveTypecheckBackend(false, undefined)).toBe("unavailable");
   });
 
-  it("turns transport throws into error results instead of rejecting", async () => {
+  it("turns transport throws into offline results instead of rejecting", async () => {
     const play = createCodePlay({
       languages: { rust: true },
       transport: createMemoryTransport(() => {
@@ -156,8 +156,8 @@ describe("createCodePlay", () => {
       }),
     });
     const result = await play.createSession({ language: "rust", code: "fn main() {}" }).run();
-    expect(result.status).toBe("error");
-    expect(result.diagnostics[0]?.message).toBe("offline");
+    expect(result.status).toBe("offline");
+    expect(result.diagnostics[0]?.message).toMatch(/offline|unreachable/i);
   });
 
   it("explains a missing static-host typecheck endpoint", () => {

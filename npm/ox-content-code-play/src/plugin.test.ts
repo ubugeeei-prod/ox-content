@@ -47,6 +47,32 @@ describe("codePlay vite plugin", () => {
     expect(payload.capabilities.execute).toBe(true);
   });
 
+  it("embeds per-sample authoring options in payloads", () => {
+    const plugin = codePlay({ languages: { typescript: true } });
+    resolveCommand(plugin, "serve");
+    const payload = payloadFromTransform(
+      plugin,
+      '```ts play play-title="Loose sample" play-compact play-timeout=2500 play-strict=false\nconst n = 1;\n```',
+    );
+    expect(payload.title).toBe("Loose sample");
+    expect(payload.ui).toBe("compact");
+    expect(payload.timeoutMs).toBe(2500);
+    expect(payload.config.strict).toBe(false);
+  });
+
+  it("does not request a browser client asset until a play fence is transformed", async () => {
+    const plugin = codePlay({ languages: { javascript: true } });
+    resolveCommand(plugin, "build");
+    const emitted: unknown[] = [];
+    const context = { emitFile: (file: unknown) => emitted.push(file) };
+    await hookFn(plugin.generateBundle).call(context);
+    expect(emitted).toEqual([]);
+    const transform = hookFn(plugin.transform) as (source: string, id: string) => string | null;
+    expect(transform("```js\nconsole.log(1);\n```", "plain.md")).toBeNull();
+    await hookFn(plugin.generateBundle).call(context);
+    expect(emitted).toEqual([]);
+  });
+
   it("keeps the Vite typecheck proxy on the dev server", () => {
     const plugin = codePlay({ languages: { typescript: { execute: true, typecheck: true } } });
     resolveCommand(plugin, "serve");
