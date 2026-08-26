@@ -232,7 +232,7 @@ function buildComment({ basePath, headPath, baseBundlePath, headBundlePath, base
 
     lines.push(
       "",
-      "Gzip uses JS/CSS/HTML/JSON assets. HTML gzip tracks rendered page output without JS/CSS assets. Requests estimate index.html plus referenced local initial assets. Build time is informational for now because runner variance is higher than the size gates.",
+      "Gzip uses JS/CSS/HTML/JSON assets. HTML gzip tracks rendered page output without JS/CSS assets. Requests estimate index.html plus referenced local initial assets. Relative build-time deltas stay informational because runner variance is higher than the size gates; absolute build-time ceilings still apply via `benchmarks/perf-budgets.json`.",
       "",
     );
   }
@@ -240,7 +240,7 @@ function buildComment({ basePath, headPath, baseBundlePath, headBundlePath, base
   lines.push(
     "### Regression Gate",
     "",
-    `Runtime regressions fail when head throughput is more than ${Math.abs(RUNTIME_REGRESSION_THRESHOLD_PERCENT)}% slower than base (async rows are informational only; their worker-scheduling variance exceeds the threshold on quiet PRs). Bundle and rendered HTML regressions fail when gzipped size grows by more than ${BUNDLE_REGRESSION_THRESHOLD_PERCENT}%. Maintainers can intentionally override by applying the \`benchmark-regression-accepted\` PR label, which sets \`${BENCHMARK_OVERRIDE_ENV}=1\`.`,
+    `Runtime regressions fail when head throughput is more than ${Math.abs(RUNTIME_REGRESSION_THRESHOLD_PERCENT)}% slower than base (async rows are informational only; their worker-scheduling variance exceeds the threshold on quiet PRs). Bundle and rendered HTML regressions fail when gzipped size grows by more than ${BUNDLE_REGRESSION_THRESHOLD_PERCENT}%. Absolute bundle, output, build-time, and runtime-floor ceilings are checked against \`benchmarks/perf-budgets.json\`. Maintainers can intentionally override both gates by applying the \`benchmark-regression-accepted\` PR label, which sets \`${BENCHMARK_OVERRIDE_ENV}=1\`.`,
     "",
   );
 

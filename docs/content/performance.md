@@ -10,15 +10,33 @@ work happening?" Benchmarking answers "how fast is this workload?"
 
 ## What We Measure
 
-Ox Content has two performance surfaces:
+Ox Content has four performance surfaces, all reported on pull requests:
 
 - Runtime throughput for Markdown parsing and rendering.
-- Static output weight for generated sites, including gzip size and initial
-  request count.
+- Fixture production build time.
+- Static output weight for generated sites, including gzip size and rendered
+  HTML gzip.
+- Initial request count for `index.html` and local critical-path assets.
 
 Runtime matters for CLIs, dev servers, editor integrations, and batch builds.
 Output weight matters for documentation sites because generated HTML, CSS, and
-JS are what users fetch on every navigation.
+JS are what users fetch on every navigation. Absolute ceilings live in
+[`benchmarks/perf-budgets.json`](https://github.com/ubugeeei-prod/ox-content/blob/main/benchmarks/perf-budgets.json).
+Relative base/head deltas still use the PR Benchmark comment.
+
+### Out of scope
+
+These are intentionally not gated by the budget file:
+
+- Host-absolute ops/sec on developer laptops. Use the published relative
+  ordering; the floors are for the Blacksmith runner class.
+- Competitor app sizes (VitePress, Astro) as fail-the-build ceilings.
+- Full docs-site output (`docs/dist`), OG image binaries, and fetched fonts.
+- `vp run build:npm` wall time. The fixture `buildMs` field is the build-time
+  budget; the package graph is not timed by this harness.
+- Isolated search, theme, embed, Code Play, or MDX island payloads. The
+  default fixture does not enable those features, so they stay out of the
+  default-shell number.
 
 ## Runtime Snapshot
 
@@ -241,16 +259,17 @@ the generated production output. It reports:
 - Estimated initial requests for `index.html` and local assets referenced from
   HTML or CSS.
 
-Latest local bundle-size sweep on 2026-05-28 with Node `v24.16.0` on Apple M5
-Pro. The table lists successful production builds from the local sweep.
+Latest Blacksmith fixture sweep on 2026-08-26 (`blacksmith-32vcpu-ubuntu-2404`,
+Node `v26.7.0`), taken from PR Benchmark comments such as #1001 and #1005.
 
-| App                 |    Total |  Gzipped | Ratio   | Requests | Files |
-| ------------------- | -------: | -------: | ------- | -------: | ----: |
-| `ox-content (bare)` |  20.6 KB |   5.8 KB | 1.00x   |        1 |     5 |
-| `ox-content`        | 111.1 KB |  25.6 KB | 4.41x   |        4 |     9 |
-| `VitePress (bare)`  | 155.0 KB |  46.9 KB | 8.05x   |        6 |    14 |
-| `ox-content + Vue`  | 169.6 KB |  47.9 KB | 8.23x   |        4 |     9 |
-| `VitePress`         | 972.4 KB | 717.2 KB | 123.18x |       21 |    29 |
+| App                   |  Gzipped | HTML gzip | Requests | Files |
+| --------------------- | -------: | --------: | -------: | ----: |
+| `ox-content (bare)`   |   5.8 KB |    2.9 KB |        1 |     5 |
+| `ox-content`          |  31.4 KB |    9.8 KB |        5 |    10 |
+| `ox-content + Vue`    |  53.9 KB |    9.8 KB |        5 |    10 |
+| `VitePress (bare)`    |  47.3 KB |    8.4 KB |        6 |    14 |
+| `Astro + Vue`         |  33.1 KB |    5.4 KB |        3 |     7 |
+| `VitePress (default)` | 717.2 KB |   14.2 KB |       21 |    29 |
 
 `ox-content (bare)` is the no-JS baseline. `ox-content` includes the built-in
 docs shell. `ox-content + Vue` adds framework island support. VitePress rows use
@@ -292,7 +311,8 @@ when doing so would create path-resolution risk or extra request overhead.
 
 Pull requests run the benchmark workflow against both the base commit and the
 head commit on `blacksmith-32vcpu-ubuntu-2404`. The workflow posts one report
-with runtime, competitive snapshot, environment, and bundle-size sections.
+with runtime, competitive snapshot, environment, bundle-size, and budget
+sections.
 
 Runtime rows compare the large benchmark target for `@ox-content/napi` and
 `@ox-content/napi (async)`. Changes within +/-5% are treated as noise, and the
@@ -303,8 +323,26 @@ target package against the next fastest comparison package for the same large
 input corpus.
 
 Bundle rows compare gzipped output for each successful benchmark app. The check
-fails when gzipped size grows by more than 5%. Maintainers can intentionally
-accept a regression with the `benchmark-regression-accepted` PR label.
+fails when gzipped size grows by more than 5%. Head measurements also fail when
+they exceed [`benchmarks/perf-budgets.json`](https://github.com/ubugeeei-prod/ox-content/blob/main/benchmarks/perf-budgets.json).
+Maintainers can intentionally accept either failure with the
+`benchmark-regression-accepted` PR label.
+
+## Area Audit
+
+Each major surface has a measured baseline and either a target or an explicit
+no-op. Numbers are from the 2026-08-26 Blacksmith reports cited above, not from
+a local laptop run.
+
+| Area                                      | Baseline                                                                   | Target or no-op                                                                                                                                               |
+| ----------------------------------------- | -------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Fixture build time                        | Default shell ~370–430 ms; cold runs near 750 ms                           | Ceiling 5 s. No tighter gate: #1003 swung the same fixture +45% with no output-size change.                                                                   |
+| Runtime parse/render                      | large `@ox-content/napi` parse ~5.3k–6.1k ops/sec, parse+render ~6.5k–7.3k | Floors 2500 / 4000 ops/sec. Keep beating `pulldown-cmark` on the published parse+render tables.                                                               |
+| Bundle gzip                               | bare 5.8 KB, default 31.4 KB, +Vue 53.9 KB                                 | Keep default under 48 KB. Shared chunks already beat VitePress default (717.2 KB). Measured no-op for extra default-shell splits: 5 requests vs VitePress 21. |
+| Rendered HTML gzip                        | bare 2.9 KB, default/Vue 9.8 KB                                            | Ceiling 16 KB for the default shell.                                                                                                                          |
+| Initial requests                          | bare 1, default/Vue 5                                                      | Ceiling 8. Do not add blocking requests to the default fixture.                                                                                               |
+| Published package weight                  | Not measured by `measure.mjs`                                              | No-op: CI gates generated site output, not npm tarball weight.                                                                                                |
+| Search / embeds / Code Play / MDX islands | Fixture apps do not enable these                                           | No-op: keep feature payloads out of the 31.4 KB default-shell number until a fixture exercises them.                                                          |
 
 ## Reproduce
 
@@ -328,6 +366,15 @@ For a faster local rerun after dependencies are installed, use:
 
 ```bash
 node benchmarks/bundle-size/measure.mjs --skip-install
+```
+
+Write JSON for the budget checker, and optionally run the dedicated build-time
+sweep (also from the repository root):
+
+```bash
+node benchmarks/bundle-size/measure.mjs --json /tmp/bundle.json
+node benchmarks/bundle-size/build-time-benchmark.mjs --json /tmp/build.json
+node benchmarks/bundle-size/check-budgets.mjs --bundle /tmp/bundle.json --build /tmp/build.json
 ```
 
 For Rust-side parser benchmarks, use:

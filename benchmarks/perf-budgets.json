@@ -1,0 +1,44 @@
+{
+  "version": 1,
+  "source": "Blacksmith PR Benchmark reports on 2026-08-26 (for example #1001 and #1005) on blacksmith-32vcpu-ubuntu-2404. Ceilings add headroom above those measured fixture values. They are not laptop estimates.",
+  "override": {
+    "env": "OX_CONTENT_BENCHMARK_ALLOW_REGRESSION",
+    "label": "benchmark-regression-accepted"
+  },
+  "apps": {
+    "ox-content (bare)": {
+      "gzippedBytes": 10240,
+      "htmlGzippedBytes": 5120,
+      "buildMs": 5000,
+      "requests": 2
+    },
+    "ox-content (default)": {
+      "gzippedBytes": 49152,
+      "htmlGzippedBytes": 16384,
+      "buildMs": 5000,
+      "requests": 8
+    },
+    "ox-content + Vue": {
+      "gzippedBytes": 81920,
+      "htmlGzippedBytes": 16384,
+      "buildMs": 5000,
+      "requests": 8
+    }
+  },
+  "runtime": {
+    "floors": [
+      {
+        "size": "large",
+        "suite": "parseOnly",
+        "target": "@ox-content/napi",
+        "minOpsPerSec": 2500
+      },
+      {
+        "size": "large",
+        "suite": "parseAndRender",
+        "target": "@ox-content/napi",
+        "minOpsPerSec": 4000
+      }
+    ]
+  }
+}

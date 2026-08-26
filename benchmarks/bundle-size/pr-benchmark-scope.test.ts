@@ -62,6 +62,13 @@ describe("detect-pr-benchmark-scope", () => {
     expect(parseOutputs(result.stdout)).toEqual({ runtime: "true", bundle: "true" });
   });
 
+  it("runs only the bundle gate for committed performance budgets", () => {
+    const result = runScope(["benchmarks/perf-budgets.json"]);
+
+    expect(result.status).toBe(0);
+    expect(parseOutputs(result.stdout)).toEqual({ runtime: "false", bundle: "true" });
+  });
+
   it("falls back to both gates for unclassified paths", () => {
     const result = runScope(["tools/new-source-tree/file.rs"]);
 
