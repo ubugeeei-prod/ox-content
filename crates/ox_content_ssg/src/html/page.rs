@@ -165,7 +165,7 @@ pub struct Contributor {
 }
 
 /// Page data for SSG.
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub struct PageData {
     /// Page title.
     pub title: String,
@@ -202,6 +202,9 @@ pub struct PageData {
     /// Frontmatter `canonical`. Overrides the `siteUrl` + path URL.
     #[serde(default)]
     pub canonical: Option<String>,
+    /// Companion `.md` URL when default-theme copy-as-markdown chrome is on.
+    #[serde(default, rename = "markdownSource")]
+    pub markdown_source: Option<String>,
 }
 
 /// SSG configuration.
