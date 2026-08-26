@@ -2,6 +2,7 @@ mod apple_music;
 mod html;
 mod native;
 mod package_cards;
+mod playground_cards;
 mod provider_cards;
 mod render;
 mod speaker_deck;
@@ -14,6 +15,7 @@ use apple_music::render_apple_music;
 use html::{ComponentElement, find_component, find_pascal_component};
 use native::{render_audio, render_video};
 use package_cards::{render_crates_io, render_docker_hub, render_npm_package, render_pypi};
+use playground_cards::{render_codepen, render_jsfiddle, render_observable};
 use provider_cards::{
     render_discord, render_facebook, render_fediverse, render_google_maps, render_instagram,
     render_mastodon, render_misskey, render_mixi2, render_qiita, render_threads, render_zenn,
@@ -82,6 +84,17 @@ pub fn transform_media_embeds(html: &str, options: Option<&MediaEmbedsOptions>) 
             current = transform_component(&current, "dockerhub", render_docker_hub);
         }
     }
+    if options.playgrounds.unwrap_or(false) {
+        if contains_ci(&current, "<codepen") {
+            current = transform_component(&current, "codepen", render_codepen);
+        }
+        if contains_ci(&current, "<jsfiddle") {
+            current = transform_component(&current, "jsfiddle", render_jsfiddle);
+        }
+        if contains_ci(&current, "<observable") {
+            current = transform_component(&current, "observable", render_observable);
+        }
+    }
     if options.discord.unwrap_or(false) && contains_ci(&current, "<discord") {
         current = transform_component(&current, "discord", render_discord);
     }
@@ -127,6 +140,7 @@ fn has_enabled_embed(options: &MediaEmbedsOptions) -> bool {
         || options.qiita.unwrap_or(false)
         || options.zenn.unwrap_or(false)
         || options.package_registry.unwrap_or(false)
+        || options.playgrounds.unwrap_or(false)
         || options.discord.unwrap_or(false)
         || options.fediverse.unwrap_or(false)
         || options.facebook.unwrap_or(false)

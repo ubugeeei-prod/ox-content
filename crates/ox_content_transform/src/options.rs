@@ -286,6 +286,7 @@ pub struct MediaEmbedsOptions {
     pub qiita: Option<bool>,
     pub zenn: Option<bool>,
     pub package_registry: Option<bool>,
+    pub playgrounds: Option<bool>,
     pub discord: Option<bool>,
     pub fediverse: Option<bool>,
     pub facebook: Option<bool>,

@@ -8,6 +8,7 @@ import type {
   OgpOptions,
   ProviderArticleEmbedOptions,
   ProviderPackageEmbedOptions,
+  ProviderPlaygroundEmbedOptions,
   RedditEmbedOptions,
   TwitterEmbedOptions,
 } from "./plugins";
@@ -2421,6 +2422,13 @@ export interface BuiltinEmbedOptions {
   packageRegistry?: boolean | ProviderPackageEmbedOptions;
 
   /**
+   * Render `<CodePen>`, `<JSFiddle>`, and `<Observable>` as static playground cards.
+   * Pass `{ iframe: true }` to include lazy iframe URLs where supported.
+   * @default false
+   */
+  playgrounds?: boolean | ProviderPlaygroundEmbedOptions;
+
+  /**
    * Render `<Discord>` as static invite/message cards.
    * @default false
    */
@@ -2488,6 +2496,7 @@ export interface ResolvedBuiltinEmbedOptions {
   qiita?: ProviderArticleEmbedOptions | false;
   zenn?: ProviderArticleEmbedOptions | false;
   packageRegistry?: ProviderPackageEmbedOptions | false;
+  playgrounds?: ProviderPlaygroundEmbedOptions | false;
   discord?: boolean;
   fediverse?: boolean;
   facebook?: boolean;

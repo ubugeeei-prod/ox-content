@@ -23,6 +23,10 @@ import type {
   ProviderPackageEmbedOptions,
   ResolvedProviderPackageEmbedOptions,
 } from "./provider-packages";
+import type {
+  ProviderPlaygroundEmbedOptions,
+  ResolvedProviderPlaygroundEmbedOptions,
+} from "./provider-playgrounds";
 import {
   createSyndicationToken,
   parseTweetReference,
@@ -145,11 +149,13 @@ export type {
   ResolvedProviderArticleEmbedOptions,
   ProviderPackageEmbedOptions,
   ResolvedProviderPackageEmbedOptions,
+  ProviderPlaygroundEmbedOptions,
+  ResolvedProviderPlaygroundEmbedOptions,
   MermaidOptions,
 };
 
 const SELF_CLOSING_EMBED_TAG =
-  /<(GitHub|OgCard|Tweet|XPost|Reddit|Bluesky|GoogleMaps|Qiita|Zenn|NpmPackage|CratesIo|PyPI|DockerHub|Discord|Fediverse|Mastodon|Misskey|Mixi2|Facebook|Threads|Instagram|Spotify|AppleMusic|SpeakerDeck|Audio|Video|StackBlitz|WebContainer|YouTube|NotByAI)((?:[^>"']|"[^"]*"|'[^']*')*?)\s*\/>(?:\s*<\/\1\s*>)?/gi;
+  /<(GitHub|OgCard|Tweet|XPost|Reddit|Bluesky|GoogleMaps|Qiita|Zenn|NpmPackage|CratesIo|PyPI|DockerHub|CodePen|JSFiddle|Observable|Discord|Fediverse|Mastodon|Misskey|Mixi2|Facebook|Threads|Instagram|Spotify|AppleMusic|SpeakerDeck|Audio|Video|StackBlitz|WebContainer|YouTube|NotByAI)((?:[^>"']|"[^"]*"|'[^']*')*?)\s*\/>(?:\s*<\/\1\s*>)?/gi;
 
 /**
  * Custom embed tags are not HTML void elements, so a self-closing authoring
@@ -214,6 +220,7 @@ export async function transformAllPlugins(
     qiita = false,
     zenn = false,
     packageRegistry = false,
+    playgrounds = false,
     discord = false,
     fediverse = false,
     facebook = false,
@@ -273,6 +280,7 @@ export async function transformAllPlugins(
     qiita,
     zenn,
     packageRegistry,
+    playgrounds,
     discord,
     fediverse,
     facebook,
@@ -343,6 +351,7 @@ export async function transformBuiltinEmbeds(
     qiita: options.qiita,
     zenn: options.zenn,
     packageRegistry: options.packageRegistry,
+    playgrounds: options.playgrounds,
     discord: options.discord,
     fediverse: options.fediverse,
     facebook: options.facebook,

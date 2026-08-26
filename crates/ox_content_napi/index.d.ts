@@ -1425,6 +1425,12 @@ export interface JsMediaEmbedsOptions {
    */
   packageRegistry?: boolean
   /**
+   * Render `<CodePen>`, `<JSFiddle>`, and `<Observable>` playground cards.
+   *
+   * Default: `false`.
+   */
+  playgrounds?: boolean
+  /**
    * Render `<Discord>` static invite/message cards.
    *
    * Default: `false`.

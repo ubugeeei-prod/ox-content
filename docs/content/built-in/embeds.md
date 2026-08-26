@@ -21,6 +21,7 @@ markup; everything else is opt-in.
 | Qiita                | `embeds.qiita`           | `false` | `<Qiita url="https://..." />`       |
 | Zenn                 | `embeds.zenn`            | `false` | `<Zenn url="https://..." />`        |
 | Package registries   | `embeds.packageRegistry` | `false` | `<NpmPackage url="https://..." />`  |
+| Playgrounds          | `embeds.playgrounds`     | `false` | `<CodePen url="https://..." />`     |
 | Discord              | `embeds.discord`         | `false` | `<Discord url="https://..." />`     |
 | Fediverse            | `embeds.fediverse`       | `false` | `<Mastodon url="https://..." />`    |
 | Facebook             | `embeds.facebook`        | `false` | `<Facebook url="https://..." />`    |
@@ -61,6 +62,7 @@ export default {
         qiita: true,
         zenn: true,
         packageRegistry: true,
+        playgrounds: true,
       },
     }),
   ],
@@ -436,15 +438,17 @@ likes="21k"
 ## Provider Cards
 
 `embeds.googleMaps`, `embeds.qiita`, `embeds.zenn`,
-`embeds.packageRegistry`, `embeds.discord`, `embeds.fediverse`,
-`embeds.facebook`, `embeds.threads`, and `embeds.instagram` render static
-provider cards. `qiita: true`, `zenn: true`, and `packageRegistry: true` fetch
-public metadata at build time; set `{ fetch: false }` to render link cards
-without network access. Other provider cards do not fetch metadata or load
-third-party scripts by default. Authors can pass stable metadata with
-attributes such as `title`, `author`, `avatar`, `date`, `dateLabel`, `tags`,
-`likes`, `reposts`, `replies`, `server`, `channel`, `address`, `image`,
-`version`, `license`, `repository`, `downloads`, and `stars`.
+`embeds.packageRegistry`, `embeds.playgrounds`, `embeds.discord`,
+`embeds.fediverse`, `embeds.facebook`, `embeds.threads`, and
+`embeds.instagram` render static provider cards. `qiita: true`, `zenn: true`,
+`packageRegistry: true`, and CodePen playground cards fetch public metadata at
+build time; set `{ fetch: false }` to render link cards without network access.
+Playground iframe URLs are added only with `playgrounds: { iframe: true }`.
+Other provider cards do not fetch metadata or load third-party scripts by
+default. Authors can pass stable metadata with attributes such as `title`,
+`author`, `avatar`, `date`, `dateLabel`, `tags`, `likes`, `reposts`,
+`replies`, `server`, `channel`, `address`, `image`, `version`, `license`,
+`repository`, `downloads`, `stars`, `language`, and `runtime`.
 
 ```mdx
 <GoogleMaps
@@ -468,6 +472,12 @@ attributes such as `title`, `author`, `avatar`, `date`, `dateLabel`, `tags`,
 <PyPI url="https://pypi.org/project/requests" />
 <DockerHub url="https://hub.docker.com/_/nginx" />
 
+<CodePen url="https://codepen.io/ubugeeei/pen/abc123" />
+
+<JSFiddle url="https://jsfiddle.net/ubugeeei/abc123/2/" />
+
+<Observable url="https://observablehq.com/@d3/bar-chart" />
+
 <Mastodon
   url="https://mastodon.social/@docs/111"
   author="@docs@mastodon.social"
@@ -479,12 +489,13 @@ attributes such as `title`, `author`, `avatar`, `date`, `dateLabel`, `tags`,
 </Mastodon>
 ```
 
-| Option     | Default   | Purpose                                                   |
-| ---------- | --------- | --------------------------------------------------------- |
-| `fetch`    | `true`    | Fetch Qiita/Zenn/package registry metadata at build time. |
-| `timeout`  | `10000`   | Metadata request timeout in milliseconds.                 |
-| `cache`    | `true`    | Cache fetched metadata in memory for this build.          |
-| `cacheTTL` | `3600000` | Freshness window in milliseconds.                         |
+| Option     | Default   | Purpose                                          |
+| ---------- | --------- | ------------------------------------------------ |
+| `fetch`    | `true`    | Fetch article/package/playground metadata.       |
+| `timeout`  | `10000`   | Metadata request timeout in milliseconds.        |
+| `cache`    | `true`    | Cache fetched metadata in memory for this build. |
+| `cacheTTL` | `3600000` | Freshness window in milliseconds.                |
+| `iframe`   | `false`   | Add lazy playground iframe URLs when supported.  |
 
 `<Fediverse>`, `<Mastodon>`, `<Misskey>`, and `<Mixi2>` share the
 `embeds.fediverse` option. Google Maps accepts an optional safe Google Maps

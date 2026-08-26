@@ -55,6 +55,11 @@ pub struct JsMediaEmbedsOptions {
     /// Default: `false`.
     pub package_registry: Option<bool>,
 
+    /// Render `<CodePen>`, `<JSFiddle>`, and `<Observable>` playground cards.
+    ///
+    /// Default: `false`.
+    pub playgrounds: Option<bool>,
+
     /// Render `<Discord>` static invite/message cards.
     ///
     /// Default: `false`.
@@ -111,6 +116,7 @@ impl From<JsMediaEmbedsOptions> for MediaEmbedsOptions {
             qiita: value.qiita,
             zenn: value.zenn,
             package_registry: value.package_registry,
+            playgrounds: value.playgrounds,
             discord: value.discord,
             fediverse: value.fediverse,
             facebook: value.facebook,

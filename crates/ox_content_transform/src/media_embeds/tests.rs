@@ -80,6 +80,19 @@ fn renders_package_registry_cards() {
 }
 
 #[test]
+fn renders_playground_cards() {
+    let enabled = MediaEmbedsOptions { playgrounds: Some(true), ..Default::default() };
+    let html = transform_media_embeds(
+        r#"<CodePen url="https://codepen.io/ubugeeei/pen/abc123" title="Card demo" author="ubugeeei" image="https://shots.codepen.io/card.png">Static preview.</CodePen>
+<JSFiddle url="https://jsfiddle.net/ubugeeei/abc123/2/" title="Fiddle demo" embed="https://jsfiddle.net/ubugeeei/abc123/2/embedded/result/"></JSFiddle>
+<Observable url="https://observablehq.com/@d3/bar-chart" author="@d3" runtime="Observable Runtime"></Observable>"#,
+        Some(&enabled),
+    );
+
+    insta::assert_snapshot!(html);
+}
+
+#[test]
 fn leaves_provider_cards_when_disabled_or_rejected() {
     let input = r#"<Qiita url="https://qiita.com/ubugeeei/items/abcdef123456"></Qiita>"#;
     assert_eq!(transform_media_embeds(input, Some(&MediaEmbedsOptions::default())), input);
@@ -89,6 +102,7 @@ fn leaves_provider_cards_when_disabled_or_rejected() {
         qiita: Some(true),
         zenn: Some(true),
         package_registry: Some(true),
+        playgrounds: Some(true),
         discord: Some(true),
         fediverse: Some(true),
         facebook: Some(true),
@@ -104,6 +118,9 @@ fn leaves_provider_cards_when_disabled_or_rejected() {
         r#"<CratesIo url="http://crates.io/crates/serde"></CratesIo>"#,
         r#"<PyPI url="https://pypi.org/user/requests"></PyPI>"#,
         r#"<DockerHub url="https://hub.docker.com.evil/r/library/nginx"></DockerHub>"#,
+        r#"<CodePen url="https://codepen.io.evil/ubugeeei/pen/abc123"></CodePen>"#,
+        r#"<JSFiddle url="http://jsfiddle.net/ubugeeei/abc123"></JSFiddle>"#,
+        r#"<Observable url="https://observablehq.com/docs"></Observable>"#,
         r#"<Discord url="https://evil.example/channels/1"></Discord>"#,
         r#"<Facebook url="https://facebook.com.evil.example/post"></Facebook>"#,
         r#"<Threads url="http://threads.net/@example/post/abc"></Threads>"#,

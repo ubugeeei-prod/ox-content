@@ -9,6 +9,11 @@ import {
   normalizeProviderPackageOptions,
   type ProviderPackageEmbedOptions,
 } from "./provider-packages";
+import {
+  enrichProviderPlaygroundEmbeds,
+  normalizeProviderPlaygroundOptions,
+  type ProviderPlaygroundEmbedOptions,
+} from "./provider-playgrounds";
 import { enrichSpeakerDeckEmbeds } from "./speaker-deck";
 import { transformRedditEmbeds, type RedditEmbedOptions } from "./reddit";
 import { transformFetchedTweets } from "./twitter";
@@ -98,6 +103,13 @@ export interface MediaEmbedOptions {
   packageRegistry?: boolean | ProviderPackageEmbedOptions;
 
   /**
+   * Render `<CodePen>`, `<JSFiddle>`, and `<Observable>` static playground cards.
+   * Pass `{ iframe: true }` to add lazy provider iframe URLs where supported.
+   * @default false
+   */
+  playgrounds?: boolean | ProviderPlaygroundEmbedOptions;
+
+  /**
    * Render `<Discord>` static invite/message cards.
    * @default false
    */
@@ -167,6 +179,12 @@ export async function transformMediaEmbeds(
       normalizeProviderPackageOptions(options.packageRegistry),
     );
   }
+  if (options.playgrounds) {
+    result = await enrichProviderPlaygroundEmbeds(
+      result,
+      normalizeProviderPlaygroundOptions(options.playgrounds),
+    );
+  }
   if (!hasMediaMarker(result)) return result;
 
   const mod = await importNapiModule();
@@ -183,6 +201,7 @@ export async function transformMediaEmbeds(
     qiita: Boolean(options.qiita),
     zenn: Boolean(options.zenn),
     packageRegistry: Boolean(options.packageRegistry),
+    playgrounds: Boolean(options.playgrounds),
     discord: options.discord,
     fediverse: options.fediverse,
     facebook: options.facebook,
@@ -207,6 +226,7 @@ function hasEnabledMediaEmbed(options: MediaEmbedOptions): boolean {
     options.qiita ||
     options.zenn ||
     options.packageRegistry ||
+    options.playgrounds ||
     options.discord ||
     options.fediverse ||
     options.facebook ||
@@ -218,7 +238,7 @@ function hasEnabledMediaEmbed(options: MediaEmbedOptions): boolean {
 
 function hasMediaMarker(html: string): boolean {
   return (
-    /<(spotify|applemusic|speakerdeck|stackblitz|tweet|xpost|reddit|bluesky|googlemaps|qiita|zenn|npmpackage|cratesio|pypi|dockerhub|discord|fediverse|mastodon|misskey|mixi2|facebook|threads|instagram|webcontainer)[\s/>]/i.test(
+    /<(spotify|applemusic|speakerdeck|stackblitz|tweet|xpost|reddit|bluesky|googlemaps|qiita|zenn|npmpackage|cratesio|pypi|dockerhub|codepen|jsfiddle|observable|discord|fediverse|mastodon|misskey|mixi2|facebook|threads|instagram|webcontainer)[\s/>]/i.test(
       html,
     ) || /<(Audio|Video)[\s/>]/.test(html)
   );

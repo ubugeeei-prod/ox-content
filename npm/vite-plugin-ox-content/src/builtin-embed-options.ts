@@ -2,6 +2,7 @@ import type { TwitterEmbedOptions } from "./plugins";
 import type { BuiltinPmOptions, OxContentOptions, ResolvedOptions } from "./types";
 import { normalizeProviderArticleOptions } from "./plugins/provider-articles";
 import { normalizeProviderPackageOptions } from "./plugins/provider-packages";
+import { normalizeProviderPlaygroundOptions } from "./plugins/provider-playgrounds";
 
 export function resolveBuiltinEmbedOptions(
   options: OxContentOptions["embeds"],
@@ -24,6 +25,7 @@ export function resolveBuiltinEmbedOptions(
       qiita: false,
       zenn: false,
       packageRegistry: false,
+      playgrounds: false,
       discord: false,
       fediverse: false,
       facebook: false,
@@ -50,6 +52,7 @@ export function resolveBuiltinEmbedOptions(
     qiita: normalizeProviderArticleOptions(options?.qiita),
     zenn: normalizeProviderArticleOptions(options?.zenn),
     packageRegistry: normalizeProviderPackageOptions(options?.packageRegistry),
+    playgrounds: normalizeProviderPlaygroundOptions(options?.playgrounds),
     discord: options?.discord === true,
     fediverse: options?.fediverse === true,
     facebook: options?.facebook === true,
