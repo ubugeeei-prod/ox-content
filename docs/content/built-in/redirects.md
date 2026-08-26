@@ -48,7 +48,7 @@ options object and enables the feature with that map.
 | --------------- | ----------------------------------------- | ------- |
 | `redirects`     | `boolean` / path map / `RedirectsOptions` | `false` |
 | `map`           | `Record<string, string>`                  | `{}`    |
-| `netlify`       | `boolean`                                 | `false` |
+| `provider`      | `"netlify"` / `"cloudflare"`              | detect  |
 | `headers`       | `boolean`                                 | `false` |
 | `json`          | `boolean`                                 | `false` |
 | `allowExternal` | `boolean`                                 | `false` |
@@ -98,14 +98,28 @@ an explicit map entry overrides a page alias for the same old path.
 
 ## Host files
 
-Set `netlify: true` to also write a `_redirects` file
-(`/old /guide 301`). Set `headers: true` to write `_headers` with a
-`Location` line per source. Set `json: true` to write `redirects.json`.
-Normal (non-wildcard) sources still get HTML fallback pages.
+Set `provider: "netlify"` or `provider: "cloudflare"` to also write a
+`_redirects` file (`/old /guide 301`). Both hosts use the same body today.
+Set `headers: true` to write `_headers` with a `Location` line per source.
+Set `json: true` to write `redirects.json`. HTML fallback pages stay
+independent of the provider selector.
+
+When `provider` is omitted, the build detects the host from CI env:
+
+- `CF_PAGES=1` or `WORKERS_CI=1` → Cloudflare
+- `NETLIFY=true` → Netlify
+
+An explicit `provider` always wins, including local builds and GitHub
+Actions. If both Cloudflare and Netlify variables are set, the build
+warns and skips `_redirects` instead of picking a host. With no match,
+`_redirects` is omitted — the same default as before.
+
+Cloudflare Workers applies `_redirects` only to static asset responses,
+not to requests handled by Worker code.
 
 Sources that contain `*` are host-rule syntax (Netlify, Cloudflare Pages),
 not a literal URL segment. They still appear in `_redirects`, `_headers`,
-and `redirects.json` when those flags are on, but the SSG does not write
+and `redirects.json` when those outputs are on, but the SSG does not write
 a static HTML file such as `talks*/index.html`.
 
 ```ts
@@ -115,13 +129,19 @@ oxContent({
       "/talks*": "/works/talks",
       "/old-guide": "/guide",
     },
-    netlify: true,
+    provider: "netlify",
   },
 });
 ```
 
 That map writes `/talks* /works/talks 301` to `_redirects` and an HTML
 page only for `/old-guide`.
+
+## Migrating from 2.x
+
+`redirects.netlify` is removed in 3.0. Replace `netlify: true` with
+`provider: "netlify"`, or omit `provider` when the CI environment should
+select the host.
 
 ## Drafts
 

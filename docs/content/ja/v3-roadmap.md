@@ -28,6 +28,7 @@ description: テーマパッケージ、完全な MDX、Code Play、オプトイ
 - tree-sitter 文法がない言語はプレーンのままです。
 - テーマパッケージの peer 範囲は 3.x へ移ります。
 - 組み込み機能と Code Play は、メジャーバージョンが変わっただけでは **有効になりません**。それぞれ明示的なインストールかオプションが必要です。
+- `redirects.netlify` は削除されました。`provider: "netlify"` にするか、CI に Netlify / Cloudflare を検出させるなら `provider` を省略してください。
 
 シンタックストークンの CSS は `<pre class="ox-highlight css-variables">` 上の `--octc-syntax-*` カスタムプロパティです。カラーパッケージは対応する `syntax-*` トークンを定義します。
 

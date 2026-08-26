@@ -7,7 +7,7 @@ describe("oxContentSvelte", () => {
     const names = pluginNames(
       oxContentSvelte({
         ssg: { siteUrl: "https://example.com" },
-        redirects: { map: { "/old": "/new" }, netlify: true },
+        redirects: { map: { "/old": "/new" }, provider: "netlify" },
       }),
     );
 
