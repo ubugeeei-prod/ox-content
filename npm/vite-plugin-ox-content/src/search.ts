@@ -14,11 +14,8 @@ import type {
   ScopedSearchQuery,
 } from "./types";
 import { toNapiPublishState } from "./publish-state";
-import {
-  generateHostedSearchModule,
-  resolveHostedSearchConfig,
-  toLocalSearchRuntimeOptions,
-} from "./search-provider";
+import { generateHostedSearchModule, resolveHostedSearchConfig } from "./search-provider";
+import { generateLocalSearchModule } from "./search/local-runtime";
 
 // Import Rust bindings
 let oxContent: typeof import("@ox-content/napi") | null = null;
@@ -197,8 +194,5 @@ export function generateSearchModule(options: ResolvedSearchOptions, indexPath: 
   if (options.provider === "hosted") {
     return generateHostedSearchModule(options);
   }
-  return importNapiModuleSync().generateSearchModuleFromOptions(
-    toLocalSearchRuntimeOptions(options),
-    indexPath,
-  );
+  return generateLocalSearchModule(options, indexPath);
 }

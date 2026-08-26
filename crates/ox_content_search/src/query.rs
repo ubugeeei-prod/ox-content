@@ -1,12 +1,24 @@
 //! Search query engine with BM25 scoring.
 
+use std::cmp::Ordering;
+
 use rustc_hash::FxHashMap;
 
 use serde::{Deserialize, Serialize};
 
 use crate::fuzzy::fuzzy_match_weight;
 use crate::index::SearchIndex;
-use crate::tokenizer::tokenize_query;
+use crate::scope::parse_search_query;
+
+mod rich;
+mod snippet;
+
+pub use rich::{SearchResultMetadata, SearchResultRanking};
+
+use rich::{
+    MatchKind, PHRASE_MATCH_BOOST, SearchCandidate, SearchConstraints, phrase_fields,
+    phrase_tokens, result_aria_label, result_metadata, result_ranking, term_tokens,
+};
 
 /// Search options.
 ///
@@ -72,15 +84,23 @@ pub struct SearchResult {
 
     /// Content snippet with highlights.
     pub snippet: String,
+
+    /// Hierarchical result metadata for richer cards.
+    pub metadata: SearchResultMetadata,
+
+    /// Stable explanation of the ranking inputs.
+    pub ranking: SearchResultRanking,
+
+    /// Concise accessible label for result cards.
+    #[serde(rename = "ariaLabel")]
+    pub aria_label: String,
 }
 
 /// BM25 parameters.
 const K1: f64 = 1.2;
 const B: f64 = 0.75;
 const MIN_PREFIX_MATCH_LEN: usize = 2;
-const SNIPPET_CONTEXT_DIVISOR: usize = 3;
 const SNIPPET_MAX_CHARS: usize = 150;
-const SNIPPET_ELLIPSIS: &str = "...";
 
 impl SearchIndex {
     /// Searches the index with the given query.
@@ -90,33 +110,93 @@ impl SearchIndex {
             return Vec::new();
         }
 
-        let tokens = tokenize_query(query);
-        if tokens.is_empty() {
+        let parsed_query = parse_search_query(query);
+        if parsed_query.is_empty() {
             return Vec::new();
         }
+        let constraints = SearchConstraints::from_query(&parsed_query);
 
         // Calculate scores for each document
-        let mut doc_scores: FxHashMap<usize, (f64, Vec<String>)> = FxHashMap::default();
+        let mut doc_scores: FxHashMap<usize, SearchCandidate> = FxHashMap::default();
 
-        for (i, token) in tokens.iter().enumerate() {
-            let is_last = i == tokens.len() - 1;
+        let term_tokens = term_tokens(&parsed_query);
+        let phrase_tokens = phrase_tokens(&parsed_query);
+        let has_scoring_query = !term_tokens.is_empty()
+            || !phrase_tokens.is_empty()
+            || !parsed_query.prefixes.is_empty();
+
+        if !has_scoring_query && constraints.has_refinements() {
+            for (doc_idx, doc) in self.documents.iter().enumerate() {
+                if constraints.matches(doc) {
+                    doc_scores.entry(doc_idx).or_default();
+                }
+            }
+        }
+
+        for (i, token) in term_tokens.iter().enumerate() {
+            let is_last = i == term_tokens.len() - 1;
 
             if is_last && options.prefix && token.len() >= MIN_PREFIX_MATCH_LEN {
                 // Prefix expansion is limited to the final token so a query
                 // like "render mar" can reuse exact postings for "render" and
                 // only scan vocabulary terms for the active completion token.
                 for term in self.index.keys().filter(|term| term.starts_with(token)) {
-                    self.score_matching_term(term, 1.0, &mut doc_scores);
+                    self.score_matching_term(
+                        term,
+                        1.0,
+                        MatchKind::Prefix,
+                        constraints,
+                        &mut doc_scores,
+                    );
                 }
             } else {
-                self.score_matching_term(token, 1.0, &mut doc_scores);
+                self.score_matching_term(token, 1.0, MatchKind::Term, constraints, &mut doc_scores);
             }
 
             if options.fuzzy {
                 for (term, weight) in self.fuzzy_terms(token, is_last && options.prefix) {
-                    self.score_matching_term(term, weight, &mut doc_scores);
+                    self.score_matching_term(
+                        term,
+                        weight,
+                        MatchKind::Fuzzy,
+                        constraints,
+                        &mut doc_scores,
+                    );
                 }
             }
+        }
+
+        for token in &phrase_tokens {
+            self.score_matching_term(token, 1.0, MatchKind::Term, constraints, &mut doc_scores);
+            if options.fuzzy {
+                for (term, weight) in self.fuzzy_terms(token, false) {
+                    self.score_matching_term(
+                        term,
+                        weight,
+                        MatchKind::Fuzzy,
+                        constraints,
+                        &mut doc_scores,
+                    );
+                }
+            }
+        }
+
+        for prefix in &parsed_query.prefixes {
+            if prefix.len() >= MIN_PREFIX_MATCH_LEN {
+                for term in self.index.keys().filter(|term| term.starts_with(prefix)) {
+                    self.score_matching_term(
+                        term,
+                        1.0,
+                        MatchKind::Prefix,
+                        constraints,
+                        &mut doc_scores,
+                    );
+                }
+            }
+        }
+
+        for phrase in &parsed_query.phrases {
+            self.score_matching_phrase(phrase, constraints, &mut doc_scores);
         }
 
         // Sort and limit candidates before constructing result payloads.
@@ -125,23 +205,29 @@ impl SearchIndex {
         // the ranking step.
         let mut ranked_docs: Vec<_> = doc_scores
             .into_iter()
-            .filter(|(_, (score, _))| *score >= options.threshold)
-            .map(|(doc_idx, (score, matches))| (doc_idx, score, matches))
+            .filter(|(_, candidate)| candidate.score >= options.threshold)
             .collect();
 
-        ranked_docs.sort_by(|(left_idx, left_score, _), (right_idx, right_score, _)| {
-            right_score
-                .partial_cmp(left_score)
-                .unwrap_or(std::cmp::Ordering::Equal)
+        ranked_docs.sort_by(|(left_idx, left), (right_idx, right)| {
+            right
+                .score
+                .partial_cmp(&left.score)
+                .unwrap_or(Ordering::Equal)
                 .then_with(|| left_idx.cmp(right_idx))
         });
         ranked_docs.truncate(options.limit);
 
         ranked_docs
             .into_iter()
-            .map(|(doc_idx, score, matches)| {
+            .map(|(doc_idx, candidate)| {
                 let doc = &self.documents[doc_idx];
+                let score = candidate.score;
+                let matches = candidate.matches.clone();
                 let snippet = self.generate_snippet(&doc.body, &matches, SNIPPET_MAX_CHARS);
+                let metadata =
+                    result_metadata(doc, &matches, constraints, parsed_query.filters.clone());
+                let ranking = result_ranking(score, candidate, &parsed_query);
+                let aria_label = result_aria_label(doc, &metadata, &ranking);
                 SearchResult {
                     id: doc.id.clone(),
                     title: doc.title.clone(),
@@ -149,6 +235,9 @@ impl SearchIndex {
                     score,
                     matches,
                     snippet,
+                    metadata,
+                    ranking,
+                    aria_label,
                 }
             })
             .collect()
@@ -166,7 +255,9 @@ impl SearchIndex {
         &self,
         term: &str,
         weight: f64,
-        doc_scores: &mut FxHashMap<usize, (f64, Vec<String>)>,
+        kind: MatchKind,
+        constraints: SearchConstraints<'_>,
+        doc_scores: &mut FxHashMap<usize, SearchCandidate>,
     ) {
         let Some(postings) = self.index.get(term) else {
             return;
@@ -177,6 +268,10 @@ impl SearchIndex {
 
         for posting in postings {
             let doc = &self.documents[posting.doc_idx];
+            if !constraints.matches(doc) {
+                continue;
+            }
+
             #[allow(clippy::cast_precision_loss)]
             let doc_len = doc.body.len() as f64;
             let tf = f64::from(posting.tf);
@@ -191,10 +286,32 @@ impl SearchIndex {
             // query tokens do not allocate intermediate result rows. The small
             // `matches` Vec is de-duplicated in place because it is surfaced in
             // the final result payload.
-            let entry = doc_scores.entry(posting.doc_idx).or_insert((0.0, Vec::new()));
-            entry.0 += score;
-            if !entry.1.iter().any(|matched| matched == term) {
-                entry.1.push(term.to_owned());
+            let entry = doc_scores.entry(posting.doc_idx).or_default();
+            entry.score += score;
+            entry.add_term_match(term, posting.field, kind);
+        }
+    }
+
+    fn score_matching_phrase(
+        &self,
+        phrase: &str,
+        constraints: SearchConstraints<'_>,
+        doc_scores: &mut FxHashMap<usize, SearchCandidate>,
+    ) {
+        for (doc_idx, doc) in self.documents.iter().enumerate() {
+            if !constraints.matches(doc) {
+                continue;
+            }
+
+            let fields = phrase_fields(doc, phrase);
+            if fields.is_empty() {
+                continue;
+            }
+
+            let entry = doc_scores.entry(doc_idx).or_default();
+            for field in fields {
+                entry.score = field.boost().mul_add(PHRASE_MATCH_BOOST, entry.score);
+                entry.add_phrase_match(phrase, field);
             }
         }
     }
@@ -215,104 +332,8 @@ impl SearchIndex {
     /// Generates a snippet of text around matched terms.
     #[allow(clippy::unused_self)]
     fn generate_snippet(&self, body: &str, matches: &[String], max_len: usize) -> String {
-        if body.is_empty() || max_len == 0 {
-            return String::new();
-        }
-
-        let body_lower = body.to_lowercase();
-
-        // Find the first match position
-        let mut first_match_pos: Option<usize> = None;
-        for term in matches {
-            if let Some(pos) = body_lower.find(term) {
-                first_match_pos = Some(first_match_pos.map_or(pos, |current| current.min(pos)));
-            }
-        }
-
-        let start_pos = previous_char_boundary(body, first_match_pos.unwrap_or(0));
-        let start_char = body[..start_pos.min(body.len())].chars().count();
-
-        // Find a good start position (at word boundary, before match)
-        let context_before = max_len / SNIPPET_CONTEXT_DIVISOR;
-        let mut snippet_start =
-            byte_index_for_char(body, start_char.saturating_sub(context_before));
-        snippet_start = previous_word_start_byte(body, snippet_start);
-
-        // Calculate end position
-        let snippet_end = byte_index_after_chars(body, snippet_start, max_len);
-
-        // Build snippet
-        let needs_prefix = snippet_start > 0;
-        let needs_suffix = snippet_end < body.len();
-        let mut snippet = String::with_capacity(
-            snippet_end.saturating_sub(snippet_start)
-                + usize::from(needs_prefix) * SNIPPET_ELLIPSIS.len()
-                + usize::from(needs_suffix) * SNIPPET_ELLIPSIS.len(),
-        );
-
-        // Add ellipsis if needed
-        if needs_prefix {
-            snippet.push_str(SNIPPET_ELLIPSIS);
-        }
-        snippet.push_str(&body[snippet_start..snippet_end]);
-        if needs_suffix {
-            snippet.push_str(SNIPPET_ELLIPSIS);
-        }
-
-        snippet
+        snippet::generate_snippet(body, matches, max_len)
     }
-}
-
-fn byte_index_for_char(body: &str, target_char: usize) -> usize {
-    if target_char == 0 {
-        return 0;
-    }
-
-    body.char_indices().nth(target_char).map_or(body.len(), |(byte, _)| byte)
-}
-
-fn previous_char_boundary(body: &str, byte_index: usize) -> usize {
-    let mut byte_index = byte_index.min(body.len());
-    while !body.is_char_boundary(byte_index) {
-        byte_index -= 1;
-    }
-    byte_index
-}
-
-fn previous_word_start_byte(body: &str, start_byte: usize) -> usize {
-    let mut start_byte = previous_char_boundary(body, start_byte);
-
-    while start_byte < body.len() {
-        let Some(current_char) = body[start_byte..].chars().next() else {
-            return start_byte;
-        };
-
-        if current_char.is_whitespace() {
-            return start_byte + current_char.len_utf8();
-        }
-
-        if start_byte == 0 {
-            return 0;
-        }
-
-        let Some((prev_byte, _)) = body[..start_byte].char_indices().next_back() else {
-            return 0;
-        };
-        start_byte = prev_byte;
-    }
-
-    body.len()
-}
-
-fn byte_index_after_chars(body: &str, start_byte: usize, char_count: usize) -> usize {
-    if char_count == 0 {
-        return start_byte;
-    }
-
-    body[start_byte..]
-        .char_indices()
-        .nth(char_count)
-        .map_or(body.len(), |(byte, _)| start_byte + byte)
 }
 
 #[cfg(test)]

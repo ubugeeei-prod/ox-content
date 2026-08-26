@@ -45,10 +45,11 @@ pub use markdown::{
     build_search_index_from_directory_with_options, build_search_index_json,
     extract_search_document_from_source, search_document_id,
 };
-pub use query::{SearchOptions, SearchResult};
+pub use query::{SearchOptions, SearchResult, SearchResultMetadata, SearchResultRanking};
 pub use runtime::{
     SearchRuntimeOptions, generate_search_module, generate_search_module_with_options,
 };
 pub use scope::{
-    ScopedSearchQuery, get_search_document_scopes, matches_search_scopes, parse_scoped_search_query,
+    ScopedSearchQuery, SearchQuery, SearchQueryFilter, get_search_document_scopes,
+    matches_search_scopes, parse_scoped_search_query, parse_search_query,
 };

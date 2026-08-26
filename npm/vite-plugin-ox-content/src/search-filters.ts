@@ -5,6 +5,8 @@
 import { escapeHtml, isSafeHref } from "./versions-html";
 
 const RESULTS_MARKUP = '<div class="search-results"></div>';
+const ACCESSIBLE_RESULTS_MARKUP =
+  '<div class="search-results" role="listbox" aria-label="Search results" aria-live="polite"></div>';
 
 export interface SearchLocaleOption {
   code: string;
@@ -131,7 +133,7 @@ function ensureSearchFilters(html: string): string {
   if (html.includes('class="search-filters"') || !html.includes(RESULTS_MARKUP)) {
     return html;
   }
-  return html.replace(RESULTS_MARKUP, `${searchFiltersMarkup()}${RESULTS_MARKUP}`);
+  return html.replace(RESULTS_MARKUP, `${searchFiltersMarkup()}${ACCESSIBLE_RESULTS_MARKUP}`);
 }
 
 function searchFiltersMarkup(): string {

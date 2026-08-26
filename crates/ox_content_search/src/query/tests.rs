@@ -1,5 +1,6 @@
 use super::*;
 use crate::index::SearchIndexBuilder;
+use crate::{SearchDocument, parse_search_query};
 
 #[test]
 fn test_search_basic() {
@@ -66,6 +67,88 @@ fn test_search_fuzzy_stays_opt_in() {
     let options = SearchOptions { prefix: false, ..Default::default() };
 
     assert!(index.search("isntall", &options).is_empty());
+}
+
+#[test]
+fn test_parse_rich_search_query() {
+    let parsed = parse_search_query(r#"@api lang:ja version:2.90 "static index" render* cli"#);
+
+    assert_eq!(parsed.text, "static index render cli");
+    assert_eq!(parsed.terms, vec!["cli"]);
+    assert_eq!(parsed.phrases, vec!["static index"]);
+    assert_eq!(parsed.prefixes, vec!["render"]);
+    assert_eq!(parsed.scopes, vec!["api"]);
+    assert_eq!(parsed.first_filter_value(&["locale"]), Some("ja"));
+    assert_eq!(parsed.first_filter_value(&["version"]), Some("2.90"));
+}
+
+#[test]
+fn test_search_rich_query_ranking_metadata() {
+    let mut builder = SearchIndexBuilder::new();
+    builder.add_document(SearchDocument {
+        id: "2.90/ja/api/search".to_string(),
+        title: "Query Grammar".to_string(),
+        url: "/2.90/ja/api/search".to_string(),
+        body: "The static index includes render pipelines for the CLI.".to_string(),
+        headings: vec!["Search API".to_string()],
+        code: vec!["render_page".to_string()],
+    });
+    builder.add_document(SearchDocument {
+        id: "2.90/ja/api/legacy".to_string(),
+        title: "Legacy Search".to_string(),
+        url: "/2.90/ja/api/legacy".to_string(),
+        body: "A static page may mention an index and renderer separately.".to_string(),
+        headings: vec!["Search API".to_string()],
+        code: Vec::new(),
+    });
+    builder.add_document(SearchDocument {
+        id: "guide/search".to_string(),
+        title: "English Search".to_string(),
+        url: "/guide/search".to_string(),
+        body: "The static index includes render pipelines.".to_string(),
+        headings: vec!["Guide".to_string()],
+        code: Vec::new(),
+    });
+
+    let index = builder.build();
+    let results = index.search(
+        r#"@2.90/ja/api lang:ja version:2.90 "static index" render*"#,
+        &SearchOptions { prefix: false, ..Default::default() },
+    );
+
+    assert_eq!(results.len(), 2);
+    assert_eq!(results[0].id, "2.90/ja/api/search");
+    assert_eq!(results[0].metadata.scopes, vec!["2.90", "2.90/ja", "2.90/ja/api"]);
+    assert_eq!(results[0].metadata.section.as_deref(), Some("Search API"));
+    assert_eq!(results[0].metadata.locale.as_deref(), Some("ja"));
+    assert_eq!(results[0].metadata.version.as_deref(), Some("2.90"));
+    assert!(results[0].matches.iter().any(|value| value == "static index"));
+    assert!(results[0].ranking.fields.iter().any(|field| field == "body"));
+    assert!(
+        results[0].ranking.reasons.iter().any(|reason| reason == "body phrase match: static index")
+    );
+    assert!(results[0].ranking.reasons.iter().any(|reason| reason == "scope filter: 2.90/ja/api"));
+    assert!(results[0].aria_label.contains("Query Grammar"));
+    assert!(results[0].aria_label.contains("language ja"));
+
+    let serialized = serde_json::to_value(&results[0]).unwrap();
+    assert!(serialized.get("ariaLabel").is_some());
+    assert!(serialized.get("aria_label").is_none());
+}
+
+#[test]
+fn test_search_filter_only_queries_return_matching_documents() {
+    let mut builder = SearchIndexBuilder::new();
+    builder.add_simple("2.90/api/search", "Versioned", "/2.90/api/search", "Search content.");
+    builder.add_simple("api/search", "Current", "/api/search", "Search content.");
+
+    let index = builder.build();
+    let results = index.search("version:2.90", &SearchOptions::default());
+
+    assert_eq!(results.len(), 1);
+    assert_eq!(results[0].id, "2.90/api/search");
+    assert_eq!(results[0].metadata.version.as_deref(), Some("2.90"));
+    assert!(results[0].ranking.reasons.iter().any(|reason| reason == "version filter: 2.90"));
 }
 
 #[test]

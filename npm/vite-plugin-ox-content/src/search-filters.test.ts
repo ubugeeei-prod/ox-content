@@ -48,6 +48,9 @@ describe("injectSearchLocaleFilters", () => {
     expect(html).toContain('<option value="">All languages</option>');
     expect(html).toContain('<option value="ja" selected>日本語</option>');
     expect(html).toContain('<option value="en">English</option>');
+    expect(html).toContain(
+      '<div class="search-results" role="listbox" aria-label="Search results" aria-live="polite"></div>',
+    );
     expect(html).toContain('data-search-filter-label="locale"');
     expect(html).not.toContain('data-search-filter-label="locale" hidden');
   });

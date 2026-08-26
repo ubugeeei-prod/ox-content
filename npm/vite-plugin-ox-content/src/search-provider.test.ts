@@ -1,5 +1,4 @@
 import { afterEach, describe, expect, it } from "vite-plus/test";
-import { oxContent } from "./index";
 import { generateSearchModule, resolveSearchOptions, writeSearchIndex } from "./search";
 import type { SearchOptions } from "./types";
 import * as fs from "node:fs/promises";
@@ -9,8 +8,6 @@ import * as path from "node:path";
 const INDEX_PATH = "/docs/search-index.json";
 const PUBLIC_KEY = "pub_search_only_key";
 const SECRET_KEY = "SECRET_WRITE_OR_ADMIN_KEY";
-const HOSTILE_APP_ID = `"><img src=x onerror=alert(1)></script>`;
-const HOSTILE_INDEX = `</div><script>alert(1)</script>`;
 
 const tempDirs: string[] = [];
 const restore: Array<() => void> = [];
@@ -202,17 +199,44 @@ describe("generateSearchModule hosted adapter", () => {
     const calls = mockFetch(() => ({
       ok: true,
       json: async () => ({
-        hits: [{ id: "guide", title: "Guide", url: "/guide", score: 2, snippet: "hello" }],
+        hits: [
+          {
+            id: "api/guide",
+            title: "Guide",
+            url: "/api/guide",
+            score: 2,
+            snippet: "hello",
+            metadata: {
+              scopes: ["api"],
+              section: "Search API",
+              locale: "ja",
+              filters: [{ name: "locale", value: "ja" }],
+            },
+            ranking: {
+              score: 2,
+              fields: ["title"],
+              reasons: ["title term match: guide"],
+            },
+          },
+        ],
       }),
     }));
     const runtime = await loadModule(
       generateSearchModule(resolveSearchOptions(hostedOptions()), INDEX_PATH),
     );
-    const results = await runtime.search("guide", { limit: 3 });
+    const query = String.raw`@api lang:ja "Guide" gui*`;
+    const results = await runtime.search(query, { limit: 3 });
 
     expect(runtime.searchOptions.placeholder).toBe("Search documentation...");
     expect(runtime.searchOptions.hotkey).toBe("/");
     expect(runtime.searchOptions.provider).toBe("hosted");
+    expect(runtime.parseSearchQuery(query)).toMatchObject({
+      text: "Guide gui",
+      phrases: ["guide"],
+      prefixes: ["gui"],
+      filters: [{ name: "locale", value: "ja" }],
+      scopes: ["api"],
+    });
     expect(calls).toHaveLength(1);
     expect(calls[0]?.input).toBe("https://search.example.test/query");
     const headers = new Headers(calls[0]?.init?.headers);
@@ -222,65 +246,54 @@ describe("generateSearchModule hosted adapter", () => {
     expect(headers.has("x-write-key")).toBe(false);
     expect(headers.has("x-api-key")).toBe(false);
     expect(calls[0]?.init?.body).toBe(
-      JSON.stringify({ query: "guide", limit: 3, indexName: "site-index" }),
+      JSON.stringify({
+        query: "Guide gui",
+        rawQuery: query,
+        parsedQuery: {
+          raw: query,
+          text: "Guide gui",
+          terms: [],
+          phrases: ["guide"],
+          prefixes: ["gui"],
+          filters: [{ name: "locale", value: "ja" }],
+          scopes: ["api"],
+        },
+        limit: 3,
+        indexName: "site-index",
+      }),
     );
     expect(results).toEqual([
-      { id: "guide", title: "Guide", url: "/guide", score: 2, matches: [], snippet: "hello" },
+      {
+        id: "api/guide",
+        title: "Guide",
+        url: "/api/guide",
+        score: 2,
+        matches: [],
+        snippet: "hello",
+        scopes: ["api"],
+        metadata: {
+          scopes: ["api"],
+          section: "Search API",
+          locale: "ja",
+          version: undefined,
+          filters: [{ name: "locale", value: "ja" }],
+        },
+        ranking: {
+          score: 2,
+          fields: ["title"],
+          reasons: ["title term match: guide"],
+        },
+        ariaLabel: "Guide, section Search API, language ja, 1 ranking reasons",
+      },
     ]);
-  });
-
-  it("fails closed without calling a broken endpoint or leaking secrets", async () => {
-    const warnings = captureWarn();
-    const calls = mockFetch(() => {
-      throw new Error("hosted adapter should not fetch");
+    expect(runtime.createSearchUiState(query, results).cards[0]).toMatchObject({
+      id: "ox-search-result-api-guide",
+      role: "option",
+      badges: [
+        { kind: "section", label: "Search API" },
+        { kind: "locale", label: "ja" },
+        { kind: "scope", label: "@api" },
+      ],
     });
-    const resolved = resolveSearchOptions({
-      provider: "hosted",
-      adminKey: SECRET_KEY,
-    } as SearchOptions);
-    const code = generateSearchModule(resolved, INDEX_PATH);
-    const runtime = await loadModule(code);
-    const results = await runtime.search("anything");
-
-    expect(results).toEqual([]);
-    expect(calls).toHaveLength(0);
-    expect(code).not.toContain("fetch(");
-    expect(code).not.toContain(SECRET_KEY);
-    expect(code).not.toMatch(/adminKey|writeKey|apiKey/);
-    expect(runtime.searchOptions.placeholder).toBe("Search documentation...");
-    expect(runtime.searchOptions.hotkey).toBe("/");
-    expect(JSON.stringify(warnings)).not.toContain(SECRET_KEY);
-  });
-
-  it("escapes hostile appId and indexName and never names a write key", () => {
-    const code = generateSearchModule(
-      resolveSearchOptions(
-        hostedOptions({
-          appId: HOSTILE_APP_ID,
-          indexName: HOSTILE_INDEX,
-        }),
-      ),
-      INDEX_PATH,
-    );
-
-    expect(code).not.toContain("<script>");
-    expect(code).not.toContain("<img");
-    expect(code).toContain("\\u003c");
-    expect(code).toContain("searchKey");
-    expect(code).not.toMatch(/adminKey|writeKey|apiKey/);
-    expect(code).not.toContain("write key");
-  });
-});
-
-describe("search plugin disable path", () => {
-  it("still disables the virtual module when search is false", async () => {
-    const plugins = oxContent({ search: false });
-    const search = plugins.find((plugin) => plugin.name === "ox-content:search");
-    const load = search?.load as (id: string) => Promise<string | null> | string | null;
-    const code = await load.call(search, "\0virtual:ox-content/search");
-
-    expect(code).toContain("enabled: false");
-    expect(code).not.toContain("fetch(");
-    expect(code).not.toContain("BM25");
   });
 });

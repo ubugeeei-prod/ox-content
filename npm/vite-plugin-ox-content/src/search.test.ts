@@ -98,6 +98,101 @@ describe("generateSearchModule", () => {
     expect(calls).toEqual(["/search.json"]);
     expect(results[0]?.id).toBe("install");
   });
+
+  it("exposes rich query, ranking, and accessible card state in the local runtime", async () => {
+    const srcDir = await fs.mkdtemp(path.join(os.tmpdir(), "ox-content-search-rich-"));
+    tempDirs.push(srcDir);
+    await fs.mkdir(path.join(srcDir, "2.90", "ja", "api"), { recursive: true });
+    await fs.writeFile(
+      path.join(srcDir, "2.90", "ja", "api", "search.md"),
+      `---
+title: Query Grammar
+---
+# Search API
+
+The static index includes render pipelines for the CLI.
+`,
+      "utf-8",
+    );
+    await fs.writeFile(
+      path.join(srcDir, "2.90", "ja", "api", "legacy.md"),
+      `---
+title: Legacy Search
+---
+# Search API
+
+A static page may mention an index and renderer separately.
+`,
+      "utf-8",
+    );
+
+    const indexJson = await buildSearchIndex(srcDir, "/");
+    mockFetchJson(indexJson);
+    const runtime = await loadModule(
+      generateSearchModule(resolveSearchOptions({ prefix: false }), "/search.json"),
+    );
+    const query = String.raw`@2.90/ja/api lang:ja version:2.90 "static index" render*`;
+
+    expect(runtime.parseSearchQuery(query)).toMatchObject({
+      text: "static index render",
+      terms: [],
+      phrases: ["static index"],
+      prefixes: ["render"],
+      filters: [
+        { name: "locale", value: "ja" },
+        { name: "version", value: "2.90" },
+      ],
+      scopes: ["2.90/ja/api"],
+    });
+
+    const results = await runtime.search(query, {
+      localeCodes: ["ja"],
+      defaultLocale: "en",
+      versionPrefixes: ["2.90"],
+    });
+
+    expect(results).toHaveLength(2);
+    expect(results[0]).toMatchObject({
+      id: "2.90/ja/api/search",
+      scopes: ["2.90", "2.90/ja", "2.90/ja/api"],
+      metadata: {
+        section: "Search API",
+        locale: "ja",
+        version: "2.90",
+      },
+    });
+    expect(results[0].matches).toContain("static index");
+    expect(results[0].ranking.fields).toContain("body");
+    expect(results[0].ranking.reasons).toContain("body phrase match: static index");
+    expect(results[0].ranking.reasons).toContain("scope filter: 2.90/ja/api");
+    expect(results[0].ariaLabel).toContain("language ja");
+
+    const ui = runtime.createSearchUiState(query, results, { activeIndex: 0 });
+    expect(ui.status).toBe("results");
+    expect(ui.refinements.map((item: { label: string }) => item.label)).toEqual([
+      "@2.90/ja/api",
+      "locale:ja",
+      "version:2.90",
+      '"static index"',
+      "render*",
+    ]);
+    expect(ui.cards[0]).toMatchObject({
+      role: "option",
+      id: "ox-search-result-2-90-ja-api-search",
+      title: "Query Grammar",
+    });
+    expect(ui.activeDescendant).toBe("ox-search-result-2-90-ja-api-search");
+    expect(runtime.createSearchUiState("", []).status).toBe("empty");
+    expect(runtime.createSearchUiState("query", [], { loading: true }).status).toBe("loading");
+    expect(runtime.createSearchUiState("query", []).status).toBe("no-results");
+    expect(runtime.createSearchUiState("検索", [], { isComposing: true }).status).toBe("composing");
+  });
+
+  it("keeps the generated local runtime under the rich search size budget", () => {
+    const mod = generateSearchModule(resolveSearchOptions(true), "/docs/search-index.json");
+
+    expect(Buffer.byteLength(mod, "utf8")).toBeLessThan(36_000);
+  });
 });
 
 describe("buildSearchIndex", () => {

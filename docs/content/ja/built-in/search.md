@@ -43,6 +43,22 @@ export default {
 
 サイトにロケールが2つ以上あるときは、ダイアログに **Language** の `<select>` が出て、今見ているページの言語が既定になります。**All languages** はインデックス全体を探します。ドキュメントバージョンが有効なら、**Version** の `<select>` がその版の `search-index.json` を読みます。どちらもネイティブの select なので、Tab・矢印・タイプアヘッド・Space・Enter が追加ウィジェットなしで動きます。
 
+## クエリ文法
+
+Rust の BM25 エンジンと生成される `virtual:ox-content/search` ランタイムは、同じ正規化済みクエリモデルを使います。入力された本文と絞り込みを分けるので、UI は安定したチップを出せ、エンジンは順位の理由を説明できます。
+
+| クエリ           | 意味                                                    |
+| ---------------- | ------------------------------------------------------- |
+| `install cli`    | BM25 の完全一致 posting を採点する通常の単語。          |
+| `"static index"` | その連続した文字列を含む文書をブーストするフレーズ。    |
+| `render*`        | 最後のトークンでなくても効く明示的なプレフィックス。    |
+| `@api`           | 文書 ID または URL のパス区切りから作るスコープ。       |
+| `scope:api`      | 同じスコープ絞り込みのフィルタ表記。                    |
+| `lang:ja`        | ロケール絞り込み。`language:` と `locale:` も同じです。 |
+| `version:2.90`   | バージョン絞り込み。`v:` も同じです。                   |
+
+閉じていない引用符は入力中のフレーズとして扱うため、キーボードで絞り込んでいる途中や IME 変換中でも UI は状態を保てます。ホスト済み検索にはリクエスト本文で `rawQuery` と `parsedQuery` を渡します。ローカル検索では、静的文書のパスから分かる範囲でスコープ、ロケール、バージョンの絞り込みを直接適用します。
+
 ## ホスト済みプロバイダ
 
 `provider` を `"hosted"` にしない限り、検索はローカル BM25 インデックスのままです。ホスト済みアダプタは、設定または環境変数からアプリケーション ID、インデックス名、**公開の検索専用キー** を受け取ります。書き込みキーや管理キーは渡さないでください。`adminKey`、`writeKey`、`apiKey` という名前のフィールドは拒否します。
@@ -73,7 +89,7 @@ export default {
 | `publicKey` | 設定または `OX_CONTENT_SEARCH_PUBLIC_KEY` | `searchKey` の別名。            |
 | `endpoint`  | 設定または `OX_CONTENT_SEARCH_ENDPOINT`   | 検索クエリを受ける HTTP URL。   |
 
-`publicKey` は `searchKey` の別名です。`endpoint` を省略すると、クライアントは `/search` に POST します。リクエストは `query`、`limit`、`indexName` を持つ JSON `POST` で、ヘッダーに `x-app-id`、`x-index-name`、`x-search-key` が付きます。アダプタは `hits`（または `results`）を、ローカル検索と同じ `{ id, title, url, score, matches, snippet }` 形に写します。
+`publicKey` は `searchKey` の別名です。`endpoint` を省略すると、クライアントは `/search` に POST します。リクエストは `query`、`rawQuery`、`parsedQuery`、`limit`、`indexName` を持つ JSON `POST` で、ヘッダーに `x-app-id`、`x-index-name`、`x-search-key` が付きます。アダプタは `hits`（または `results`）を、ローカル検索と同じ `{ id, title, url, score, matches, snippet }` 形に写し、ホスト側が返した `metadata`、`ranking`、`ariaLabel` も保持します。
 
 ホスト済み検索を選んでも `appId`、`indexName`、公開検索キーのいずれかが欠けていると、クライアントは閉じて失敗します。`search()` は空配列を返し、壊れたエンドポイントは呼びません。秘密はログに出しません。ローカルの `search-index.json` パスはそのままです。
 
@@ -84,12 +100,19 @@ export default {
 既定の SSG テーマが検索 UI を配線します。独自 UI では、同じインデックスを仮想モジュール経由で任意のクライアントコードから使えます。
 
 ```ts
-import { search, searchOptions } from "virtual:ox-content/search";
+import {
+  createSearchUiState,
+  parseSearchQuery,
+  search,
+  searchOptions,
+} from "virtual:ox-content/search";
 
 const results = await search("code annotations", { limit: 5 });
+const query = parseSearchQuery('@api "static index" lang:ja');
+const ui = createSearchUiState(query.raw, results);
 
 for (const result of results) {
-  // { id, title, url, score, matches, snippet }
+  // { id, title, url, score, matches, snippet, metadata, ranking, ariaLabel }
   console.log(result.title, result.url, result.snippet);
 }
 ```
@@ -97,6 +120,11 @@ for (const result of results) {
 - `search(query, options?)` は `provider` に応じてローカル BM25 またはホスト済みアダプタを使います。`options.limit`、`options.prefix`、`options.fuzzy` は呼び出しごとに設定済みの既定を上書きします。`fuzzy` はローカル専用で、巨大な静的インデックスの exact/prefix 経路を速いまま保つため既定ではオフです。`options.locale` は、`localeCodes` と `defaultLocale` も渡したときに結果を一つの言語に保ちます。`versionPrefixes` は、ロケール区分を読む前に文書パスから取り除きます。
 - `searchOptions` は解決済みの `{ enabled, limit, prefix, placeholder, hotkey, provider }` を出すので、独自 UI がサイト設定を尊重できます。
 - `@api transform` のようなスコープ付きクエリは、結果をサイトの一区画に限定します。
+- 結果は基本フィールドに加えて、カード向けの `scopes`、`metadata`、`ranking`、`ariaLabel` を返します。`metadata` にはセクション文脈、有効なフィルタ、取得できた言語/バージョンが入ります。`ranking.reasons` は `title term match: install` や `body phrase match: static index` のような安定した文字列です。
+- `parseSearchQuery(query)` は正規化済みの単語、フレーズ、プレフィックス、フィルタ、スコープを返します。`createSearchUiState(query, results, options)` は `empty`、`loading`、`no-results`、`results`、`composing` を扱い、`aria-activedescendant` 用のリストボックス向けカード ID を返します。
+- `formatSearchResultForCard(result, index)` はローカル/ホスト済みの結果を、`role: "option"`、バッジ、アクセシブルラベルを持つ安定した結果カード用モデルへ変換します。
+
+生成されるローカルランタイムには、36 KB のバイト予算をユニットテストで置いています。PR の benchmark/output-size レポートでは、コンテンツ増加によるペイロード増を見えるように、docs コーパスの `search-index.json` サイズも併記してください。
 
 検索をオフにしても仮想モジュールは解決します。`search()` は空配列を返し、`searchOptions.enabled` は `false` です。独自 UI で条件付き import は不要です。
 
