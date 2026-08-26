@@ -315,6 +315,9 @@ render `.ox-tweet--full`. The full-card chrome follows the MIT-licensed
 [sveltweet](https://github.com/ryoppippi/sveltweet) visual contract; notices
 are in [Credits](../credits.md). See
 [Twitter/X Embed](../examples/twitter-embed.md) for details.
+Custom hosts import `@ox-content/vite-plugin/styles/social.css` and, for
+`appearance: "full"`, `styles/twitter-full.css`. See
+[Component styles](./component-styles.md).
 
 ## Bluesky
 
@@ -406,4 +409,5 @@ requirements.
 ## Related
 
 - [Mermaid Diagrams](./mermaid.md) — diagram fences rendered to static SVG.
+- [Component styles](./component-styles.md) — official CSS for custom hosts.
 - [Built-in Features overview](../built-in-features.md)

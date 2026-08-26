@@ -66,6 +66,9 @@ root card.
 Full appearance is static HTML/CSS: no hydration, widget iframe, or per-card
 listeners. It reuses the same materialized avatar/photo/video assets as compact.
 Pages that only render compact cards do not ship the full-card CSS.
+Custom `ssg: false` hosts import `@ox-content/vite-plugin/styles/social.css`
+and, for full cards, `styles/twitter-full.css`. See
+[Component styles](../built-in/component-styles.md).
 
 The full-card visual contract follows MIT-licensed
 [react-tweet](https://github.com/vercel/react-tweet) (Copyright (c) 2023 Luis
