@@ -151,7 +151,7 @@ fn happy_path_lists_locales_and_marks_current() {
     );
     assert!(
         switcher.contains(
-            r#"<button type="button" aria-expanded="false" aria-haspopup="true">日本語</button>"#
+            r#"<button type="button" disabled aria-expanded="false" aria-haspopup="true">日本語</button>"#
         ),
         "{switcher}"
     );
@@ -294,9 +294,9 @@ fn dropdown_trigger_escapes_current_name() {
     );
     let switcher = switcher_html(&html).expect("enabled switcher must render");
     assert!(
-        switcher
-            .contains("<button type=\"button\" aria-expanded=\"false\" aria-haspopup=\"true\">")
-            && switcher.contains("&lt;script&gt;alert(1)&lt;/script&gt;"),
+        switcher.contains(
+            "<button type=\"button\" disabled aria-expanded=\"false\" aria-haspopup=\"true\">"
+        ) && switcher.contains("&lt;script&gt;alert(1)&lt;/script&gt;"),
         "{switcher}"
     );
     assert!(!switcher.contains("<script>alert(1)</script>"), "{switcher}");

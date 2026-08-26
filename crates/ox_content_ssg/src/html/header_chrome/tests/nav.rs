@@ -52,7 +52,7 @@ fn nav_dropdown_markup_has_aria() {
 
     assert!(
         nav.contains(
-            r#"<button type="button" aria-expanded="false" aria-haspopup="true">API</button>"#
+            r#"<button type="button" disabled aria-expanded="false" aria-haspopup="true">API</button>"#
         ),
         "{nav}"
     );
@@ -105,7 +105,8 @@ fn dropdown_js_closes_on_escape_and_restores_focus() {
     assert!(
         HEADER_CHROME_JS.contains("Escape")
             && HEADER_CHROME_JS.contains(".focus(")
-            && HEADER_CHROME_JS.contains(".ox-locale-switcher > button"),
+            && HEADER_CHROME_JS.contains(".ox-locale-switcher > button")
+            && HEADER_CHROME_JS.contains("button.disabled = false"),
         "{HEADER_CHROME_JS}"
     );
 }

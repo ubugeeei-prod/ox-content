@@ -8,8 +8,7 @@ use super::footer::{FOOTER_CSS, generate_footer_html};
 use super::head::{RenderedHead, render_themed_head};
 use super::header_chrome::{
     enhance_article_html, markdown_source_chrome_enabled, push_header_chrome_body_classes,
-    push_header_chrome_css, push_header_chrome_js, render_announcement, render_header_nav,
-    resolve_page_chrome,
+    push_header_chrome_css, render_announcement, render_header_nav, resolve_page_chrome,
 };
 use super::heading_permalinks::{push_heading_permalink_body_class, push_heading_permalink_css};
 use super::json_ld::render_json_ld;
@@ -17,8 +16,9 @@ use super::locale_switcher::render_locale_switcher;
 use super::mpa_navigation::{MPA_NAVIGATION_CSS, THEME_BOOTSTRAP_JS, view_transitions_enabled};
 use super::nav::generate_nav_html;
 use super::not_by_ai::push_not_by_ai_css;
+use super::page_js::{PageJsInput, assemble_page_js};
 use super::pagination::resolve_pager;
-use super::reader_chrome::{READER_CHROME_CSS, READER_CHROME_JS};
+use super::reader_chrome::READER_CHROME_CSS;
 use super::section_index::SECTION_INDEX_CSS;
 use super::social::{generate_mobile_social_links_html, generate_social_links_html};
 use super::team::TEAM_CSS;
@@ -29,8 +29,8 @@ use super::utils::{
 };
 use super::{
     CONTRIBUTORS_CSS, ENTRY_CSS, FILE_TREE_CSS, GITHUB_CSS, ISLAND_CSS, MERMAID_CSS, NavGroup,
-    OGP_CSS, PageData, PageTemplate, SOCIAL_CSS, SOCIAL_TWEET_FULL_CSS, SSG_CSS, SSG_JS, SsgConfig,
-    TABS_CSS, TABS_JS, YOUTUBE_CSS,
+    OGP_CSS, PageData, PageTemplate, SOCIAL_CSS, SOCIAL_TWEET_FULL_CSS, SSG_CSS, SsgConfig,
+    TABS_CSS, YOUTUBE_CSS,
 };
 
 pub(super) struct GeneratedPage {
@@ -219,19 +219,16 @@ pub(super) fn generate_html_inner(
     let logo_dark_src = header_config.and_then(|h| h.logo_dark.as_deref()).map(resolve_theme_asset);
     let locale_switcher_html = render_locale_switcher(config);
     let custom_js = theme.and_then(|t| t.js.as_deref()).unwrap_or("");
-    let mut all_js =
-        format!("{}\n{}\n{}", SSG_JS.replace("{{base}}", &config.base), TABS_JS, custom_js);
-    if reader_chrome.needs_js() {
-        all_js.push('\n');
-        all_js.push_str(READER_CHROME_JS);
-    }
-    push_header_chrome_js(
-        &mut all_js,
-        &header_nav_html,
-        &announcement_html,
-        &locale_switcher_html,
+    let all_js = assemble_page_js(&PageJsInput {
+        content: &page_data.content,
+        base: &config.base,
+        custom_js,
+        header_nav_html: &header_nav_html,
+        announcement_html: &announcement_html,
+        locale_switcher_html: &locale_switcher_html,
         markdown_source_chrome,
-    );
+        reader_needs_js: reader_chrome.needs_js(),
+    });
     let self_hosted_icons = theme_has_self_hosted_icons(theme);
     let social_links_html = theme
         .and_then(|t| t.social_links.as_ref())

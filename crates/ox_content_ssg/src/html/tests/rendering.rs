@@ -300,6 +300,32 @@ fn kbd_css_is_included_only_when_ox_kbd_is_present() {
 }
 
 #[test]
+fn tabs_js_is_included_only_when_tab_groups_sync() {
+    let config = config("Test Site", "/", None);
+    let static_tabs = generate_html(
+        &page("Tabs", None, r#"<div class="ox-tabs"></div>"#, vec![], None, "tabs"),
+        &[],
+        &config,
+    );
+    assert!(static_tabs.contains("ox-content:css:plugin-tabs:start"), "{static_tabs}");
+    assert!(!static_tabs.contains("ox-content:js:tabs:"), "{static_tabs}");
+
+    let synced = generate_html(
+        &page(
+            "Tabs",
+            None,
+            r#"<div class="ox-tabs" data-ox-tab-group="pkg"></div>"#,
+            vec![],
+            None,
+            "tabs-sync",
+        ),
+        &[],
+        &config,
+    );
+    assert!(synced.contains("ox-content:js:tabs:start"), "{synced}");
+}
+
+#[test]
 fn test_generate_toc_html_escapes_entries() {
     let html = generate_toc_html(&[TocEntry {
         depth: 2,

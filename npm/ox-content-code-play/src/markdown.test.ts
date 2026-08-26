@@ -69,6 +69,7 @@ describe("markdown and viewers", () => {
       },
     );
     expect(commented).toContain("<ox-code-play data-ox-code-play=");
+    expect(commented).toContain(" inert>");
     expect(commented).toContain("/ox-code-play.js");
 
     const matched = enhancePlayHtml(`<pre><code class="language-js">console.log(1)</code></pre>`, {
