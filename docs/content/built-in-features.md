@@ -42,6 +42,7 @@ inline**.
 | [Quality Checks](./built-in/quality-checks.md)              | Code block lint, type checking, docs tests, HTML sanitizer                  |
 | [Typed Hover](./built-in/typed-hover.md)                    | Opt-in build-time TypeScript hover overlays for `twoslash` fences           |
 | [Site Generation](./built-in/site-generation.md)            | SSG, OG images, edit links, collections, API docs, transformers             |
+| [SSG output primitives](./built-in/ssg-output.md)           | Resources, companions, feeds, sitemaps, and lastmod for `ssg: false` hosts  |
 | [Component styles](./built-in/component-styles.md)          | Official CSS for `ssg: false` and `transformAllPlugins()` hosts             |
 | [Page head](./built-in/page-head.md)                        | Build-time Unhead-compatible title / meta / link / JSON-LD API              |
 | [SEO](./built-in/seo.md)                                    | Canonical, robots, hreflang, and head validation on that API                |
@@ -77,6 +78,7 @@ inline**.
 | Navigation         | `toc`, `tocMaxDepth`                                                                                          | `true`, `3`          | [Markdown Baseline](./built-in/markdown.md)                 |
 | Heading links      | `headingPermalinks` / `theme.headingPermalink`                                                                | `false`, `"hover"`   | [Heading Permalinks](./built-in/heading-permalinks.md)      |
 | Static site        | `ssg`                                                                                                         | `{ enabled }`        | [Site Generation](./built-in/site-generation.md)            |
+| Custom SSG outputs | `planSsgOutputs`, `writeResourceFiles`, `writeMarkdownCompanions`, `writeFeedFiles`, `writeSiteMapFiles`      | public API           | [SSG output primitives](./built-in/ssg-output.md)           |
 | API docs           | `docs`                                                                                                        | `{ enabled }`        | [Site Generation](./built-in/site-generation.md)            |
 | Search             | `search`                                                                                                      | `{ enabled }`        | [Search](./built-in/search.md)                              |
 | Collections        | `collections`                                                                                                 | `content` collection | [Collections](./built-in/collections.md)                    |

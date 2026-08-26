@@ -303,8 +303,18 @@ oxContent({
 
 各トランスフォーマはパース済み AST と `{ filePath, frontmatter, options }` を受け取り、（置き換えたかもしれない）AST を返します。トランスフォーマは配列順で合成されます。
 
+## 独自ホスト（`ssg: false`）
+
+ページテンプレートを自分で持つホストでも、リソース指紋、Markdown 併記、
+フィード、sitemap、git lastmod は再利用できます。`planSsgOutputs` と
+対応する writer を呼んでください。[SSG 出力プリミティブ](./ssg-output.md)
+を見てください。これらのフィールドを解決したいときは
+`ssg: { enabled: false, markdownSource, lastUpdated, siteUrl }` を使い、
+boolean の `ssg: false` はそれらを消します。
+
 ## 関連
 
+- [SSG 出力プリミティブ](./ssg-output.md) — 既定テーマなしで出力を計画して書き出す。
 - [前へ / 次へ](./pagination.md) — オプトインの前後ページリンク。
 - [パンくず](./breadcrumbs.md) — サイトルートからサイドバー祖先までのオプトインの道筋。
 - [リーダー chrome](./reader-chrome.md) — オプトインのコピー、外部アイコン、先頭へ戻る。

@@ -24,8 +24,10 @@ describe("public export surface", () => {
       "generateMarkdown",
       "isMarkdownFilePath",
       "oxContent",
+      "planSsgOutputs",
       "createMarkdownProcessor",
       "renderMarkdown",
+      "resolveGitLastmod",
       "resolveCollectionsOptions",
       "renderHtmlToReactCreateElement",
       "renderHtmlToVueH",
@@ -52,7 +54,11 @@ describe("public export surface", () => {
       "transformMarkdown",
       "writeDocs",
       "writeDocsTestFiles",
+      "writeFeedFiles",
+      "writeMarkdownCompanions",
+      "writeResourceFiles",
       "writeSearchIndex",
+      "writeSiteMapFiles",
     ].sort();
 
     const actual = Object.keys(publicApi)

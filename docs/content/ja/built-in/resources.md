@@ -168,5 +168,6 @@ oxContent({
 ## 関連
 
 - [画像](./images.md)
+- [SSG 出力プリミティブ](./ssg-output.md)
 - [サイト生成](./site-generation.md)
 - [組み込み機能の概要](../built-in-features.md)

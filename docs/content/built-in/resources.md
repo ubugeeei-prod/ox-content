@@ -174,5 +174,6 @@ resource basename plus a cache-key suffix, never from raw author input.
 ## Related
 
 - [Images](./images.md)
+- [SSG output primitives](./ssg-output.md)
 - [Site Generation](./site-generation.md)
 - [Built-in Features overview](../built-in-features.md)

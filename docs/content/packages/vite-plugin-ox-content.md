@@ -167,6 +167,10 @@ HTML — do not copy crate CSS into the app. See
 @import "@ox-content/vite-plugin/styles/twitter-full.css";
 ```
 
+Custom hosts can also reuse resource fingerprinting, Markdown companions,
+feeds, sitemaps, and git lastmod without `buildSsg()`. See
+[SSG output primitives](../built-in/ssg-output.md).
+
 ### gfm
 
 - Type: `boolean`
