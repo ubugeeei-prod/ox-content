@@ -2,7 +2,7 @@ import { describe, expect, it } from "vite-plus/test";
 import { createDocsResolvedOptions } from "../test/fixtures/docs-fixture";
 import { isReservedBuiltinComponent } from "./plugins/embed-transform";
 import { renderMarkdown } from "./render-markdown";
-import { resolveNotByAiOptions } from "./resolve-options";
+import { resolveNotByAiOptions } from "./not-by-ai-options";
 import { transformMarkdown } from "./transform";
 import type { ResolvedOptions } from "./types";
 

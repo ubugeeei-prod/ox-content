@@ -11,6 +11,8 @@ import { resolveI18nOptions } from "./i18n";
 import { resolveIncludeOptions } from "./include-options";
 import { resolveMagicLinkOptions } from "./magic-link-options";
 import { resolveNotByAiOptions } from "./not-by-ai-options";
+
+export { resolveNotByAiOptions } from "./not-by-ai-options";
 import { normalizeMarkdownExtensions } from "./markdown";
 import { resolveOgImageOptions } from "./og-image";
 import { resolveCascadeOptions, resolvePermalinksOptions } from "./permalinks";
