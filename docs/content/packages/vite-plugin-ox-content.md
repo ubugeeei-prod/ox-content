@@ -132,6 +132,29 @@ oxContent({
 });
 ```
 
+Custom hosts that never import Markdown through Vite can run the same pipeline
+from public `OxContentOptions` and receive a structured `TransformResult`.
+You do not need to cast the plugin `transform` hook or parse
+`export const html = ...` from generated module source.
+
+```ts
+import { renderMarkdown } from "@ox-content/vite-plugin";
+
+const result = await renderMarkdown("# Hi", "/virtual/article.md", {
+  ssg: false,
+  highlight: false,
+});
+
+result.html;
+result.frontmatter;
+result.toc;
+```
+
+`.md` / `.mdx` inference matches the Vite plugin (`resolveMdxForFilePath`),
+and built-in option defaults match `oxContent()`. To resolve options once
+for many documents, use `createMarkdownProcessor(options)` and call
+`processor.render(source, filePath)`.
+
 ### gfm
 
 - Type: `boolean`
