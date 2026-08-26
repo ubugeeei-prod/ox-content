@@ -123,6 +123,10 @@ attaches to the element rendered from that line:
 A lead paragraph. {.lead}
 
 ## Install {.section data-section=install}
+
+[Slides](https://example.com/slides){.deck-link data-kind=deck}
+
+![Architecture](./architecture.png){.w-1/2 .mx-auto width=480}
 ```
 
 produces:
@@ -131,6 +135,10 @@ produces:
 <p class="lead">A lead paragraph.</p>
 
 <h2 id="install" class="section" data-section="install">Install</h2>
+
+<p><a href="https://example.com/slides" class="deck-link" data-kind="deck">Slides</a></p>
+
+<p><img src="./architecture.png" alt="Architecture" class="w-1/2 mx-auto" width="480" /></p>
 ```
 
 The transform runs as a post-render HTML pass over the full document — raw

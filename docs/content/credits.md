@@ -24,6 +24,18 @@ Contribution summary:
 - Improved documentation quality around generated API docs and user-facing
   docs.
 
+### ryoppippi
+
+Special thanks to [ryoppippi](https://github.com/ryoppippi) for production
+migration feedback on Markdown attributes and rich social embed parity.
+
+Contribution summary:
+
+- Reported the inline link and transformed image attribute target regression
+  found during the ryoppippi.com Ox Content migration.
+- Helped validate the expected Twitter/X full-card visual contract through
+  sveltweet.
+
 ## Third-party attribution
 
 ### react-tweet and sveltweet

@@ -5,6 +5,7 @@
 
 use crate::ImageOptions;
 
+use super::attr_tokens::{ParsedAttrs, write_attrs_except};
 use super::{escape_html_attr, escape_html_text};
 
 #[cfg(test)]
@@ -13,14 +14,15 @@ mod tests;
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub(super) struct ResolvedImageOptions {
     pub(super) lazy: bool,
+    pub(super) attrs: bool,
 }
 
-pub(super) fn resolve(options: Option<&ImageOptions>) -> Option<ResolvedImageOptions> {
+pub(super) fn resolve(options: Option<&ImageOptions>, attrs: bool) -> Option<ResolvedImageOptions> {
     let options = options?;
     if options.enabled == Some(false) {
         return None;
     }
-    Some(ResolvedImageOptions { lazy: options.lazy != Some(false) })
+    Some(ResolvedImageOptions { lazy: options.lazy != Some(false), attrs })
 }
 
 pub(super) fn preprocess(source: &str, options: &ResolvedImageOptions) -> Option<String> {
@@ -49,7 +51,7 @@ pub(super) fn replace_images(segment: &str, options: &ResolvedImageOptions, out:
     while let Some(relative) = segment[cursor..].find("![") {
         let start = cursor + relative;
         out.push_str(&segment[cursor..start]);
-        if let Some(parsed) = parse_image(&segment[start..]) {
+        if let Some(parsed) = parse_image(&segment[start..], options) {
             emit_image(out, options, &parsed);
             cursor = start + parsed.end;
         } else {
@@ -64,31 +66,41 @@ struct ParsedImage<'a> {
     alt: &'a str,
     src: Option<&'a str>,
     caption: Option<&'a str>,
-    width: Option<&'a str>,
-    height: Option<&'a str>,
+    attrs: Option<ParsedAttrs>,
+    width: Option<String>,
+    height: Option<String>,
     end: usize,
+}
+
+#[derive(Default)]
+struct ParsedImageAttrs {
+    attrs: Option<ParsedAttrs>,
+    width: Option<String>,
+    height: Option<String>,
+    consumed: usize,
 }
 
 fn is_indented_code_segment(segment: &str) -> bool {
     segment.starts_with('\t') || segment.starts_with("    ")
 }
 
-fn parse_image(input: &str) -> Option<ParsedImage<'_>> {
+fn parse_image<'a>(input: &'a str, options: &ResolvedImageOptions) -> Option<ParsedImage<'a>> {
     let rest = input.strip_prefix("![")?;
     let (alt, after_alt) = split_balanced(rest, b'[', b']')?;
     let after_alt = after_alt.strip_prefix('(')?;
     let (src_raw, after_src) = parse_destination(after_alt)?;
     let (caption, after_title) = parse_optional_title(after_src);
     let after_close = after_title.trim_start().strip_prefix(')')?;
-    let (width, height, consumed_attrs) = parse_trailing_dimensions(after_close);
+    let trailing_attrs = parse_trailing_image_attrs(after_close, options.attrs).unwrap_or_default();
     let src = sanitize_src(src_raw);
     Some(ParsedImage {
         alt,
         src,
         caption,
-        width,
-        height,
-        end: input.len() - after_close.len() + consumed_attrs,
+        attrs: trailing_attrs.attrs,
+        width: trailing_attrs.width,
+        height: trailing_attrs.height,
+        end: input.len() - after_close.len() + trailing_attrs.consumed,
     })
 }
 
@@ -167,38 +179,45 @@ fn parse_optional_title(input: &str) -> (Option<&str>, &str) {
     (None, input)
 }
 
-fn parse_trailing_dimensions(input: &str) -> (Option<&str>, Option<&str>, usize) {
+fn parse_trailing_image_attrs(input: &str, preserve_attrs: bool) -> Option<ParsedImageAttrs> {
     let trimmed = input.trim_start();
-    let Some(inner) = trimmed.strip_prefix('{') else {
-        return (None, None, 0);
-    };
-    let Some(close) = inner.find('}') else {
-        return (None, None, 0);
-    };
+    let inner = trimmed.strip_prefix('{')?;
+    let close = inner.find('}')?;
     let body = inner[..close].trim();
     let consumed = input.len() - inner.len() + close + 1;
+    if !preserve_attrs {
+        let (width, height) = parse_dimensions_only(body)?;
+        return Some(ParsedImageAttrs { attrs: None, width, height, consumed });
+    }
+    let attrs = ParsedAttrs::parse(body)?;
+    let width = parse_dimension_attr(&attrs, "width").ok()?;
+    let height = parse_dimension_attr(&attrs, "height").ok()?;
+    Some(ParsedImageAttrs { attrs: Some(attrs), width, height, consumed })
+}
+
+fn parse_dimensions_only(body: &str) -> Option<(Option<String>, Option<String>)> {
     let mut width = None;
     let mut height = None;
-    let mut valid = !body.is_empty();
+    if body.is_empty() {
+        return None;
+    }
     for token in body.split_whitespace() {
-        let Some((key, raw)) = token.split_once('=') else {
-            valid = false;
-            break;
-        };
-        let Some(value) = unsigned_int_value(raw) else {
-            valid = false;
-            break;
-        };
-        match key {
+        let (name, raw_value) = token.split_once('=')?;
+        let value = unsigned_int_value(raw_value)?.to_string();
+        match name {
             "width" if width.is_none() => width = Some(value),
             "height" if height.is_none() => height = Some(value),
-            _ => {
-                valid = false;
-                break;
-            }
+            _ => return None,
         }
     }
-    if valid { (width, height, consumed) } else { (None, None, consumed) }
+    if width.is_none() && height.is_none() { None } else { Some((width, height)) }
+}
+
+fn parse_dimension_attr(attrs: &ParsedAttrs, name: &str) -> Result<Option<String>, ()> {
+    let Some(value) = attrs.attr_value(name) else {
+        return Ok(None);
+    };
+    unsigned_int_value(value).map(|value| Some(value.to_string())).ok_or(())
 }
 
 fn unsigned_int_value(raw: &str) -> Option<&str> {
@@ -246,15 +265,18 @@ fn emit_image(out: &mut String, options: &ResolvedImageOptions, image: &ParsedIm
     out.push_str(" alt=\"");
     escape_html_attr(image.alt, out);
     out.push('"');
+    if let Some(attrs) = &image.attrs {
+        write_attrs_except(out, attrs, &["src", "alt", "loading", "width", "height"]);
+    }
     if options.lazy {
         out.push_str(" loading=\"lazy\"");
     }
-    if let Some(width) = image.width {
+    if let Some(width) = image.width.as_deref() {
         out.push_str(" width=\"");
         out.push_str(width);
         out.push('"');
     }
-    if let Some(height) = image.height {
+    if let Some(height) = image.height.as_deref() {
         out.push_str(" height=\"");
         out.push_str(height);
         out.push('"');
