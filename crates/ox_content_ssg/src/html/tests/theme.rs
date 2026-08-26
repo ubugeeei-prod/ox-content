@@ -19,6 +19,7 @@ fn test_generate_html_with_theme() {
         chrome: PageChromeFlags::default(),
         robots: None,
         canonical: None,
+        markdown_source: None,
     };
 
     let nav_groups = vec![];
@@ -75,6 +76,7 @@ fn test_generate_html_with_custom_social_link() {
         chrome: PageChromeFlags::default(),
         robots: None,
         canonical: None,
+        markdown_source: None,
     };
     let config = SsgConfig {
         site_name: "Social Site".to_string(),

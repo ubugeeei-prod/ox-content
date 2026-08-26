@@ -19,6 +19,7 @@ mod page;
 mod pagination;
 mod reader_chrome;
 mod render;
+mod render_inner;
 mod section_index;
 mod social;
 mod team;

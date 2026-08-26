@@ -34,6 +34,7 @@
 //!     chrome: PageChromeFlags::default(),
 //!     robots: None,
 //!     canonical: None,
+//!     markdown_source: None,
 //! };
 //!
 //! let nav_groups = vec![NavGroup {

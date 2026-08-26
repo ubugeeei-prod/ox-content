@@ -42,6 +42,7 @@ fn page(content: &str) -> PageData {
         chrome: crate::PageChromeFlags::default(),
         robots: None,
         canonical: None,
+        markdown_source: None,
     }
 }
 
