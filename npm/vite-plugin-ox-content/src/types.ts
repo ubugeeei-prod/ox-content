@@ -870,6 +870,49 @@ export interface ResolvedPwaOptions {
 }
 
 /**
+ * Opt-in self-hosted Iconify CSS for used icons.
+ *
+ * Off by default. When enabled, the SSG build resolves Iconify names from
+ * installed `@iconify/json` or `@iconify-json/*` packages and emits CSS
+ * masks so the published site does not request `api.iconify.design`.
+ */
+export interface IconsOptions {
+  /**
+   * CSS emission mode.
+   * @default "css-mask"
+   */
+  mode?: "css-mask";
+
+  /**
+   * Class syntax. `"unocss"` emits `icon-[prefix--name]`.
+   * @default "unocss"
+   */
+  syntax?: "unocss";
+
+  /**
+   * Glob patterns to scan, or explicit `prefix:name` icons.
+   * Entries that look like Iconify names are used as-is (no scan).
+   */
+  include?: string[];
+
+  /**
+   * Iconify names that are always emitted, even when no source mentions them.
+   */
+  safelist?: string[];
+}
+
+/**
+ * Resolved icon asset options.
+ */
+export interface ResolvedIconsOptions {
+  enabled: boolean;
+  mode: "css-mask";
+  syntax: "unocss";
+  include: string[];
+  safelist: string[];
+}
+
+/**
  * Opt-in Markdown source companions written beside generated HTML.
  */
 export interface MarkdownSourceOptions {
@@ -1492,6 +1535,17 @@ export interface OxContentOptions {
   pwa?: boolean | PwaOptions;
 
   /**
+   * Generate self-hosted Iconify CSS for used and safelisted icons.
+   *
+   * Off by default. `true` or `{}` enables CSS-mask emission. Install
+   * `@iconify/json` or individual `@iconify-json/*` packages so the build
+   * can resolve collections without a network request.
+   *
+   * @default false
+   */
+  icons?: boolean | IconsOptions;
+
+  /**
    * Write tag/category term pages and inject related-page lists.
    *
    * Off by default. `true` reads frontmatter `tags` and `categories` and
@@ -1964,6 +2018,10 @@ export interface ResolvedOptions {
   blog?: ResolvedBlogOptions;
   feeds?: ResolvedFeedsOptions;
   pwa?: ResolvedPwaOptions;
+  /**
+   * Present after `resolveOptions`. Omitted in hand-built fixtures means off.
+   */
+  icons?: ResolvedIconsOptions;
   taxonomies?: ResolvedTaxonomiesOptions;
   versions?: ResolvedVersionsOptions;
   resources?: ResolvedResourcesOptions;
