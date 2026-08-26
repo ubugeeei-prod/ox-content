@@ -16,6 +16,7 @@ fn page(contributors: Vec<Contributor>) -> PageData {
         chrome: PageChromeFlags::default(),
         robots: None,
         canonical: None,
+        markdown_source: None,
     }
 }
 

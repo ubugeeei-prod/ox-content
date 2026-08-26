@@ -24,13 +24,15 @@ export default {
 ```
 
 `false` or omitted writes nothing extra. `true` enables the defaults. An
-object enables the feature and can turn the alternate link off:
+object enables the feature and can turn the alternate link off, or opt in
+to the default theme's Copy as Markdown control:
 
 ```ts
 oxContent({
   ssg: {
     markdownSource: {
       alternate: false,
+      copy: true,
     },
   },
 });
@@ -40,6 +42,7 @@ oxContent({
 | ---------------- | ----------------------------------- | ------- |
 | `markdownSource` | `boolean` / `MarkdownSourceOptions` | `false` |
 | `alternate`      | `boolean`                           | `true`  |
+| `copy`           | `boolean`                           | `false` |
 
 ## URL mapping
 
@@ -91,7 +94,14 @@ const page = usePageProps();
 return page.markdownSource ? <a href={page.markdownSource}>Source</a> : null;
 ```
 
-No client JavaScript is added.
+When `copy` is on, the default theme adds a **Copy as Markdown** button and a
+**View Markdown** link near the page title (next to “Edit this page” when that
+is also enabled). Copy fetches the companion `.md` URL and writes those
+original source bytes — including frontmatter — to the clipboard. The View
+Markdown link is a static `<a href="…md">` and works without JavaScript.
+`copy` stays off unless you set it, even when companions are enabled.
+
+This project's docs site turns the control on with `markdownSource: { copy: true }`.
 
 ## Related
 

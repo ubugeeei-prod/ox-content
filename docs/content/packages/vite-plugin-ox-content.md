@@ -155,6 +155,18 @@ and built-in option defaults match `oxContent()`. To resolve options once
 for many documents, use `createMarkdownProcessor(options)` and call
 `processor.render(source, filePath)`.
 
+`ssg: false`, `renderMarkdown()`, and `transformAllPlugins()` return markup
+only. Import the official feature stylesheets in the host that renders that
+HTML — do not copy crate CSS into the app. See
+[Component styles](../built-in/component-styles.md).
+
+```css
+@import "@ox-content/vite-plugin/styles/core.css";
+@import "@ox-content/vite-plugin/styles/magic-links.css";
+@import "@ox-content/vite-plugin/styles/social.css";
+@import "@ox-content/vite-plugin/styles/twitter-full.css";
+```
+
 ### gfm
 
 - Type: `boolean`

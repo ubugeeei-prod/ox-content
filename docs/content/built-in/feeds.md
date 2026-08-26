@@ -31,8 +31,8 @@ export default {
 
 `false` or omitted keeps the files off. `true` enables the defaults: all three
 formats, the `content` collection (or the first configured collection), and a
-20-item limit. An object enables the feature and overrides only the fields you
-set:
+20-item limit. A single object is one default feed and overrides only the
+fields you set:
 
 ```ts
 oxContent({
@@ -48,16 +48,56 @@ oxContent({
 });
 ```
 
-| Option       | Type                            | Default                              |
-| ------------ | ------------------------------- | ------------------------------------ |
-| `feeds`      | `boolean` / `FeedsOptions`      | `false`                              |
-| `formats`    | `("rss" \| "atom" \| "json")[]` | `["rss", "atom", "json"]`            |
-| `collection` | `string`                        | `content`, else the first collection |
-| `limit`      | `number`                        | `20`                                 |
-| `path`       | `string`                        | `/` (site root)                      |
+A named record or array writes multiple feeds. Each channel can set its own
+collection, path, formats, and metadata:
+
+```ts
+oxContent({
+  feeds: {
+    blog: {
+      formats: ["rss"],
+      collection: "blog",
+      path: "/",
+      title: "blog | example.com",
+      description: "Technical articles",
+      language: "en",
+      image: "https://example.com/icon.png",
+      favicon: "https://example.com/icon.png",
+      copyright: "© 2026 example.com",
+    },
+    media: {
+      formats: ["rss"],
+      collection: "media",
+      path: "/works/media",
+      title: "Media | example.com",
+      language: "ja",
+    },
+  },
+  ssg: {
+    siteUrl: "https://example.com",
+  },
+});
+```
+
+| Option        | Type                                        | Default                              |
+| ------------- | ------------------------------------------- | ------------------------------------ |
+| `feeds`       | `boolean` / one feed / named record / array | `false`                              |
+| `formats`     | `("rss" \| "atom" \| "json")[]`             | `["rss", "atom", "json"]`            |
+| `collection`  | `string`                                    | `content`, else the first collection |
+| `limit`       | `number`                                    | `20`                                 |
+| `path`        | `string`                                    | `/` (site root)                      |
+| `title`       | `string`                                    | SSG site name                        |
+| `description` | `string`                                    | SSG site description                 |
+| `language`    | `string`                                    | omitted                              |
+| `image`       | `string`                                    | omitted                              |
+| `favicon`     | `string`                                    | omitted                              |
+| `copyright`   | `string`                                    | omitted                              |
 
 `path` is the site-relative directory for the generated files. `/feeds` writes
-`feeds/feed.xml`, `feeds/atom.xml`, and `feeds/feed.json`.
+`feeds/feed.xml`, `feeds/atom.xml`, and `feeds/feed.json`. Channel `title`,
+`description`, `language`, `image`, `favicon`, and `copyright` override the
+site defaults where the format has a matching field (JSON Feed has no
+copyright).
 
 Items are sorted newest first. The sort key is frontmatter `date`, then
 `lastUpdated` when `date` is missing. Entries with `draft: true` are omitted.

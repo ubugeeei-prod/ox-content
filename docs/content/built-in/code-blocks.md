@@ -32,6 +32,48 @@ when the existing grammar keeps source text safe: `jsonc` / `json5` /
 Dotfile and config tags such as `dotenv`, `.env`, `gitignore`, `npmrc`,
 `ini`, and `conf` render as escaped plain text.
 
+### Supported languages
+
+Native grammars tokenize the fence tags below. Aliases in a cell resolve to
+the same grammar. Vue, Svelte, Astro, and Angular still use the HTML grammar
+— crates.io does not currently ship maintained dedicated grammars that match
+this tree-sitter line.
+
+| Language   | Fence tags                                                                |
+| ---------- | ------------------------------------------------------------------------- |
+| TypeScript | `typescript`, `ts`, `cts`, `mts`                                          |
+| TSX        | `tsx`, `typescriptreact`                                                  |
+| JavaScript | `javascript`, `js`, `cjs`, `mjs`, `jsx`, `javascriptreact`, `flow`, `mdx` |
+| Rust       | `rust`, `rs`                                                              |
+| JSON       | `json`, `jsonc`, `json5`, `webmanifest`                                   |
+| CSS        | `css`                                                                     |
+| HTML       | `html`, `vue`, `svelte`, `astro`, `angular`                               |
+| Python     | `python`, `py`                                                            |
+| Go         | `go`, `golang`                                                            |
+| Java       | `java`                                                                    |
+| C          | `c`, `h`                                                                  |
+| C++        | `cpp`, `c++`, `cc`, `hpp`, `cxx`                                          |
+| YAML       | `yaml`, `yml`                                                             |
+| Markdown   | `markdown`, `md`                                                          |
+| Bash       | `bash`, `sh`, `shell`, `zsh`, `shellscript`                               |
+| TOML       | `toml`                                                                    |
+| WGSL       | `wgsl`                                                                    |
+| SQL        | `sql`                                                                     |
+| GraphQL    | `graphql`, `gql`                                                          |
+| Dockerfile | `dockerfile`, `docker`, `containerfile`                                   |
+| Ruby       | `ruby`, `rb`                                                              |
+| PHP        | `php`                                                                     |
+| Nix        | `nix`                                                                     |
+| C#         | `csharp`, `cs`                                                            |
+| Swift      | `swift`                                                                   |
+| Kotlin     | `kotlin`, `kt`                                                            |
+| GLSL       | `glsl`                                                                    |
+
+Unknown tags stay ordinary `<pre><code>` — for example `haskell`, `scala`,
+`elixir`, `perl`, `elm`, `assembly`, `asm`, `llvm`, `clojure`, and
+`brainfuck`. Do not alias those onto an unrelated grammar. Plain tags such as
+`text`, `dotenv`, and `ini` are escaped but not tokenized.
+
 ```ts
 import { oxContent } from "@ox-content/vite-plugin";
 

@@ -258,6 +258,8 @@ oxContent({
 | `timeZone`        | `"UTC"`                     | フルカード日時の IANA タイムゾーン。                |
 
 ダウンロードしたメディアは自分のサイトから出すので、厳しい `img-src 'self'` CSP も動き続けます。動画とアニメーション GIF は、`downloadVideo` をオンにしない限り自前のポスターと Watch on X パーマリンクを使い、生成 HTML に `video.twimg.com` は出しません。削除済みや非公開の投稿は、ビルドを落とさずリンクのみのカードに落ちます。引用投稿が欠けていても、元の投稿カードは残します。フルカード用 CSS は `.ox-tweet--full` を描画するページにだけ載ります。フルカードのクロムは MIT ライセンスの [react-tweet](https://github.com/vercel/react-tweet) と [sveltweet](https://github.com/ryoppippi/sveltweet) の見た目の契約に従います。帰属は [クレジット](../credits.md) にあります。詳細は [Twitter/X Embed](/examples/twitter-embed.md) を見てください。
+独自ホストは `@ox-content/vite-plugin/styles/social.css` を、`appearance: "full"`
+なら `styles/twitter-full.css` も import します。[コンポーネント CSS](./component-styles.md) を見てください。
 
 ## Bluesky
 
@@ -317,4 +319,5 @@ oxContent({
 ## 関連
 
 - [Mermaid](./mermaid.md) — 静的 SVG に描画する図フェンス。
+- [コンポーネント CSS](./component-styles.md) — 独自ホスト向けの公式 CSS。
 - [組み込み機能の一覧](../built-in-features.md)

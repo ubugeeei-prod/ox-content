@@ -422,6 +422,9 @@ async function renderPage(
         publishState: options.publishState,
       })
     : undefined;
+  if (options.ssg.markdownSource?.copy) {
+    pageData.markdownSource = markdownSource;
+  }
 
   // Generate full HTML page
   let html = await generateHtmlPage(
