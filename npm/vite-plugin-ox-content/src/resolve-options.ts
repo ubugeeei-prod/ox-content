@@ -5,6 +5,7 @@ import { resolveCollectionsOptions } from "./collections";
 import { resolveDocsOptions } from "./docs";
 import { resolveFeedsOptions } from "./feeds";
 import { resolveFileTreeOptions } from "./file-tree-options";
+import { resolveIconsOptions } from "./icons";
 import { resolveHeadingPermalinksOptions } from "./heading-permalinks-options";
 import { resolveI18nOptions } from "./i18n";
 import { resolveIncludeOptions } from "./include-options";
@@ -48,6 +49,7 @@ export function resolveOptions(options: OxContentOptions): ResolvedOptions {
     ),
     feeds: resolveFeedsOptions(options.feeds),
     pwa: resolvePwaOptions(options.pwa),
+    icons: resolveIconsOptions(options.icons),
     taxonomies: resolveTaxonomiesOptions(options.taxonomies),
     versions: resolveVersionsOptions(options.versions),
     resources: resolveResourcesOptions(options.resources),
@@ -65,6 +67,7 @@ export function resolveOptions(options: OxContentOptions): ResolvedOptions {
     emojiShortcodes: resolveEmojiShortcodeOptions(options.emojiShortcodes),
     attrs: resolveAttrsOptions(options.attrs),
     badges: resolveBadgeOptions(options.badges),
+    keyboardKeys: resolveKeyboardKeysOptions(options.keyboardKeys),
     magicLinks: resolveMagicLinkOptions(options.magicLinks),
     containers: resolveContainerOptions(options.containers),
     images: resolveImageOptions(options.images),
@@ -184,6 +187,18 @@ export function resolveBadgeOptions(
   if (!options) return { enabled: false };
   if (options === true) return { enabled: true };
   return { enabled: options.enabled ?? true };
+}
+
+export function resolveKeyboardKeysOptions(
+  options: OxContentOptions["keyboardKeys"],
+): NonNullable<ResolvedOptions["keyboardKeys"]> {
+  if (!options) return { enabled: false, aliases: {}, style: "words" };
+  if (options === true) return { enabled: true, aliases: {}, style: "words" };
+  return {
+    enabled: options.enabled ?? true,
+    aliases: options.aliases ?? {},
+    style: options.style === "symbols" ? "symbols" : "words",
+  };
 }
 
 function resolveContainerOptions(

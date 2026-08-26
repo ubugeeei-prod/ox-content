@@ -2,6 +2,7 @@ use askama::Template;
 
 use super::a11y::A11Y_CSS;
 use super::breadcrumbs::resolve_breadcrumbs;
+use super::content_css::push_content_plugin_css;
 use super::entry::generate_entry_html;
 use super::footer::{FOOTER_CSS, generate_footer_html};
 use super::head::{RenderedHead, render_themed_head};
@@ -120,6 +121,7 @@ pub(super) fn generate_html_inner(
     if page_content_contains_any(&page_data.content, &["ox-file-tree"]) {
         css_sections.push(wrap_css_section("file-tree", FILE_TREE_CSS));
     }
+    push_content_plugin_css(&mut css_sections, &page_data.content);
     push_heading_permalink_css(&mut css_sections, &page_data.content);
     if has_footer {
         css_sections.push(wrap_css_section("footer", footer_css));
@@ -221,12 +223,13 @@ pub(super) fn generate_html_inner(
         &locale_switcher_html,
         markdown_source_chrome,
     );
+    let self_hosted_icons = theme_has_self_hosted_icons(theme);
     let social_links_html = theme
         .and_then(|t| t.social_links.as_ref())
-        .map_or(String::new(), generate_social_links_html);
+        .map_or(String::new(), |links| generate_social_links_html(links, self_hosted_icons));
     let mobile_social_links_html = theme
         .and_then(|t| t.social_links.as_ref())
-        .map_or(String::new(), generate_mobile_social_links_html);
+        .map_or(String::new(), |links| generate_mobile_social_links_html(links, self_hosted_icons));
     let article_html = enhance_article_html(
         &page_data.content,
         reader_chrome,
@@ -235,7 +238,7 @@ pub(super) fn generate_html_inner(
     );
 
     let (page_class, main_content) = if let Some(ref entry) = page_data.entry_page {
-        let entry_html = generate_entry_html(entry, &config.base);
+        let entry_html = generate_entry_html(entry, &config.base, self_hosted_icons);
         let combined = if article_html.trim().is_empty() {
             entry_html
         } else {
@@ -309,4 +312,11 @@ pub(super) fn generate_html_inner(
     };
 
     GeneratedPage { html: template.render().unwrap_or_default(), head: page_head }
+}
+
+fn theme_has_self_hosted_icons(theme: Option<&super::ThemeConfig>) -> bool {
+    theme
+        .and_then(|t| t.embed.as_ref())
+        .and_then(|e| e.head.as_deref())
+        .is_some_and(|head| head.contains("__ox_icons__/"))
 }

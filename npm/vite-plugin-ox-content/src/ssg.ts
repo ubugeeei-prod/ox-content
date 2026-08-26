@@ -10,6 +10,7 @@ import type { OgImagePageEntry } from "./og-image";
 import { transformAllPlugins } from "./plugins";
 import { copyKatexAssets } from "./plugins/math-assets";
 import { writeSelfHostedThemeFonts } from "./theme-fonts";
+import { withSelfHostedIconHead, writeSelfHostedIcons } from "./icons";
 import type { TransformAllOptions } from "./plugins";
 import { protectMermaidSvgs, restoreMermaidSvgs } from "./plugins/mermaid-protect";
 import { transformIslands, hasIslands } from "./island";
@@ -665,6 +666,7 @@ export async function generateHtmlPage(
   siteUrl?: string,
   headValidation: false | "warn" | "strict" = false,
   defaultLocale?: string,
+  iconsEnabled = false,
 ): Promise<string> {
   const mod = await importNapiModule();
 
@@ -675,7 +677,11 @@ export async function generateHtmlPage(
   const navGroupsForRust = convertNavGroupsForRust(navGroups);
 
   // Convert theme to NAPI format if provided
-  const themeForRust = theme ? themeToNapi(theme, locale, base) : undefined;
+  const themeForRust = theme
+    ? themeToNapi(theme, locale, base, iconsEnabled)
+    : iconsEnabled
+      ? { embed: withSelfHostedIconHead(undefined, true, base) }
+      : undefined;
 
   // Convert entry page to NAPI format if provided
   const entryPageForRust = pageData.entryPage
@@ -1118,6 +1124,17 @@ export async function buildSsg(options: ResolvedOptions, root: string): Promise<
   generatedFiles.push(
     ...(await writeSelfHostedThemeFonts({ fonts: ssgOptions.theme?.fonts ?? {}, outDir, root })),
   );
+  if (options.icons?.enabled) {
+    const icons = await writeSelfHostedIcons({
+      options: options.icons,
+      outDir,
+      root,
+      srcDir,
+      socialLinks: ssgOptions.theme?.socialLinks,
+    });
+    generatedFiles.push(...icons.files);
+    errors.push(...icons.errors);
+  }
 
   return {
     files: generatedFiles,
@@ -1700,6 +1717,7 @@ async function renderSsgPage(
       context.ssgOptions.siteUrl,
       context.ssgOptions.headValidation,
       i18n?.defaultLocale,
+      Boolean(context.options.icons?.enabled),
     ),
     markdownSource,
   );

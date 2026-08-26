@@ -870,6 +870,49 @@ export interface ResolvedPwaOptions {
 }
 
 /**
+ * Opt-in self-hosted Iconify CSS for used icons.
+ *
+ * Off by default. When enabled, the SSG build resolves Iconify names from
+ * installed `@iconify/json` or `@iconify-json/*` packages and emits CSS
+ * masks so the published site does not request `api.iconify.design`.
+ */
+export interface IconsOptions {
+  /**
+   * CSS emission mode.
+   * @default "css-mask"
+   */
+  mode?: "css-mask";
+
+  /**
+   * Class syntax. `"unocss"` emits `icon-[prefix--name]`.
+   * @default "unocss"
+   */
+  syntax?: "unocss";
+
+  /**
+   * Glob patterns to scan, or explicit `prefix:name` icons.
+   * Entries that look like Iconify names are used as-is (no scan).
+   */
+  include?: string[];
+
+  /**
+   * Iconify names that are always emitted, even when no source mentions them.
+   */
+  safelist?: string[];
+}
+
+/**
+ * Resolved icon asset options.
+ */
+export interface ResolvedIconsOptions {
+  enabled: boolean;
+  mode: "css-mask";
+  syntax: "unocss";
+  include: string[];
+  safelist: string[];
+}
+
+/**
  * Opt-in Markdown source companions written beside generated HTML.
  */
 export interface MarkdownSourceOptions {
@@ -1492,6 +1535,17 @@ export interface OxContentOptions {
   pwa?: boolean | PwaOptions;
 
   /**
+   * Generate self-hosted Iconify CSS for used and safelisted icons.
+   *
+   * Off by default. `true` or `{}` enables CSS-mask emission. Install
+   * `@iconify/json` or individual `@iconify-json/*` packages so the build
+   * can resolve collections without a network request.
+   *
+   * @default false
+   */
+  icons?: boolean | IconsOptions;
+
+  /**
    * Write tag/category term pages and inject related-page lists.
    *
    * Off by default. `true` reads frontmatter `tags` and `categories` and
@@ -1644,6 +1698,18 @@ export interface OxContentOptions {
    * @default false
    */
   badges?: boolean | BadgeOptions;
+
+  /**
+   * Opt-in `{kbd:...}` inline keyboard keys.
+   *
+   * Passing `true` or an options object enables `{kbd:Ctrl+K}` and
+   * `{kbd:Cmd Shift P}`. Key labels are HTML-escaped. Fenced, indented,
+   * inline, and raw code, plus HTML comments, are skipped. Aliases come
+   * from build config, not the runtime user agent.
+   *
+   * @default false
+   */
+  keyboardKeys?: boolean | KeyboardKeysOptions;
 
   /**
    * Opt-in `{link:...}` rich magic links.
@@ -1964,6 +2030,10 @@ export interface ResolvedOptions {
   blog?: ResolvedBlogOptions;
   feeds?: ResolvedFeedsOptions;
   pwa?: ResolvedPwaOptions;
+  /**
+   * Present after `resolveOptions`. Omitted in hand-built fixtures means off.
+   */
+  icons?: ResolvedIconsOptions;
   taxonomies?: ResolvedTaxonomiesOptions;
   versions?: ResolvedVersionsOptions;
   resources?: ResolvedResourcesOptions;
@@ -1984,6 +2054,10 @@ export interface ResolvedOptions {
   emojiShortcodes: ResolvedEmojiShortcodeOptions;
   attrs: ResolvedAttrsOptions;
   badges: ResolvedBadgeOptions;
+  /**
+   * Present after `resolveOptions`. Omitted in hand-built fixtures means off.
+   */
+  keyboardKeys?: ResolvedKeyboardKeysOptions;
   /**
    * Present after `resolveOptions`. Omitted in hand-built fixtures means off.
    */
@@ -2133,6 +2207,38 @@ export interface BadgeOptions {
  */
 export interface ResolvedBadgeOptions {
   enabled: boolean;
+}
+
+/**
+ * Options for opt-in `{kbd:...}` inline keyboard keys.
+ */
+export interface KeyboardKeysOptions {
+  /**
+   * Enable the keyboard-key transform when an options object is supplied.
+   *
+   * @default true
+   */
+  enabled?: boolean;
+  /**
+   * Build-time aliases. Keys are matched case-insensitively and override
+   * the built-in `cmd` / `ctrl` table.
+   */
+  aliases?: Record<string, string>;
+  /**
+   * Built-in alias labels. `"words"` emits `Command`; `"symbols"` emits `⌘`.
+   *
+   * @default "words"
+   */
+  style?: "words" | "symbols";
+}
+
+/**
+ * Resolved inline keyboard-key transform options.
+ */
+export interface ResolvedKeyboardKeysOptions {
+  enabled: boolean;
+  aliases: Record<string, string>;
+  style: "words" | "symbols";
 }
 
 /**

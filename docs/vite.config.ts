@@ -144,6 +144,7 @@ export default defineConfig(({ mode }) => {
                       { text: "File Includes", link: "/built-in/includes.md" },
                       { text: "File Tree", link: "/built-in/file-tree.md" },
                       { text: "Inline Badges", link: "/built-in/badges.md" },
+                      { text: "Keyboard Keys", link: "/built-in/keyboard-keys.md" },
                       { text: "Magic Links", link: "/built-in/magic-links.md" },
                       { text: "Images", link: "/built-in/images.md" },
                       { text: "Page resources", link: "/built-in/resources.md" },
@@ -175,6 +176,7 @@ export default defineConfig(({ mode }) => {
                       { text: "RSS / Atom / JSON feeds", link: "/built-in/feeds.md" },
                       { text: "Blog", link: "/built-in/blog.md" },
                       { text: "PWA manifest and service worker", link: "/built-in/pwa.md" },
+                      { text: "Self-hosted Iconify CSS", link: "/built-in/icons.md" },
                       { text: "Taxonomies", link: "/built-in/taxonomies.md" },
                       { text: "Documentation versioning", link: "/built-in/versioning.md" },
                       { text: "Team / members page", link: "/built-in/team.md" },
@@ -265,6 +267,7 @@ export default defineConfig(({ mode }) => {
         math: true,
         cjkEmphasis: true,
         badges: true,
+        keyboardKeys: true,
         magicLinks: {
           aliases: {
             Oxc: {
