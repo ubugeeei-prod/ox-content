@@ -79,6 +79,6 @@ export default {};
 ## 関連
 
 - [コードブロック](./code-blocks.md)
-- [埋め込み](./embeds.md#tabs)
+- [埋め込み](./embeds.md#タブ)
 - [カスタムコンテナ](./containers.md)
 - [組み込み機能の一覧](../built-in-features.md)
