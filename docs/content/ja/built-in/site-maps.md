@@ -58,5 +58,6 @@ Git 履歴があるとき、各 URL に W3C の `<lastmod>` 日付が付きま�
 
 ## 関連
 
+- [SSG 出力プリミティブ](./ssg-output.md)
 - [サイト生成](./site-generation.md)
 - [組み込み機能の一覧](../built-in-features.md)

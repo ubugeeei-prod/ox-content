@@ -69,5 +69,6 @@ Titles and descriptions are escaped so they cannot break out of XML or
 
 ## Related
 
+- [SSG output primitives](./ssg-output.md)
 - [Site Generation](./site-generation.md)
 - [Built-in Features overview](../built-in-features.md)

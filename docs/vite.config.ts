@@ -159,6 +159,7 @@ export default defineConfig(({ mode }) => {
                       { text: "Quality Checks", link: "/built-in/quality-checks.md" },
                       { text: "Typed Hover", link: "/built-in/typed-hover.md" },
                       { text: "Site Generation", link: "/built-in/site-generation.md" },
+                      { text: "SSG output primitives", link: "/built-in/ssg-output.md" },
                       { text: "Component styles", link: "/built-in/component-styles.md" },
                       { text: "Page head", link: "/built-in/page-head.md" },
                       { text: "SEO", link: "/built-in/seo.md" },

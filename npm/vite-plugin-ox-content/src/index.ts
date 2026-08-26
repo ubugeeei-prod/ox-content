@@ -1004,3 +1004,21 @@ export type {
   OgImageResult,
   OgBrowserSession,
 } from "./og-image";
+
+// Composable SSG outputs for custom (`ssg: false`) hosts
+export {
+  planSsgOutputs,
+  writeResourceFiles,
+  writeMarkdownCompanions,
+  writeFeedFiles,
+  writeSiteMapFiles,
+  resolveGitLastmod,
+} from "./ssg-output";
+export type {
+  PlanSsgOutputsInput,
+  PlanSsgOutputsOptions,
+  SsgOutputPlan,
+  WriteResourceFilesInput,
+  WriteResourceFilesPage,
+  WriteResourceFilesResult,
+} from "./ssg-output";

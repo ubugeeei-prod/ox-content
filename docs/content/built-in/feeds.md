@@ -115,6 +115,7 @@ switch in this release.
 
 ## Related
 
+- [SSG output primitives](./ssg-output.md)
 - [Collections](./collections.md)
 - [Blog](./blog.md)
 - [Sitemap / robots / llms.txt](./site-maps.md)

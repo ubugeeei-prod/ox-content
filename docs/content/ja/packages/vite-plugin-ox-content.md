@@ -170,6 +170,10 @@ import してください。crate の CSS をアプリにコピーしないで�
 @import "@ox-content/vite-plugin/styles/twitter-full.css";
 ```
 
+独自ホストは `buildSsg()` なしでも、リソース指紋、Markdown 併記、フィード、
+sitemap、git lastmod を再利用できます。
+[SSG 出力プリミティブ](../built-in/ssg-output.md) を見てください。
+
 ### gfm
 
 - 型: `boolean`

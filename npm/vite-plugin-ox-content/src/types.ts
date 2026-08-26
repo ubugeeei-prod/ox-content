@@ -4406,3 +4406,31 @@ export interface ResolvedI18nOptions {
   check: boolean;
   functionNames: string[];
 }
+
+/**
+ * One host-owned page for composable SSG outputs (`ssg: false`).
+ *
+ * The host renders HTML. Ox Content plans and emits resources, Markdown
+ * companions, feeds, and sitemap metadata from these fields.
+ */
+export interface SsgOutputPageInput {
+  /** Source file used for git lastmod and companion identity. */
+  inputPath: string;
+  /** Published URL path (`guide` or `/`). */
+  urlPath: string;
+  /** Filesystem path of the host-rendered HTML page. */
+  outputPath?: string;
+  /** Host-rendered HTML. Required for resource fingerprinting. */
+  html?: string;
+  /** Already-read Markdown source bytes for companions. */
+  source?: string;
+  title?: string;
+  description?: string;
+  /** Absolute page URL. When omitted, `siteUrl` + `base` + `urlPath` is used. */
+  loc?: string;
+  /** Git commit time in milliseconds, or a host-supplied timestamp. */
+  lastUpdated?: number;
+  draft?: boolean;
+  unlisted?: boolean;
+  frontmatter?: Record<string, unknown>;
+}
