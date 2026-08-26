@@ -4,6 +4,7 @@ import { toJsDataTableOptions } from "./data-table-options";
 import { toJsFileTreeOptions } from "./file-tree-options";
 import { toJsImageGalleryOptions } from "./image-gallery-options";
 import { toJsPartialsOptions } from "./partials-options";
+import { toJsTimelineOptions } from "./timeline-options";
 import { generateCollectionsModule } from "./collections-runtime";
 import { importNapiModule } from "./napi";
 import type {
@@ -73,6 +74,13 @@ type NativeTransformOptions = {
     enabled?: boolean;
     lazy?: boolean;
     missingAlt?: "error" | "warn" | "ignore";
+    empty?: "error" | "warn" | "ignore";
+  };
+  timelines?: {
+    enabled?: boolean;
+    ordered?: boolean;
+    invalidDate?: "error" | "warn" | "ignore";
+    unknownMeta?: "error" | "warn" | "ignore";
     empty?: "error" | "warn" | "ignore";
   };
   cjkEmphasis?: boolean;
@@ -280,6 +288,7 @@ function createNativeTransformOptions(options: ResolvedOptions): NativeTransform
         }
       : undefined,
     imageGalleries: toJsImageGalleryOptions(options.imageGalleries, options.images),
+    timelines: toJsTimelineOptions(options.timelines),
     cjkEmphasis: options.cjkEmphasis ?? false,
     codeImports: options.codeImports?.enabled
       ? {

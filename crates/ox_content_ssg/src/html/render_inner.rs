@@ -30,7 +30,7 @@ use super::utils::{
 use super::{
     CONTRIBUTORS_CSS, ENTRY_CSS, FILE_TREE_CSS, GITHUB_CSS, IMAGE_GALLERY_CSS, ISLAND_CSS,
     MERMAID_CSS, NavGroup, OGP_CSS, PageData, PageTemplate, SOCIAL_CSS, SOCIAL_TWEET_FULL_CSS,
-    SSG_CSS, SsgConfig, TABS_CSS, YOUTUBE_CSS,
+    SSG_CSS, SsgConfig, TABS_CSS, TIMELINE_CSS, YOUTUBE_CSS,
 };
 
 pub(super) struct GeneratedPage {
@@ -135,6 +135,9 @@ pub(super) fn generate_html_inner(
     }
     if page_content_contains_any(&page_data.content, &["ox-image-gallery"]) {
         css_sections.push(wrap_css_section("image-gallery", IMAGE_GALLERY_CSS));
+    }
+    if page_content_contains_any(&page_data.content, &["ox-timeline"]) {
+        css_sections.push(wrap_css_section("timeline", TIMELINE_CSS));
     }
     push_not_by_ai_css(&mut css_sections, &page_data.content);
     push_content_plugin_css(&mut css_sections, &page_data.content);

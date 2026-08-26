@@ -147,6 +147,13 @@ export function createDocsResolvedOptions(
     definitionLists: { enabled: false },
     containers: { enabled: false, types: {} },
     images: { enabled: false, lazy: true },
+    timelines: {
+      enabled: false,
+      ordered: true,
+      invalidDate: "error",
+      unknownMeta: "error",
+      empty: "error",
+    },
     codeImports: { enabled: false },
     includes: { enabled: false },
     partials: { enabled: false, root: "_partials", missing: "literal" },

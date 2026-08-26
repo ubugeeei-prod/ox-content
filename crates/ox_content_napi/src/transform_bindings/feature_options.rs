@@ -11,10 +11,12 @@ mod image_gallery_options;
 mod image_options;
 mod media_embeds_options;
 mod not_by_ai_options;
+mod timeline_options;
 pub use image_gallery_options::JsImageGalleryOptions;
 pub use image_options::JsImageOptions;
 pub use media_embeds_options::JsMediaEmbedsOptions;
 pub use not_by_ai_options::JsNotByAiOptions;
+pub use timeline_options::JsTimelineOptions;
 
 /// Wiki-link transform options.
 #[napi(object)]

@@ -1,10 +1,8 @@
 #![allow(clippy::redundant_pub_crate)]
-
+use crate::TransformOptions;
 use rustc_hash::FxHashMap;
 use std::borrow::Cow;
 use std::path::PathBuf;
-
-use crate::TransformOptions;
 
 mod abbreviations;
 mod attr_tokens;
@@ -33,8 +31,8 @@ mod option_resolve;
 mod partials;
 mod segments;
 mod steps;
+mod timelines;
 mod wiki;
-
 use attributes::transform_attribute_syntax;
 use cards::ResolvedCardOptions;
 pub use code_blocks::{
@@ -81,11 +79,11 @@ pub struct TransformFeatureOptions {
     magic_links: Option<ResolvedMagicLinks>,
     images: Option<ResolvedImageOptions>,
     image_galleries: Option<ResolvedImageGalleryOptions>,
+    timelines: Option<timelines::ResolvedTimelineOptions>,
     math: bool,
     attributes: bool,
     edit_this_page: Option<ResolvedEditThisPageOptions>,
 }
-
 #[derive(Clone)]
 struct ResolvedWikiLinkOptions {
     base_url: String,
@@ -128,6 +126,7 @@ impl TransformFeatureOptions {
         let images = images::resolve(options.images.as_ref(), attributes);
         let image_galleries =
             image_galleries::resolve(options.image_galleries.as_ref(), attributes, images.as_ref());
+        let timelines = timelines::resolve(options.timelines.as_ref());
         let mut containers = containers::resolve(options.containers.as_ref());
         containers::remove_reserved_type_names(
             &mut containers,
@@ -135,6 +134,7 @@ impl TransformFeatureOptions {
             steps.is_some(),
             code_groups.as_ref().map(|_| code_groups::reserved_type_names()),
             image_galleries.is_some(),
+            timelines.is_some(),
         );
         let includes = includes::resolve(options.includes.as_ref(), source_path);
         let partials = partials::resolve(options.partials.as_ref(), source_path);
@@ -172,6 +172,7 @@ impl TransformFeatureOptions {
             magic_links,
             images,
             image_galleries,
+            timelines,
             math,
             attributes,
             edit_this_page,
@@ -198,6 +199,7 @@ impl TransformFeatureOptions {
             || self.magic_links.is_some()
             || self.images.is_some()
             || self.image_galleries.is_some()
+            || self.timelines.is_some()
             || self.math
     }
 
@@ -263,6 +265,9 @@ pub fn preprocess_markdown<'a>(
     if current.contains(":::") {
         if let Some(galleries) = &options.image_galleries {
             current = Cow::Owned(image_galleries::transform(&current, galleries, &mut errors));
+        }
+        if let Some(timelines) = &options.timelines {
+            current = Cow::Owned(timelines::transform(&current, timelines, &mut errors));
         }
         if options.cards.is_some() {
             current = Cow::Owned(cards::transform(&current));

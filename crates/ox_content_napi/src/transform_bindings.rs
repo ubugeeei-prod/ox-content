@@ -39,7 +39,7 @@ pub use feature_options::{
     JsAttrsOptions, JsCodeBlockLintOptions, JsCodeImportOptions, JsContainerOptions,
     JsContainerTypeOptions, JsDocsTestOptions, JsEditThisPageOptions, JsEmojiShortcodeOptions,
     JsImageGalleryOptions, JsImageOptions, JsIncludeOptions, JsMediaEmbedsOptions,
-    JsNotByAiOptions, JsSanitizeOptions, JsWikiLinkOptions,
+    JsNotByAiOptions, JsSanitizeOptions, JsTimelineOptions, JsWikiLinkOptions,
 };
 pub use file_tree_options::JsFileTreeOptions;
 pub use keyboard_keys_options::JsKeyboardKeysOptions;

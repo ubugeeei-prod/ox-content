@@ -16,7 +16,6 @@ import { resolveAbbreviationsOptions } from "./abbreviations-options";
 import { resolveMagicLinkOptions } from "./magic-link-options";
 import { resolveDefinitionListOptions } from "./definition-list-options";
 import { resolveNotByAiOptions } from "./not-by-ai-options";
-export { resolveNotByAiOptions } from "./not-by-ai-options";
 import { normalizeMarkdownExtensions } from "./markdown";
 import { resolveOgImageOptions } from "./og-image";
 import { resolveCascadeOptions, resolvePermalinksOptions } from "./permalinks";
@@ -31,6 +30,7 @@ import { resolveSiteMapsOptions } from "./site-maps";
 import { resolveSsgOptions } from "./ssg";
 import { resolveStepsOptions } from "./step-options";
 import { resolveTaxonomiesOptions } from "./taxonomies";
+import { resolveTimelineOptions } from "./timeline-options";
 import { resolveTypedHoverOptions } from "./typed-hover";
 import type { BuiltinPmOptions, OxContentOptions, ResolvedOptions } from "./types";
 import { resolveVersionsOptions } from "./versions";
@@ -79,6 +79,7 @@ export function resolveOptions(options: OxContentOptions): ResolvedOptions {
     containers: resolveContainerOptions(options.containers),
     images: resolveImageOptions(options.images),
     imageGalleries: resolveImageGalleryOptions(options.imageGalleries),
+    timelines: resolveTimelineOptions(options.timelines),
     codeImports: resolveCodeImportOptions(options.codeImports),
     includes: resolveIncludeOptions(options.includes),
     partials: resolvePartialsOptions(options.partials),
@@ -111,7 +112,6 @@ export function resolveOptions(options: OxContentOptions): ResolvedOptions {
     i18n: resolveI18nOptions(options.i18n),
   };
 }
-
 export function resolveBuiltinEmbedOptions(
   options: OxContentOptions["embeds"],
 ): ResolvedOptions["embeds"] {
@@ -341,7 +341,6 @@ function resolveCodeAnnotationsOptions(
       defaultLineNumbers: false,
     };
   }
-
   return {
     enabled: true,
     notation: options.notation ?? "attribute",

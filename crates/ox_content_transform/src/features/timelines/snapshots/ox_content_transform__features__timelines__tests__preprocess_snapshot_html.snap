@@ -1,0 +1,23 @@
+---
+source: crates/ox_content_transform/src/features/timelines/tests.rs
+expression: source
+---
+<section class="ox-timeline" aria-label="Timeline">
+<p class="ox-timeline__caption">Roadmap</p>
+<ol class="ox-timeline__items">
+<li class="ox-timeline__item" data-status="done">
+<div class="ox-timeline__marker" aria-hidden="true"></div>
+<div class="ox-timeline__content">
+<div class="ox-timeline__meta"><time class="ox-timeline__date" datetime="2026-08-26">2026-08-26</time><span class="ox-timeline__status">done</span></div>
+<p class="ox-timeline__title">Start</p>
+</div>
+</li>
+<li class="ox-timeline__item">
+<div class="ox-timeline__marker" aria-hidden="true"></div>
+<div class="ox-timeline__content">
+<div class="ox-timeline__meta"><time class="ox-timeline__date" datetime="2026-09">2026-09</time></div>
+<p class="ox-timeline__title">Next</p>
+</div>
+</li>
+</ol>
+</section>

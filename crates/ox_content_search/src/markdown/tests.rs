@@ -75,6 +75,31 @@ fn explicit_mdx_setting_overrides_the_source_extension() {
 }
 
 #[test]
+fn timeline_markdown_items_stay_searchable_in_source_order() {
+    let root = std::env::temp_dir().join(format!("ox-search-timeline-{}", std::process::id()));
+    let _ = std::fs::remove_dir_all(&root);
+    write_tree(
+        &root,
+        &[(
+            "releases.md",
+            "# Releases\n\n::: timeline\n- 2026-08-26 RC cut\n  Nested migration notes.\n- 2026-09 GA window\n:::\n",
+        )],
+    );
+
+    let body = body(&build_search_index_from_directory_with_options(
+        root.to_str().unwrap(),
+        "/",
+        &[".md".to_string()],
+        None,
+    ));
+    let rc = body.find("RC cut").expect("timeline title indexed");
+    let nested = body.find("Nested migration notes").expect("nested body indexed");
+    let ga = body.find("GA window").expect("later item indexed");
+    assert!(rc < nested && nested < ga, "{body:?}");
+    let _ = std::fs::remove_dir_all(&root);
+}
+
+#[test]
 fn off_indexes_every_page() {
     let root = std::env::temp_dir().join(format!("ox-search-drafts-off-{}", std::process::id()));
     let _ = std::fs::remove_dir_all(&root);

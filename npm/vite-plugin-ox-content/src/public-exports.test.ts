@@ -45,6 +45,7 @@ describe("public export surface", () => {
       "resolveVersionsOptions",
       "resolveResourcesOptions",
       "resolveImageGalleryOptions",
+      "resolveTimelineOptions",
       "resolveTeamOptions",
       "resolveSiteMapsOptions",
       "resolveMarkdownSourceOptions",

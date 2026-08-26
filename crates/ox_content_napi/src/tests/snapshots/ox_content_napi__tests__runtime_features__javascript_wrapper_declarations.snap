@@ -2228,6 +2228,40 @@ export interface JsThemeLayout {
   maxContentWidth?: string
 }
 
+/** Opt-in static `::: timeline` milestone lists. */
+export interface JsTimelineOptions {
+  /**
+   * Enable static timeline blocks.
+   *
+   * Default: `false`.
+   */
+  enabled?: boolean
+  /**
+   * Render timelines as ordered lists unless a block overrides it.
+   *
+   * Default: `true`.
+   */
+  ordered?: boolean
+  /**
+   * Validation mode for malformed dates.
+   *
+   * Default: `"error"`.
+   */
+  invalidDate?: string
+  /**
+   * Validation mode for unsupported item metadata.
+   *
+   * Default: `"error"`.
+   */
+  unknownMeta?: string
+  /**
+   * Validation mode for timeline blocks without items.
+   *
+   * Default: `"error"`.
+   */
+  empty?: string
+}
+
 /**
  * Transform options for JavaScript.
  *
@@ -2498,6 +2532,12 @@ export interface JsTransformOptions {
    * Default: disabled.
    */
   imageGalleries?: JsImageGalleryOptions
+  /**
+   * Opt-in static `::: timeline` milestone lists.
+   *
+   * Default: disabled.
+   */
+  timelines?: JsTimelineOptions
   /**
    * Opt-in `::: card` / `::: link-card` / `::: card-grid` blocks.
    *

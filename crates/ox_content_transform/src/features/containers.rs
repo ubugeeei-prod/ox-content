@@ -93,6 +93,7 @@ pub(super) fn remove_reserved_type_names(
     steps: bool,
     code_groups: Option<&[&str]>,
     galleries: bool,
+    timelines: bool,
 ) {
     let Some(options) = options.as_mut() else {
         return;
@@ -107,6 +108,9 @@ pub(super) fn remove_reserved_type_names(
     }
     if galleries {
         options.types.remove("gallery");
+    }
+    if timelines {
+        options.types.remove("timeline");
     }
 }
 

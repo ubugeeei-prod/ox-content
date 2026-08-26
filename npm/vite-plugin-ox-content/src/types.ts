@@ -1795,6 +1795,17 @@ export interface OxContentOptions {
   imageGalleries?: boolean | ImageGalleryOptions;
 
   /**
+   * Opt-in static `::: timeline` milestone lists.
+   *
+   * Timeline blocks render dated or undated milestones from Markdown-only
+   * `::: timeline` blocks. Items can carry `status`, `label`, and `href`
+   * metadata while nested Markdown stays searchable and static.
+   *
+   * @default false
+   */
+  timelines?: boolean | TimelineOptions;
+
+  /**
    * Opt-in page-bundle resources and build-time image processing.
    *
    * Off by default. `true` or `{}` treats each page directory as a bundle:
@@ -2149,6 +2160,10 @@ export interface ResolvedOptions {
    * Present after `resolveOptions`. Omitted in hand-built fixtures means off.
    */
   imageGalleries?: ResolvedImageGalleryOptions;
+  /**
+   * Present after `resolveOptions`. Omitted in hand-built fixtures means off.
+   */
+  timelines?: ResolvedTimelineOptions;
   codeImports: ResolvedCodeImportOptions;
   includes: ResolvedIncludeOptions;
   /**
@@ -2607,6 +2622,57 @@ export interface ResolvedImageGalleryOptions {
   enabled: boolean;
   lazy?: boolean;
   missingAlt: "error" | "warn" | "ignore";
+  empty: "error" | "warn" | "ignore";
+}
+
+/**
+ * Options for opt-in static timelines.
+ */
+export interface TimelineOptions {
+  /**
+   * Enable `::: timeline` blocks.
+   *
+   * @default true when the options object is supplied.
+   */
+  enabled?: boolean;
+
+  /**
+   * Render timelines as ordered lists unless a block overrides it.
+   *
+   * @default true
+   */
+  ordered?: boolean;
+
+  /**
+   * Diagnostics for malformed `YYYY`, `YYYY-MM`, or `YYYY-MM-DD` item dates.
+   *
+   * @default "error"
+   */
+  invalidDate?: "error" | "warn" | "ignore";
+
+  /**
+   * Diagnostics for unsupported item metadata.
+   *
+   * @default "error"
+   */
+  unknownMeta?: "error" | "warn" | "ignore";
+
+  /**
+   * Diagnostics for timeline blocks without items.
+   *
+   * @default "error"
+   */
+  empty?: "error" | "warn" | "ignore";
+}
+
+/**
+ * Resolved timeline transform options.
+ */
+export interface ResolvedTimelineOptions {
+  enabled: boolean;
+  ordered: boolean;
+  invalidDate: "error" | "warn" | "ignore";
+  unknownMeta: "error" | "warn" | "ignore";
   empty: "error" | "warn" | "ignore";
 }
 

@@ -254,6 +254,9 @@ const FILE_TREE_CSS: &str =
 /// CSS for opt-in static image galleries.
 const IMAGE_GALLERY_CSS: &str = include_str!("html/image_gallery.css");
 
+/// CSS for opt-in static timelines.
+const TIMELINE_CSS: &str = include_str!("html/timeline.css");
+
 /// CSS styles for opt-in `{kbd:...}` keyboard keys.
 const KBD_CSS: &str = include_str!("plugins/kbd.css");
 

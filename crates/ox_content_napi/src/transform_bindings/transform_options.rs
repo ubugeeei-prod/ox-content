@@ -7,7 +7,8 @@ use super::{
     JsCodeImportOptions, JsContainerOptions, JsDataTableOptions, JsDefinitionListOptions,
     JsEditThisPageOptions, JsEmojiShortcodeOptions, JsFileTreeOptions, JsImageGalleryOptions,
     JsImageOptions, JsIncludeOptions, JsKeyboardKeysOptions, JsMagicLinkOptions, JsMathOptions,
-    JsNotByAiOptions, JsPartialsOptions, JsSanitizeOptions, JsStepsOptions, JsWikiLinkOptions,
+    JsNotByAiOptions, JsPartialsOptions, JsSanitizeOptions, JsStepsOptions, JsTimelineOptions,
+    JsWikiLinkOptions,
 };
 
 /// Transform options for JavaScript.
@@ -239,6 +240,11 @@ pub struct JsTransformOptions {
     /// Default: disabled.
     pub image_galleries: Option<JsImageGalleryOptions>,
 
+    /// Opt-in static `::: timeline` milestone lists.
+    ///
+    /// Default: disabled.
+    pub timelines: Option<JsTimelineOptions>,
+
     /// Opt-in `::: card` / `::: link-card` / `::: card-grid` blocks.
     ///
     /// Default: disabled.
@@ -304,6 +310,7 @@ impl From<JsTransformOptions> for TransformOptions {
             magic_links: value.magic_links.map(Into::into),
             images: value.images.map(Into::into),
             image_galleries: value.image_galleries.map(Into::into),
+            timelines: value.timelines.map(Into::into),
             cards: value.cards.map(Into::into),
             math: match value.math {
                 Some(Either::A(enabled)) => Some(MathOptions { enabled: Some(enabled) }),
