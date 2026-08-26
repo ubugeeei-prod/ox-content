@@ -306,6 +306,8 @@ pub struct JsSsgPageData {
     pub robots: Option<String>,
     /// Frontmatter `canonical`.
     pub canonical: Option<String>,
+    /// Companion `.md` URL when copy-as-markdown chrome is on.
+    pub markdown_source: Option<String>,
 }
 
 /// Per-page frontmatter chrome flags.

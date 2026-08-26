@@ -32,6 +32,47 @@ JavaScript、`typescriptreact` は TSX を使います。`dotenv`、`.env`、`gi
 `npmrc`、`ini`、`conf` などの dotfile / config タグは、エスケープ済みの plain text
 として描画します。
 
+### 対応言語
+
+下のフェンスタグはネイティブ文法でトークン化します。同じセルの alias は同じ文法です。
+Vue / Svelte / Astro / Angular は HTML 文法のままです。crates.io に、この
+tree-sitter 系列と合うメンテされた専用文法がまだありません。
+
+| 言語       | フェンスタグ                                                              |
+| ---------- | ------------------------------------------------------------------------- |
+| TypeScript | `typescript`, `ts`, `cts`, `mts`                                          |
+| TSX        | `tsx`, `typescriptreact`                                                  |
+| JavaScript | `javascript`, `js`, `cjs`, `mjs`, `jsx`, `javascriptreact`, `flow`, `mdx` |
+| Rust       | `rust`, `rs`                                                              |
+| JSON       | `json`, `jsonc`, `json5`, `webmanifest`                                   |
+| CSS        | `css`                                                                     |
+| HTML       | `html`, `vue`, `svelte`, `astro`, `angular`                               |
+| Python     | `python`, `py`                                                            |
+| Go         | `go`, `golang`                                                            |
+| Java       | `java`                                                                    |
+| C          | `c`, `h`                                                                  |
+| C++        | `cpp`, `c++`, `cc`, `hpp`, `cxx`                                          |
+| YAML       | `yaml`, `yml`                                                             |
+| Markdown   | `markdown`, `md`                                                          |
+| Bash       | `bash`, `sh`, `shell`, `zsh`, `shellscript`                               |
+| TOML       | `toml`                                                                    |
+| WGSL       | `wgsl`                                                                    |
+| SQL        | `sql`                                                                     |
+| GraphQL    | `graphql`, `gql`                                                          |
+| Dockerfile | `dockerfile`, `docker`, `containerfile`                                   |
+| Ruby       | `ruby`, `rb`                                                              |
+| PHP        | `php`                                                                     |
+| Nix        | `nix`                                                                     |
+| C#         | `csharp`, `cs`                                                            |
+| Swift      | `swift`                                                                   |
+| Kotlin     | `kotlin`, `kt`                                                            |
+| GLSL       | `glsl`                                                                    |
+
+未知のタグは普通の `<pre><code>` のままです。例: `haskell`、`scala`、
+`elixir`、`perl`、`elm`、`assembly`、`asm`、`llvm`、`clojure`、
+`brainfuck`。無関係な文法へ alias しません。`text`、`dotenv`、`ini` などの
+plain タグはエスケープのみで、トークン化しません。
+
 ```ts
 import { oxContent } from "@ox-content/vite-plugin";
 

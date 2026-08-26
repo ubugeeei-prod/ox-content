@@ -35,6 +35,8 @@ Contribution summary:
   found during the ryoppippi.com Ox Content migration.
 - Helped validate the expected Twitter/X full-card visual contract through
   sveltweet.
+- Requested self-hosted web font acquisition for the built-in theme during the
+  ryoppippi.com migration.
 
 ## Third-party attribution
 

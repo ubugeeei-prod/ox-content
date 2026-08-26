@@ -51,14 +51,15 @@ export function resolveMarkdownSourceOptions(
   value: boolean | MarkdownSourceOptions | undefined,
 ): ResolvedMarkdownSourceOptions {
   if (!value) {
-    return { enabled: false, alternate: true };
+    return { enabled: false, alternate: true, copy: false };
   }
   if (value === true) {
-    return { enabled: true, alternate: true };
+    return { enabled: true, alternate: true, copy: false };
   }
   return {
     enabled: true,
     alternate: value.alternate !== false,
+    copy: value.copy === true,
   };
 }
 

@@ -9,6 +9,7 @@ import { generateOgImages } from "./og-image";
 import type { OgImagePageEntry } from "./og-image";
 import { transformAllPlugins } from "./plugins";
 import { copyKatexAssets } from "./plugins/math-assets";
+import { writeSelfHostedThemeFonts } from "./theme-fonts";
 import type { TransformAllOptions } from "./plugins";
 import { protectMermaidSvgs, restoreMermaidSvgs } from "./plugins/mermaid-protect";
 import { transformIslands, hasIslands } from "./island";
@@ -149,6 +150,8 @@ export interface SsgPageData {
   breadcrumbs?: boolean;
   /** Per-page chrome flags. Honored only when `ssg.pageChrome` is on. */
   chrome?: PageChromeFlags;
+  /** Companion URL when `ssg.markdownSource.copy` is on. */
+  markdownSource?: string;
 }
 
 /** Frontmatter override for one previous/next pager side. */
@@ -672,7 +675,7 @@ export async function generateHtmlPage(
   const navGroupsForRust = convertNavGroupsForRust(navGroups);
 
   // Convert theme to NAPI format if provided
-  const themeForRust = theme ? themeToNapi(theme, locale) : undefined;
+  const themeForRust = theme ? themeToNapi(theme, locale, base) : undefined;
 
   // Convert entry page to NAPI format if provided
   const entryPageForRust = pageData.entryPage
@@ -737,6 +740,7 @@ export async function generateHtmlPage(
         typeof pageData.frontmatter.canonical === "string"
           ? pageData.frontmatter.canonical
           : undefined,
+      markdownSource: pageData.markdownSource,
     },
     navGroupsForRust,
     {
@@ -1111,6 +1115,9 @@ export async function buildSsg(options: ResolvedOptions, root: string): Promise<
   if (options.math?.enabled) {
     generatedFiles.push(...(await copyKatexAssets(outDir)));
   }
+  generatedFiles.push(
+    ...(await writeSelfHostedThemeFonts({ fonts: ssgOptions.theme?.fonts ?? {}, outDir, root })),
+  );
 
   return {
     files: generatedFiles,
@@ -1595,7 +1602,12 @@ async function renderSsgPage(
     );
   }
 
-  const pageData = createSsgPageData(pageResult);
+  const pageData = createSsgPageData(
+    pageResult,
+    context.ssgOptions.markdownSource?.copy && pageResult.source != null
+      ? markdownSource
+      : undefined,
+  );
   const versionNavigation = context.versionNavigation;
   if (versionNavigation) {
     pageData.prev = rewritePagerOverride(pageData.prev, versionNavigation);
@@ -1760,7 +1772,7 @@ function canonicalPageUrl(context: BuildSsgContext, urlPath: string): string | u
   return `${siteUrl}${context.base}${urlPath}/`;
 }
 
-function createSsgPageData(pageResult: PageProcessResult): SsgPageData {
+function createSsgPageData(pageResult: PageProcessResult, markdownSource?: string): SsgPageData {
   const { frontmatter } = pageResult;
   const entryPage =
     frontmatter.layout === "entry"
@@ -1785,6 +1797,7 @@ function createSsgPageData(pageResult: PageProcessResult): SsgPageData {
     next: parseSsgPagerOverride(frontmatter.next),
     breadcrumbs: frontmatter.breadcrumbs === false ? false : undefined,
     chrome: parsePageChromeFlags(frontmatter),
+    markdownSource,
   };
 }
 

@@ -20,6 +20,7 @@ fn page(toc: Vec<TocEntry>) -> PageData {
         chrome: PageChromeFlags::default(),
         robots: None,
         canonical: None,
+        markdown_source: None,
     }
 }
 

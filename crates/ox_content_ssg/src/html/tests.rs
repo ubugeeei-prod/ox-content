@@ -54,9 +54,22 @@ fn mobile_menu_script_keeps_state_and_focus_synchronized() {
 }
 
 #[test]
+fn ssg_css_inlines_shared_magic_links_stylesheet() {
+    let magic_links = include_str!("../plugins/magic-links.css");
+    assert!(
+        super::SSG_CSS.contains(magic_links),
+        "built-in SSG must include the published magic-links stylesheet"
+    );
+    assert!(
+        !super::SSG_CSS.contains("/* @include magic-links.css */"),
+        "the include marker must be expanded before pages are rendered"
+    );
+}
+
+#[test]
 fn default_theme_surfaces_stay_flat() {
     let default_css = [
-        super::SSG_CSS,
+        super::SSG_CSS.as_str(),
         super::CONTRIBUTORS_CSS,
         super::FILE_TREE_CSS,
         super::header_chrome::HEADER_CHROME_CSS,
