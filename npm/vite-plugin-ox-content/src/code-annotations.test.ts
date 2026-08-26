@@ -155,6 +155,7 @@ function createResolvedOptions(overrides: Partial<ResolvedOptions> = {}): Resolv
     includes: { enabled: false },
     cards: { enabled: false },
     steps: { enabled: false },
+    codeGroups: { enabled: false },
     fileTree: { enabled: false, defaultOpen: true, icons: true },
     dataTables: { enabled: false, missing: "error" },
     sanitize: { enabled: false },

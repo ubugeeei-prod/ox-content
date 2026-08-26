@@ -647,6 +647,7 @@ export async function transformMarkdown(
       : undefined,
     cards: options.cards?.enabled ? { enabled: true } : undefined,
     steps: options.steps?.enabled ? { enabled: true } : undefined,
+    codeGroups: options.codeGroups?.enabled ? { enabled: true } : undefined,
     fileTree: toJsFileTreeOptions(options.fileTree),
     dataTables: toJsDataTableOptions(options.dataTables),
     // Sanitize once at the end of the JS pipeline so opt-in embeds can be
