@@ -164,10 +164,52 @@ JSX 向けに `tsconfig.json` を設定します。
 
 ### フォント
 
-| オプション   | CSS 変数           | 説明                         |
-| ------------ | ------------------ | ---------------------------- |
-| `fonts.sans` | `--octc-font-sans` | サンセリフのフォントスタック |
-| `fonts.mono` | `--octc-font-mono` | 等幅のフォントスタック       |
+| オプション    | CSS 変数             | 説明                                                       |
+| ------------- | -------------------- | ---------------------------------------------------------- |
+| `fonts.sans`  | `--octc-font-sans`   | サンセリフのフォントスタック、またはセルフホストファミリー |
+| `fonts.mono`  | `--octc-font-mono`   | 等幅のフォントスタック、またはセルフホストファミリー       |
+| `fonts.named` | `--octc-font-<name>` | カスタム CSS 向けの追加ファミリー                          |
+
+`sans` と `mono` は CSS スタック文字列か Web フォントオブジェクトのどちらかです。文字列形式はこれまでどおりです。
+
+```ts
+fonts: {
+  sans: "Inter, sans-serif",
+  mono: "DM Mono, monospace",
+}
+```
+
+オブジェクト形式はファミリー名を指定します。`selfHost: true` のとき、Ox Content は要求されたウェイトとサブセットを SSG 出力へコピーし `@font-face` を出すので、公開サイトは実行時に Google Fonts へリクエストしません。
+
+```ts
+fonts: {
+  sans: {
+    family: "Inter",
+    provider: "google",
+    weights: [400, 600],
+    subsets: ["latin"],
+    display: "swap",
+    selfHost: true,
+  },
+  mono: "DM Mono, monospace",
+  named: {
+    code: {
+      family: "JetBrains Mono",
+      provider: "google",
+      weights: [400],
+      selfHost: true,
+    },
+  },
+}
+```
+
+- `sans` / `mono` はこれまでどおり `--octc-font-sans` と `--octc-font-mono` に対応します。
+- `named` のファミリーは `--octc-font-<name>`（例: `--octc-font-code`）として出ます。
+- `provider: "local"` はファイルまたは `@fontsource/*` ディレクトリを読み、ネットワーク不要です。CI や、すでにファイルを同梱している場合に使います。
+- `preload: true`（またはウェイトの配列）は、そのフェイスに `<link rel="preload">` を出します。
+- ダウンロードは `node_modules/.cache/ox-content/fonts` にキャッシュされます。
+
+`selfHost: true` がないオブジェクトは CSS スタックだけを設定し、ファイルの取得や出力はしません。
 
 セットしたキーだけが出ます。省略した色、フォント、レイアウトは [既定テーマの値](#既定テーマの値) に落ちるので、アクセント 1 つを上書きするためにパレット全体を書き直す必要はありません。
 

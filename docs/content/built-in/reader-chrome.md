@@ -47,7 +47,8 @@ oxContent({
 | `backToTop`     | `true`  | Back-to-top button after scroll      |
 
 Copy uses the browser clipboard when the reader clicks the button. Fence text
-is not copied at build time.
+is not copied at build time. Page-level Copy as Markdown is a separate opt-in
+on [`ssg.markdownSource.copy`](./markdown-source.md).
 
 Outbound icons skip relative, hash, `mailto:`, and `tel:` links. Links inside
 fenced blocks or inline code spans are left alone. `javascript:`, `data:`, and

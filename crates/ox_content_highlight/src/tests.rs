@@ -24,6 +24,28 @@ fn aliases_resolve_to_the_same_grammar() {
         assert!(supports(alias), "{alias} should be supported");
     }
     assert!(supports("mdx"));
+    assert!(supports("sql"));
+    for alias in ["graphql", "gql"] {
+        assert!(supports(alias), "{alias} should be supported");
+    }
+    for alias in ["dockerfile", "docker", "containerfile"] {
+        assert!(supports(alias), "{alias} should be supported");
+    }
+    for alias in ["ruby", "rb"] {
+        assert!(supports(alias), "{alias} should be supported");
+    }
+    assert!(supports("php"));
+    assert!(supports("nix"));
+    for alias in ["csharp", "cs"] {
+        assert!(supports(alias), "{alias} should be supported");
+    }
+    assert!(supports("swift"));
+    for alias in ["kotlin", "kt"] {
+        assert!(supports(alias), "{alias} should be supported");
+    }
+    assert!(supports("glsl"));
+    assert!(!supports("assembly"));
+    assert!(!supports("asm"));
     assert_eq!(
         highlight_to_html("const a = 1;", "ts"),
         highlight_to_html("const a = 1;", "typescript")
@@ -130,6 +152,16 @@ fn the_visible_text_is_exactly_the_input() {
         ("<script lang=\"ts\">let a = 1;</script>\n", "svelte"),
         ("---\ntitle: Demo\n---\n<h1>{title}</h1>\n", "astro"),
         ("FOO=a < b\n# comment\n", "dotenv"),
+        ("SELECT name FROM t WHERE a < b AND c = 'x & y';\n", "sql"),
+        ("type Query { hello: String }\n# a < b & c\n", "graphql"),
+        ("FROM alpine\nRUN echo \"a < b & c > d\"\n", "dockerfile"),
+        ("def f(x)\n  x < 1 && \"a & b\"\nend\n", "ruby"),
+        ("<?php echo \"a < b & c > d\";\n", "php"),
+        ("let x = \"a < b & c\"; in x\n", "nix"),
+        ("class A { string F() { return \"a < b & c\"; } }\n", "csharp"),
+        ("let s = \"a < b & c\"\n", "swift"),
+        ("fun main() { val s = \"a < b & c\" }\n", "kotlin"),
+        ("void main() { bool b = 1.0 < 2.0 && true; }\n", "glsl"),
         ("no trailing newline", "ts"),
         ("\n\n\n", "ts"),
         ("tabs\tand  spaces\n", "ts"),
@@ -242,6 +274,32 @@ fn plain_text_keeps_the_input_verbatim() {
     for code in ["a < b & c > d\n", "\ttabbed\n\n", "🎉 ünï\n", "no newline"] {
         let html = highlight_to_html(code, "text").expect("supported");
         assert_eq!(visible_text(&html), code);
+    }
+}
+
+#[test]
+fn added_grammars_tokenize_and_escape() {
+    for (code, lang) in [
+        ("SELECT name FROM t WHERE a < b AND c = 'x & y';\n", "sql"),
+        ("type Query { hello: String }\n# a < b & c\n", "gql"),
+        ("FROM alpine\nRUN echo \"a < b & c > d\"\n", "docker"),
+        ("def f(x)\n  x < 1 && \"a & b\"\nend\n", "rb"),
+        ("<?php echo \"a < b & c > d\";\n", "php"),
+        ("let x = \"a < b & c\"; in x\n", "nix"),
+        ("class A { string F() { return \"a < b & c\"; } }\n", "cs"),
+        ("let s = \"a < b & c\"\n", "swift"),
+        ("fun main() { val s = \"a < b & c\" }\n", "kt"),
+        ("void main() { bool b = 1.0 < 2.0 && true; }\n", "glsl"),
+    ] {
+        let html = highlight_to_html(code, lang).expect(lang);
+        assert_eq!(visible_text(&html), code, "lang={lang}");
+        assert!(html.contains("--octc-syntax-token-"), "lang={lang} html={html}");
+        assert!(html.contains("&lt;"), "lang={lang} html={html}");
+        assert!(html.contains("&amp;"), "lang={lang} html={html}");
+        if code.contains('>') {
+            assert!(html.contains("&gt;"), "lang={lang} html={html}");
+        }
+        assert!(!html.contains("a < b"), "lang={lang} html={html}");
     }
 }
 

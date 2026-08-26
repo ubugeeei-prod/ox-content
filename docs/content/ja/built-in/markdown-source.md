@@ -24,13 +24,15 @@ export default {
 ```
 
 `false` または省略は追加ファイルを書きません。`true` は既定で有効にします。
-オブジェクトにすると機能をオンにし、alternate リンクだけオフにできます。
+オブジェクトにすると機能をオンにし、alternate リンクだけオフにしたり、
+既定テーマの Copy as Markdown をオプトインしたりできます。
 
 ```ts
 oxContent({
   ssg: {
     markdownSource: {
       alternate: false,
+      copy: true,
     },
   },
 });
@@ -40,6 +42,7 @@ oxContent({
 | ---------------- | ----------------------------------- | ------- |
 | `markdownSource` | `boolean` / `MarkdownSourceOptions` | `false` |
 | `alternate`      | `boolean`                           | `true`  |
+| `copy`           | `boolean`                           | `false` |
 
 ## URL の対応
 
@@ -89,7 +92,14 @@ const page = usePageProps();
 return page.markdownSource ? <a href={page.markdownSource}>ソース</a> : null;
 ```
 
-クライアント JS は追加しません。
+`copy` がオンのとき、既定テーマはタイトル付近に **Copy as Markdown** ボタンと
+**View Markdown** リンクを付けます（「このページを編集」があるときはその隣）。
+コピーは併記の `.md` URL を取得し、frontmatter を含む元のソースバイトを
+クリップボードに書きます。View Markdown は静的な `<a href="…md">` なので
+JavaScript なしでも開けます。併記がオンでも `copy` は明示しない限りオフです。
+
+このリポジトリのドキュメントサイトは `markdownSource: { copy: true }` で
+コントロールを有効にしています。
 
 ## 関連
 

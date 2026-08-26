@@ -4,6 +4,7 @@ use super::super::{
 };
 
 mod announcement;
+mod markdown_source;
 mod nav;
 mod page_chrome;
 
@@ -32,6 +33,7 @@ fn page() -> PageData {
         chrome: PageChromeFlags::default(),
         robots: None,
         canonical: None,
+        markdown_source: None,
     }
 }
 

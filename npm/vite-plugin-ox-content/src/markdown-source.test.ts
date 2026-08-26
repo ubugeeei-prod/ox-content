@@ -26,21 +26,49 @@ afterEach(async () => {
 
 describe("resolveMarkdownSourceOptions", () => {
   it("disables the feature by default", () => {
-    expect(resolveMarkdownSourceOptions(undefined)).toEqual({ enabled: false, alternate: true });
-    expect(resolveMarkdownSourceOptions(false)).toEqual({ enabled: false, alternate: true });
+    expect(resolveMarkdownSourceOptions(undefined)).toEqual({
+      enabled: false,
+      alternate: true,
+      copy: false,
+    });
+    expect(resolveMarkdownSourceOptions(false)).toEqual({
+      enabled: false,
+      alternate: true,
+      copy: false,
+    });
     expect(resolveSsgOptions(undefined).markdownSource?.enabled).toBe(false);
+    expect(resolveSsgOptions(undefined).markdownSource?.copy).toBe(false);
   });
 
   it("enables defaults when true", () => {
-    expect(resolveMarkdownSourceOptions(true)).toEqual({ enabled: true, alternate: true });
+    expect(resolveMarkdownSourceOptions(true)).toEqual({
+      enabled: true,
+      alternate: true,
+      copy: false,
+    });
   });
 
   it("enables from an object and can turn the alternate link off", () => {
-    expect(resolveMarkdownSourceOptions({})).toEqual({ enabled: true, alternate: true });
+    expect(resolveMarkdownSourceOptions({})).toEqual({
+      enabled: true,
+      alternate: true,
+      copy: false,
+    });
     expect(resolveMarkdownSourceOptions({ alternate: false })).toEqual({
       enabled: true,
       alternate: false,
+      copy: false,
     });
+  });
+
+  it("keeps copy off unless opted in", () => {
+    expect(resolveMarkdownSourceOptions({ copy: true })).toEqual({
+      enabled: true,
+      alternate: true,
+      copy: true,
+    });
+    expect(resolveMarkdownSourceOptions({ copy: false }).copy).toBe(false);
+    expect(resolveSsgOptions({ markdownSource: true }).markdownSource?.copy).toBe(false);
   });
 });
 
@@ -146,6 +174,51 @@ describe("SSG write", () => {
     expect(html).toContain("<title>/guide.md</title>");
   });
 
+  it("omits copy-as-markdown chrome when copy is off", async () => {
+    const root = await makeSite({
+      "getting-started.md": "---\ntitle: Getting Started\n---\n# Getting Started\nBody.\n",
+    });
+    const built = await buildSsg(ssgOptions({ markdownSource: true, themed: true }), root);
+    const html = await fs.readFile(
+      path.join(root, "dist", "getting-started", "index.html"),
+      "utf8",
+    );
+    expect(built.files).toContain(path.join(root, "dist", "getting-started.md"));
+    expect(html).not.toContain("ox-markdown-source");
+    expect(html).not.toContain("Copy as Markdown");
+    expect(html).not.toContain("View Markdown");
+  });
+
+  it("emits copy-as-markdown chrome that points at the companion", async () => {
+    const source = "---\ntitle: Getting Started\n---\n# Getting Started\nBody.\n";
+    const root = await makeSite({ "getting-started.md": source });
+    const built = await buildSsg(
+      ssgOptions({ markdownSource: { copy: true }, themed: true }),
+      root,
+    );
+    const companion = path.join(root, "dist", "getting-started.md");
+    expect(built.files).toContain(companion);
+    expect(await fs.readFile(companion, "utf8")).toBe(source);
+
+    const html = await fs.readFile(
+      path.join(root, "dist", "getting-started", "index.html"),
+      "utf8",
+    );
+    expect(html).toContain('class="ox-markdown-source"');
+    expect(html).toContain('href="/getting-started.md">View Markdown</a>');
+    expect(html).toContain("Copy as Markdown");
+    expect(html).toContain("data-ox-copy-markdown");
+    expect(html).not.toContain(source);
+  });
+
+  it("official docs site enables markdownSource copy so companions are published", async () => {
+    const config = await fs.readFile(
+      path.join(import.meta.dirname, "../../../docs/vite.config.ts"),
+      "utf8",
+    );
+    expect(config).toMatch(/markdownSource:\s*\{\s*copy:\s*true\s*\}/);
+  });
+
   it("leaves output unchanged when the feature is off", async () => {
     const files = { "guide.md": "---\ntitle: Guide\n---\n# Guide\n" };
     const offRoot = await makeSite(files);
@@ -205,12 +278,13 @@ async function makeSite(files: Record<string, string>): Promise<string> {
 
 function ssgOptions(
   input: {
-    markdownSource?: boolean | { alternate?: boolean };
+    markdownSource?: boolean | { alternate?: boolean; copy?: boolean };
     publishState?: ReturnType<typeof resolvePublishStateOptions>;
     permalinks?: { enabled: boolean };
     base?: string;
     ssgExtension?: string;
     render?: ThemeComponent;
+    themed?: boolean;
   } = {},
 ) {
   const base = createDocsResolvedOptions();
@@ -220,7 +294,7 @@ function ssgOptions(
     publishState: input.publishState,
     ssg: {
       ...base.ssg,
-      bare: !input.render,
+      bare: input.themed || input.render ? false : true,
       extension: input.ssgExtension ?? ".html",
       markdownSource: resolveMarkdownSourceOptions(input.markdownSource),
       ...(input.render ? { render: input.render } : {}),

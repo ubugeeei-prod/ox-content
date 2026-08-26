@@ -143,7 +143,7 @@ function channelDescription(doc: FeedDocument): string {
   return description ? description : doc.siteName;
 }
 
-function escapeXml(value: string): string {
+export function escapeXml(value: string): string {
   return value.replace(/[&<>"']/g, (ch) => {
     switch (ch) {
       case "&":
@@ -160,7 +160,7 @@ function escapeXml(value: string): string {
   });
 }
 
-function jsonString(value: string): string {
+export function jsonString(value: string): string {
   let escaped = '"';
   for (const ch of value) {
     const code = ch.codePointAt(0) ?? 0;

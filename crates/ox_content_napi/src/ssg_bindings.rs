@@ -185,6 +185,7 @@ pub fn generate_ssg_html(
         chrome: convert_page_chrome_flags(page_data.chrome),
         robots: page_data.robots,
         canonical: page_data.canonical,
+        markdown_source: page_data.markdown_source,
     };
 
     let ssg_nav_groups: Vec<ox_content_ssg::NavGroup> = nav_groups
