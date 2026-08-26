@@ -112,6 +112,35 @@
 .ox-hide-edit-link .ox-edit-this-page {
   display: none;
 }
+.ox-markdown-source {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.35rem 1rem;
+  margin: 0 0 1.25rem;
+  font-size: 0.875rem;
+}
+.ox-copy-markdown,
+.ox-view-markdown {
+  color: var(--octc-color-text-muted);
+  background: none;
+  border: none;
+  cursor: pointer;
+  font: inherit;
+  padding: 0;
+  text-decoration: none;
+}
+.ox-copy-markdown:hover,
+.ox-view-markdown:hover {
+  color: var(--octc-color-primary);
+}
+.ox-copy-markdown-status {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+}
 @media (max-width: 768px) {
   .header-nav {
     flex: 0 1 auto;

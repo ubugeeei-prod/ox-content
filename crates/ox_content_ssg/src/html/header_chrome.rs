@@ -2,10 +2,29 @@
 
 use serde::{Deserialize, Serialize};
 
-use super::utils::escape_html;
+use super::utils::{escape_html, wrap_css_section};
 
 pub(super) const HEADER_CHROME_CSS: &str = include_str!("header_chrome.css");
 pub(super) const HEADER_CHROME_JS: &str = include_str!("header_chrome.js");
+
+mod markdown_source;
+pub(super) use markdown_source::{insert_markdown_source_chrome, markdown_source_chrome_enabled};
+
+use super::reader_chrome::{ReaderChrome, apply_reader_chrome};
+
+pub(super) fn enhance_article_html(
+    content: &str,
+    reader_chrome: ReaderChrome,
+    markdown_source: Option<&str>,
+    is_entry_page: bool,
+) -> String {
+    let html = if reader_chrome.copy || reader_chrome.external_links {
+        apply_reader_chrome(content, reader_chrome)
+    } else {
+        content.to_string()
+    };
+    if is_entry_page { html } else { insert_markdown_source_chrome(&html, markdown_source) }
+}
 
 /// Header nav link or dropdown.
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
@@ -142,25 +161,54 @@ pub(super) fn render_announcement(announcement: &ThemeAnnouncement) -> String {
     html
 }
 
+pub(super) fn push_header_chrome_css(
+    css_sections: &mut Vec<String>,
+    nav_html: &str,
+    announcement_html: &str,
+    chrome: ResolvedPageChrome,
+    markdown_source: bool,
+) {
+    if header_chrome_needs_css(nav_html, announcement_html, chrome, markdown_source) {
+        css_sections.push(wrap_css_section("header-chrome", HEADER_CHROME_CSS));
+    }
+}
+
+pub(super) fn push_header_chrome_js(
+    all_js: &mut String,
+    nav_html: &str,
+    announcement_html: &str,
+    locale_switcher_html: &str,
+    markdown_source: bool,
+) {
+    if header_chrome_needs_js(nav_html, announcement_html, locale_switcher_html, markdown_source) {
+        all_js.push('\n');
+        all_js.push_str(HEADER_CHROME_JS);
+    }
+}
+
 pub(super) fn header_chrome_needs_js(
     nav_html: &str,
     announcement_html: &str,
     locale_switcher_html: &str,
+    markdown_source: bool,
 ) -> bool {
     nav_html.contains("aria-expanded")
         || announcement_html.contains("data-ox-announce")
         || locale_switcher_html.contains("ox-header-select")
+        || markdown_source
 }
 
 pub(super) fn header_chrome_needs_css(
     nav_html: &str,
     announcement_html: &str,
     chrome: ResolvedPageChrome,
+    markdown_source: bool,
 ) -> bool {
     !nav_html.is_empty()
         || !announcement_html.is_empty()
         || !chrome.show_navbar
         || chrome.hide_edit_link
+        || markdown_source
 }
 
 pub(super) fn push_header_chrome_body_classes(

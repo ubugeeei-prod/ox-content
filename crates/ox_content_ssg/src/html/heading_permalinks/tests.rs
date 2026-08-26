@@ -23,6 +23,7 @@ fn page(content: &str) -> PageData {
         chrome: PageChromeFlags::default(),
         robots: None,
         canonical: None,
+        markdown_source: None,
     }
 }
 

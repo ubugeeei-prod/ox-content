@@ -1788,6 +1788,8 @@ export interface JsSsgPageData {
   robots?: string
   /** Frontmatter `canonical`. */
   canonical?: string
+  /** Companion `.md` URL when copy-as-markdown chrome is on. */
+  markdownSource?: string
 }
 
 /** Resolved SSG output and public route paths. */

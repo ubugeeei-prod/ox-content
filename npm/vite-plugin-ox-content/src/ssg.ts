@@ -150,6 +150,8 @@ export interface SsgPageData {
   breadcrumbs?: boolean;
   /** Per-page chrome flags. Honored only when `ssg.pageChrome` is on. */
   chrome?: PageChromeFlags;
+  /** Companion URL when `ssg.markdownSource.copy` is on. */
+  markdownSource?: string;
 }
 
 /** Frontmatter override for one previous/next pager side. */
@@ -738,6 +740,7 @@ export async function generateHtmlPage(
         typeof pageData.frontmatter.canonical === "string"
           ? pageData.frontmatter.canonical
           : undefined,
+      markdownSource: pageData.markdownSource,
     },
     navGroupsForRust,
     {
@@ -1598,7 +1601,12 @@ async function renderSsgPage(
     );
   }
 
-  const pageData = createSsgPageData(pageResult);
+  const pageData = createSsgPageData(
+    pageResult,
+    context.ssgOptions.markdownSource?.copy && pageResult.source != null
+      ? markdownSource
+      : undefined,
+  );
   const versionNavigation = context.versionNavigation;
   if (versionNavigation) {
     pageData.prev = rewritePagerOverride(pageData.prev, versionNavigation);
@@ -1763,7 +1771,7 @@ function canonicalPageUrl(context: BuildSsgContext, urlPath: string): string | u
   return `${siteUrl}${context.base}${urlPath}/`;
 }
 
-function createSsgPageData(pageResult: PageProcessResult): SsgPageData {
+function createSsgPageData(pageResult: PageProcessResult, markdownSource?: string): SsgPageData {
   const { frontmatter } = pageResult;
   const entryPage =
     frontmatter.layout === "entry"
@@ -1788,6 +1796,7 @@ function createSsgPageData(pageResult: PageProcessResult): SsgPageData {
     next: parseSsgPagerOverride(frontmatter.next),
     breadcrumbs: frontmatter.breadcrumbs === false ? false : undefined,
     chrome: parsePageChromeFlags(frontmatter),
+    markdownSource,
   };
 }
 

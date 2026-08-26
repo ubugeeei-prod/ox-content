@@ -412,7 +412,8 @@ export interface SsgOptions {
    * Off by default. `true` writes a `.md` companion using the published URL
    * (permalink, locale, base, and output directory) and adds
    * `<link rel="alternate" type="text/markdown">`. An object enables the
-   * feature and can turn the alternate link off.
+   * feature and can turn the alternate link off, or opt in to the default
+   * theme's Copy as Markdown control.
    *
    * The companion is a byte-for-byte copy of the source file, including
    * frontmatter. Draft and unlisted pages are never written.
@@ -877,6 +878,14 @@ export interface MarkdownSourceOptions {
    * @default true
    */
   alternate?: boolean;
+
+  /**
+   * Show a page-level Copy as Markdown control in the default theme.
+   * The control copies or opens the published companion bytes, including
+   * frontmatter. Off unless set, even when companions are enabled.
+   * @default false
+   */
+  copy?: boolean;
 }
 
 /**
@@ -885,6 +894,7 @@ export interface MarkdownSourceOptions {
 export interface ResolvedMarkdownSourceOptions {
   enabled: boolean;
   alternate: boolean;
+  copy: boolean;
 }
 
 /**
