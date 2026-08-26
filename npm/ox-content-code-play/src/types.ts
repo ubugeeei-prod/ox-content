@@ -174,6 +174,8 @@ export interface PlayPayload {
   code: string;
   capabilities: LanguageCapabilities;
   config: Record<string, unknown>;
+  /** Per-language executor endpoint for remote language backends. */
+  endpoint?: string;
   viewers: ViewerFlags;
   ui: CodePlayPreset;
   timeoutMs: number;

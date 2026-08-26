@@ -1,7 +1,6 @@
 import {
   currentJavaScriptRuntime,
   executeScriptWithRuntime,
-  executionRuntimeFromError,
   javascriptRuntimeProvenance,
 } from "./javascript";
 import { hasNodeVm } from "./runtime-host";
@@ -69,7 +68,6 @@ export async function typecheckTypeScript(request: AdapterRequest): Promise<Adap
     if (isAbortError(error) || request.signal?.aborted) {
       throw error;
     }
-    executedRuntime = executionRuntimeFromError(error) ?? executedRuntime;
     tracker.stop();
     const message = error instanceof Error ? error.message : String(error);
     return {

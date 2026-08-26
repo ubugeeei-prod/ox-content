@@ -8,6 +8,8 @@
 
 ### Bug Fixes
 
+- return Code Play TypeScript fallback diagnostics when tsgo is unavailable (#916)
+- preserve Code Play remote endpoints for hydrated Python runs (#916)
 - preserve attrs on inline links and transformed images (#935)
 - expand MDX parser and renderer edge-case coverage (#894)
 - snapshot framework MDX island outputs (#852)

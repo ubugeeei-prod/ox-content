@@ -5,7 +5,7 @@ import { errorMessage, errorResult } from "./result";
 import { CODE_PLAY_STYLES } from "./styles";
 import { JS_SANDBOX_FLAGS } from "./javascript-sandbox";
 import { applyActionBusy, renderPlayUi } from "./ui";
-import type { PlayPayload, RunResult } from "./types";
+import type { LanguageEnable, LanguageEnableOptions, PlayPayload, RunResult } from "./types";
 import {
   renderDiagnosticsHtml,
   renderProvenanceHtml,
@@ -47,7 +47,7 @@ export function mountCodePlay(element: Element, options: { client?: CodePlayClie
   const client =
     options.client ??
     createCodePlay({
-      languages: { [payload.language]: true },
+      languages: { [payload.language]: languageEnableFromPayload(payload) },
       endpoints: payload.endpoints,
     });
   const source = element.innerHTML;
@@ -182,18 +182,30 @@ function readForm(form: HTMLFormElement): Record<string, unknown> {
 }
 
 function createCodePlayFromPayloads(root: ParentNode) {
-  const languages: Record<string, true> = {};
+  const languages: Record<string, LanguageEnable> = {};
   let endpoints;
   for (const element of queryWidgets(root)) {
     try {
       const payload = decodePayload(element.getAttribute("data-ox-code-play") ?? "");
-      languages[payload.language] = true;
+      languages[payload.language] = languageEnableFromPayload(payload);
       endpoints = payload.endpoints ?? endpoints;
     } catch {
       // Ignore malformed widgets so one bad payload cannot block the page.
     }
   }
   return createCodePlay({ languages, endpoints });
+}
+
+function languageEnableFromPayload(payload: PlayPayload): LanguageEnableOptions {
+  const enable: LanguageEnableOptions = {
+    execute: payload.capabilities.execute,
+    typecheck: payload.capabilities.typecheck,
+    config: payload.config,
+  };
+  if (payload.endpoint) {
+    enable.endpoint = payload.endpoint;
+  }
+  return enable;
 }
 
 function queryWidgets(root: ParentNode): HTMLElement[] {

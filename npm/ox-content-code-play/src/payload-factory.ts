@@ -6,7 +6,7 @@ import type { LanguageDefinition, PlayPayload, PlaygroundEndpoints } from "./typ
 export function payloadFromFence(fence: PlayFence, options: ResolvedCodePlayOptions): PlayPayload {
   const definition = resolveLanguage(fence.language);
   const enabled = definition ? options.languages.get(definition.id) : undefined;
-  return {
+  const payload: PlayPayload = {
     language: definition?.id ?? fence.language,
     code: fence.code,
     capabilities: {
@@ -24,6 +24,10 @@ export function payloadFromFence(fence: PlayFence, options: ResolvedCodePlayOpti
     timeoutMs: options.timeoutMs,
     endpoints: options.endpoints,
   };
+  if (enabled?.endpoint) {
+    payload.endpoint = enabled.endpoint;
+  }
+  return payload;
 }
 
 /** TypeScript typecheck in the browser needs a reachable endpoint; hide the dead button otherwise. */

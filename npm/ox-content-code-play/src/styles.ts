@@ -25,12 +25,42 @@ export const CODE_PLAY_STYLES = `
   border: 1px solid var(--octc-color-border, color-mix(in srgb, currentColor 20%, transparent));
   background: color-mix(in srgb, var(--octc-color-text, CanvasText) 8%, transparent);
   color: var(--octc-color-text, CanvasText);
-  border-radius: 999px;
+  border-radius: 8px;
   padding: 0.25rem 0.75rem;
   font: 600 0.75rem/1.4 ui-sans-serif, system-ui, sans-serif;
   cursor: pointer;
 }
 .ox-code-play__toolbar button:disabled { opacity: 0.55; cursor: progress; }
+.ox-code-play__runtime {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+  align-items: center;
+  padding: 0.55rem 0.8rem;
+  border-bottom: 1px solid var(--octc-color-border, color-mix(in srgb, currentColor 10%, transparent));
+  background: color-mix(in srgb, var(--octc-color-text, CanvasText) 4%, transparent);
+}
+.ox-code-play__runtime-chip {
+  display: inline-grid;
+  gap: 0.1rem;
+  min-width: 7.5rem;
+  padding: 0.35rem 0.5rem;
+  border: 1px solid var(--octc-color-border, color-mix(in srgb, currentColor 14%, transparent));
+  border-radius: 8px;
+  background: var(--octc-color-bg, Canvas);
+}
+.ox-code-play__runtime-chip span {
+  font: 600 0.62rem/1.1 ui-sans-serif, system-ui, sans-serif;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  opacity: 0.62;
+}
+.ox-code-play__runtime-chip strong {
+  font: 650 0.78rem/1.2 ui-sans-serif, system-ui, sans-serif;
+}
+.ox-code-play__runtime-chip--ok strong { color: var(--octc-color-primary, var(--octc-accent, #4f46e5)); }
+.ox-code-play__runtime-chip--warn strong { color: var(--octc-warning, #b54708); }
+.ox-code-play__runtime-chip--muted strong { opacity: 0.72; }
 .ox-code-play .ox-code { margin: 0; }
 .ox-code-play__source pre { margin: 0; border: 0; border-radius: 0; }
 .ox-code-play__tabs {

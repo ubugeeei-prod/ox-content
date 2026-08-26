@@ -1,6 +1,6 @@
 import { resolveLanguage } from "./catalog";
 import { escapeHtml } from "./escape";
-import type { CodePlayPreset, PlayPayload, RunResult } from "./types";
+import type { CodePlayPreset, LanguageDefinition, PlayPayload, RunResult } from "./types";
 import {
   renderConfigHtml,
   renderDiagnosticsHtml,
@@ -34,6 +34,7 @@ export function renderPlayUi(state: UiState): string {
     ${canTypecheck ? `<button type="button" data-ox-action="typecheck"${actionButtonAttrs("typecheck", Boolean(state.busy))}>Typecheck</button>` : ""}
     <button type="button" data-ox-action="cancel"${actionButtonAttrs("cancel", Boolean(state.busy))}>Cancel</button>
   </div>
+  ${renderRuntimeStrip(state.payload, definition)}
   <div class="ox-code-play__source"></div>
   ${tabs}
   ${viewers.stdio ? `<div class="ox-code-play__panel" data-panel="stdio">${renderDiagnosticsHtml(state.result)}${renderStdioHtml(state.result?.stdio ?? [])}</div>` : ""}
@@ -42,6 +43,62 @@ export function renderPlayUi(state: UiState): string {
   <div class="ox-code-play__panel" data-panel="provenance"${hidden(panel, "provenance", preset)}>${renderProvenanceHtml(state.result?.provenance)}</div>
   <div class="ox-code-play__panel" data-panel="timing"${hidden(panel, "timing", preset)}>${renderTimingHtml(state.result?.timing)}</div>
 </div>`;
+}
+
+function renderRuntimeStrip(
+  payload: PlayPayload,
+  definition: LanguageDefinition | undefined,
+): string {
+  const runtime = runtimeLabel(payload, definition);
+  const executor = executorLabel(payload, definition);
+  const checks = payload.capabilities.typecheck ? "Typecheck ready" : "Run only";
+  const chips = [
+    runtimeChip("Runtime", runtime.label, runtime.kind),
+    runtimeChip("Executor", executor.label, executor.kind),
+    runtimeChip("Checks", checks, payload.capabilities.typecheck ? "ok" : "muted"),
+  ].join("");
+  return `<div class="ox-code-play__runtime" aria-label="Code Play runtime">${chips}</div>`;
+}
+
+function runtimeLabel(
+  payload: PlayPayload,
+  definition: LanguageDefinition | undefined,
+): { label: string; kind: "ok" | "warn" | "muted" } {
+  switch (definition?.backend) {
+    case "javascript":
+      return { label: "Browser sandbox", kind: "ok" };
+    case "typescript":
+      return { label: "TypeScript sandbox", kind: "ok" };
+    case "framework":
+      return { label: `${definition.name} iframe preview`, kind: "ok" };
+    case "rust-playground":
+      return { label: "Rust Playground", kind: payload.endpoints?.rust ? "ok" : "warn" };
+    case "go-playground":
+      return { label: "Go Playground", kind: payload.endpoints?.go ? "ok" : "warn" };
+    case "remote":
+      return payload.endpoint
+        ? { label: "Piston-compatible", kind: "ok" }
+        : { label: "Endpoint missing", kind: "warn" };
+    default:
+      return { label: definition?.name ?? payload.language, kind: "muted" };
+  }
+}
+
+function executorLabel(
+  payload: PlayPayload,
+  definition: LanguageDefinition | undefined,
+): { label: string; kind: "ok" | "warn" | "muted" } {
+  if (!payload.capabilities.execute) {
+    return { label: "Disabled", kind: "warn" };
+  }
+  if (definition?.backend === "remote" && !payload.endpoint) {
+    return { label: "Configure endpoint", kind: "warn" };
+  }
+  return { label: "On demand", kind: "ok" };
+}
+
+function runtimeChip(label: string, value: string, kind: "ok" | "warn" | "muted"): string {
+  return `<span class="ox-code-play__runtime-chip ox-code-play__runtime-chip--${kind}"><span>${escapeHtml(label)}</span><strong>${escapeHtml(value)}</strong></span>`;
 }
 
 function renderTabs(state: UiState, panel: string): string {
