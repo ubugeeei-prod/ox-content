@@ -120,7 +120,7 @@ impl TransformFeatureOptions {
         let file_tree = file_tree::resolve(options.file_tree.as_ref());
         let badges = badges::resolve(options.badges.as_ref());
         let magic_links = magic::resolve(options.magic_links.as_ref());
-        let images = images::resolve(options.images.as_ref());
+        let images = images::resolve(options.images.as_ref(), attributes);
         let math = math::resolve(options.math.as_ref());
         let edit_this_page = resolve_edit_this_page(
             options.edit_this_page.as_ref(),

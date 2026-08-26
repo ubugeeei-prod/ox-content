@@ -1,6 +1,6 @@
 use super::escape_html_attr;
 
-#[derive(Default)]
+#[derive(Clone, Debug, Default, PartialEq, Eq)]
 pub(super) struct ParsedAttrs {
     id: Option<String>,
     classes: Vec<String>,
@@ -12,6 +12,13 @@ impl ParsedAttrs {
         self.id.as_deref()
     }
 
+    pub(super) fn attr_value(&self, name: &str) -> Option<&str> {
+        self.attrs
+            .iter()
+            .find(|(candidate, _)| candidate.eq_ignore_ascii_case(name))
+            .map(|(_, value)| value.as_str())
+    }
+
     pub(super) fn parse(value: &str) -> Option<Self> {
         if !value.contains('#') && !value.contains('.') && !value.contains('=') {
             return None;
@@ -19,21 +26,24 @@ impl ParsedAttrs {
         let mut parsed = Self::default();
         for token in split_attr_tokens(value) {
             if let Some(id) = token.strip_prefix('#') {
-                if !id.is_empty() {
-                    parsed.id = Some(id.to_string());
+                if id.is_empty() {
+                    return None;
                 }
+                parsed.id = Some(id.to_string());
             } else if let Some(class) = token.strip_prefix('.') {
-                if !class.is_empty() {
-                    parsed.classes.push(class.to_string());
+                if class.is_empty() {
+                    return None;
                 }
+                parsed.classes.push(class.to_string());
             } else if let Some((name, raw_value)) = token.split_once('=') {
                 let name = name.trim();
-                if is_safe_attr_name(name) {
-                    parsed.attrs.push((
-                        name.to_string(),
-                        raw_value.trim_matches(|ch| ch == '"' || ch == '\'').to_string(),
-                    ));
+                let value = raw_value.trim_matches(|ch| ch == '"' || ch == '\'');
+                if !is_safe_attr_name(name) || !is_safe_attr_value(name, value) {
+                    return None;
                 }
+                parsed.attrs.push((name.to_string(), value.to_string()));
+            } else {
+                return None;
             }
         }
         if parsed.id.is_none() && parsed.classes.is_empty() && parsed.attrs.is_empty() {
@@ -107,12 +117,18 @@ pub(super) fn strip_quoted_attr(open: &str, name: &str) -> String {
 }
 
 pub(super) fn write_attrs(out: &mut String, attrs: &ParsedAttrs) {
-    if let Some(id) = &attrs.id {
+    write_attrs_except(out, attrs, &[]);
+}
+
+pub(super) fn write_attrs_except(out: &mut String, attrs: &ParsedAttrs, excluded: &[&str]) {
+    if let Some(id) = &attrs.id
+        && !is_excluded_attr("id", excluded)
+    {
         out.push_str(" id=\"");
         escape_html_attr(id, out);
         out.push('"');
     }
-    if !attrs.classes.is_empty() {
+    if !attrs.classes.is_empty() && !is_excluded_attr("class", excluded) {
         out.push_str(" class=\"");
         for (index, class) in attrs.classes.iter().enumerate() {
             if index > 0 {
@@ -123,6 +139,9 @@ pub(super) fn write_attrs(out: &mut String, attrs: &ParsedAttrs) {
         out.push('"');
     }
     for (name, value) in &attrs.attrs {
+        if is_excluded_attr(name, excluded) {
+            continue;
+        }
         out.push(' ');
         out.push_str(name);
         out.push_str("=\"");
@@ -131,10 +150,37 @@ pub(super) fn write_attrs(out: &mut String, attrs: &ParsedAttrs) {
     }
 }
 
+fn is_excluded_attr(name: &str, excluded: &[&str]) -> bool {
+    excluded.iter().any(|excluded| name.eq_ignore_ascii_case(excluded))
+}
+
 fn is_safe_attr_name(name: &str) -> bool {
     !name.is_empty()
         && !name.to_ascii_lowercase().starts_with("on")
         && name
             .bytes()
             .all(|byte| byte.is_ascii_alphanumeric() || matches!(byte, b'-' | b':' | b'_'))
+}
+
+fn is_safe_attr_value(name: &str, value: &str) -> bool {
+    !is_url_attr_name(name) || !is_dangerous_url(value)
+}
+
+fn is_url_attr_name(name: &str) -> bool {
+    matches!(
+        name.to_ascii_lowercase().as_str(),
+        "href" | "src" | "poster" | "action" | "formaction" | "xlink:href"
+    )
+}
+
+fn is_dangerous_url(value: &str) -> bool {
+    let compact: String = value
+        .chars()
+        .filter(|ch| !ch.is_ascii_whitespace())
+        .map(|ch| ch.to_ascii_lowercase())
+        .collect();
+    compact.starts_with("//")
+        || compact.starts_with("javascript:")
+        || compact.starts_with("data:")
+        || compact.starts_with("vbscript:")
 }

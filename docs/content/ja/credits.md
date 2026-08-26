@@ -22,6 +22,17 @@ JSDoc 対応とドキュメント品質まわりで、大きなコミュニテ�
 - Ox Content 自身のドキュメントで使っている API ドキュメント生成パイプラインに貢献しました。
 - 生成 API ドキュメントとユーザー向けドキュメントの品質を改善しました。
 
+### ryoppippi
+
+Markdown 属性とリッチなソーシャル埋め込みの見た目の同等性について、本番移行からの
+フィードバックをくれた [ryoppippi](https://github.com/ryoppippi) に感謝します。
+
+貢献の要約:
+
+- ryoppippi.com の Ox Content 移行中に見つかった、inline link と変換済み画像の
+  属性ターゲットの regression を報告しました。
+- sveltweet を通して、Twitter / X full card の見た目の契約の検証に協力しました。
+
 ## 第三者の帰属
 
 ### react-tweet と sveltweet

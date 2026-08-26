@@ -89,6 +89,29 @@ describe("transformMarkdown", () => {
     expect(result.html).toMatchSnapshot();
   });
 
+  it("keeps attrs on inline links and transformed images", async () => {
+    const result = await transformMarkdown(
+      [
+        "[slides](https://example.com){#deck .text-xl data-kind=deck}",
+        "",
+        "![alt](./image.png){#hero .w-1/2 .mx-auto width=480 height=320}",
+      ].join("\n"),
+      "docs/attrs-images.md",
+      createResolvedOptions({
+        attrs: { enabled: true },
+        images: { enabled: true, lazy: true },
+      }),
+    );
+
+    expect(result.html).toContain('<p><a href="https://example.com"');
+    expect(result.html).toContain('id="deck" class="text-xl" data-kind="deck">slides</a></p>');
+    expect(result.html).toContain(
+      '<img src="./image.png" alt="alt" id="hero" class="w-1/2 mx-auto" loading="lazy" width="480" height="320">',
+    );
+    expect(result.html).not.toContain('<p id="deck"');
+    expect(result.html).not.toContain("{#hero");
+  });
+
   it("can append edit links and import source snippets when opted in", async () => {
     const result = await transformMarkdown(
       "<<< @/README.md{1-1}",

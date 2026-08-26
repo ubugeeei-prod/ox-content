@@ -3,7 +3,7 @@ use crate::transformer::MarkdownTransformer;
 use crate::{ImageOptions, TransformOptions};
 
 fn enabled() -> ResolvedImageOptions {
-    resolve(Some(&ImageOptions { enabled: Some(true), lazy: None })).expect("enabled")
+    resolve(Some(&ImageOptions { enabled: Some(true), lazy: None }), false).expect("enabled")
 }
 
 fn transform_html(source: &str, options: TransformOptions) -> String {
@@ -18,6 +18,15 @@ fn images_on() -> TransformOptions {
     }
 }
 
+fn images_with_attrs() -> TransformOptions {
+    TransformOptions {
+        gfm: Some(true),
+        images: Some(ImageOptions { enabled: Some(true), lazy: None }),
+        attributes: Some(crate::AttrsOptions { enabled: Some(true) }),
+        ..Default::default()
+    }
+}
+
 fn images_eager() -> TransformOptions {
     TransformOptions {
         gfm: Some(true),
@@ -28,17 +37,20 @@ fn images_eager() -> TransformOptions {
 
 #[test]
 fn resolve_is_none_when_option_is_omitted() {
-    assert!(resolve(None).is_none());
+    assert!(resolve(None, false).is_none());
 }
 
 #[test]
 fn resolve_is_none_when_explicitly_disabled() {
-    assert!(resolve(Some(&ImageOptions { enabled: Some(false), lazy: Some(true) })).is_none());
+    assert!(
+        resolve(Some(&ImageOptions { enabled: Some(false), lazy: Some(true) }), false).is_none()
+    );
 }
 
 #[test]
 fn resolve_is_some_when_object_is_present() {
-    let resolved = resolve(Some(&ImageOptions { enabled: None, lazy: None })).expect("enabled");
+    let resolved =
+        resolve(Some(&ImageOptions { enabled: None, lazy: None }), false).expect("enabled");
     assert!(resolved.lazy);
 }
 
@@ -128,18 +140,53 @@ fn safe_dimensions_emitted() {
 }
 
 #[test]
+fn image_attrs_are_preserved_with_dimensions() {
+    let html = transform_html(
+        "![Alt](/x.png){#hero .w-1/2 .mx-auto width=480 height=320 data-kind=illustration}\n",
+        images_with_attrs(),
+    );
+    assert!(html.contains(r#"<img src="/x.png" alt="Alt" id="hero" class="w-1/2 mx-auto" data-kind="illustration" loading="lazy" width="480" height="320">"#), "{html}");
+    assert!(!html.contains("{#hero"), "{html}");
+}
+
+#[test]
+fn image_attrs_require_attrs_feature() {
+    let html = transform_html("![Alt](/x.png){.hero width=480}\n", images_on());
+    assert!(html.contains("{.hero width=480}"), "{html}");
+    assert!(!html.contains(r#"class="hero""#), "{html}");
+    assert!(!html.contains(r#"width="480""#), "{html}");
+}
+
+#[test]
+fn captioned_image_attrs_stay_on_image() {
+    let html = transform_html("![Alt](/x.png \"Caption\"){.hero width=480}\n", images_with_attrs());
+    assert!(html.contains(r#"<figure class="ox-figure">"#), "{html}");
+    assert!(
+        html.contains(r#"<img src="/x.png" alt="Alt" class="hero" loading="lazy" width="480">"#),
+        "{html}"
+    );
+    assert!(!html.contains(r#"<figure class="ox-figure hero""#), "{html}");
+}
+
+#[test]
 fn hostile_dimensions_rejected() {
     let html = transform_html("![Alt](/x.png){width=100 onclick=alert(1)}\n", images_on());
-    assert!(!html.contains("onclick"), "{html}");
-    assert!(!html.contains("alert(1)"), "{html}");
+    assert!(html.contains("{width=100 onclick=alert(1)}"), "{html}");
     assert!(!html.contains(r#"width="100""#), "{html}");
 }
 
 #[test]
 fn quoted_hostile_width_is_rejected() {
     let html = transform_html(r#"![Alt](/x.png){width="100 onclick=alert(1)"}"#, images_on());
-    assert!(!html.contains("onclick"), "{html}");
-    assert!(!html.contains("alert(1)"), "{html}");
+    assert!(html.contains(r"{width=&quot;100 onclick=alert(1)&quot;}"), "{html}");
+    assert!(!html.contains(r#"width="100 onclick=alert(1)""#), "{html}");
+}
+
+#[test]
+fn unsafe_image_attrs_stay_literal_with_attrs_enabled() {
+    let html = transform_html("![Alt](/x.png){.ok onclick=alert(1)}\n", images_with_attrs());
+    assert!(html.contains("{.ok onclick=alert(1)}"), "{html}");
+    assert!(!html.contains(r#"class="ok""#), "{html}");
 }
 
 #[test]
