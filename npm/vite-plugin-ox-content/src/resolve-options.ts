@@ -4,6 +4,7 @@ import { resolveCodeGroupOptions } from "./code-group-options";
 import { resolveCollectionsOptions } from "./collections";
 import { resolveDocsOptions } from "./docs";
 import { resolveFeedsOptions } from "./feeds";
+import { resolveDataTableOptions } from "./data-table-options";
 import { resolveFileTreeOptions } from "./file-tree-options";
 import { resolveIconsOptions } from "./icons";
 import { resolveHeadingPermalinksOptions } from "./heading-permalinks-options";
@@ -81,6 +82,7 @@ export function resolveOptions(options: OxContentOptions): ResolvedOptions {
     steps: resolveStepsOptions(options.steps),
     codeGroups: resolveCodeGroupOptions(options.codeGroups),
     fileTree: resolveFileTreeOptions(options.fileTree),
+    dataTables: resolveDataTableOptions(options.dataTables),
     sanitize: resolveSanitizeOptions(options.sanitize),
     editThisPage: resolveEditThisPageOptions(options.editThisPage),
     cjkEmphasis: options.cjkEmphasis ?? false,

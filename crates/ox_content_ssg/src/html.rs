@@ -243,8 +243,9 @@ const ISLAND_CSS: &str = include_str!("plugins/island.css");
 /// CSS styles for the opt-in git contributor list.
 const CONTRIBUTORS_CSS: &str = include_str!("html/contributors.css");
 
-/// CSS styles for opt-in `file-tree` fences.
-const FILE_TREE_CSS: &str = include_str!("html/file_tree.css");
+/// CSS for opt-in `file-tree` fences and `csv-table` / `json-table` wrappers.
+const FILE_TREE_CSS: &str =
+    concat!(include_str!("html/file_tree.css"), include_str!("html/data_tables.css"));
 
 /// CSS styles for opt-in `{kbd:...}` keyboard keys.
 const KBD_CSS: &str = include_str!("plugins/kbd.css");

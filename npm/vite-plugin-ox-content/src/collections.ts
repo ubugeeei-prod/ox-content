@@ -1,5 +1,6 @@
 import * as path from "node:path";
 import { applyCollectionRoutes } from "./apply-permalinks";
+import { toJsDataTableOptions } from "./data-table-options";
 import { toJsFileTreeOptions } from "./file-tree-options";
 import { generateCollectionsModule } from "./collections-runtime";
 import { importNapiModule } from "./napi";
@@ -70,6 +71,11 @@ type NativeTransformOptions = {
     iconFolderOpen?: string;
     iconFile?: string;
     iconFiles?: Record<string, string>;
+  };
+  dataTables?: {
+    enabled?: boolean;
+    rootDir?: string;
+    missing?: "error" | "warn";
   };
   editThisPage?: {
     enabled?: boolean;
@@ -265,6 +271,7 @@ function createNativeTransformOptions(options: ResolvedOptions): NativeTransform
     steps: options.steps?.enabled ? { enabled: true } : undefined,
     codeGroups: options.codeGroups?.enabled ? { enabled: true } : undefined,
     fileTree: toJsFileTreeOptions(options.fileTree),
+    dataTables: toJsDataTableOptions(options.dataTables),
     editThisPage: options.editThisPage?.enabled
       ? {
           enabled: true,

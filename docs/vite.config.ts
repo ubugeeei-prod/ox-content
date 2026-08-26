@@ -143,6 +143,7 @@ export default defineConfig(({ mode }) => {
                       { text: "Step Lists", link: "/built-in/steps.md" },
                       { text: "File Includes", link: "/built-in/includes.md" },
                       { text: "File Tree", link: "/built-in/file-tree.md" },
+                      { text: "Data Tables", link: "/built-in/data-tables.md" },
                       { text: "Inline Badges", link: "/built-in/badges.md" },
                       { text: "NotByAI Badge", link: "/built-in/not-by-ai.md" },
                       { text: "Keyboard Keys", link: "/built-in/keyboard-keys.md" },
@@ -286,6 +287,7 @@ export default defineConfig(({ mode }) => {
         steps: true,
         codeGroups: true,
         fileTree: true,
+        dataTables: true,
         typedHover: true,
         embeds: {
           pm: true,

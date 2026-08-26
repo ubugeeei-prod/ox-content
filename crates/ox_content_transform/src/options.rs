@@ -54,6 +54,8 @@ pub struct TransformOptions {
     pub cards: Option<CardOptions>,
     /// Opt-in `file-tree` fences. Disabled when omitted.
     pub file_tree: Option<FileTreeOptions>,
+    /// Opt-in `csv-table` / `json-table` fences. Disabled when omitted.
+    pub data_tables: Option<DataTableOptions>,
 }
 
 #[derive(Clone, Default)]
@@ -174,6 +176,13 @@ pub struct FileTreeOptions {
     pub icon_folder_open: Option<String>,
     pub icon_file: Option<String>,
     pub icon_files: Option<FxHashMap<String, String>>,
+}
+
+#[derive(Clone, Default)]
+pub struct DataTableOptions {
+    pub enabled: Option<bool>,
+    pub root_dir: Option<String>,
+    pub missing: Option<String>,
 }
 
 #[derive(Clone, Default)]

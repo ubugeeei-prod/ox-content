@@ -29,6 +29,7 @@ inline**.
 | [Step Lists](./built-in/steps.md)                           | Opt-in `::: steps` tutorial lists                                           |
 | [File Includes](./built-in/includes.md)                     | Opt-in `<!-- @include -->` Markdown fragments                               |
 | [File Tree](./built-in/file-tree.md)                        | Opt-in static `file-tree` directory diagrams                                |
+| [Data Tables](./built-in/data-tables.md)                    | Opt-in static tables from `csv-table` / `json-table` fences                 |
 | [Inline Badges](./built-in/badges.md)                       | Opt-in `{badge:tip}` status labels in headings or prose                     |
 | [NotByAI Badge](./built-in/not-by-ai.md)                    | Opt-in static human-authorship disclosure (`<NotByAI />`)                   |
 | [Keyboard Keys](./built-in/keyboard-keys.md)                | Opt-in `{kbd:Ctrl+K}` semantic shortcut markup                              |
@@ -96,6 +97,7 @@ inline**.
 | Cards              | `cards`                                                                                                                            | `false`              | [Cards](./built-in/cards.md)                                |
 | Step lists         | `steps`                                                                                                                            | `false`              | [Step Lists](./built-in/steps.md)                           |
 | File tree          | `fileTree`                                                                                                                         | `false`              | [File Tree](./built-in/file-tree.md)                        |
+| Data tables        | `dataTables`                                                                                                                       | `false`              | [Data Tables](./built-in/data-tables.md)                    |
 | Images             | `images`                                                                                                                           | `false`              | [Images](./built-in/images.md)                              |
 | Page resources     | `resources`                                                                                                                        | `false`              | [Page resources](./built-in/resources.md)                   |
 | Diagrams           | `mermaid`                                                                                                                          | `false`              | [Mermaid Diagrams](./built-in/mermaid.md)                   |

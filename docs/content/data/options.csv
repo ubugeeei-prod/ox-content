@@ -1,0 +1,3 @@
+Option,Type,Default
+highlight,boolean,false
+lineNumbers,boolean,true

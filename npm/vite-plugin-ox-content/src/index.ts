@@ -72,6 +72,8 @@ export type {
   FileTreeIconOptions,
   FileTreeOptions,
   ResolvedFileTreeOptions,
+  DataTableOptions,
+  ResolvedDataTableOptions,
   SanitizeOptions,
   ResolvedSanitizeOptions,
   EditThisPageOptions,
@@ -646,6 +648,7 @@ export { resolveIncludeOptions } from "./include-options";
 export { resolveStepsOptions } from "./step-options";
 export { resolveCodeGroupOptions } from "./code-group-options";
 export { resolveFileTreeOptions } from "./file-tree-options";
+export { resolveDataTableOptions } from "./data-table-options";
 export { resolveHeadingPermalinksOptions } from "./heading-permalinks-options";
 export { resolveTypedHoverOptions } from "./typed-hover";
 

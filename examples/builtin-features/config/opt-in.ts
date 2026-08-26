@@ -11,6 +11,7 @@ export default defineConfig({
       attrs: true,
       codeAnnotations: { notation: "both" },
       codeImports: { rootDir: exampleRoot },
+      dataTables: { rootDir: exampleRoot },
       cjkEmphasis: true,
       editThisPage: {
         repoUrl: "https://github.com/owner/repo",

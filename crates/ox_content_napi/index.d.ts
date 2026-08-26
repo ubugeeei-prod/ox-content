@@ -482,6 +482,28 @@ export interface JsContainerTypeOptions {
   tag?: string
 }
 
+/** Opt-in static `csv-table` / `json-table` fences. */
+export interface JsDataTableOptions {
+  /**
+   * Enable `csv-table` and `json-table` fences.
+   *
+   * Default: `false`.
+   */
+  enabled?: boolean
+  /**
+   * Root directory used for `@/` and absolute data-table imports.
+   *
+   * Default: project root from the JavaScript caller.
+   */
+  rootDir?: string
+  /**
+   * What to do when an imported file is missing.
+   *
+   * Default: `"error"`.
+   */
+  missing?: string
+}
+
 /** Normalized documentation entry used by generated API docs. */
 export interface JsDocEntry {
   name: string
@@ -2338,6 +2360,12 @@ export interface JsTransformOptions {
    * Default: disabled.
    */
   fileTree?: JsFileTreeOptions
+  /**
+   * Opt-in static `csv-table` / `json-table` fences.
+   *
+   * Default: disabled.
+   */
+  dataTables?: JsDataTableOptions
 }
 
 /** Type parameter documentation (`<T extends C = D>`) used by generated API docs. */

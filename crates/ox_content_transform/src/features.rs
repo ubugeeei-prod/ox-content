@@ -14,6 +14,7 @@ pub mod code_blocks;
 mod code_groups;
 mod code_imports;
 mod containers;
+mod data_tables;
 mod edit;
 mod emoji;
 mod emoji_shortcodes;
@@ -39,6 +40,7 @@ pub use code_blocks::{
 use code_groups::ResolvedCodeGroupOptions;
 use code_imports::ResolvedCodeImportOptions;
 use containers::ResolvedContainerOptions;
+use data_tables::ResolvedDataTableOptions;
 use edit::append_edit_this_page;
 use emoji_shortcodes::replace_emoji_shortcodes;
 pub(super) use escape::{escape_html_attr, escape_html_text};
@@ -64,6 +66,7 @@ pub struct TransformFeatureOptions {
     steps: Option<ResolvedStepsOptions>,
     code_groups: Option<ResolvedCodeGroupOptions>,
     file_tree: Option<ResolvedFileTreeOptions>,
+    data_tables: Option<ResolvedDataTableOptions>,
     badges: bool,
     not_by_ai: Option<not_by_ai::ResolvedNotByAi>,
     keyboard_keys: Option<keyboard_keys::ResolvedKeyboardKeys>,
@@ -133,6 +136,7 @@ impl TransformFeatureOptions {
         }
         let includes = includes::resolve(options.includes.as_ref(), source_path);
         let file_tree = file_tree::resolve(options.file_tree.as_ref());
+        let data_tables = data_tables::resolve(options.data_tables.as_ref(), source_path);
         let badges = badges::resolve(options.badges.as_ref());
         let not_by_ai = not_by_ai::resolve(options.not_by_ai.as_ref());
         let keyboard_keys = keyboard_keys::resolve(options.keyboard_keys.as_ref());
@@ -154,6 +158,7 @@ impl TransformFeatureOptions {
             steps,
             code_groups,
             file_tree,
+            data_tables,
             badges,
             not_by_ai,
             keyboard_keys,
@@ -175,6 +180,7 @@ impl TransformFeatureOptions {
             || self.steps.is_some()
             || self.code_groups.is_some()
             || self.file_tree.is_some()
+            || self.data_tables.is_some()
             || self.badges
             || self.not_by_ai.is_some()
             || self.keyboard_keys.is_some()
@@ -255,7 +261,9 @@ pub fn preprocess_markdown<'a>(
     {
         current = Cow::Owned(file_tree::transform(&current, file_tree));
     }
-
+    if let Some(tables) = &options.data_tables {
+        current = Cow::Owned(data_tables::transform(&current, tables, &mut errors));
+    }
     if options.badges && current.contains("{badge:") {
         let replaced = transform_markdown_text_segments(&current, |segment, out| {
             badges::replace(segment, out);

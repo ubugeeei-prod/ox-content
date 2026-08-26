@@ -1842,6 +1842,18 @@ export interface OxContentOptions {
   fileTree?: boolean | FileTreeOptions;
 
   /**
+   * Opt-in static tables from `csv-table` / `json-table` fences.
+   *
+   * Passing `true` or `{}` enables the transform. Inline CSV/JSON becomes a
+   * semantic `<table>` with a responsive wrapper. `src` or a single path body
+   * can import `@/data/options.csv` or `./options.json`. Paths cannot escape
+   * the content/project root with `..`. Missing imports use `missing`.
+   *
+   * @default false
+   */
+  dataTables?: boolean | DataTableOptions;
+
+  /**
    * Sanitize rendered HTML with safe defaults or explicit allow lists.
    *
    * Enable this for untrusted Markdown. The default allow lists are conservative;
@@ -2086,6 +2098,7 @@ export interface ResolvedOptions {
    */
   codeGroups?: ResolvedCodeGroupOptions;
   fileTree: ResolvedFileTreeOptions;
+  dataTables: ResolvedDataTableOptions;
   sanitize: ResolvedSanitizeOptions;
   editThisPage: ResolvedEditThisPageOptions;
   cjkEmphasis: boolean;
@@ -2754,6 +2767,41 @@ export interface ResolvedFileTreeOptions {
   iconFolderOpen?: string;
   iconFile?: string;
   iconFiles?: Record<string, string>;
+}
+
+/**
+ * Options for opt-in `csv-table` / `json-table` fences.
+ */
+export interface DataTableOptions {
+  /**
+   * Enable the data-table transform when an options object is supplied.
+   *
+   * @default true
+   */
+  enabled?: boolean;
+  /**
+   * Directory used to resolve `@/` and absolute import paths.
+   *
+   * When omitted, imports resolve from the Vite project root.
+   *
+   * @default undefined
+   */
+  rootDir?: string;
+  /**
+   * What to do when an imported CSV/JSON file is missing.
+   *
+   * @default "error"
+   */
+  missing?: "error" | "warn";
+}
+
+/**
+ * Resolved data-table transform options.
+ */
+export interface ResolvedDataTableOptions {
+  enabled: boolean;
+  rootDir?: string;
+  missing: "error" | "warn";
 }
 
 /**

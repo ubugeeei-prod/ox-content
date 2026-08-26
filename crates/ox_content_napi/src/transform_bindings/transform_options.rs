@@ -4,9 +4,9 @@ use ox_content_transform::{MathOptions, TransformOptions};
 
 use super::{
     JsAttrsOptions, JsBadgeOptions, JsCardOptions, JsCodeGroupOptions, JsCodeImportOptions,
-    JsContainerOptions, JsEditThisPageOptions, JsEmojiShortcodeOptions, JsFileTreeOptions,
-    JsImageOptions, JsIncludeOptions, JsKeyboardKeysOptions, JsMagicLinkOptions, JsMathOptions,
-    JsNotByAiOptions, JsSanitizeOptions, JsStepsOptions, JsWikiLinkOptions,
+    JsContainerOptions, JsDataTableOptions, JsEditThisPageOptions, JsEmojiShortcodeOptions,
+    JsFileTreeOptions, JsImageOptions, JsIncludeOptions, JsKeyboardKeysOptions, JsMagicLinkOptions,
+    JsMathOptions, JsNotByAiOptions, JsSanitizeOptions, JsStepsOptions, JsWikiLinkOptions,
 };
 
 /// Transform options for JavaScript.
@@ -232,6 +232,11 @@ pub struct JsTransformOptions {
     ///
     /// Default: disabled.
     pub file_tree: Option<JsFileTreeOptions>,
+
+    /// Opt-in static `csv-table` / `json-table` fences.
+    ///
+    /// Default: disabled.
+    pub data_tables: Option<JsDataTableOptions>,
 }
 
 impl From<JsTransformOptions> for TransformOptions {
@@ -281,6 +286,7 @@ impl From<JsTransformOptions> for TransformOptions {
                 None => None,
             },
             file_tree: value.file_tree.map(Into::into),
+            data_tables: value.data_tables.map(Into::into),
         }
     }
 }

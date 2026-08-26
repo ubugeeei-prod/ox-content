@@ -2,65 +2,31 @@ import { describe, expect, it } from "vite-plus/test";
 import { transformMarkdown } from "./transform";
 import type { ResolvedOptions } from "./types";
 
-describe("file-tree transform", () => {
-  it("leaves file-tree fences literal unless opted in", async () => {
-    const markdown = "```file-tree\n- src/\n  - index.ts **\n```\n";
+describe("dataTables transform", () => {
+  it("leaves csv-table fences literal unless opted in", async () => {
+    const markdown =
+      '```csv-table title="Options"\nOption,Type,Default\nhighlight,boolean,false\n```\n';
 
     const defaultResult = await transformMarkdown(
       markdown,
-      "docs/file-tree.md",
+      "docs/data-tables.md",
       createResolvedOptions(),
     );
-    expect(defaultResult.html).not.toContain("ox-file-tree");
+    expect(defaultResult.html).not.toContain("ox-data-table");
 
     const enabledResult = await transformMarkdown(
       markdown,
-      "docs/file-tree.md",
+      "docs/data-tables.md",
       createResolvedOptions({
-        fileTree: { enabled: true, defaultOpen: true, icons: true },
+        dataTables: { enabled: true, missing: "error" },
       }),
     );
-    expect(enabledResult.html).toContain('class="ox-file-tree"');
-    expect(enabledResult.html).toContain("ox-file-tree__dir");
-    expect(enabledResult.html).toContain("ox-file-tree__highlight");
-    expect(enabledResult.html).toContain("<details open>");
-    expect(enabledResult.html).toContain("<summary>");
-    expect(enabledResult.html).toContain("ox-file-tree__icon--folder");
-    expect(enabledResult.html).toContain("<svg");
+    expect(enabledResult.html).toContain('class="ox-data-table"');
+    expect(enabledResult.html).toContain("ox-data-table__scroll");
+    expect(enabledResult.html).toContain("<table");
+    expect(enabledResult.html).toContain("Options");
+    expect(enabledResult.html).toContain("highlight");
     expect(enabledResult.html).not.toContain("<script");
-    expect(enabledResult.html).toContain("index.ts");
-  });
-
-  it("turns icons off and can start directories closed", async () => {
-    const result = await transformMarkdown(
-      "```file-tree\n- src/\n  - index.ts\n```\n",
-      "docs/file-tree.md",
-      createResolvedOptions({
-        fileTree: { enabled: true, defaultOpen: false, icons: false },
-      }),
-    );
-    expect(result.html).toContain("<details>");
-    expect(result.html).not.toContain("<details open>");
-    expect(result.html).not.toContain("<svg");
-    expect(result.html).not.toContain("ox-file-tree__icon");
-  });
-
-  it("uses trusted config icons and ignores fence names as markup", async () => {
-    const result = await transformMarkdown(
-      "```file-tree\n- <svg></svg>.ts\n```\n",
-      "docs/file-tree.md",
-      createResolvedOptions({
-        fileTree: {
-          enabled: true,
-          defaultOpen: true,
-          icons: true,
-          iconFile: '<svg class="custom-file"></svg>',
-        },
-      }),
-    );
-    expect(result.html).toContain('class="custom-file"');
-    expect(result.html).toMatch(/(&lt;|&#x3C;)svg(&gt;|&gt;|>)(&lt;|&#x3C;)\/svg(&gt;|&gt;|>)\.ts/);
-    expect(result.html).not.toContain("><svg></svg>.ts");
   });
 });
 
@@ -102,14 +68,12 @@ function createResolvedOptions(overrides: Partial<ResolvedOptions> = {}): Resolv
     emojiShortcodes: { enabled: false, custom: {} },
     attrs: { enabled: false },
     badges: { enabled: false },
-    notByAi: { enabled: false, label: "Written by human, not by AI", href: "https://notbyai.fyi" },
     containers: { enabled: false, types: {} },
     images: { enabled: false, lazy: true },
     codeImports: { enabled: false },
     includes: { enabled: false },
     cards: { enabled: false },
     steps: { enabled: false },
-    codeGroups: { enabled: false },
     math: { enabled: false },
     fileTree: { enabled: false, defaultOpen: true, icons: true },
     dataTables: { enabled: false, missing: "error" },
@@ -160,7 +124,6 @@ function createResolvedOptions(overrides: Partial<ResolvedOptions> = {}): Resolv
       openGraph: {},
       pm: false,
       spotify: false,
-      appleMusic: false,
       stackBlitz: false,
       twitter: false,
       bluesky: false,
