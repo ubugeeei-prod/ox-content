@@ -70,7 +70,7 @@ pub(super) fn generate_html_inner(
         reader_chrome.back_to_top = false;
     }
     let contributors = contributor_views(&page_data.contributors);
-    let mut css_sections = vec![wrap_css_section("base", SSG_CSS)];
+    let mut css_sections = vec![wrap_css_section("base", SSG_CSS.as_str())];
 
     if view_transitions_enabled(theme) {
         css_sections.push(wrap_css_section("mpa-navigation", MPA_NAVIGATION_CSS));
