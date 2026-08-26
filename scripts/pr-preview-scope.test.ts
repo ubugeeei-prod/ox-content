@@ -45,6 +45,16 @@ describe("detect-pr-preview-scope", () => {
     expect(parseOutputs(result.stdout)).toEqual({ preview: "true" });
   });
 
+  it("skips benchmark helper edits", () => {
+    const result = runScope([
+      ".github/scripts/detect-pr-benchmark-scope.mjs",
+      "benchmarks/bundle-size/pr-benchmark-scope.test.ts",
+    ]);
+
+    expect(result.status).toBe(0);
+    expect(parseOutputs(result.stdout)).toEqual({ preview: "false" });
+  });
+
   it("falls back to preview builds for unclassified paths", () => {
     const result = runScope(["tools/new-publish-surface/file.ts"]);
 
