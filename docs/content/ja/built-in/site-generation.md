@@ -54,6 +54,7 @@ export default defineConfig({
 | ----------------- | -------------- | -------------------------------------------------------------------------------------------------------- |
 | `enabled`         | `true`         | `.md` モジュールだけ残すときは `ssg: false`。                                                            |
 | `extension`       | `".html"`      | 生成ページの拡張子。                                                                                     |
+| `routePrefix`     | —              | `base` や `outDir` を変えずにページルートをマウントする。                                                |
 | `clean`           | `false`        | 書き出す前に生成物を消す。                                                                               |
 | `bare`            | `false`        | ナビなしの、テーマなし HTML を出す。                                                                     |
 | `render`          | —              | 文書全体を所有する JSX コンポーネント。                                                                  |
@@ -82,6 +83,20 @@ export default defineConfig({
 | `markdownSource`  | `false`        | 各ページの横に元の Markdown を公開する。[Markdown ソースの併記](./markdown-source.md)。                  |
 | `theme`           | `defaultTheme` | `defineTheme()` によるテーマ設定。                                                                       |
 | `navigation`      | 派生           | ファイルツリーの代わりに明示的なナビグループ。                                                           |
+
+`ssg.routePrefix` はデプロイの `base` やルートのホストファイルを動かさずに、Markdown ページルートを `/blog` のようなパスへマウントします。`blog`、`/blog`、`/blog/` はどれも `/blog` 配下になります。ページ HTML とページ単位のアセットはプレフィックスに従い、`_redirects`、`_headers`、ルートのフィード、サイトマップ index は `outDir` に残ります。`base` は公開 URL のプレフィックスのままです。[パーマリンク](./permalinks.md) がオンのとき、frontmatter の `permalink` が勝ちます。
+
+```ts
+oxContent({
+  srcDir: "content/blog",
+  outDir: "build",
+  ssg: { routePrefix: "/blog" },
+  redirects: { netlify: true },
+  feeds: { path: "/" },
+});
+```
+
+これは `build/blog/first-post/index.html` を書き、`build/_redirects` と `build/feed.xml` はデプロイルートに残します。
 
 テーマ — 色、フォント、ヘッダー、フッター、サイドバー、独自 CSS、オプトインのページアウトライン（`theme.aside`、既定 `false`）— は別トピックです。[テーマ](../theming.md#ページアウトライン) を見てください。
 

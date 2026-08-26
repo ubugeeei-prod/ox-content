@@ -1,7 +1,10 @@
+import * as fs from "node:fs/promises";
+import * as os from "node:os";
 import * as path from "node:path";
-import { describe, expect, it } from "vite-plus/test";
+import { afterEach, describe, expect, it } from "vite-plus/test";
 import {
   buildNavItems,
+  buildSsg,
   buildThemeNavItems,
   formatTitle,
   generateBareHtmlPage,
@@ -17,6 +20,13 @@ import {
 } from "./ssg";
 import { applyContributorOptions, filterGitContributors, gravatarAvatar } from "./contributors";
 import type { ResolvedOptions } from "./types";
+import { createDocsResolvedOptions } from "../test/fixtures/docs-fixture";
+
+const tempDirs: string[] = [];
+
+afterEach(async () => {
+  await Promise.all(tempDirs.splice(0).map((dir) => fs.rm(dir, { recursive: true, force: true })));
+});
 
 describe("resolveSsgOptions", () => {
   it("disables git timestamps by default", () => {
@@ -207,6 +217,23 @@ describe("resolveSsgOptions", () => {
     expect(resolved.bodyStart).toBe("<header>site</header>");
     expect(resolved.bodyEnd).toBe("<footer>end</footer>");
   });
+
+  it("leaves routePrefix off when omitted", () => {
+    expect(resolveSsgOptions(undefined).routePrefix).toBeUndefined();
+    expect(resolveSsgOptions(true).routePrefix).toBeUndefined();
+    expect(resolveSsgOptions({}).routePrefix).toBeUndefined();
+  });
+
+  it("normalizes routePrefix mounts to a slash-free path", () => {
+    expect(resolveSsgOptions({ routePrefix: "blog" }).routePrefix).toBe("blog");
+    expect(resolveSsgOptions({ routePrefix: "/blog" }).routePrefix).toBe("blog");
+    expect(resolveSsgOptions({ routePrefix: "/blog/" }).routePrefix).toBe("blog");
+  });
+
+  it("rejects path-escape routePrefix values", () => {
+    expect(resolveSsgOptions({ routePrefix: "../secret" }).routePrefix).toBeUndefined();
+    expect(resolveSsgOptions({ routePrefix: "//evil.example" }).routePrefix).toBeUndefined();
+  });
 });
 
 describe("generateBarePage", () => {
@@ -339,6 +366,21 @@ describe("SSG route helpers", () => {
       path.join(outDir, "components", "button", "index.html"),
     );
     expect(getUrlPath(mdxPath, srcDir)).toBe("components/button");
+  });
+
+  it("mounts file-tree routes under routePrefix without changing base", () => {
+    const srcDir = path.join(process.cwd(), "docs");
+    const outDir = path.join(process.cwd(), "dist");
+    const inputPath = path.join(srcDir, "guide", "intro.md");
+
+    expect(getOutputPath(inputPath, srcDir, outDir, ".html", "/blog/")).toBe(
+      path.join(outDir, "blog", "guide", "intro", "index.html"),
+    );
+    expect(getUrlPath(inputPath, srcDir, "/blog")).toBe("blog/guide/intro");
+    expect(getHref(inputPath, srcDir, "/docs/", ".html", "blog")).toBe(
+      "/docs/blog/guide/intro/index.html",
+    );
+    expect(getHref(inputPath, srcDir, "/", ".html", "/blog")).toBe("/blog/guide/intro/index.html");
   });
 
   it("builds nav groups in the default SSG order", () => {
@@ -488,3 +530,105 @@ describe("git contributors", () => {
     expect(ada.avatar).toMatch(/^https:\/\/www\.gravatar\.com\/avatar\/[a-f0-9]{32}\?d=mp&s=40$/);
   });
 });
+
+describe("SSG routePrefix", () => {
+  it("keeps existing page paths when routePrefix is omitted", async () => {
+    const root = await makeSite({
+      "first-post/index.md": "---\ntitle: First\n---\n# First\n",
+    });
+    const built = await buildSsg(routePrefixOptions(), root);
+
+    expect(built.files.some((file) => file.endsWith(path.join("first-post", "index.html")))).toBe(
+      true,
+    );
+    expect(built.files.some((file) => file.includes(`${path.sep}blog${path.sep}`))).toBe(false);
+    expect(built.errors).toEqual([]);
+  });
+
+  it("writes pages under the prefix and keeps _redirects at outDir", async () => {
+    const root = await makeSite({
+      "first-post/index.md":
+        "---\ntitle: First\naliases: [/old-post]\n---\n# First\n[Next](./second-post.md)\n",
+      "second-post/index.md": "---\ntitle: Second\n---\n# Second\n",
+    });
+    const built = await buildSsg(
+      routePrefixOptions({
+        ssg: { ...routePrefixOptions().ssg, routePrefix: "/blog" },
+        redirects: {
+          enabled: true,
+          map: {},
+          netlify: true,
+          headers: false,
+          json: false,
+          allowExternal: false,
+        },
+      }),
+      root,
+    );
+
+    expect(built.files).toEqual(
+      expect.arrayContaining([
+        path.join(root, "dist", "blog", "first-post", "index.html"),
+        path.join(root, "dist", "blog", "second-post", "index.html"),
+        path.join(root, "dist", "_redirects"),
+      ]),
+    );
+    expect(
+      built.files.some((file) => file.endsWith(path.join("dist", "first-post", "index.html"))),
+    ).toBe(false);
+    await expect(fs.access(path.join(root, "dist", "blog", "_redirects"))).rejects.toThrow();
+
+    const html = await fs.readFile(
+      path.join(root, "dist", "blog", "first-post", "index.html"),
+      "utf8",
+    );
+    expect(html).toContain("/blog/first-post/");
+    expect(built.errors).toEqual([]);
+  });
+
+  it("lets a permalink override win over routePrefix", async () => {
+    const root = await makeSite({
+      "first-post/index.md": "---\ntitle: First\npermalink: /standalone\n---\n# First\n",
+      "second-post/index.md": "---\ntitle: Second\n---\n# Second\n",
+    });
+    const built = await buildSsg(
+      routePrefixOptions({
+        ssg: { ...routePrefixOptions().ssg, routePrefix: "/blog" },
+        permalinks: { enabled: true },
+      }),
+      root,
+    );
+
+    expect(built.files).toEqual(
+      expect.arrayContaining([
+        path.join(root, "dist", "standalone", "index.html"),
+        path.join(root, "dist", "blog", "second-post", "index.html"),
+      ]),
+    );
+    expect(built.files.some((file) => file.includes(path.join("blog", "first-post")))).toBe(false);
+    expect(built.errors).toEqual([]);
+  });
+});
+
+async function makeSite(files: Record<string, string>): Promise<string> {
+  const root = await fs.mkdtemp(path.join(os.tmpdir(), "ox-content-route-prefix-"));
+  tempDirs.push(root);
+  for (const [name, source] of Object.entries(files)) {
+    const full = path.join(root, "content", name);
+    await fs.mkdir(path.dirname(full), { recursive: true });
+    await fs.writeFile(full, source);
+  }
+  return root;
+}
+
+function routePrefixOptions(overrides: Partial<ResolvedOptions> = {}): ResolvedOptions {
+  const base = createDocsResolvedOptions({
+    ssg: {
+      ...createDocsResolvedOptions().ssg,
+      bare: true,
+      siteUrl: "https://example.com",
+    },
+    search: { enabled: false, limit: 10, prefix: true, placeholder: "Search", hotkey: "/" },
+  });
+  return { ...base, ...overrides, ssg: { ...base.ssg, ...overrides.ssg } };
+}

@@ -174,6 +174,122 @@ interface SsgRoutePaths {
  */
 export const DEFAULT_HTML_TEMPLATE = "<!-- ox-content default HTML template is Rust-backed -->";
 
+/** Normalizes `blog` / `/blog` / `/blog/` to `blog`. Empty or unsafe values stay off. */
+export function normalizeRoutePrefix(value?: string): string | undefined {
+  if (!value) {
+    return undefined;
+  }
+  const trimmed = value.trim();
+  if (
+    !trimmed ||
+    trimmed.includes("\\") ||
+    trimmed.includes("\0") ||
+    trimmed.includes("://") ||
+    trimmed.startsWith("//") ||
+    /^[a-zA-Z]:/u.test(trimmed)
+  ) {
+    return undefined;
+  }
+  const segments = trimmed
+    .replaceAll(/^\/+|\/+$/gu, "")
+    .split("/")
+    .filter((segment) => segment.length > 0);
+  if (segments.length === 0 || segments.some((segment) => segment === "." || segment === "..")) {
+    return undefined;
+  }
+  return segments.join("/");
+}
+
+function resolvedRoutePrefix(value?: string): { routePrefix: string } | Record<string, never> {
+  const prefix = normalizeRoutePrefix(value);
+  return prefix ? { routePrefix: prefix } : {};
+}
+
+function applyUrlPrefix(urlPath: string, routePrefix?: string): string {
+  const prefix = normalizeRoutePrefix(routePrefix);
+  if (!prefix) {
+    return urlPath;
+  }
+  if (!urlPath || urlPath === "/") {
+    return prefix;
+  }
+  return `${prefix}/${urlPath.replace(/^\/+/u, "")}`;
+}
+
+function applyOutputPrefix(outputPath: string, outDir: string, routePrefix?: string): string {
+  const prefix = normalizeRoutePrefix(routePrefix);
+  if (!prefix) {
+    return outputPath;
+  }
+  const rel = path.relative(path.resolve(outDir), path.resolve(outputPath));
+  if (rel.startsWith("..") || path.isAbsolute(rel)) {
+    return outputPath;
+  }
+  return path.join(outDir, prefix, rel);
+}
+
+function applyHrefPrefix(href: string, base: string, routePrefix?: string): string {
+  const prefix = normalizeRoutePrefix(routePrefix);
+  if (!prefix) {
+    return href;
+  }
+  const root = !base || base === "/" ? "/" : base.endsWith("/") ? base : `${base}/`;
+  if (href.startsWith(root)) {
+    return `${root}${prefix}/${href.slice(root.length)}`;
+  }
+  return href.startsWith("/") ? `/${prefix}${href}` : `${root}${prefix}/${href}`;
+}
+
+function applyOgUrlPrefix(url: string, base: string, routePrefix?: string): string {
+  if (!normalizeRoutePrefix(routePrefix)) {
+    return url;
+  }
+  const scheme = url.indexOf("://");
+  if (scheme === -1) {
+    return applyHrefPrefix(url, base, routePrefix);
+  }
+  const pathStart = url.indexOf("/", scheme + 3);
+  if (pathStart === -1) {
+    return applyHrefPrefix(url, base, routePrefix);
+  }
+  return `${url.slice(0, pathStart)}${applyHrefPrefix(url.slice(pathStart), base, routePrefix)}`;
+}
+
+function applySsgRoutePrefix(
+  paths: SsgRoutePaths,
+  routePrefix: string | undefined,
+  outDir: string,
+  base: string,
+): SsgRoutePaths {
+  if (!normalizeRoutePrefix(routePrefix)) {
+    return paths;
+  }
+  return {
+    outputPath: applyOutputPrefix(paths.outputPath, outDir, routePrefix),
+    urlPath: applyUrlPrefix(paths.urlPath, routePrefix),
+    href: applyHrefPrefix(paths.href, base, routePrefix),
+    ogImagePath: applyOutputPrefix(paths.ogImagePath, outDir, routePrefix),
+    ogImageUrl: applyOgUrlPrefix(paths.ogImageUrl, base, routePrefix),
+  };
+}
+
+function publicBase(base: string, routePrefix?: string): string {
+  const root = !base || base === "/" ? "/" : base.endsWith("/") ? base : `${base}/`;
+  const prefix = normalizeRoutePrefix(routePrefix);
+  return prefix ? `${root}${prefix}/` : root;
+}
+
+function localeUrlPath(urlPath: string, routePrefix?: string): string {
+  const prefix = normalizeRoutePrefix(routePrefix);
+  if (!prefix) {
+    return urlPath;
+  }
+  if (urlPath === prefix) {
+    return "/";
+  }
+  return urlPath.startsWith(`${prefix}/`) ? urlPath.slice(prefix.length + 1) : urlPath;
+}
+
 /**
  * Resolves SSG options with defaults.
  */
@@ -232,6 +348,7 @@ export function resolveSsgOptions(ssg: SsgOptions | boolean | undefined): Resolv
   return {
     enabled: ssg.enabled ?? true,
     extension: ssg.extension ?? ".html",
+    ...resolvedRoutePrefix(ssg.routePrefix),
     clean: ssg.clean ?? false,
     bare: ssg.bare ?? false,
     render: ssg.render,
@@ -713,15 +830,20 @@ export function getOutputPath(
   srcDir: string,
   outDir: string,
   extension: string,
+  routePrefix?: string,
 ): string {
-  return importNapiModuleSync().getSsgOutputPath(inputPath, srcDir, outDir, extension);
+  return applyOutputPrefix(
+    importNapiModuleSync().getSsgOutputPath(inputPath, srcDir, outDir, extension),
+    outDir,
+    routePrefix,
+  );
 }
 
 /**
  * Converts a markdown file path to a relative URL path.
  */
-export function getUrlPath(inputPath: string, srcDir: string): string {
-  return importNapiModuleSync().getSsgUrlPath(inputPath, srcDir);
+export function getUrlPath(inputPath: string, srcDir: string, routePrefix?: string): string {
+  return applyUrlPrefix(importNapiModuleSync().getSsgUrlPath(inputPath, srcDir), routePrefix);
 }
 
 /**
@@ -732,8 +854,13 @@ export function getHref(
   srcDir: string,
   base: string,
   extension: string,
+  routePrefix?: string,
 ): string {
-  return importNapiModuleSync().getSsgHref(inputPath, srcDir, base, extension);
+  return applyHrefPrefix(
+    importNapiModuleSync().getSsgHref(inputPath, srcDir, base, extension),
+    base,
+    routePrefix,
+  );
 }
 
 /**
@@ -769,14 +896,20 @@ function getRoutePaths(
   base: string,
   extension: string,
   siteUrl?: string,
+  routePrefix?: string,
 ): SsgRoutePaths {
-  return importNapiModuleSync().resolveSsgRoutePaths(
-    inputPath,
-    srcDir,
+  return applySsgRoutePrefix(
+    importNapiModuleSync().resolveSsgRoutePaths(
+      inputPath,
+      srcDir,
+      outDir,
+      base,
+      extension,
+      siteUrl,
+    ),
+    routePrefix,
     outDir,
     base,
-    extension,
-    siteUrl,
   );
 }
 
@@ -1121,7 +1254,7 @@ function applyPermalinkRoutes(context: BuildSsgContext, collected: CollectedPage
 }
 
 function remapPermalinkNav(context: BuildSsgContext, listedPages: PageProcessResult[]): void {
-  if (!context.options.permalinks?.enabled) {
+  if (!context.options.permalinks?.enabled && !context.ssgOptions.routePrefix) {
     return;
   }
   const usedManualNav =
@@ -1221,7 +1354,7 @@ async function transformSsgPage(
   const content = await fs.readFile(inputPath, "utf-8");
   const result = await transformMarkdown(content, inputPath, context.options, {
     convertMdLinks: true,
-    baseUrl: context.base,
+    baseUrl: publicBase(context.base, context.ssgOptions.routePrefix),
     sourcePath: inputPath,
   });
   const frontmatter = normalizeVitePressFrontmatter(result.frontmatter);
@@ -1238,6 +1371,7 @@ async function transformSsgPage(
       context.base,
       context.ssgOptions.extension,
       context.ssgOptions.siteUrl,
+      context.ssgOptions.routePrefix,
     ),
     transformedHtml,
     title,
@@ -1444,7 +1578,10 @@ async function renderSsgPage(
         content: pageResult.transformedHtml,
         lang:
           context.ssgOptions.lang ??
-          getPageLocale(pageResult.routePaths.urlPath, context.options.i18n),
+          getPageLocale(
+            localeUrlPath(pageResult.routePaths.urlPath, context.ssgOptions.routePrefix),
+            context.options.i18n,
+          ),
         description: pageResult.description,
         canonicalUrl: canonicalPageUrl(context, pageResult.routePaths.urlPath),
         siteName: context.ssgOptions.siteName,
@@ -1474,7 +1611,7 @@ async function renderSsgPage(
   const localePath = versionNavigation
     ? unversionedPath(pageData.path, versionNavigation)
     : pageData.path;
-  const locale = getPageLocale(localePath, i18n);
+  const locale = getPageLocale(localeUrlPath(localePath, context.ssgOptions.routePrefix), i18n);
   const localeNav =
     i18n && locale
       ? {

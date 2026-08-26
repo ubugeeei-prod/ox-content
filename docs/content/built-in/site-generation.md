@@ -58,6 +58,7 @@ export default defineConfig({
 | ----------------- | -------------- | ----------------------------------------------------------------------------------------------------- |
 | `enabled`         | `true`         | Set `ssg: false` to keep only `.md` modules.                                                          |
 | `extension`       | `".html"`      | Generated page extension.                                                                             |
+| `routePrefix`     | —              | Mount page routes under a path without changing `base` or `outDir`.                                   |
 | `clean`           | `false`        | Remove generated output before writing.                                                               |
 | `bare`            | `false`        | Emit unthemed HTML without navigation.                                                                |
 | `render`          | —              | JSX component that owns the whole document.                                                           |
@@ -86,6 +87,26 @@ export default defineConfig({
 | `markdownSource`  | `false`        | Publish original Markdown beside each page. See [Markdown source companions](./markdown-source.md).   |
 | `theme`           | `defaultTheme` | Theme configuration via `defineTheme()`.                                                              |
 | `navigation`      | derived        | Explicit navigation groups instead of the file tree.                                                  |
+
+`ssg.routePrefix` mounts Markdown page routes under a path such as `/blog`
+without changing the deployment `base` or moving root host files. `blog`,
+`/blog`, and `/blog/` all mount under `/blog`. Page HTML and page-level assets
+follow the prefix; `_redirects`, `_headers`, root feeds, and the sitemap index
+stay at `outDir`. `base` stays the public URL prefix. A frontmatter
+`permalink` still wins when [permalinks](./permalinks.md) are enabled.
+
+```ts
+oxContent({
+  srcDir: "content/blog",
+  outDir: "build",
+  ssg: { routePrefix: "/blog" },
+  redirects: { netlify: true },
+  feeds: { path: "/" },
+});
+```
+
+That writes `build/blog/first-post/index.html` while `build/_redirects` and
+`build/feed.xml` stay at the deployment root.
 
 Theming — colors, fonts, header, footer, sidebar, custom CSS, and the opt-in
 page outline (`theme.aside`, default `false`) — is a topic of its own: see
