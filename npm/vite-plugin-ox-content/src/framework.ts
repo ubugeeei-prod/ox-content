@@ -68,7 +68,6 @@ export function createFrameworkMarkdownOptions(options: FrameworkMarkdownOptions
     redirects: {
       enabled: false,
       map: {},
-      netlify: false,
       headers: false,
       json: false,
       allowExternal: false,
