@@ -29,6 +29,20 @@ fn preserves_language_metadata_for_non_annotated_code_blocks() {
 }
 
 #[test]
+fn preserves_line_link_targets_after_highlighting() {
+    let original = r#"<pre class="ox-code-block ox-code-block--line-links" data-line-link-prefix="auth-loader"><code class="language-ts"><span class="line ox-code-line" id="auth-loader-L27" data-line="1" data-line-anchor="auth-loader-L27">const token = readToken();</span>
+<span class="line ox-code-line" id="auth-loader-L28" data-line="2" data-line-anchor="auth-loader-L28">return token;</span></code></pre>"#;
+    let highlighted = r#"<pre class="ox-highlight github-dark" style="background-color:#24292e;color:#e1e4e8" tabindex="0"><code><span class="line"><span style="color:#E1E4E8">const token = readToken();</span></span>
+<span class="line"><span style="color:#E1E4E8">return token;</span></span></code></pre>"#;
+
+    let merged = merge_highlighted_code_blocks(original, highlighted);
+
+    assert!(merged.contains(r#"data-line-link-prefix="auth-loader""#), "{merged}");
+    assert!(merged.contains(r#"id="auth-loader-L27""#), "{merged}");
+    assert!(merged.contains(r#"data-line-anchor="auth-loader-L28""#), "{merged}");
+}
+
+#[test]
 fn decodes_entities_next_to_multibyte_text() {
     // Regression: the entity scan capped its search by byte length and then
     // sliced the string, which split a multi-byte character and panicked.

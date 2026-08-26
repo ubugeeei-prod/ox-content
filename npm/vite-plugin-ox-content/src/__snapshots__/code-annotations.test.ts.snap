@@ -16,7 +16,10 @@ exports[`code annotations > preserves pre and line classes after syntax highligh
 `;
 
 exports[`code annotations > supports VitePress-style escape-next-line directives 1`] = `
-"<pre class="ox-code-block ox-code-block--annotated has-highlighted"><code class="language-ts"><span class="line ox-code-line" data-line="1">console.warn(literal) // [!code warning]</span>
+"<pre class="ox-code-block ox-code-block--annotated has-highlighted" data-ox-code-source="// [!code escape]
+console.warn(literal) // [!code warning]
+console.warn(annotated) // [!code warning]
+"><code class="language-ts"><span class="line ox-code-line" data-line="1">console.warn(literal) // [!code warning]</span>
 <span class="line ox-code-line ox-code-line--warning highlighted warning" data-line="2">console.warn(annotated)</span>
 <span class="line ox-code-line" data-line="3"></span></code></pre>
 "
@@ -31,7 +34,14 @@ exports[`code annotations > supports VitePress-style fence metadata 1`] = `
 `;
 
 exports[`code annotations > supports VitePress-style inline directives 1`] = `
-"<pre class="ox-highlight css-variables ox-code-block ox-code-block--annotated has-focused has-diff has-highlighted" style="background-color:var(--octc-syntax-background, #0d1117);color:var(--octc-syntax-foreground, #e6edf3)" tabindex="0" data-language="ts"><code class="language-ts" data-language="ts"><span class="line ox-code-line ox-code-line--focus focused" data-line="1"><span style="color:var(--octc-syntax-token-keyword, #ff7b72)">const</span><span style="color:var(--octc-syntax-foreground, #e6edf3)"> </span><span style="color:var(--octc-syntax-foreground, #e6edf3)">first</span><span style="color:var(--octc-syntax-foreground, #e6edf3)"> </span><span style="color:var(--octc-syntax-token-keyword, #ff7b72)">=</span><span style="color:var(--octc-syntax-foreground, #e6edf3)"> </span><span style="color:var(--octc-syntax-token-constant, #79c0ff)">true</span><span style="color:var(--octc-syntax-token-punctuation, #c9d1d9)">;</span></span>
+"<pre class="ox-highlight css-variables ox-code-block ox-code-block--annotated has-focused has-diff has-highlighted" style="background-color:var(--octc-syntax-background, #0d1117);color:var(--octc-syntax-foreground, #e6edf3)" tabindex="0" data-ox-code-source="// [!code focus:2]
+const first = true;
+const second = false;
+console.log(&#x22;before&#x22;) // [!code --]
+console.log(&#x22;after&#x22;) // [!code ++]
+console.warn(&#x22;careful&#x22;) // [!code warning]
+throw new Error(&#x22;boom&#x22;) // [!code error]
+" data-language="ts"><code class="language-ts" data-language="ts"><span class="line ox-code-line ox-code-line--focus focused" data-line="1"><span style="color:var(--octc-syntax-token-keyword, #ff7b72)">const</span><span style="color:var(--octc-syntax-foreground, #e6edf3)"> </span><span style="color:var(--octc-syntax-foreground, #e6edf3)">first</span><span style="color:var(--octc-syntax-foreground, #e6edf3)"> </span><span style="color:var(--octc-syntax-token-keyword, #ff7b72)">=</span><span style="color:var(--octc-syntax-foreground, #e6edf3)"> </span><span style="color:var(--octc-syntax-token-constant, #79c0ff)">true</span><span style="color:var(--octc-syntax-token-punctuation, #c9d1d9)">;</span></span>
 <span class="line ox-code-line ox-code-line--focus focused" data-line="2"><span style="color:var(--octc-syntax-token-keyword, #ff7b72)">const</span><span style="color:var(--octc-syntax-foreground, #e6edf3)"> </span><span style="color:var(--octc-syntax-foreground, #e6edf3)">second</span><span style="color:var(--octc-syntax-foreground, #e6edf3)"> </span><span style="color:var(--octc-syntax-token-keyword, #ff7b72)">=</span><span style="color:var(--octc-syntax-foreground, #e6edf3)"> </span><span style="color:var(--octc-syntax-token-constant, #79c0ff)">false</span><span style="color:var(--octc-syntax-token-punctuation, #c9d1d9)">;</span></span>
 <span class="line ox-code-line ox-code-line--remove diff remove ox-code-line--dimmed" data-line="3"><span style="color:var(--octc-syntax-foreground, #e6edf3)">console</span><span style="color:var(--octc-syntax-token-punctuation, #c9d1d9)">.</span><span style="color:var(--octc-syntax-token-function, #d2a8ff)">log</span><span style="color:var(--octc-syntax-token-punctuation, #c9d1d9)">(</span><span style="color:var(--octc-syntax-token-string, #a5d6ff)">"before"</span><span style="color:var(--octc-syntax-token-punctuation, #c9d1d9)">)</span></span>
 <span class="line ox-code-line ox-code-line--add diff add ox-code-line--dimmed" data-line="4"><span style="color:var(--octc-syntax-foreground, #e6edf3)">console</span><span style="color:var(--octc-syntax-token-punctuation, #c9d1d9)">.</span><span style="color:var(--octc-syntax-token-function, #d2a8ff)">log</span><span style="color:var(--octc-syntax-token-punctuation, #c9d1d9)">(</span><span style="color:var(--octc-syntax-token-string, #a5d6ff)">"after"</span><span style="color:var(--octc-syntax-token-punctuation, #c9d1d9)">)</span></span>

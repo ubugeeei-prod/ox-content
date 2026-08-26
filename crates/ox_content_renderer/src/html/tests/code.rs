@@ -68,6 +68,44 @@ fn test_render_code_block_with_vitepress_meta() {
 }
 
 #[test]
+fn test_render_code_block_with_line_links_and_wrapping() {
+    let allocator = Allocator::new();
+    let doc = Parser::new(
+            &allocator,
+            "```ts:line-numbers=27 :line-links=auth-loader :wrap [src/auth/load-user.ts]\nexport const token = loadVeryLongAuthenticationTokenFromRequestHeaders(request.headers.authorization);\nreturn token;\n```",
+        )
+        .parse()
+        .unwrap();
+    let mut renderer = HtmlRenderer::with_options(HtmlRendererOptions {
+        code_annotations: true,
+        code_annotation_syntax: CodeAnnotationSyntax::VitePress,
+        ..Default::default()
+    });
+    let html = renderer.render(&doc);
+
+    insta::assert_snapshot!(html);
+}
+
+#[test]
+fn test_render_code_block_with_auto_line_link_prefix() {
+    let allocator = Allocator::new();
+    let doc = Parser::new(
+        &allocator,
+        "```ts:line-links :line-numbers=3 [src/config.ts]\nexport const mode = 'docs';\n```",
+    )
+    .parse()
+    .unwrap();
+    let mut renderer = HtmlRenderer::with_options(HtmlRendererOptions {
+        code_annotations: true,
+        code_annotation_syntax: CodeAnnotationSyntax::VitePress,
+        ..Default::default()
+    });
+    let html = renderer.render(&doc);
+
+    insta::assert_snapshot!(html);
+}
+
+#[test]
 fn test_render_code_block_with_vitepress_inline_directives() {
     let allocator = Allocator::new();
     let doc = Parser::new(

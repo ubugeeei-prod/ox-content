@@ -103,9 +103,7 @@ fn split_code_block_language_token(raw: &str) -> (&str, &str) {
     for (index, ch) in raw.char_indices() {
         match ch {
             '{' | '[' => return (&raw[..index], &raw[index..]),
-            ':' if raw[index..].starts_with(":line-numbers")
-                || raw[index..].starts_with(":no-line-numbers") =>
-            {
+            ':' if starts_vitepress_raw_meta(&raw[index..]) => {
                 return (&raw[..index], &raw[index..]);
             }
             _ => {}
@@ -113,6 +111,21 @@ fn split_code_block_language_token(raw: &str) -> (&str, &str) {
     }
 
     (raw, "")
+}
+
+fn starts_vitepress_raw_meta(value: &str) -> bool {
+    [
+        ":no-line-numbers",
+        ":line-numbers",
+        ":line-links",
+        ":no-wrap-lines",
+        ":no-wrap",
+        ":wrap-lines",
+        ":nowrap",
+        ":wrap",
+    ]
+    .iter()
+    .any(|token| value.starts_with(token))
 }
 
 pub(in crate::html) fn normalize_code_block_info(

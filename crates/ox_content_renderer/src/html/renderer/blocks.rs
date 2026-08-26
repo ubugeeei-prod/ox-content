@@ -172,7 +172,8 @@ impl HtmlRenderer {
             return;
         }
 
-        let state = self.build_code_block_state(code_block);
+        self.code_block_index += 1;
+        let state = self.build_code_block_state(code_block, self.code_block_index);
         let block_classes = state.block_classes();
 
         self.write("<pre");
@@ -183,12 +184,22 @@ impl HtmlRenderer {
         }
         if let Some(title) = state.title.as_deref() {
             self.write(" data-code-title=\"");
-            self.write_escaped(title);
+            self.write_attribute_escaped(title);
+            self.write("\"");
+        }
+        if let Some(prefix) = state.line_link_prefix.as_deref() {
+            self.write(" data-line-link-prefix=\"");
+            self.write_attribute_escaped(prefix);
             self.write("\"");
         }
         if let Some(start) = state.line_numbers_start {
             self.write(" data-line-numbers=\"true\" data-line-number-start=\"");
             self.write_display(start);
+            self.write("\"");
+        }
+        if let Some(source) = state.copy_source.as_deref() {
+            self.write(" data-ox-code-source=\"");
+            self.write_attribute_escaped(source);
             self.write("\"");
         }
         self.write("><code");

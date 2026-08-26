@@ -10,6 +10,22 @@ fn keeps_definition_list_markup() {
 }
 
 #[test]
+fn keeps_code_block_authoring_metadata() {
+    let html = r#"<pre class="ox-code-block ox-code-block--line-links" data-code-title="src/api.ts" data-line-link-prefix="api" data-ox-code-source="const value = 1;&#10;// [!code focus]"><code><span class="line ox-code-line" id="api-L12" data-line="1" data-line-number="12" data-line-anchor="api-L12">const value = 1;</span></code></pre>"#;
+    let sanitized = sanitize_html(html, Some(&SanitizeOptions::default()));
+
+    assert!(sanitized.contains(r#"data-code-title="src/api.ts""#), "{sanitized}");
+    assert!(sanitized.contains(r#"data-line-link-prefix="api""#), "{sanitized}");
+    assert!(
+        sanitized.contains(r#"data-ox-code-source="const value = 1;&amp;#10;// [!code focus]""#)
+            || sanitized.contains(r#"data-ox-code-source="const value = 1;&#10;// [!code focus]""#),
+        "{sanitized}"
+    );
+    assert!(sanitized.contains(r#"id="api-L12""#), "{sanitized}");
+    assert!(sanitized.contains(r#"data-line-anchor="api-L12""#), "{sanitized}");
+}
+
+#[test]
 fn removes_scripts_and_event_handlers() {
     let html = r#"<p onclick="x()">Hi<script>alert(1)</script><a href="javascript:x">x</a></p>"#;
     let sanitized = sanitize_html(html, Some(&SanitizeOptions::default()));

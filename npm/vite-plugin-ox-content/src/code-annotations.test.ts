@@ -56,6 +56,34 @@ const third = true;
     expect(result.html).toMatchSnapshot();
   });
 
+  it("supports line links and wrapping metadata through highlighting", async () => {
+    const markdown = `\`\`\`ts:line-numbers=27 :line-links=auth-loader :wrap [src/auth/load-user.ts]
+export const token = loadVeryLongAuthenticationTokenFromRequestHeaders(request.headers.authorization);
+return token;
+\`\`\`
+`;
+
+    const result = await transformMarkdown(
+      markdown,
+      "docs/vitepress-dense-code.md",
+      createResolvedOptions({
+        codeAnnotations: {
+          enabled: true,
+          notation: "vitepress",
+          metaKey: "annotate",
+          defaultLineNumbers: false,
+        },
+      }),
+    );
+
+    expect(result.html).toContain("ox-code-block--line-links");
+    expect(result.html).toContain("ox-code-block--wrap");
+    expect(result.html).toContain('data-line-link-prefix="auth-loader"');
+    expect(result.html).toContain('id="auth-loader-L27"');
+    expect(result.html).toContain('data-line-anchor="auth-loader-L27"');
+    expect(result.html).not.toContain("data-ox-code-source");
+  });
+
   it("supports VitePress-style inline directives", async () => {
     const markdown = `\`\`\`ts
 // [!code focus:2]
@@ -82,6 +110,8 @@ throw new Error("boom") // [!code error]
     );
 
     expect(result.html).toMatchSnapshot();
+    expect(result.html).toContain("data-ox-code-source=");
+    expect(result.html).toContain("// [!code focus:2]");
   });
 
   it("supports VitePress-style escape-next-line directives", async () => {

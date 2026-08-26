@@ -1,0 +1,6 @@
+---
+source: crates/ox_content_renderer/src/html/tests/code.rs
+expression: html
+---
+<pre class="ox-code-block ox-code-block--line-numbers line-numbers-mode ox-code-block--with-title ox-code-block--line-links" data-code-title="src/config.ts" data-line-link-prefix="code-src-config-ts" data-line-numbers="true" data-line-number-start="3"><code class="language-ts"><span class="line ox-code-line" data-line="1" id="code-src-config-ts-L3" data-line-anchor="code-src-config-ts-L3" data-line-number="3">export const mode = &#39;docs&#39;;</span>
+<span class="line ox-code-line" data-line="2" id="code-src-config-ts-L4" data-line-anchor="code-src-config-ts-L4" data-line-number="4"></span></code></pre>

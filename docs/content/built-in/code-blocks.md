@@ -194,6 +194,40 @@ export function resolve(id: string) {
 `// [!code focus]` (or `// [!code focus:3]` for a range) dims everything but
 the focused lines.
 
+### Dense blocks
+
+Dense API pages can opt a block into stable line fragments and wrapping
+without custom components:
+
+````md
+```ts:line-numbers=27 :line-links=auth-loader :wrap [src/auth/load-user.ts]
+export async function loadUserSession(request: Request) {
+  const token = request.headers.get("authorization") ?? request.headers.get("x-legacy-auth-token");
+  return fetchSession(token);
+}
+```
+````
+
+Rendered:
+
+```ts:line-numbers=27 :line-links=auth-loader :wrap [src/auth/load-user.ts]
+export async function loadUserSession(request: Request) {
+  const token = request.headers.get("authorization") ?? request.headers.get("x-legacy-auth-token");
+  return fetchSession(token);
+}
+```
+
+`:line-links` adds `id` targets to rendered lines. With an explicit prefix,
+line 27 above can be linked as `#auth-loader-L27`; without one, the prefix is
+derived from the filename caption when present. `:wrap` wraps long lines inside
+the code frame for mobile-heavy docs, while `:no-wrap` keeps the default
+horizontal scrolling.
+
+When `ssg.readerChrome.copy` is enabled, blocks whose VitePress inline
+directives changed the visible code expose the original fence source to the
+copy button. Plain and purely metadata-decorated blocks still copy their
+visible code text.
+
 Inline directives are consumed wherever they appear inside a code block —
 including fence examples nested in an outer fence — so use the escape
 directive below when a line needs to show annotation-looking text.

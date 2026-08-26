@@ -83,6 +83,22 @@ fn code_table_and_mobile_nav_share_spacing_tokens() {
 }
 
 #[test]
+fn code_block_affordances_keep_wrapping_and_targets_stable() {
+    assert!(
+        SSG_CSS.contains(".content pre.ox-code-block--wrap {\n  overflow-x: hidden;\n  white-space: pre-wrap;")
+            && SSG_CSS.contains(".content pre.ox-code-block--wrap code,\n.content pre.ox-code-block--wrap .line {\n  white-space: inherit;\n  overflow-wrap: anywhere;")
+            && SSG_CSS.contains(".content pre.ox-code-block--nowrap {\n  overflow-x: auto;\n  white-space: pre;"),
+        "code wrap modes must choose either wrapping or horizontal scrolling explicitly"
+    );
+    assert!(
+        SSG_CSS.contains(".content pre.ox-code-block .ox-code-line:target {")
+            && SSG_CSS.contains("background: var(--octc-color-code-line-focus);")
+            && SSG_CSS.contains("outline-offset: -1px;"),
+        "line-link targets must reuse code focus tokens without shifting layout"
+    );
+}
+
+#[test]
 fn default_theme_replaces_on_primary_hex_escapes() {
     assert!(
         ENTRY_CSS.contains("color: var(--octc-color-on-primary);")

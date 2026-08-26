@@ -36,7 +36,7 @@
       const container = button.closest(".ox-code");
       const pre = container?.querySelector("pre");
       const status = container?.querySelector("[data-ox-copy-status]");
-      const text = pre ? pre.textContent || "" : "";
+      const text = pre ? (pre.getAttribute("data-ox-code-source") ?? pre.textContent ?? "") : "";
       if (!navigator.clipboard?.writeText) {
         setCopyState(button, status, "failed");
         return;

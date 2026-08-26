@@ -16,6 +16,7 @@ use tag::ParsedAttribute;
 #[derive(Debug, Clone, PartialEq, Eq)]
 struct LineMetadata {
     class_names: Vec<String>,
+    id: Option<String>,
     data_attributes: Vec<ParsedAttribute>,
 }
 
@@ -57,6 +58,7 @@ fn extract_code_block_metadata(original_block: &str) -> CodeBlockMetadata {
                 if class_names.iter().any(|class_name| class_name == "line") {
                     lines.push(LineMetadata {
                         class_names,
+                        id: tag_match.tag.attribute_value("id").map(ToString::to_string),
                         data_attributes: tag_match.tag.data_attributes(),
                     });
                 }
@@ -131,6 +133,9 @@ fn merge_highlighted_code_block(
                 if is_line {
                     if let Some(line_metadata) = metadata.lines.get(line_index) {
                         tag.merge_class_names(&line_metadata.class_names);
+                        if let Some(id) = line_metadata.id.as_deref() {
+                            tag.set_attribute("id", id);
+                        }
                         tag.merge_data_attributes(&line_metadata.data_attributes);
                     }
                     line_index += 1;

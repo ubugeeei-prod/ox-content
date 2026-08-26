@@ -56,3 +56,70 @@ test("code copy button stays compact on touch layouts", async ({ page }) => {
   expect(metrics.opacity).toBeLessThanOrEqual(0.72);
   expect(metrics.backgroundColor).toBe("rgba(0, 0, 0, 0)");
 });
+
+test("code copy button preserves authored inline directives", async ({ page }) => {
+  const markdown = [
+    "# Copy",
+    "",
+    "```ts",
+    "// [!code focus:2]",
+    "const before = true;",
+    "const after = false;",
+    "console.log('old') // [!code --]",
+    "console.log('new') // [!code ++]",
+    "```",
+  ].join("\n");
+  const result = await transformMarkdown(
+    markdown,
+    "docs/vrt-copy-source.md",
+    createDocsResolvedOptions({
+      highlight: true,
+      codeAnnotations: {
+        enabled: true,
+        notation: "vitepress",
+        metaKey: "annotate",
+        defaultLineNumbers: false,
+      },
+    }),
+  );
+  const html = await generateHtmlPage(
+    {
+      title: "Copy",
+      content: result.html,
+      toc: result.toc,
+      frontmatter: {},
+      path: "/vrt-copy-source",
+      href: "/vrt-copy-source/index.html",
+    },
+    [],
+    "Ox Content",
+    "/",
+    undefined,
+    undefined,
+    undefined,
+    undefined,
+    false,
+    { copy: true, externalLinks: false, backToTop: false },
+  );
+
+  await page.setContent(html, { waitUntil: "load" });
+  await page.evaluate(() => {
+    Object.defineProperty(navigator, "clipboard", {
+      configurable: true,
+      value: {
+        writeText(value: string) {
+          (window as typeof window & { __oxCopied?: string }).__oxCopied = value;
+          return Promise.resolve();
+        },
+      },
+    });
+  });
+
+  await page.locator(".ox-copy").focus();
+  await page.keyboard.press("Enter");
+
+  const authoredSource = `${markdown.split("\n").slice(3, -1).join("\n")}\n`;
+  await expect
+    .poll(() => page.evaluate(() => (window as typeof window & { __oxCopied?: string }).__oxCopied))
+    .toBe(authoredSource);
+});

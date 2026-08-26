@@ -14,6 +14,7 @@ use super::super::code_annotations::{
     parse_code_annotations, parse_line_numbers, parse_vitepress_inline_annotations,
     split_code_block_meta,
 };
+use super::super::heading::slugify_heading_into;
 use super::HtmlRenderer;
 
 impl HtmlRenderer {
@@ -27,6 +28,7 @@ impl HtmlRenderer {
     pub(in crate::html::renderer) fn build_code_block_state(
         &self,
         code_block: &CodeBlock<'_>,
+        block_index: usize,
     ) -> CodeBlockRenderState {
         crate::profile_span!("renderer::code_block_state");
         let info = normalize_code_block_info(code_block.lang, code_block.meta);
@@ -45,6 +47,9 @@ impl HtmlRenderer {
         };
 
         let mut title = None;
+        let mut line_links = false;
+        let mut line_link_prefix = None;
+        let mut wrap_lines = None;
         let mut line_numbers_start = if self.options.code_annotations
             && syntax.includes_vitepress()
             && self.options.code_annotation_default_line_numbers
@@ -94,6 +99,19 @@ impl HtmlRenderer {
                                 line_numbers_start = Some(start);
                             } else if token.value == ":no-line-numbers" {
                                 line_numbers_start = None;
+                            } else if matches!(token.value, ":wrap" | ":wrap-lines") {
+                                wrap_lines = Some(true);
+                            } else if matches!(
+                                token.value,
+                                ":no-wrap" | ":nowrap" | ":no-wrap-lines"
+                            ) {
+                                wrap_lines = Some(false);
+                            } else if token.value == ":line-links" {
+                                line_links = true;
+                            } else if let Some(prefix) =
+                                token.value.strip_prefix(":line-links=").and_then(slug_meta_value)
+                            {
+                                line_link_prefix = Some(prefix);
                             }
                         }
                     }
@@ -101,7 +119,32 @@ impl HtmlRenderer {
             }
         }
 
-        CodeBlockRenderState { language: info.language, title, line_numbers_start, lines }
+        if line_links && line_link_prefix.is_none() {
+            line_link_prefix = Some(default_line_link_prefix(
+                title.as_deref(),
+                info.language.as_deref(),
+                block_index,
+            ));
+        }
+
+        let copy_source = if self.options.code_annotations
+            && syntax.includes_vitepress()
+            && !line_values_match_source(&lines, code_block.value)
+        {
+            Some(code_block.value.to_string())
+        } else {
+            None
+        };
+
+        CodeBlockRenderState {
+            language: info.language,
+            title,
+            line_numbers_start,
+            line_link_prefix,
+            wrap_lines,
+            copy_source,
+            lines,
+        }
     }
 
     /// Emits annotated code lines from precomputed render state.
@@ -142,6 +185,20 @@ impl HtmlRenderer {
             self.write_display(line_number);
             self.write("\"");
 
+            let visible_line_number =
+                state.line_numbers_start.map_or(line_number, |start| start + index);
+            if let Some(prefix) = state.line_link_prefix.as_deref() {
+                self.write(" id=\"");
+                self.write_attribute_escaped(prefix);
+                self.write("-L");
+                self.write_display(visible_line_number);
+                self.write("\" data-line-anchor=\"");
+                self.write_attribute_escaped(prefix);
+                self.write("-L");
+                self.write_display(visible_line_number);
+                self.write("\"");
+            }
+
             if let Some(start) = state.line_numbers_start {
                 self.write(" data-line-number=\"");
                 self.write_display(start + index);
@@ -157,4 +214,72 @@ impl HtmlRenderer {
             }
         }
     }
+}
+
+fn slug_meta_value(value: &str) -> Option<CompactString> {
+    let value = unquote_meta_value(value);
+    let mut slug = String::with_capacity(value.len());
+    slugify_heading_into(value, &mut slug);
+    (slug != "section").then(|| CompactString::from(slug))
+}
+
+fn unquote_meta_value(value: &str) -> &str {
+    let value = value.trim();
+    if value.len() >= 2 {
+        let bytes = value.as_bytes();
+        if matches!(
+            (bytes.first(), bytes.last()),
+            (Some(b'"'), Some(b'"')) | (Some(b'\''), Some(b'\''))
+        ) {
+            return &value[1..value.len() - 1];
+        }
+    }
+    value
+}
+
+fn default_line_link_prefix(
+    title: Option<&str>,
+    language: Option<&str>,
+    block_index: usize,
+) -> CompactString {
+    let title = title.filter(|value| !value.trim().is_empty());
+    let mut source = String::with_capacity(title.map_or(32, |title| title.len() + 5));
+    source.push_str("code-");
+    if let Some(title) = title {
+        source.push_str(title);
+    } else {
+        source.push_str(language.unwrap_or("block"));
+        source.push('-');
+        push_usize(block_index, &mut source);
+    }
+
+    let mut slug = String::with_capacity(source.len());
+    slugify_heading_into(&source, &mut slug);
+    CompactString::from(slug)
+}
+
+fn push_usize(mut value: usize, output: &mut String) {
+    let mut digits = [0_u8; 20];
+    let mut index = digits.len();
+    loop {
+        index -= 1;
+        digits[index] = b'0' + (value % 10) as u8;
+        value /= 10;
+        if value == 0 {
+            break;
+        }
+    }
+    for digit in &digits[index..] {
+        output.push(char::from(*digit));
+    }
+}
+
+fn line_values_match_source(lines: &[CodeLineRenderState], source: &str) -> bool {
+    let mut source_lines = source.split('\n');
+    for line in lines {
+        if source_lines.next() != Some(line.value.as_str()) {
+            return false;
+        }
+    }
+    source_lines.next().is_none()
 }

@@ -1,0 +1,7 @@
+---
+source: crates/ox_content_renderer/src/html/tests/code.rs
+expression: html
+---
+<pre class="ox-code-block ox-code-block--line-numbers line-numbers-mode ox-code-block--with-title ox-code-block--line-links ox-code-block--wrap" data-code-title="src/auth/load-user.ts" data-line-link-prefix="auth-loader" data-line-numbers="true" data-line-number-start="27"><code class="language-ts"><span class="line ox-code-line" data-line="1" id="auth-loader-L27" data-line-anchor="auth-loader-L27" data-line-number="27">export const token = loadVeryLongAuthenticationTokenFromRequestHeaders(request.headers.authorization);</span>
+<span class="line ox-code-line" data-line="2" id="auth-loader-L28" data-line-anchor="auth-loader-L28" data-line-number="28">return token;</span>
+<span class="line ox-code-line" data-line="3" id="auth-loader-L29" data-line-anchor="auth-loader-L29" data-line-number="29"></span></code></pre>

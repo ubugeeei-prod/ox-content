@@ -52,6 +52,19 @@ console.warn("Token expires soon") // [!code warning]
 throw new Error("Token is invalid") // [!code error]
 ```
 
+## Dense authoring
+
+Filename captions compose with line links, wrapping, focus, and diff markers:
+
+```ts:line-numbers=27 :line-links=auth-loader :wrap [src/auth/load-user.ts]
+export async function loadUserSession(request: Request, cache: Map<string, Promise<UserSession>>) {
+  const token = request.headers.get("authorization") ?? request.headers.get("x-legacy-auth-token");
+  const previous = cache.get(token ?? "anonymous"); // [!code --]
+  const previous = cache.get(token ?? "anonymous") ?? fetchSession(token); // [!code ++]
+  return previous;
+}
+```
+
 Use a standalone comment directive when the next line should be rendered
 literally even if it contains annotation-looking text:
 

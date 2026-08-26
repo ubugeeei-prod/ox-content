@@ -72,6 +72,9 @@ pub(in crate::html) struct CodeBlockRenderState {
     pub(in crate::html) language: Option<CompactString>,
     pub(in crate::html) title: Option<CompactString>,
     pub(in crate::html) line_numbers_start: Option<usize>,
+    pub(in crate::html) line_link_prefix: Option<CompactString>,
+    pub(in crate::html) wrap_lines: Option<bool>,
+    pub(in crate::html) copy_source: Option<String>,
     pub(in crate::html) lines: Vec<CodeLineRenderState>,
 }
 
@@ -90,7 +93,13 @@ impl CodeBlockRenderState {
         // SmallVec avoids a heap allocation for that common case while still
         // allowing class de-duplication across many annotated lines.
         let mut classes = SmallVec::new();
-        if self.has_annotations() || self.line_numbers_start.is_some() || self.title.is_some() {
+        if self.has_annotations()
+            || self.line_numbers_start.is_some()
+            || self.title.is_some()
+            || self.line_link_prefix.is_some()
+            || self.wrap_lines.is_some()
+            || self.copy_source.is_some()
+        {
             classes.push("ox-code-block");
         }
         if self.has_annotations() {
@@ -102,6 +111,14 @@ impl CodeBlockRenderState {
         }
         if self.title.is_some() {
             classes.push("ox-code-block--with-title");
+        }
+        if self.line_link_prefix.is_some() {
+            classes.push("ox-code-block--line-links");
+        }
+        match self.wrap_lines {
+            Some(true) => classes.push("ox-code-block--wrap"),
+            Some(false) => classes.push("ox-code-block--nowrap"),
+            None => {}
         }
 
         for line in &self.lines {
@@ -118,7 +135,9 @@ impl CodeBlockRenderState {
     }
 
     pub(in crate::html) fn needs_line_wrappers(&self) -> bool {
-        self.has_annotations() || self.line_numbers_start.is_some()
+        self.has_annotations()
+            || self.line_numbers_start.is_some()
+            || self.line_link_prefix.is_some()
     }
 }
 

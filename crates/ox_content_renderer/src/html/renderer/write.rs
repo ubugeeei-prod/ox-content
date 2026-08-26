@@ -33,6 +33,21 @@ impl HtmlRenderer {
         write_escaped_into(&mut self.output, s);
     }
 
+    pub(in crate::html::renderer) fn write_attribute_escaped(&mut self, s: &str) {
+        for ch in s.chars() {
+            match ch {
+                '&' => self.output.push_str("&amp;"),
+                '<' => self.output.push_str("&lt;"),
+                '>' => self.output.push_str("&gt;"),
+                '"' => self.output.push_str("&quot;"),
+                '\'' => self.output.push_str("&#39;"),
+                '\n' => self.output.push_str("&#10;"),
+                '\r' => self.output.push_str("&#13;"),
+                _ => self.output.push(ch),
+            }
+        }
+    }
+
     /// Walks `s` and emits an `<a>` tag for each registered URL pattern match.
     ///
     /// The caller has already gated on the autolink option and link nesting

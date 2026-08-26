@@ -204,8 +204,9 @@ fn copy_control_uses_capability_media_queries_and_stable_status_ui() {
     assert!(
         READER_CHROME_JS.contains("data-ox-copy-status")
             && READER_CHROME_JS.contains("Copy failed")
+            && READER_CHROME_JS.contains(r#"getAttribute("data-ox-code-source")"#)
             && !READER_CHROME_JS.contains("textContent = \"Copy"),
-        "copy feedback must not replace the fixed-size icon: {READER_CHROME_JS}"
+        "copy feedback must stay fixed-size and prefer raw code source when available: {READER_CHROME_JS}"
     );
 }
 

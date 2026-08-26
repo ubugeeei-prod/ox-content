@@ -73,6 +73,10 @@ pub struct HtmlRenderer {
     /// any `-N` suffix. Permalinks reuse this exact value instead of
     /// slugifying again.
     heading_id_scratch: String,
+    /// 1-based code block index inside the current render. Code-line link
+    /// metadata uses this only when a block has no filename/title to derive a
+    /// human-readable fragment prefix from.
+    code_block_index: usize,
     /// Suppresses URL auto-linking while we're already inside an `<a>` so
     /// the builtin can't nest anchors. Tracked manually rather than via
     /// the AST because `visit_text` can be reached through many parents
@@ -123,6 +127,7 @@ impl HtmlRenderer {
             heading_text_scratch: String::with_capacity(64),
             heading_slug_scratch: String::with_capacity(64),
             heading_id_scratch: String::with_capacity(64),
+            code_block_index: 0,
             in_link: false,
             in_mdx_island_children: false,
             autolink_index: None,
@@ -163,6 +168,7 @@ impl HtmlRenderer {
         // all TOC allocation while the heading count still lets us reserve the
         // unique-id map once.
         self.toc_entries.clear();
+        self.code_block_index = 0;
         let document_scan = scan_document_for_render(document);
         self.document_has_toc_marker = document_scan.has_toc_marker;
         if self.document_has_toc_marker {

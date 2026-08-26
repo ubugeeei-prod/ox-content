@@ -1212,6 +1212,19 @@ a:hover {
 .content pre.ox-code-block code {
   display: block;
 }
+.content pre.ox-code-block--wrap {
+  overflow-x: hidden;
+  white-space: pre-wrap;
+}
+.content pre.ox-code-block--wrap code,
+.content pre.ox-code-block--wrap .line {
+  white-space: inherit;
+  overflow-wrap: anywhere;
+}
+.content pre.ox-code-block--nowrap {
+  overflow-x: auto;
+  white-space: pre;
+}
 .content pre.ox-code-block[data-code-title]::before {
   content: attr(data-code-title);
   display: block;
@@ -1244,6 +1257,14 @@ a:hover {
   color: var(--octc-color-code-line-number);
   user-select: none;
   pointer-events: none;
+}
+.content pre.ox-code-block .ox-code-line:target {
+  scroll-margin-top: calc(var(--octc-header-height) + 1rem);
+  opacity: 1;
+  filter: none;
+  background: var(--octc-color-code-line-focus);
+  outline: 1px solid color-mix(in srgb, var(--octc-color-primary) 48%, transparent);
+  outline-offset: -1px;
 }
 .content pre.ox-code-block.has-focused .line {
   opacity: var(--octc-color-code-line-dim);
