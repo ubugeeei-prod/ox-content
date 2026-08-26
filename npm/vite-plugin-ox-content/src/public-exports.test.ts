@@ -24,6 +24,8 @@ describe("public export surface", () => {
       "generateMarkdown",
       "isMarkdownFilePath",
       "oxContent",
+      "createMarkdownProcessor",
+      "renderMarkdown",
       "resolveCollectionsOptions",
       "renderHtmlToReactCreateElement",
       "renderHtmlToVueH",

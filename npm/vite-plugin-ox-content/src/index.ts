@@ -10,27 +10,13 @@ import type { Plugin, ViteDevServer, ResolvedConfig } from "vite";
 import "./virtual";
 import { createMarkdownEnvironment } from "./environment";
 import { transformMarkdown } from "./transform";
-import { extractDocs, generateMarkdown, writeDocs, resolveDocsOptions } from "./docs";
-import { buildSsg, resolveSsgOptions } from "./ssg";
-import { resolveSiteMapsOptions } from "./site-maps";
-import { resolvePublishStateOptions } from "./publish-state";
-import { resolveCascadeOptions, resolvePermalinksOptions } from "./permalinks";
-import { resolveRedirectsOptions } from "./redirects";
+import { extractDocs, generateMarkdown, writeDocs } from "./docs";
+import { buildSsg } from "./ssg";
 import { notFoundSearchExcludeIds } from "./not-found";
-import { resolveFeedsOptions } from "./feeds";
-import { BlogFeedError, resolveBlogOptions } from "./blog";
-import { resolvePwaOptions } from "./pwa";
-import { resolveTaxonomiesOptions } from "./taxonomies";
-import { resolveVersionsOptions } from "./versions";
-import { PageResourceError, resolveResourcesOptions } from "./resources";
+import { BlogFeedError } from "./blog";
+import { PageResourceError } from "./resources";
 import { createKatexAssetsPlugin } from "./plugins/math-assets";
-import {
-  resolveSearchOptions,
-  buildSearchIndex,
-  writeSearchIndex,
-  generateSearchModule,
-} from "./search";
-import { resolveOgImageOptions } from "./og-image";
+import { buildSearchIndex, writeSearchIndex, generateSearchModule } from "./search";
 import {
   createDevServerMiddleware,
   createDevServerCache,
@@ -38,19 +24,11 @@ import {
   invalidatePageCache,
 } from "./dev-server";
 import { createOgViewerPlugin } from "./og-viewer";
-import { resolveI18nOptions, createI18nPlugin } from "./i18n";
-import { isMarkdownFilePath, normalizeMarkdownExtensions } from "./markdown";
-import { resolveImageOptions } from "./resolve-image-options";
-import { generateCollectionsVirtualModule, resolveCollectionsOptions } from "./collections";
-import type { BuiltinPmOptions, OxContentOptions, ResolvedOptions } from "./types";
-import { resolveCardOptions } from "./card-options";
-import { resolveFileTreeOptions } from "./file-tree-options";
-import { resolveHeadingPermalinksOptions } from "./heading-permalinks-options";
-import { resolveMagicLinkOptions } from "./magic-link-options";
-import { resolveTypedHoverOptions } from "./typed-hover";
-import { resolveIncludeOptions } from "./include-options";
-import { resolveStepsOptions } from "./step-options";
-import type { TwitterEmbedOptions } from "./plugins";
+import { createI18nPlugin } from "./i18n";
+import { isMarkdownFilePath } from "./markdown";
+import { generateCollectionsVirtualModule } from "./collections";
+import type { OxContentOptions, ResolvedOptions } from "./types";
+import { resolveOptions } from "./resolve-options";
 
 export type { OxContentOptions } from "./types";
 export type { TwitterEmbedOptions } from "./plugins";
@@ -647,304 +625,17 @@ function createSearchPlugin(resolvedOptions: ResolvedOptions, getRoot: () => str
   };
 }
 
-/**
- * Resolves plugin options with defaults.
- */
-function resolveOptions(options: OxContentOptions): ResolvedOptions {
-  return {
-    srcDir: options.srcDir ?? "content",
-    outDir: options.outDir ?? "dist",
-    base: options.base ?? "/",
-    extensions: normalizeMarkdownExtensions(options.extensions),
-    ssg: resolveSsgOptions(options.ssg),
-    siteMaps: resolveSiteMapsOptions(options.siteMaps),
-    publishState: resolvePublishStateOptions(options.publishState),
-    permalinks: resolvePermalinksOptions(options.permalinks),
-    cascade: resolveCascadeOptions(options.cascade),
-    redirects: resolveRedirectsOptions(options.redirects),
-    blog: resolveBlogOptions(
-      options.blog ??
-        (typeof options.ssg === "object" && options.ssg ? options.ssg.blog : undefined),
-    ),
-    feeds: resolveFeedsOptions(options.feeds),
-    pwa: resolvePwaOptions(options.pwa),
-    taxonomies: resolveTaxonomiesOptions(options.taxonomies),
-    versions: resolveVersionsOptions(options.versions),
-    resources: resolveResourcesOptions(options.resources),
-    gfm: options.gfm ?? true,
-    mdx: options.mdx,
-    footnotes: options.footnotes ?? true,
-    semanticFootnotes: options.semanticFootnotes ?? false,
-    tables: options.tables ?? true,
-    taskLists: options.taskLists ?? true,
-    strikethrough: options.strikethrough ?? true,
-    autolinks: options.autolinks ?? options.gfm ?? true,
-    highlight: options.highlight ?? false,
-    codeAnnotations: resolveCodeAnnotationsOptions(options.codeAnnotations),
-    wikiLinks: resolveWikiLinkOptions(options.wikiLinks, options.base ?? "/"),
-    emojiShortcodes: resolveEmojiShortcodeOptions(options.emojiShortcodes),
-    attrs: resolveAttrsOptions(options.attrs),
-    badges: resolveBadgeOptions(options.badges),
-    magicLinks: resolveMagicLinkOptions(options.magicLinks),
-    containers: resolveContainerOptions(options.containers),
-    images: resolveImageOptions(options.images),
-    codeImports: resolveCodeImportOptions(options.codeImports),
-    includes: resolveIncludeOptions(options.includes),
-    cards: resolveCardOptions(options.cards),
-    steps: resolveStepsOptions(options.steps),
-    fileTree: resolveFileTreeOptions(options.fileTree),
-    sanitize: resolveSanitizeOptions(options.sanitize),
-    editThisPage: resolveEditThisPageOptions(options.editThisPage),
-    cjkEmphasis: options.cjkEmphasis ?? false,
-    codeBlockLint: resolveCodeBlockLintOptions(options.codeBlockLint),
-    codeBlockTypecheck: resolveCodeBlockTypecheckOptions(options.codeBlockTypecheck),
-    typedHover: resolveTypedHoverOptions(options.typedHover),
-    docsTests: resolveDocsTestOptions(options.docsTests),
-    mermaid: options.mermaid ?? false,
-    math: resolveMathOptions(options.math),
-    frontmatter: options.frontmatter ?? true,
-    toc: options.toc ?? true,
-    tocMaxDepth: options.tocMaxDepth ?? 3,
-    headingPermalinks: resolveHeadingPermalinksOptions(options.headingPermalinks),
-    ogImage: options.ogImage ?? false,
-    ogImageOptions: resolveOgImageOptions(options.ogImageOptions),
-    transformers: options.transformers ?? [],
-    docs: resolveDocsOptions(options.docs),
-    search: resolveSearchOptions(options.search),
-    collections: resolveCollectionsOptions(options.collections),
-    ogViewer: options.ogViewer ?? true,
-    embeds: resolveBuiltinEmbedOptions(options.embeds),
-    i18n: resolveI18nOptions(options.i18n),
-  };
-}
-
-export function resolveBuiltinEmbedOptions(
-  options: OxContentOptions["embeds"],
-): ResolvedOptions["embeds"] {
-  if (options === false) {
-    return {
-      github: false,
-      openGraph: false,
-      pm: false,
-      spotify: false,
-      stackBlitz: false,
-      twitter: false,
-      bluesky: false,
-      webContainer: false,
-    };
-  }
-
-  return {
-    github: resolveSingleEmbedOptions(options?.github),
-    openGraph: resolveSingleEmbedOptions(options?.openGraph),
-    pm: resolvePmOptions(options?.pm),
-    spotify: options?.spotify === true,
-    stackBlitz: options?.stackBlitz === true,
-    twitter: resolveTwitterEmbedOptions(options?.twitter),
-    bluesky: options?.bluesky === true,
-    webContainer: options?.webContainer === true,
-  };
-}
-
-function resolveSingleEmbedOptions<T extends object>(options: boolean | T | undefined): T | false {
-  if (options === false) return false;
-  if (options === true || options === undefined) return {} as T;
-  return options;
-}
-
-function resolveTwitterEmbedOptions(
-  options: boolean | TwitterEmbedOptions | undefined,
-): TwitterEmbedOptions | false {
-  if (options === false || options === undefined) return false;
-  if (options === true) return {};
-  return options;
-}
-
-function resolvePmOptions(
-  options: boolean | BuiltinPmOptions | undefined,
-): BuiltinPmOptions | false {
-  if (options === false || options === undefined) return false;
-  if (options === true) return {};
-  return options;
-}
-
-function resolveWikiLinkOptions(
-  options: OxContentOptions["wikiLinks"],
-  baseUrl: string,
-): ResolvedOptions["wikiLinks"] {
-  if (!options) return { enabled: false, baseUrl };
-  if (options === true) return { enabled: true, baseUrl };
-  return { enabled: true, baseUrl: options.baseUrl ?? baseUrl };
-}
-
-function resolveEmojiShortcodeOptions(
-  options: OxContentOptions["emojiShortcodes"],
-): ResolvedOptions["emojiShortcodes"] {
-  if (!options) return { enabled: false, custom: {} };
-  if (options === true) return { enabled: true, custom: {} };
-  return { enabled: true, custom: options.custom ?? {} };
-}
-
-export function resolveMathOptions(options: OxContentOptions["math"]): ResolvedOptions["math"] {
-  if (!options) return { enabled: false };
-  if (options === true) return { enabled: true };
-  return { enabled: options.enabled ?? true };
-}
-
-function resolveAttrsOptions(options: OxContentOptions["attrs"]): ResolvedOptions["attrs"] {
-  if (!options) return { enabled: false };
-  if (options === true) return { enabled: true };
-  return { enabled: options.enabled ?? true };
-}
-
-export function resolveBadgeOptions(
-  options: OxContentOptions["badges"],
-): ResolvedOptions["badges"] {
-  if (!options) return { enabled: false };
-  if (options === true) return { enabled: true };
-  return { enabled: options.enabled ?? true };
-}
-
-function resolveContainerOptions(
-  options: OxContentOptions["containers"],
-): ResolvedOptions["containers"] {
-  if (!options) return { enabled: false, types: {} };
-  if (options === true) return { enabled: true, types: {} };
-  return { enabled: options.enabled ?? true, types: options.types ?? {} };
-}
-
-function resolveCodeImportOptions(
-  options: OxContentOptions["codeImports"],
-): ResolvedOptions["codeImports"] {
-  if (!options) return { enabled: false };
-  if (options === true) return { enabled: true };
-  return { enabled: true, rootDir: options.rootDir };
-}
-
+export {
+  resolveBadgeOptions,
+  resolveBuiltinEmbedOptions,
+  resolveMathOptions,
+} from "./resolve-options";
 export { resolveCardOptions } from "./card-options";
 export { resolveIncludeOptions } from "./include-options";
 export { resolveStepsOptions } from "./step-options";
 export { resolveFileTreeOptions } from "./file-tree-options";
 export { resolveHeadingPermalinksOptions } from "./heading-permalinks-options";
 export { resolveTypedHoverOptions } from "./typed-hover";
-
-function resolveSanitizeOptions(
-  options: OxContentOptions["sanitize"],
-): ResolvedOptions["sanitize"] {
-  if (!options) return { enabled: false };
-  if (options === true) return { enabled: true };
-  return {
-    enabled: true,
-    allowedTags: options.allowedTags,
-    allowedAttributes: options.allowedAttributes,
-    allowedUrlSchemes: options.allowedUrlSchemes,
-  };
-}
-
-function resolveEditThisPageOptions(
-  options: OxContentOptions["editThisPage"],
-): ResolvedOptions["editThisPage"] {
-  if (!options) return { enabled: false, branch: "main", label: "Edit this page" };
-  if (options === true) return { enabled: false, branch: "main", label: "Edit this page" };
-  return {
-    enabled: Boolean(options.repoUrl),
-    repoUrl: options.repoUrl,
-    branch: options.branch ?? "main",
-    rootDir: options.rootDir,
-    label: options.label ?? "Edit this page",
-  };
-}
-
-function resolveCodeBlockLintOptions(
-  options: OxContentOptions["codeBlockLint"],
-): ResolvedOptions["codeBlockLint"] {
-  if (!options) {
-    return { enabled: false, requireLanguage: false, trailingSpaces: true, mode: "warn" };
-  }
-  if (options === true) {
-    return { enabled: true, requireLanguage: false, trailingSpaces: true, mode: "warn" };
-  }
-  return {
-    enabled: true,
-    languages: options.languages,
-    requireLanguage: options.requireLanguage ?? false,
-    trailingSpaces: options.trailingSpaces ?? true,
-    mode: options.mode ?? "warn",
-  };
-}
-
-function resolveCodeBlockTypecheckOptions(
-  options: OxContentOptions["codeBlockTypecheck"],
-): ResolvedOptions["codeBlockTypecheck"] {
-  if (!options) {
-    return {
-      enabled: false,
-      languages: ["ts", "tsx"],
-      requireMeta: true,
-      tsgoCommand: "tsgo",
-      mode: "warn",
-    };
-  }
-  if (options === true) {
-    return {
-      enabled: true,
-      languages: ["ts", "tsx"],
-      requireMeta: true,
-      tsgoCommand: "tsgo",
-      mode: "warn",
-    };
-  }
-  return {
-    enabled: true,
-    languages: options.languages ?? ["ts", "tsx"],
-    requireMeta: options.requireMeta ?? true,
-    tsgoCommand: options.tsgoCommand ?? "tsgo",
-    mode: options.mode ?? "warn",
-  };
-}
-
-function resolveDocsTestOptions(
-  options: OxContentOptions["docsTests"],
-): ResolvedOptions["docsTests"] {
-  if (!options) return { enabled: false, languages: ["js", "jsx", "ts", "tsx"], requireMeta: true };
-  if (options === true) {
-    return { enabled: true, languages: ["js", "jsx", "ts", "tsx"], requireMeta: true };
-  }
-  return {
-    enabled: true,
-    languages: options.languages ?? ["js", "jsx", "ts", "tsx"],
-    requireMeta: options.requireMeta ?? true,
-  };
-}
-
-function resolveCodeAnnotationsOptions(
-  options: OxContentOptions["codeAnnotations"],
-): ResolvedOptions["codeAnnotations"] {
-  if (!options) {
-    return {
-      enabled: false,
-      notation: "attribute",
-      metaKey: "annotate",
-      defaultLineNumbers: false,
-    };
-  }
-
-  if (options === true) {
-    return {
-      enabled: true,
-      notation: "attribute",
-      metaKey: "annotate",
-      defaultLineNumbers: false,
-    };
-  }
-
-  return {
-    enabled: true,
-    notation: options.notation ?? "attribute",
-    metaKey: options.metaKey ?? "annotate",
-    defaultLineNumbers: options.defaultLineNumbers ?? false,
-  };
-}
 
 /**
  * Generates virtual module content.
@@ -1020,6 +711,8 @@ export {
   type MarkdownChunkSource,
 } from "./incremental";
 export { transformMarkdown } from "./transform";
+export { createMarkdownProcessor, renderMarkdown } from "./render-markdown";
+export type { MarkdownProcessor } from "./render-markdown";
 export { isMdxFilePath, resolveMdxForFilePath } from "./markdown";
 export {
   collectMdxIslandNamesFromHtml,
