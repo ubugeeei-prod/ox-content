@@ -15,62 +15,63 @@ Ox Content は、よく使うドキュメントの挙動を既定で載せ、非
 
 ## 機能ガイド
 
-| ガイド                                                   | 内容                                                                           |
-| -------------------------------------------------------- | ------------------------------------------------------------------------------ |
-| [Markdown の土台](./built-in/markdown.md)                | GFM、表、タスクリスト、脚注、autolink、frontmatter、TOC                        |
-| [見出しパーマリンク](./built-in/heading-permalinks.md)   | 生成済み見出し id を再利用するオプトインの可視 `#` リンク                      |
-| [構文拡張](./built-in/syntax-extensions.md)              | 絵文字ショートコード、Wiki リンク、属性構文、CJK 強調                          |
-| [カスタムコンテナ](./built-in/containers.md)             | オプトインの `::: tip` / `::: details`                                         |
-| [カード](./built-in/cards.md)                            | オプトインの `::: card` / `::: link-card` / `::: card-grid`                    |
-| [手順リスト](./built-in/steps.md)                        | オプトインの `::: steps`                                                       |
-| [ファイル取り込み](./built-in/includes.md)               | オプトインの `<!-- @include -->`                                               |
-| [Markdown パーシャル](./built-in/partials.md)            | オプトインのパラメータ付き `<!-- @partial -->`                                 |
-| [ファイルツリー](./built-in/file-tree.md)                | オプトインの静的ディレクトリ図                                                 |
-| [データテーブル](./built-in/data-tables.md)              | オプトインの `csv-table` / `json-table` 静的テーブル                           |
-| [インラインバッジ](./built-in/badges.md)                 | オプトインの `{badge:tip}`                                                     |
-| [NotByAI バッジ](./built-in/not-by-ai.md)                | オプトインの静的な人の執筆開示（`<NotByAI />`）                                |
-| [キーボードキー](./built-in/keyboard-keys.md)            | オプトインの `{kbd:Ctrl+K}` セマンティックなショートカット                     |
-| [略語・用語集](./built-in/abbreviations.md)              | オプトインの `*[TERM]:` をアクセス可能な `<abbr>` へ展開                       |
-| [定義リスト](./built-in/definition-lists.md)             | オプトインの `Term` / `: definition` 用語リスト                                |
-| [マジックリンク](./built-in/magic-links.md)              | オプトインの `{link:@user}` / エイリアス / `label\|url` リッチリンク           |
-| [画像](./built-in/images.md)                             | 図、キャプション、遅延読み込み、安全な寸法                                     |
-| [ページリソース](./built-in/resources.md)                | ページバンドル資産とリサイズ・クロップ・形式変換                               |
-| [コードブロック](./built-in/code-blocks.md)              | ハイライト、注釈、ソース取り込み                                               |
-| [コードグループ](./built-in/code-groups.md)              | オプトインの VitePress 風 `::: code-group` フェンスタブ                        |
-| [埋め込み](./built-in/embeds.md)                         | GitHub / OG カード、パッケージマネージャタブ、YouTube、SNS                     |
-| [Mermaid](./built-in/mermaid.md)                         | フェンスを静的 SVG に描画                                                      |
-| [数式](./built-in/math.md)                               | オプトインの `$…$` / `$$…$$`。任意依存の KaTeX で組版                          |
-| [検索](./built-in/search.md)                             | 静的 BM25 インデックスとクライアント API                                       |
-| [コレクション](./built-in/collections.md)                | Markdown を SQL 風ビルダで問い合わせ                                           |
-| [品質チェック](./built-in/quality-checks.md)             | lint、型チェック、docs テスト、HTML サニタイズ                                 |
-| [型ホバー](./built-in/typed-hover.md)                    | `twoslash` フェンスのビルド時 TypeScript 型オーバーレイ                        |
-| [サイト生成](./built-in/site-generation.md)              | SSG、OG 画像、編集リンク、API ドキュメント                                     |
-| [SSG 出力プリミティブ](./built-in/ssg-output.md)         | `ssg: false` 向けのリソース、併記、フィード、sitemap、lastmod                  |
-| [コンポーネント CSS](./built-in/component-styles.md)     | `ssg: false` と `transformAllPlugins()` 向けの公式 CSS                         |
-| [ページ head](./built-in/page-head.md)                   | ビルド時の Unhead 互換 title / meta / link / JSON-LD API                       |
-| [SEO](./built-in/seo.md)                                 | その API 上の canonical、robots、hreflang、検証                                |
-| [前へ / 次へ](./built-in/pagination.md)                  | サイドバー順の前後リンク                                                       |
-| [パンくず](./built-in/breadcrumbs.md)                    | ルートからサイドバー祖先までの道筋                                             |
-| [JSON-LD](./built-in/json-ld.md)                         | オプトインの TechArticle / WebSite / BreadcrumbList                            |
-| [リーダー chrome](./built-in/reader-chrome.md)           | コピー、外部リンクアイコン、先頭へ戻る                                         |
-| [ロケールスイッチャー](./built-in/locale-switcher.md)    | 設定したロケールへのヘッダー導線                                               |
-| [アクセシビリティ](./built-in/a11y.md)                   | スキップリンクと印刷スタイル                                                   |
-| [ヘッダー chrome](./built-in/header-chrome.md)           | ナビ、告知バー、ページ単位の chrome                                            |
-| [Sitemap / robots / llms.txt](./built-in/site-maps.md)   | クロール用マニフェスト                                                         |
-| [Markdown ソースの併記](./built-in/markdown-source.md)   | 生成 HTML の横に元の Markdown をオプトインで書き出す                           |
-| [下書き / 非公開 / 予約公開](./built-in/drafts.md)       | frontmatter の公開状態                                                         |
-| [パーマリンクと Cascade](./built-in/permalinks.md)       | 独自 URL とディレクトリ既定 frontmatter                                        |
-| [リダイレクトとエイリアス](./built-in/redirects.md)      | 静的 HTML リダイレクト                                                         |
-| [カスタム 404](./built-in/not-found.md)                  | テーマ付き 404                                                                 |
-| [RSS / Atom / JSON フィード](./built-in/feeds.md)        | コレクションからフィードを出力                                                 |
-| [ブログ](./built-in/blog.md)                             | ページ送り索引、著者、タグ、アーカイブ、任意の外部フィード                     |
-| [PWA マニフェストとサービスワーカー](./built-in/pwa.md)  | Web アプリマニフェストと保守的なオフラインキャッシュ（クライアント JS を追加） |
-| [セルフホスト Iconify CSS](./built-in/icons.md)          | 使った Iconify アイコンのオプトイン CSS マスク（api.iconify.design なし）      |
-| [タクソノミー](./built-in/taxonomies.md)                 | タグ / カテゴリの用語ページと関連ページ                                        |
-| [ドキュメントのバージョン管理](./built-in/versioning.md) | プレフィックス、凍結スナップショット、切替 UI                                  |
-| [チーム / メンバー](./built-in/team.md)                  | `layout: team` の静的カード                                                    |
-| [Git コントリビューター](./built-in/contributors.md)     | 各記事の下に一意の git 作者を出すオプトイン                                    |
-| [セクション索引ページ](./built-in/section-index.md)      | `index.md` がないディレクトリ向けの生成一覧                                    |
+| ガイド                                                     | 内容                                                                           |
+| ---------------------------------------------------------- | ------------------------------------------------------------------------------ |
+| [Markdown の土台](./built-in/markdown.md)                  | GFM、表、タスクリスト、脚注、autolink、frontmatter、TOC                        |
+| [コンポーネントマトリクス](./built-in/component-matrix.md) | 執筆 API、生成 HTML、アクセシビリティ、テーマフック、no/low-JS の挙動          |
+| [見出しパーマリンク](./built-in/heading-permalinks.md)     | 生成済み見出し id を再利用するオプトインの可視 `#` リンク                      |
+| [構文拡張](./built-in/syntax-extensions.md)                | 絵文字ショートコード、Wiki リンク、属性構文、CJK 強調                          |
+| [カスタムコンテナ](./built-in/containers.md)               | オプトインの `::: tip` / `::: details`                                         |
+| [カード](./built-in/cards.md)                              | オプトインの `::: card` / `::: link-card` / `::: card-grid`                    |
+| [手順リスト](./built-in/steps.md)                          | オプトインの `::: steps`                                                       |
+| [ファイル取り込み](./built-in/includes.md)                 | オプトインの `<!-- @include -->`                                               |
+| [Markdown パーシャル](./built-in/partials.md)              | オプトインのパラメータ付き `<!-- @partial -->`                                 |
+| [ファイルツリー](./built-in/file-tree.md)                  | オプトインの静的ディレクトリ図                                                 |
+| [データテーブル](./built-in/data-tables.md)                | オプトインの `csv-table` / `json-table` 静的テーブル                           |
+| [インラインバッジ](./built-in/badges.md)                   | オプトインの `{badge:tip}`                                                     |
+| [NotByAI バッジ](./built-in/not-by-ai.md)                  | オプトインの静的な人の執筆開示（`<NotByAI />`）                                |
+| [キーボードキー](./built-in/keyboard-keys.md)              | オプトインの `{kbd:Ctrl+K}` セマンティックなショートカット                     |
+| [略語・用語集](./built-in/abbreviations.md)                | オプトインの `*[TERM]:` をアクセス可能な `<abbr>` へ展開                       |
+| [定義リスト](./built-in/definition-lists.md)               | オプトインの `Term` / `: definition` 用語リスト                                |
+| [マジックリンク](./built-in/magic-links.md)                | オプトインの `{link:@user}` / エイリアス / `label\|url` リッチリンク           |
+| [画像](./built-in/images.md)                               | 図、キャプション、遅延読み込み、安全な寸法                                     |
+| [ページリソース](./built-in/resources.md)                  | ページバンドル資産とリサイズ・クロップ・形式変換                               |
+| [コードブロック](./built-in/code-blocks.md)                | ハイライト、注釈、ソース取り込み                                               |
+| [コードグループ](./built-in/code-groups.md)                | オプトインの VitePress 風 `::: code-group` フェンスタブ                        |
+| [埋め込み](./built-in/embeds.md)                           | GitHub / OG カード、パッケージマネージャタブ、YouTube、SNS                     |
+| [Mermaid](./built-in/mermaid.md)                           | フェンスを静的 SVG に描画                                                      |
+| [数式](./built-in/math.md)                                 | オプトインの `$…$` / `$$…$$`。任意依存の KaTeX で組版                          |
+| [検索](./built-in/search.md)                               | 静的 BM25 インデックスとクライアント API                                       |
+| [コレクション](./built-in/collections.md)                  | Markdown を SQL 風ビルダで問い合わせ                                           |
+| [品質チェック](./built-in/quality-checks.md)               | lint、型チェック、docs テスト、HTML サニタイズ                                 |
+| [型ホバー](./built-in/typed-hover.md)                      | `twoslash` フェンスのビルド時 TypeScript 型オーバーレイ                        |
+| [サイト生成](./built-in/site-generation.md)                | SSG、OG 画像、編集リンク、API ドキュメント                                     |
+| [SSG 出力プリミティブ](./built-in/ssg-output.md)           | `ssg: false` 向けのリソース、併記、フィード、sitemap、lastmod                  |
+| [コンポーネント CSS](./built-in/component-styles.md)       | `ssg: false` と `transformAllPlugins()` 向けの公式 CSS                         |
+| [ページ head](./built-in/page-head.md)                     | ビルド時の Unhead 互換 title / meta / link / JSON-LD API                       |
+| [SEO](./built-in/seo.md)                                   | その API 上の canonical、robots、hreflang、検証                                |
+| [前へ / 次へ](./built-in/pagination.md)                    | サイドバー順の前後リンク                                                       |
+| [パンくず](./built-in/breadcrumbs.md)                      | ルートからサイドバー祖先までの道筋                                             |
+| [JSON-LD](./built-in/json-ld.md)                           | オプトインの TechArticle / WebSite / BreadcrumbList                            |
+| [リーダー chrome](./built-in/reader-chrome.md)             | コピー、外部リンクアイコン、先頭へ戻る                                         |
+| [ロケールスイッチャー](./built-in/locale-switcher.md)      | 設定したロケールへのヘッダー導線                                               |
+| [アクセシビリティ](./built-in/a11y.md)                     | スキップリンクと印刷スタイル                                                   |
+| [ヘッダー chrome](./built-in/header-chrome.md)             | ナビ、告知バー、ページ単位の chrome                                            |
+| [Sitemap / robots / llms.txt](./built-in/site-maps.md)     | クロール用マニフェスト                                                         |
+| [Markdown ソースの併記](./built-in/markdown-source.md)     | 生成 HTML の横に元の Markdown をオプトインで書き出す                           |
+| [下書き / 非公開 / 予約公開](./built-in/drafts.md)         | frontmatter の公開状態                                                         |
+| [パーマリンクと Cascade](./built-in/permalinks.md)         | 独自 URL とディレクトリ既定 frontmatter                                        |
+| [リダイレクトとエイリアス](./built-in/redirects.md)        | 静的 HTML リダイレクト                                                         |
+| [カスタム 404](./built-in/not-found.md)                    | テーマ付き 404                                                                 |
+| [RSS / Atom / JSON フィード](./built-in/feeds.md)          | コレクションからフィードを出力                                                 |
+| [ブログ](./built-in/blog.md)                               | ページ送り索引、著者、タグ、アーカイブ、任意の外部フィード                     |
+| [PWA マニフェストとサービスワーカー](./built-in/pwa.md)    | Web アプリマニフェストと保守的なオフラインキャッシュ（クライアント JS を追加） |
+| [セルフホスト Iconify CSS](./built-in/icons.md)            | 使った Iconify アイコンのオプトイン CSS マスク（api.iconify.design なし）      |
+| [タクソノミー](./built-in/taxonomies.md)                   | タグ / カテゴリの用語ページと関連ページ                                        |
+| [ドキュメントのバージョン管理](./built-in/versioning.md)   | プレフィックス、凍結スナップショット、切替 UI                                  |
+| [チーム / メンバー](./built-in/team.md)                    | `layout: team` の静的カード                                                    |
+| [Git コントリビューター](./built-in/contributors.md)       | 各記事の下に一意の git 作者を出すオプトイン                                    |
+| [セクション索引ページ](./built-in/section-index.md)        | `index.md` がないディレクトリ向けの生成一覧                                    |
 
 ## 既定とオプトイン
 

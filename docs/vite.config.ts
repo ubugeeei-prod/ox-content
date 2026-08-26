@@ -39,7 +39,6 @@ export default defineConfig(({ mode }) => {
         outDir: "dist/docs",
         base,
         semanticFootnotes: true,
-
         // Enable per-page OG image generation (Chromium-based)
         ogImage: true,
 
@@ -136,6 +135,7 @@ export default defineConfig(({ mode }) => {
                     link: "/built-in-features.md",
                     items: [
                       { text: "Markdown Baseline", link: "/built-in/markdown.md" },
+                      { text: "Component Matrix", link: "/built-in/component-matrix.md" },
                       { text: "Heading Permalinks", link: "/built-in/heading-permalinks.md" },
                       { text: "Syntax Extensions", link: "/built-in/syntax-extensions.md" },
                       { text: "Custom Containers", link: "/built-in/containers.md" },

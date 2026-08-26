@@ -22,6 +22,7 @@ inline**.
 | Guide                                                       | Covers                                                                      |
 | ----------------------------------------------------------- | --------------------------------------------------------------------------- |
 | [Markdown Baseline](./built-in/markdown.md)                 | GFM, tables, task lists, footnotes, autolinks, frontmatter, TOC             |
+| [Component Matrix](./built-in/component-matrix.md)          | Authoring API, generated HTML, a11y, theme hooks, no/low-JS behavior        |
 | [Heading Permalinks](./built-in/heading-permalinks.md)      | Opt-in visible `#` links that reuse the generated heading id                |
 | [Syntax Extensions](./built-in/syntax-extensions.md)        | Emoji shortcodes, wiki links, attribute syntax, CJK emphasis                |
 | [Custom Containers](./built-in/containers.md)               | Opt-in `::: tip` / `::: details` callout blocks                             |
