@@ -203,3 +203,44 @@ fn host_files_and_json_are_opt_in() {
     assert_eq!(output.headers.as_deref(), Some("/old\n  Location: /guide\n"));
     assert_eq!(output.json.as_deref(), Some(r#"[{"from":"/old","to":"/guide"}]"#));
 }
+
+#[test]
+fn wildcard_sources_stay_in_host_files_but_skip_html() {
+    let mut options =
+        enabled(&[("/talks*", "/works/talks"), ("/projects*", "/works"), ("/old", "/guide")]);
+    options.netlify = true;
+    options.headers = true;
+    options.json = true;
+    let output = generate_redirects(&options, &[]);
+
+    assert_eq!(output.pages.len(), 1, "{output:?}");
+    assert_eq!(output.pages[0].from, "/old");
+    assert_eq!(output.pages[0].to, "/guide");
+    assert!(output.pages.iter().all(|entry| !entry.from.contains('*')), "{output:?}");
+    assert_eq!(
+        output.netlify.as_deref(),
+        Some("/talks* /works/talks 301\n/projects* /works 301\n/old /guide 301\n")
+    );
+    assert_eq!(
+        output.headers.as_deref(),
+        Some(
+            "/talks*\n  Location: /works/talks\n/projects*\n  Location: /works\n/old\n  Location: /guide\n"
+        )
+    );
+    assert_eq!(
+        output.json.as_deref(),
+        Some(
+            r#"[{"from":"/talks*","to":"/works/talks"},{"from":"/projects*","to":"/works"},{"from":"/old","to":"/guide"}]"#
+        )
+    );
+}
+
+#[test]
+fn wildcard_only_map_emits_host_files_without_html_pages() {
+    let mut options = enabled(&[("/talks*", "/works/talks")]);
+    options.netlify = true;
+    let output = generate_redirects(&options, &[]);
+
+    assert!(output.pages.is_empty(), "{output:?}");
+    assert_eq!(output.netlify.as_deref(), Some("/talks* /works/talks 301\n"));
+}

@@ -140,7 +140,8 @@ export function planRedirectFiles(input: RedirectPlanInput): RedirectPlan {
     return { files: [] };
   }
 
-  const plan: RedirectPlan = { files };
+  const htmlFiles = files.filter((file) => !isHostWildcardSource(file.from));
+  const plan: RedirectPlan = { files: htmlFiles };
   if (input.options.netlify) {
     plan.netlify = files.map((file) => `${file.from} ${file.to} 301`).join("\n") + "\n";
   }
@@ -283,6 +284,11 @@ function readStringList(value: unknown): string[] {
     return [];
   }
   return value.filter((entry): entry is string => typeof entry === "string");
+}
+
+/** `*` is host-rule syntax (Netlify / Cloudflare), not a URL segment. */
+function isHostWildcardSource(from: string): boolean {
+  return from.includes("*");
 }
 
 function applyBase(dest: string, base: string | undefined): string {

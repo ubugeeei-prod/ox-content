@@ -101,7 +101,27 @@ an explicit map entry overrides a page alias for the same old path.
 Set `netlify: true` to also write a `_redirects` file
 (`/old /guide 301`). Set `headers: true` to write `_headers` with a
 `Location` line per source. Set `json: true` to write `redirects.json`.
-The HTML pages are still written.
+Normal (non-wildcard) sources still get HTML fallback pages.
+
+Sources that contain `*` are host-rule syntax (Netlify, Cloudflare Pages),
+not a literal URL segment. They still appear in `_redirects`, `_headers`,
+and `redirects.json` when those flags are on, but the SSG does not write
+a static HTML file such as `talks*/index.html`.
+
+```ts
+oxContent({
+  redirects: {
+    map: {
+      "/talks*": "/works/talks",
+      "/old-guide": "/guide",
+    },
+    netlify: true,
+  },
+});
+```
+
+That map writes `/talks* /works/talks 301` to `_redirects` and an HTML
+page only for `/old-guide`.
 
 ## Drafts
 

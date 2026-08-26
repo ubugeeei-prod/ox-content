@@ -196,6 +196,40 @@ describe("planRedirectFiles", () => {
 
     expect(plan.files).toEqual([]);
   });
+
+  it("keeps wildcard sources in host files but omits HTML pages", () => {
+    const plan = planRedirectFiles({
+      options: {
+        ...on,
+        map: {
+          "/talks*": "/works/talks",
+          "/projects*": "/works",
+          "/old": "/guide",
+        },
+        netlify: true,
+        headers: true,
+        json: true,
+      },
+      pages: [],
+    });
+
+    expect(plan.files).toHaveLength(1);
+    expect(plan.files[0]).toMatchObject({
+      from: "/old",
+      to: "/guide",
+      relativePath: "old/index.html",
+    });
+    expect(
+      plan.files.some((file) => file.from.includes("*") || file.relativePath.includes("*")),
+    ).toBe(false);
+    expect(plan.netlify).toBe("/talks* /works/talks 301\n/projects* /works 301\n/old /guide 301\n");
+    expect(plan.headers).toBe(
+      "/talks*\n  Location: /works/talks\n/projects*\n  Location: /works\n/old\n  Location: /guide\n",
+    );
+    expect(plan.json).toBe(
+      '[{"from":"/talks*","to":"/works/talks"},{"from":"/projects*","to":"/works"},{"from":"/old","to":"/guide"}]',
+    );
+  });
 });
 
 describe("writeRedirectFiles", () => {
@@ -270,5 +304,29 @@ describe("writeRedirectFiles", () => {
 
     expect(result.files).toEqual([]);
     await expect(fs.access(path.join(outDir, "old", "index.html"))).rejects.toThrow();
+  });
+
+  it("does not write literal HTML directories for wildcard sources", async () => {
+    const outDir = await fs.mkdtemp(path.join(os.tmpdir(), "ox-content-redirects-wild-"));
+    tempDirs.push(outDir);
+
+    const result = await writeRedirectFiles({
+      outDir,
+      options: {
+        ...on,
+        map: { "/talks*": "/works/talks", "/old": "/guide" },
+        netlify: true,
+      },
+      pages: [],
+    });
+
+    expect(await fs.readFile(path.join(outDir, "_redirects"), "utf8")).toBe(
+      "/talks* /works/talks 301\n/old /guide 301\n",
+    );
+    expect(await fs.readFile(path.join(outDir, "old", "index.html"), "utf8")).toContain(
+      "url=/guide",
+    );
+    await expect(fs.access(path.join(outDir, "talks*", "index.html"))).rejects.toThrow();
+    expect(result.files.some((file) => file.includes("talks*"))).toBe(false);
   });
 });
