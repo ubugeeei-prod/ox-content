@@ -524,6 +524,9 @@ defineTheme({
 Inline SVG passed as an icon is sanitized — `<script>` is stripped — so an icon
 string can never inject executable markup.
 
+Enable [`icons`](./built-in/icons.md) to emit local CSS masks for these Iconify
+names (and for entry-page feature icons) instead of `api.iconify.design`.
+
 ## Embedded HTML (Slots)
 
 The `embed` option injects raw HTML at fixed points in the page layout. All nine

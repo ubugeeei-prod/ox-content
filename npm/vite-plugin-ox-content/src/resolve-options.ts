@@ -1,9 +1,11 @@
 import { resolveBlogOptions } from "./blog";
 import { resolveCardOptions } from "./card-options";
+import { resolveCodeGroupOptions } from "./code-group-options";
 import { resolveCollectionsOptions } from "./collections";
 import { resolveDocsOptions } from "./docs";
 import { resolveFeedsOptions } from "./feeds";
 import { resolveFileTreeOptions } from "./file-tree-options";
+import { resolveIconsOptions } from "./icons";
 import { resolveHeadingPermalinksOptions } from "./heading-permalinks-options";
 import { resolveI18nOptions } from "./i18n";
 import { resolveIncludeOptions } from "./include-options";
@@ -47,6 +49,7 @@ export function resolveOptions(options: OxContentOptions): ResolvedOptions {
     ),
     feeds: resolveFeedsOptions(options.feeds),
     pwa: resolvePwaOptions(options.pwa),
+    icons: resolveIconsOptions(options.icons),
     taxonomies: resolveTaxonomiesOptions(options.taxonomies),
     versions: resolveVersionsOptions(options.versions),
     resources: resolveResourcesOptions(options.resources),
@@ -71,6 +74,7 @@ export function resolveOptions(options: OxContentOptions): ResolvedOptions {
     includes: resolveIncludeOptions(options.includes),
     cards: resolveCardOptions(options.cards),
     steps: resolveStepsOptions(options.steps),
+    codeGroups: resolveCodeGroupOptions(options.codeGroups),
     fileTree: resolveFileTreeOptions(options.fileTree),
     sanitize: resolveSanitizeOptions(options.sanitize),
     editThisPage: resolveEditThisPageOptions(options.editThisPage),

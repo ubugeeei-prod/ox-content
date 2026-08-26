@@ -18,6 +18,7 @@ import {
   type ThemeFontValue,
 } from "./theme-fonts";
 import { tokensToCss, type ThemeTokens } from "./theme-tokens";
+import { withSelfHostedIconHead } from "./icons";
 
 export type { HeaderNavItem, LocaleLabel, ThemeAnnouncement } from "./header-chrome";
 
@@ -546,6 +547,7 @@ export function themeToNapi(
   theme: ResolvedThemeConfig,
   locale?: string,
   base?: string,
+  iconsEnabled = false,
 ): NapiThemeConfig {
   const socialLinks = socialLinksToNapi(theme.socialLinks);
 
@@ -616,7 +618,11 @@ export function themeToNapi(
           }
         : undefined,
     socialLinks,
-    embed: withSelfHostedFontHead(theme.embed, theme.fonts, base),
+    embed: withSelfHostedIconHead(
+      withSelfHostedFontHead(theme.embed, theme.fonts, base),
+      iconsEnabled,
+      base,
+    ),
     css: themeCss(theme) || undefined,
     js: theme.js || undefined,
   };

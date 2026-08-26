@@ -4,15 +4,14 @@ use rustc_hash::FxHashMap;
 use std::borrow::Cow;
 use std::path::PathBuf;
 
-use crate::{
-    AttrsOptions, EditThisPageOptions, EmojiShortcodeOptions, TransformOptions, WikiLinkOptions,
-};
+use crate::TransformOptions;
 
 mod attr_tokens;
 mod attributes;
 mod badges;
 mod cards;
 pub mod code_blocks;
+mod code_groups;
 mod code_imports;
 mod containers;
 mod edit;
@@ -24,6 +23,7 @@ mod images;
 mod includes;
 mod magic;
 mod math;
+mod option_resolve;
 mod segments;
 mod steps;
 mod wiki;
@@ -34,6 +34,7 @@ pub use code_blocks::{
     CodeBlockDiagnostic, ExtractedCodeBlock, extract_code_blocks, extract_docs_tests,
     lint_code_blocks,
 };
+use code_groups::ResolvedCodeGroupOptions;
 use code_imports::ResolvedCodeImportOptions;
 use containers::ResolvedContainerOptions;
 use edit::append_edit_this_page;
@@ -43,6 +44,9 @@ use file_tree::ResolvedFileTreeOptions;
 use images::ResolvedImageOptions;
 use includes::ResolvedIncludeOptions;
 use magic::ResolvedMagicLinks;
+use option_resolve::{
+    resolve_attrs, resolve_edit_this_page, resolve_emoji_shortcodes, resolve_wiki_links,
+};
 use segments::transform_markdown_text_segments;
 use steps::ResolvedStepsOptions;
 use wiki::replace_wiki_links;
@@ -56,6 +60,7 @@ pub struct TransformFeatureOptions {
     includes: Option<ResolvedIncludeOptions>,
     cards: Option<ResolvedCardOptions>,
     steps: Option<ResolvedStepsOptions>,
+    code_groups: Option<ResolvedCodeGroupOptions>,
     file_tree: Option<ResolvedFileTreeOptions>,
     badges: bool,
     magic_links: Option<ResolvedMagicLinks>,
@@ -103,8 +108,9 @@ impl TransformFeatureOptions {
         let attributes = resolve_attrs(options.attributes.as_ref());
         let cards = cards::resolve(options.cards.as_ref());
         let steps = steps::resolve(options.steps.as_ref());
+        let code_groups = code_groups::resolve(options.code_groups.as_ref());
         let mut containers = containers::resolve(options.containers.as_ref());
-        if (cards.is_some() || steps.is_some())
+        if (cards.is_some() || steps.is_some() || code_groups.is_some())
             && let Some(containers) = containers.as_mut()
         {
             if cards.is_some() {
@@ -114,6 +120,11 @@ impl TransformFeatureOptions {
             }
             if steps.is_some() {
                 containers.types.remove("steps");
+            }
+            if code_groups.is_some() {
+                for name in code_groups::reserved_type_names() {
+                    containers.types.remove(*name);
+                }
             }
         }
         let includes = includes::resolve(options.includes.as_ref(), source_path);
@@ -135,6 +146,7 @@ impl TransformFeatureOptions {
             includes,
             cards,
             steps,
+            code_groups,
             file_tree,
             badges,
             magic_links,
@@ -153,6 +165,7 @@ impl TransformFeatureOptions {
             || self.includes.is_some()
             || self.cards.is_some()
             || self.steps.is_some()
+            || self.code_groups.is_some()
             || self.file_tree.is_some()
             || self.badges
             || self.magic_links.is_some()
@@ -212,18 +225,19 @@ pub fn preprocess_markdown<'a>(
         }
     }
 
-    if options.cards.is_some() && current.contains(":::") {
-        current = Cow::Owned(cards::transform(&current));
-    }
-
-    if options.steps.is_some() && current.contains(":::") {
-        current = Cow::Owned(steps::transform(&current));
-    }
-
-    if let Some(containers) = &options.containers
-        && current.contains(":::")
-    {
-        current = Cow::Owned(containers::transform(&current, containers));
+    if current.contains(":::") {
+        if options.cards.is_some() {
+            current = Cow::Owned(cards::transform(&current));
+        }
+        if options.steps.is_some() {
+            current = Cow::Owned(steps::transform(&current));
+        }
+        if options.code_groups.is_some() {
+            current = Cow::Owned(code_groups::transform(&current, &mut errors));
+        }
+        if let Some(containers) = &options.containers {
+            current = Cow::Owned(containers::transform(&current, containers));
+        }
     }
 
     if let Some(file_tree) = &options.file_tree
@@ -278,64 +292,6 @@ pub fn postprocess_html(html: &str, options: &TransformFeatureOptions) -> Postpr
     }
 
     PostprocessResult { html: current.into_owned(), errors }
-}
-
-fn resolve_wiki_links(
-    options: Option<&WikiLinkOptions>,
-    default_base_url: Option<&String>,
-) -> Option<ResolvedWikiLinkOptions> {
-    let options = options?;
-    if options.enabled == Some(false) {
-        return None;
-    }
-    Some(ResolvedWikiLinkOptions {
-        base_url: options
-            .base_url
-            .clone()
-            .or_else(|| default_base_url.cloned())
-            .unwrap_or_else(|| "/".to_string()),
-    })
-}
-
-fn resolve_emoji_shortcodes(
-    options: Option<&EmojiShortcodeOptions>,
-) -> Option<ResolvedEmojiShortcodeOptions> {
-    let options = options?;
-    if options.enabled == Some(false) {
-        return None;
-    }
-    Some(ResolvedEmojiShortcodeOptions {
-        custom: options.custom.clone().unwrap_or_default().into_iter().collect(),
-    })
-}
-
-fn resolve_attrs(options: Option<&AttrsOptions>) -> bool {
-    options.is_some_and(|options| options.enabled != Some(false))
-}
-
-fn resolve_edit_this_page(
-    options: Option<&EditThisPageOptions>,
-    source_path: &str,
-) -> Option<ResolvedEditThisPageOptions> {
-    let options = options?;
-    if options.enabled == Some(false) || source_path.is_empty() {
-        return None;
-    }
-    let repo_url = options.repo_url.as_deref()?.trim_end_matches('/').to_string();
-    if repo_url.is_empty() {
-        return None;
-    }
-
-    Some(ResolvedEditThisPageOptions {
-        repo_url,
-        branch: options.branch.clone().unwrap_or_else(|| "main".to_string()),
-        root_dir: options.root_dir.as_deref().filter(|value| !value.is_empty()).map_or_else(
-            || std::env::current_dir().unwrap_or_else(|_| PathBuf::from(".")),
-            PathBuf::from,
-        ),
-        source_path: source_path.to_string(),
-        label: options.label.clone().unwrap_or_else(|| "Edit this page".to_string()),
-    })
 }
 
 #[cfg(test)]

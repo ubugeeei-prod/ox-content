@@ -243,6 +243,7 @@ function createNativeTransformOptions(options: ResolvedOptions): NativeTransform
       : undefined,
     cards: options.cards?.enabled ? { enabled: true } : undefined,
     steps: options.steps?.enabled ? { enabled: true } : undefined,
+    codeGroups: options.codeGroups?.enabled ? { enabled: true } : undefined,
     fileTree: toJsFileTreeOptions(options.fileTree),
     editThisPage: options.editThisPage?.enabled
       ? {
