@@ -69,6 +69,10 @@ export type {
 /**
  * Creates the Ox Content Svelte integration plugin.
  *
+ * Forwards core options such as `ssg`, `redirects`, `feeds`, and `siteMaps`.
+ * The Svelte Markdown transform and environments replace the generic core
+ * transform/`markdown` environment; other build plugins are kept.
+ *
  * @example
  * ```ts
  * // vite.config.ts
@@ -196,17 +200,12 @@ export function oxContentSvelte(options: SvelteIntegrationOptions = {}): PluginO
     },
   };
 
-  const basePlugins = oxContent(options).flatMap((plugin) =>
-    Array.isArray(plugin) ? plugin : [plugin],
-  ) as Plugin[];
-  const environmentPlugin = basePlugins.find((plugin) => plugin.name === "ox-content:environment");
-  const plugins: Plugin[] = [svelteTransformPlugin, svelteEnvironmentPlugin, svelteHmrPlugin];
+  const replacedCorePluginNames = new Set(["ox-content", "ox-content:environment"]);
+  const corePlugins = (
+    oxContent(options).flatMap((plugin) => (Array.isArray(plugin) ? plugin : [plugin])) as Plugin[]
+  ).filter((plugin) => !replacedCorePluginNames.has(plugin.name));
 
-  if (environmentPlugin) {
-    plugins.push(environmentPlugin);
-  }
-
-  return plugins;
+  return [svelteTransformPlugin, svelteEnvironmentPlugin, svelteHmrPlugin, ...corePlugins];
 }
 
 function resolveSvelteOptions(
