@@ -109,6 +109,7 @@ function createResolvedOptions(overrides: Partial<ResolvedOptions> = {}): Resolv
     includes: { enabled: false },
     cards: { enabled: false },
     steps: { enabled: false },
+    codeGroups: { enabled: false },
     math: { enabled: false },
     fileTree: { enabled: false, defaultOpen: true, icons: true },
     sanitize: { enabled: false },

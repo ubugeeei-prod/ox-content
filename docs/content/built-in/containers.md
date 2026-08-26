@@ -63,5 +63,6 @@ Type names must be ASCII identifiers. Hostile names and attributes are dropped.
 
 ## Related
 
+- [Code Groups](./code-groups.md)
 - [Syntax Extensions](./syntax-extensions.md)
 - [Built-in Features overview](../built-in-features.md)
