@@ -28,7 +28,7 @@ export default {
 };
 ```
 
-`false` または省略はファイルを出しません。`true` は既定でオンです。3 形式すべて、`content` コレクション（なければ設定された最初のコレクション）、20 件制限です。オブジェクトを渡すと機能はオンになり、設定したフィールドだけ上書きします。
+`false` または省略はファイルを出しません。`true` は既定でオンです。3 形式すべて、`content` コレクション（なければ設定された最初のコレクション）、20 件制限です。単一オブジェクトは 1 本の既定フィードで、設定したフィールドだけ上書きします。
 
 ```ts
 oxContent({
@@ -44,15 +44,51 @@ oxContent({
 });
 ```
 
-| オプション   | 型                              | 既定                                  |
-| ------------ | ------------------------------- | ------------------------------------- |
-| `feeds`      | `boolean` / `FeedsOptions`      | `false`                               |
-| `formats`    | `("rss" \| "atom" \| "json")[]` | `["rss", "atom", "json"]`             |
-| `collection` | `string`                        | `content`、なければ最初のコレクション |
-| `limit`      | `number`                        | `20`                                  |
-| `path`       | `string`                        | `/`（サイトルート）                   |
+名前付きレコードまたは配列を渡すと、複数フィードを書き出します。チャンネルごとにコレクション、パス、形式、メタデータを設定できます。
 
-`path` は生成ファイルのサイト相対ディレクトリです。`/feeds` なら `feeds/feed.xml`、`feeds/atom.xml`、`feeds/feed.json` を書き出します。
+```ts
+oxContent({
+  feeds: {
+    blog: {
+      formats: ["rss"],
+      collection: "blog",
+      path: "/",
+      title: "blog | example.com",
+      description: "Technical articles",
+      language: "en",
+      image: "https://example.com/icon.png",
+      favicon: "https://example.com/icon.png",
+      copyright: "© 2026 example.com",
+    },
+    media: {
+      formats: ["rss"],
+      collection: "media",
+      path: "/works/media",
+      title: "Media | example.com",
+      language: "ja",
+    },
+  },
+  ssg: {
+    siteUrl: "https://example.com",
+  },
+});
+```
+
+| オプション    | 型                                         | 既定                                  |
+| ------------- | ------------------------------------------ | ------------------------------------- |
+| `feeds`       | `boolean` / 単一フィード / 名前付き / 配列 | `false`                               |
+| `formats`     | `("rss" \| "atom" \| "json")[]`            | `["rss", "atom", "json"]`             |
+| `collection`  | `string`                                   | `content`、なければ最初のコレクション |
+| `limit`       | `number`                                   | `20`                                  |
+| `path`        | `string`                                   | `/`（サイトルート）                   |
+| `title`       | `string`                                   | SSG のサイト名                        |
+| `description` | `string`                                   | SSG のサイト説明                      |
+| `language`    | `string`                                   | 省略                                  |
+| `image`       | `string`                                   | 省略                                  |
+| `favicon`     | `string`                                   | 省略                                  |
+| `copyright`   | `string`                                   | 省略                                  |
+
+`path` は生成ファイルのサイト相対ディレクトリです。`/feeds` なら `feeds/feed.xml`、`feeds/atom.xml`、`feeds/feed.json` を書き出します。チャンネルの `title`、`description`、`language`、`image`、`favicon`、`copyright` は、各形式に対応するフィールドがあるときサイト既定を上書きします（JSON Feed に copyright はありません）。
 
 項目は新しい順です。ソートキーは frontmatter の `date`、なければ `lastUpdated` です。`draft: true` のエントリは外れます。
 

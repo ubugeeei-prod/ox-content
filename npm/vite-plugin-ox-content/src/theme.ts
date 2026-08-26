@@ -11,10 +11,17 @@ import type {
   ThemeAnnouncement,
 } from "./header-chrome";
 import { resolveHeaderNavItems } from "./header-chrome";
+import {
+  flattenThemeFonts,
+  namedFontVarsCss,
+  withSelfHostedFontHead,
+  type ThemeFontValue,
+} from "./theme-fonts";
 import { tokensToCss, type ThemeTokens } from "./theme-tokens";
 
 export type { HeaderNavItem, LocaleLabel, ThemeAnnouncement } from "./header-chrome";
 
+export type { ThemeFontValue, ThemeWebFont } from "./theme-fonts";
 export type { ThemeTokens } from "./theme-tokens";
 
 /**
@@ -57,12 +64,17 @@ export interface ThemeLayout {
 
 /**
  * Theme font configuration.
+ *
+ * `sans` and `mono` accept a CSS stack string or a web-font object. Named
+ * families are extra stacks exposed as `--octc-font-<name>`.
  */
 export interface ThemeFonts {
-  /** Sans-serif font stack */
-  sans?: string;
-  /** Monospace font stack */
-  mono?: string;
+  /** Sans-serif font stack or self-hosted family */
+  sans?: ThemeFontValue;
+  /** Monospace font stack or self-hosted family */
+  mono?: ThemeFontValue;
+  /** Additional families, exposed as `--octc-font-<name>` */
+  named?: Record<string, ThemeFontValue>;
 }
 
 /**
@@ -530,7 +542,11 @@ function withDerivedCodeBackgroundTop(theme: ThemeConfig): ThemeConfig {
 /**
  * Converts resolved theme to the format expected by Rust NAPI.
  */
-export function themeToNapi(theme: ResolvedThemeConfig, locale?: string): NapiThemeConfig {
+export function themeToNapi(
+  theme: ResolvedThemeConfig,
+  locale?: string,
+  base?: string,
+): NapiThemeConfig {
   const socialLinks = socialLinksToNapi(theme.socialLinks);
 
   return {
@@ -566,12 +582,7 @@ export function themeToNapi(theme: ResolvedThemeConfig, locale?: string): NapiTh
           codeText: theme.darkColors.codeText,
         }
       : undefined,
-    fonts: theme.fonts.sans
-      ? {
-          sans: theme.fonts.sans,
-          mono: theme.fonts.mono,
-        }
-      : undefined,
+    fonts: flattenThemeFonts(theme.fonts),
     entryPage: theme.entryPage.mode
       ? {
           mode: theme.entryPage.mode,
@@ -605,7 +616,7 @@ export function themeToNapi(theme: ResolvedThemeConfig, locale?: string): NapiTh
           }
         : undefined,
     socialLinks,
-    embed: Object.keys(theme.embed).length > 0 ? theme.embed : undefined,
+    embed: withSelfHostedFontHead(theme.embed, theme.fonts, base),
     css: themeCss(theme) || undefined,
     js: theme.js || undefined,
   };
@@ -617,10 +628,12 @@ export function themeToNapi(theme: ResolvedThemeConfig, locale?: string): NapiTh
  */
 function themeCss(theme: ResolvedThemeConfig): string {
   const tokenCss = tokensToCss(theme.tokens, theme.darkTokens);
-  if (!tokenCss) {
+  const namedCss = namedFontVarsCss(theme.fonts);
+  const prefix = [tokenCss, namedCss].filter(Boolean).join("\n");
+  if (!prefix) {
     return theme.css;
   }
-  return theme.css ? `${tokenCss}\n${theme.css}` : tokenCss;
+  return theme.css ? `${prefix}\n${theme.css}` : prefix;
 }
 
 function socialLinksToNapi(links: SocialLinks): NapiSocialLinks | undefined {

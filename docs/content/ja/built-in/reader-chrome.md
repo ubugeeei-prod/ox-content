@@ -43,7 +43,7 @@ oxContent({
 | `externalLinks` | `true` | 外部リンクにアイコンと `rel`        |
 | `backToTop`     | `true` | スクロール後に先頭へ戻るボタン      |
 
-コピーは読者がボタンを押したときにブラウザのクリップボードを使います。フェンス本文はビルド時にはコピーしません。
+コピーは読者がボタンを押したときにブラウザのクリップボードを使います。フェンス本文はビルド時にはコピーしません。ページ全体の Copy as Markdown は別のオプトイン [`ssg.markdownSource.copy`](./markdown-source.md) です。
 
 外部リンクアイコンは相対、ハッシュ、`mailto:`、`tel:` を飛ばします。フェンス内やインラインコード内のリンクはそのままです。`javascript:`、`data:`、`vbscript:` の href には生きた操作を付けません。
 

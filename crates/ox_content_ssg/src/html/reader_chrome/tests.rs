@@ -1,25 +1,15 @@
 use super::super::{
-    EntryPageConfig, HeadValidation, NavGroup, NavItem, PageChromeFlags, PageData, ReaderChrome,
-    SsgConfig, generate_bare_html, generate_html,
+    EntryPageConfig, HeadValidation, NavGroup, NavItem, PageData, ReaderChrome, SsgConfig,
+    generate_bare_html, generate_html,
 };
 use super::{READER_CHROME_CSS, READER_CHROME_JS, apply_reader_chrome};
 
 fn page(content: &str) -> PageData {
     PageData {
         title: "Current".to_string(),
-        description: None,
         content: content.to_string(),
-        toc: vec![],
-        last_updated: None,
-        contributors: vec![],
         path: "guide".to_string(),
-        entry_page: None,
-        prev: None,
-        next: None,
-        breadcrumbs: None,
-        chrome: PageChromeFlags::default(),
-        robots: None,
-        canonical: None,
+        ..Default::default()
     }
 }
 

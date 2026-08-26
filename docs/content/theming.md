@@ -182,10 +182,58 @@ theme config (below) or override them directly from [custom CSS](#custom-css-and
 
 ### Fonts
 
-| Option       | CSS Variable       | Description           |
-| ------------ | ------------------ | --------------------- |
-| `fonts.sans` | `--octc-font-sans` | Sans-serif font stack |
-| `fonts.mono` | `--octc-font-mono` | Monospace font stack  |
+| Option        | CSS Variable         | Description                                 |
+| ------------- | -------------------- | ------------------------------------------- |
+| `fonts.sans`  | `--octc-font-sans`   | Sans-serif font stack or self-hosted family |
+| `fonts.mono`  | `--octc-font-mono`   | Monospace font stack or self-hosted family  |
+| `fonts.named` | `--octc-font-<name>` | Extra families for custom theme CSS         |
+
+`sans` and `mono` accept either a CSS stack string or a web-font object. The
+string form is unchanged:
+
+```ts
+fonts: {
+  sans: "Inter, sans-serif",
+  mono: "DM Mono, monospace",
+}
+```
+
+The object form names a family. With `selfHost: true`, Ox Content copies the
+requested weights and subsets into the SSG output and emits `@font-face`, so
+the published site does not request Google Fonts at runtime:
+
+```ts
+fonts: {
+  sans: {
+    family: "Inter",
+    provider: "google",
+    weights: [400, 600],
+    subsets: ["latin"],
+    display: "swap",
+    selfHost: true,
+  },
+  mono: "DM Mono, monospace",
+  named: {
+    code: {
+      family: "JetBrains Mono",
+      provider: "google",
+      weights: [400],
+      selfHost: true,
+    },
+  },
+}
+```
+
+- `sans` / `mono` still map to `--octc-font-sans` and `--octc-font-mono`.
+- `named` families expose `--octc-font-<name>` (for example `--octc-font-code`).
+- `provider: "local"` reads a file or an `@fontsource/*` directory and needs no
+  network. Use it in CI or when you already vendor the files.
+- `preload: true` (or a weight list) emits `<link rel="preload">` for those
+  faces.
+- Downloads are cached under `node_modules/.cache/ox-content/fonts`.
+
+Object families without `selfHost: true` only set the CSS stack; they do not
+download or emit font files.
 
 Only the keys you set are emitted. Omitted colors, fonts, and layout values fall
 back to the [default theme](#default-theme-values), so overriding a single accent

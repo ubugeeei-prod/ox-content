@@ -86,6 +86,7 @@ export default defineConfig(({ mode }) => {
           pagination: true,
           breadcrumbs: true,
           readerChrome: { backToTop: false },
+          markdownSource: { copy: true },
           a11y: true,
           pageChrome: true,
           localeSwitcher: true,
