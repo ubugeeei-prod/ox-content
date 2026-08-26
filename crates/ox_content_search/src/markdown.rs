@@ -2,8 +2,13 @@ use std::{fs, path::Path};
 
 use ox_content_allocator::Allocator;
 use ox_content_parser::{Parser, ParserOptions};
+use ox_content_transform::features::{
+    TransformFeatureOptions, preprocess_markdown_with_frontmatter,
+};
 use ox_content_transform::transformer::parse_frontmatter;
-use ox_content_transform::{PublishStateOptions, classify_publish_state};
+use ox_content_transform::{
+    ConditionalBlockOptions, PublishStateOptions, TransformOptions, classify_publish_state,
+};
 
 use crate::{DocumentIndexer, SearchDocument, SearchIndexBuilder};
 
@@ -14,6 +19,8 @@ pub struct SearchIndexBuildOptions {
     pub publish_state: Option<PublishStateOptions>,
     /// Explicit MDX parser override. When omitted, `.mdx` files enable MDX.
     pub mdx: Option<bool>,
+    /// Conditional blocks are resolved before extracting searchable content.
+    pub conditional_blocks: Option<ConditionalBlockOptions>,
 }
 
 pub fn extract_search_document_from_source(
@@ -22,7 +29,29 @@ pub fn extract_search_document_from_source(
     url: String,
     parser_options: ParserOptions,
 ) -> SearchDocument {
-    let (content, frontmatter) = parse_frontmatter(source);
+    extract_search_document_from_source_with_transform_options(
+        source,
+        id,
+        url,
+        parser_options,
+        None,
+    )
+}
+
+pub fn extract_search_document_from_source_with_transform_options(
+    source: &str,
+    id: String,
+    url: String,
+    parser_options: ParserOptions,
+    transform_options: Option<&TransformOptions>,
+) -> SearchDocument {
+    let (mut content, frontmatter) = parse_frontmatter(source);
+    if let Some(transform_options) = transform_options {
+        let feature_options = TransformFeatureOptions::from_options(transform_options);
+        let preprocessed =
+            preprocess_markdown_with_frontmatter(&content, &feature_options, &frontmatter);
+        content = preprocessed.source.into_owned();
+    }
     let frontmatter_title = frontmatter.get("title").and_then(|v| v.as_str()).map(String::from);
     let allocator = Allocator::for_source_len(content.len());
     let parser = Parser::with_options(&allocator, &content, parser_options);
@@ -93,6 +122,12 @@ pub fn build_search_index_from_directory_with_options(
     let src_path = Path::new(src_dir);
     let default_parser_options = ParserOptions::gfm();
     let publish_state = options.and_then(|opts| opts.publish_state.as_ref());
+    let transform_options = options.and_then(|opts| {
+        opts.conditional_blocks.as_ref().map(|conditional_blocks| TransformOptions {
+            conditional_blocks: Some(conditional_blocks.clone()),
+            ..Default::default()
+        })
+    });
     let documents =
         crate::collect_markdown_files(src_dir, extensions).into_iter().filter_map(|file| {
             let source = fs::read_to_string(&file).ok()?;
@@ -113,7 +148,13 @@ pub fn build_search_index_from_directory_with_options(
                     .is_some_and(|extension| extension.eq_ignore_ascii_case("mdx"))
             });
 
-            Some(extract_search_document_from_source(&source, id, url, parser_options))
+            Some(extract_search_document_from_source_with_transform_options(
+                &source,
+                id,
+                url,
+                parser_options,
+                transform_options.as_ref(),
+            ))
         });
 
     build_search_index_json(documents)

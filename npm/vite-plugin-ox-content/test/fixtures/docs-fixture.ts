@@ -154,6 +154,7 @@ export function createDocsResolvedOptions(
       unknownMeta: "error",
       empty: "error",
     },
+    conditionalBlocks: { enabled: false, values: {} },
     codeImports: { enabled: false },
     includes: { enabled: false },
     partials: { enabled: false, root: "_partials", missing: "literal" },

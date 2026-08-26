@@ -289,6 +289,7 @@ export default defineConfig(({ mode }) => {
         codeImports: true,
         includes: true,
         partials: true,
+        conditionalBlocks: { values: { runtime: "node" } },
         cards: true,
         steps: true,
         codeGroups: true,
@@ -338,7 +339,6 @@ export default defineConfig(({ mode }) => {
     server: {
       port: 4173,
     },
-
     preview: {
       port: 4173,
     },

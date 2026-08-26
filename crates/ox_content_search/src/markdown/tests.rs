@@ -1,4 +1,4 @@
-use ox_content_transform::PublishStateOptions;
+use ox_content_transform::{ConditionalBlockOptions, PublishStateOptions};
 
 use super::{SearchIndexBuildOptions, build_search_index_from_directory_with_options};
 
@@ -96,6 +96,42 @@ fn timeline_markdown_items_stay_searchable_in_source_order() {
     let nested = body.find("Nested migration notes").expect("nested body indexed");
     let ga = body.find("GA window").expect("later item indexed");
     assert!(rc < nested && nested < ga, "{body:?}");
+    let _ = std::fs::remove_dir_all(&root);
+}
+
+#[test]
+fn conditional_blocks_exclude_non_selected_search_content() {
+    let root = std::env::temp_dir().join(format!("ox-search-conditional-{}", std::process::id()));
+    let _ = std::fs::remove_dir_all(&root);
+    write_tree(
+        &root,
+        &[(
+            "runtime.md",
+            "# Runtime\n\n::: if runtime == \"node\"\n## Node only\nvisible phrase\n::: else\n## Browser only\nhidden phrase\n:::\n",
+        )],
+    );
+
+    let index_json = build_search_index_from_directory_with_options(
+        root.to_str().unwrap(),
+        "/",
+        &[".md".to_string()],
+        Some(&SearchIndexBuildOptions {
+            conditional_blocks: Some(ConditionalBlockOptions {
+                enabled: Some(true),
+                values: Some(
+                    std::iter::once(("runtime".to_string(), serde_json::json!("node"))).collect(),
+                ),
+            }),
+            ..SearchIndexBuildOptions::default()
+        }),
+    );
+    let index: serde_json::Value = serde_json::from_str(&index_json).unwrap();
+    let body = index["documents"][0]["body"].as_str().unwrap();
+    let headings = index["documents"][0]["headings"].as_array().unwrap();
+    assert!(body.contains("visible phrase"), "{body:?}");
+    assert!(!body.contains("hidden phrase"), "{body:?}");
+    assert!(headings.iter().any(|heading| heading == "Node only"));
+    assert!(!headings.iter().any(|heading| heading == "Browser only"));
     let _ = std::fs::remove_dir_all(&root);
 }
 

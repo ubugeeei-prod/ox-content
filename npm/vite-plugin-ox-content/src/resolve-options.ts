@@ -1,6 +1,7 @@
 import { resolveBlogOptions } from "./blog";
 import { resolveCardOptions } from "./card-options";
 import { resolveCodeGroupOptions } from "./code-group-options";
+import { resolveConditionalBlockOptions } from "./conditional-block-options";
 import { resolveCollectionsOptions } from "./collections";
 import { resolveDocsOptions } from "./docs";
 import { resolveFeedsOptions } from "./feeds";
@@ -80,6 +81,7 @@ export function resolveOptions(options: OxContentOptions): ResolvedOptions {
     images: resolveImageOptions(options.images),
     imageGalleries: resolveImageGalleryOptions(options.imageGalleries),
     timelines: resolveTimelineOptions(options.timelines),
+    conditionalBlocks: resolveConditionalBlockOptions(options.conditionalBlocks),
     codeImports: resolveCodeImportOptions(options.codeImports),
     includes: resolveIncludeOptions(options.includes),
     partials: resolvePartialsOptions(options.partials),
@@ -168,7 +170,6 @@ function resolvePmOptions(
   if (options === true) return {};
   return options;
 }
-
 function resolveWikiLinkOptions(
   options: OxContentOptions["wikiLinks"],
   baseUrl: string,
@@ -177,7 +178,6 @@ function resolveWikiLinkOptions(
   if (options === true) return { enabled: true, baseUrl };
   return { enabled: true, baseUrl: options.baseUrl ?? baseUrl };
 }
-
 function resolveEmojiShortcodeOptions(
   options: OxContentOptions["emojiShortcodes"],
 ): ResolvedOptions["emojiShortcodes"] {

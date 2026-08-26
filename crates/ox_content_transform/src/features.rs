@@ -2,16 +2,20 @@
 use crate::TransformOptions;
 use rustc_hash::FxHashMap;
 use std::borrow::Cow;
+use std::collections::HashMap;
+use std::hash::BuildHasher;
 use std::path::PathBuf;
 
 mod abbreviations;
 mod attr_tokens;
 mod attributes;
 mod badges;
+mod block_preprocess;
 mod cards;
 pub mod code_blocks;
 mod code_groups;
 mod code_imports;
+mod conditional_blocks;
 mod containers;
 mod data_tables;
 mod definition_lists;
@@ -41,6 +45,7 @@ pub use code_blocks::{
 };
 use code_groups::ResolvedCodeGroupOptions;
 use code_imports::ResolvedCodeImportOptions;
+use conditional_blocks::ResolvedConditionalBlockOptions;
 use containers::ResolvedContainerOptions;
 use data_tables::ResolvedDataTableOptions;
 use edit::append_edit_this_page;
@@ -80,6 +85,7 @@ pub struct TransformFeatureOptions {
     images: Option<ResolvedImageOptions>,
     image_galleries: Option<ResolvedImageGalleryOptions>,
     timelines: Option<timelines::ResolvedTimelineOptions>,
+    conditional_blocks: Option<ResolvedConditionalBlockOptions>,
     math: bool,
     attributes: bool,
     edit_this_page: Option<ResolvedEditThisPageOptions>,
@@ -127,6 +133,7 @@ impl TransformFeatureOptions {
         let image_galleries =
             image_galleries::resolve(options.image_galleries.as_ref(), attributes, images.as_ref());
         let timelines = timelines::resolve(options.timelines.as_ref());
+        let conditional_blocks = conditional_blocks::resolve(options.conditional_blocks.as_ref());
         let mut containers = containers::resolve(options.containers.as_ref());
         containers::remove_reserved_type_names(
             &mut containers,
@@ -173,6 +180,7 @@ impl TransformFeatureOptions {
             images,
             image_galleries,
             timelines,
+            conditional_blocks,
             math,
             attributes,
             edit_this_page,
@@ -200,6 +208,7 @@ impl TransformFeatureOptions {
             || self.images.is_some()
             || self.image_galleries.is_some()
             || self.timelines.is_some()
+            || self.conditional_blocks.is_some()
             || self.math
     }
 
@@ -211,6 +220,15 @@ impl TransformFeatureOptions {
 pub fn preprocess_markdown<'a>(
     source: &'a str,
     options: &TransformFeatureOptions,
+) -> PreprocessResult<'a> {
+    let frontmatter = FxHashMap::default();
+    preprocess_markdown_with_frontmatter(source, options, &frontmatter)
+}
+
+pub fn preprocess_markdown_with_frontmatter<'a, S: BuildHasher>(
+    source: &'a str,
+    options: &TransformFeatureOptions,
+    frontmatter: &HashMap<String, serde_json::Value, S>,
 ) -> PreprocessResult<'a> {
     if !options.has_preprocess() {
         return PreprocessResult { source: Cow::Borrowed(source), errors: Vec::new() };
@@ -263,24 +281,7 @@ pub fn preprocess_markdown<'a>(
     }
 
     if current.contains(":::") {
-        if let Some(galleries) = &options.image_galleries {
-            current = Cow::Owned(image_galleries::transform(&current, galleries, &mut errors));
-        }
-        if let Some(timelines) = &options.timelines {
-            current = Cow::Owned(timelines::transform(&current, timelines, &mut errors));
-        }
-        if options.cards.is_some() {
-            current = Cow::Owned(cards::transform(&current));
-        }
-        if options.steps.is_some() {
-            current = Cow::Owned(steps::transform(&current));
-        }
-        if options.code_groups.is_some() {
-            current = Cow::Owned(code_groups::transform(&current, &mut errors));
-        }
-        if let Some(containers) = &options.containers {
-            current = Cow::Owned(containers::transform(&current, containers));
-        }
+        current = block_preprocess::apply(current, options, frontmatter, &mut errors);
     }
 
     if let Some(file_tree) = &options.file_tree

@@ -49,6 +49,7 @@ import { protectMermaidSvgs, restoreMermaidSvgs } from "./plugins/mermaid-protec
 import { typecheckCodeBlocks } from "./code-blocks";
 import { applyTypedHover } from "./typed-hover";
 import { resolveMdxForFilePath } from "./markdown";
+import { toJsConditionalBlockOptions } from "./conditional-block-options";
 import { toJsDataTableOptions } from "./data-table-options";
 import { toJsFileTreeOptions } from "./file-tree-options";
 import { toJsImageGalleryOptions } from "./image-gallery-options";
@@ -348,6 +349,10 @@ interface JsTransformOptions {
     unknownMeta?: "error" | "warn" | "ignore";
     empty?: "error" | "warn" | "ignore";
   };
+  conditionalBlocks?: {
+    enabled?: boolean;
+    values?: Record<string, unknown>;
+  };
 
   cjkEmphasis?: boolean;
 
@@ -373,6 +378,10 @@ interface JsTransformOptions {
   };
 
   steps?: {
+    enabled?: boolean;
+  };
+
+  codeGroups?: {
     enabled?: boolean;
   };
 
@@ -701,6 +710,7 @@ export async function transformMarkdown(
       : undefined,
     imageGalleries: toJsImageGalleryOptions(options.imageGalleries, options.images),
     timelines: toJsTimelineOptions(options.timelines),
+    conditionalBlocks: toJsConditionalBlockOptions(options.conditionalBlocks),
     cjkEmphasis: options.cjkEmphasis ?? false,
     codeImports: options.codeImports?.enabled
       ? {

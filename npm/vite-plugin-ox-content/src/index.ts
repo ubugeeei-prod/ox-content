@@ -577,6 +577,7 @@ function createSearchPlugin(resolvedOptions: ResolvedOptions, getRoot: () => str
           searchPublishState(resolvedOptions, command),
           notFoundSearchExcludeIds(resolvedOptions.ssg.notFound),
           resolvedOptions.mdx,
+          resolvedOptions.conditionalBlocks,
         );
         console.log("[ox-content] Search index built");
       } catch (err) {
@@ -622,6 +623,7 @@ function createSearchPlugin(resolvedOptions: ResolvedOptions, getRoot: () => str
               searchPublishState(resolvedOptions, command),
               notFoundSearchExcludeIds(resolvedOptions.ssg.notFound),
               resolvedOptions.mdx,
+              resolvedOptions.conditionalBlocks,
             );
             stale = false;
           }

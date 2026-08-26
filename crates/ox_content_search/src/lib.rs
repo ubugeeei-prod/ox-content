@@ -43,7 +43,8 @@ pub use indexer::DocumentIndexer;
 pub use markdown::{
     SearchIndexBuildOptions, build_search_index_from_directory,
     build_search_index_from_directory_with_options, build_search_index_json,
-    extract_search_document_from_source, search_document_id,
+    extract_search_document_from_source,
+    extract_search_document_from_source_with_transform_options, search_document_id,
 };
 pub use query::{SearchOptions, SearchResult, SearchResultMetadata, SearchResultRanking};
 pub use runtime::{

@@ -60,6 +60,8 @@ pub struct TransformOptions {
     pub image_galleries: Option<ImageGalleryOptions>,
     /// Opt-in static `::: timeline` milestone lists. Disabled when omitted.
     pub timelines: Option<TimelineOptions>,
+    /// Opt-in static `::: if` / `::: else` conditional blocks. Disabled when omitted.
+    pub conditional_blocks: Option<ConditionalBlockOptions>,
     /// Opt-in `::: card` / `::: link-card` / `::: card-grid` blocks. Disabled when omitted.
     pub cards: Option<CardOptions>,
     /// Opt-in `file-tree` fences. Disabled when omitted.
@@ -143,6 +145,12 @@ pub struct TimelineOptions {
     pub invalid_date: Option<String>,
     pub unknown_meta: Option<String>,
     pub empty: Option<String>,
+}
+
+#[derive(Clone, Debug, Default)]
+pub struct ConditionalBlockOptions {
+    pub enabled: Option<bool>,
+    pub values: Option<FxHashMap<String, serde_json::Value>>,
 }
 
 #[derive(Clone, Default)]

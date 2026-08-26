@@ -6,10 +6,12 @@
 
 import { importNapiModule, importNapiModuleSync } from "./napi";
 import { DEFAULT_MARKDOWN_EXTENSIONS } from "./markdown";
+import { toJsConditionalBlockOptions } from "./conditional-block-options";
 import type {
   SearchOptions,
   ResolvedSearchOptions,
   ResolvedPublishStateOptions,
+  ResolvedConditionalBlockOptions,
   SearchDocument,
   ScopedSearchQuery,
 } from "./types";
@@ -122,6 +124,7 @@ export async function buildSearchIndex(
   publishState?: ResolvedPublishStateOptions,
   excludeDocumentIds: readonly string[] = [],
   mdx?: boolean,
+  conditionalBlocks?: ResolvedConditionalBlockOptions,
 ): Promise<string> {
   const napi = await getOxContent();
 
@@ -138,6 +141,7 @@ export async function buildSearchIndex(
   const indexJson = napi.buildSearchIndexFromDirectory(srcDir, base, [...extensions], {
     publishState: toNapiPublishState(publishState),
     mdx,
+    conditionalBlocks: toJsConditionalBlockOptions(conditionalBlocks),
   });
   if (excludeDocumentIds.length === 0) {
     return indexJson;

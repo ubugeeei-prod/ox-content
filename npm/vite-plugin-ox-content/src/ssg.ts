@@ -1978,6 +1978,7 @@ async function applyDocumentationVersions(
           extensions: context.options.extensions,
           publishState: context.options.publishState,
           mdx: context.options.mdx,
+          conditionalBlocks: context.options.conditionalBlocks,
         });
       } catch (err) {
         const message = err instanceof Error ? err.message : String(err);

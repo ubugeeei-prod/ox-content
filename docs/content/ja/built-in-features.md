@@ -22,6 +22,7 @@ Ox Content は、よく使うドキュメントの挙動を既定で載せ、非
 | [見出しパーマリンク](./built-in/heading-permalinks.md)     | 生成済み見出し id を再利用するオプトインの可視 `#` リンク                      |
 | [構文拡張](./built-in/syntax-extensions.md)                | 絵文字ショートコード、Wiki リンク、属性構文、CJK 強調                          |
 | [カスタムコンテナ](./built-in/containers.md)               | オプトインの `::: tip` / `::: details`                                         |
+| [条件付きブロック](./built-in/conditional-blocks.md)       | オプトインの静的な `::: if` / `::: else` 分岐                                  |
 | [カード](./built-in/cards.md)                              | オプトインの `::: card` / `::: link-card` / `::: card-grid`                    |
 | [手順リスト](./built-in/steps.md)                          | オプトインの `::: steps`                                                       |
 | [ファイル取り込み](./built-in/includes.md)                 | オプトインの `<!-- @include -->`                                               |
@@ -92,6 +93,7 @@ Ox Content は、よく使うドキュメントの挙動を既定で載せ、非
 | 構文ハイライト        | `highlight`                                                                                                                                                                                               | `false`            | [コードブロック](./built-in/code-blocks.md)              |
 | コード執筆            | `codeAnnotations`, `codeImports`                                                                                                                                                                          | `false`            | [コードブロック](./built-in/code-blocks.md)              |
 | コードグループ        | `codeGroups`                                                                                                                                                                                              | `false`            | [コードグループ](./built-in/code-groups.md)              |
+| 条件付きブロック      | `conditionalBlocks`                                                                                                                                                                                       | `false`            | [条件付きブロック](./built-in/conditional-blocks.md)     |
 | 追加構文              | `wikiLinks`, `emojiShortcodes`, `attrs`, `cjkEmphasis`, `containers`, `badges`, `notByAi`, `keyboardKeys`, `abbreviations`, `definitionLists`, `magicLinks`                                               | `false`            | [構文拡張](./built-in/syntax-extensions.md)              |
 | ファイル取り込み      | `includes`                                                                                                                                                                                                | `false`            | [ファイル取り込み](./built-in/includes.md)               |
 | Markdown パーシャル   | `partials`                                                                                                                                                                                                | `false`            | [Markdown パーシャル](./built-in/partials.md)            |

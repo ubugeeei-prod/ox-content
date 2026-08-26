@@ -491,6 +491,22 @@ export interface JsCollectionDefinition {
   include: Array<string>
 }
 
+/** Opt-in static `::: if` / `::: else` conditional blocks. */
+export interface JsConditionalBlockOptions {
+  /**
+   * Enable conditional block evaluation.
+   *
+   * Default: `true` when the options object is supplied.
+   */
+  enabled?: boolean
+  /**
+   * Build-time values available as `config.*` or bare identifiers.
+   *
+   * Default: `{}`.
+   */
+  values?: Record<string, any>
+}
+
 /** Opt-in `::: tip` custom containers. */
 export interface JsContainerOptions {
   /**
@@ -1700,6 +1716,8 @@ export interface JsSearchIndexBuildOptions {
   publishState?: JsPublishStateOptions
   /** Explicit MDX parser override. When omitted, `.mdx` files enable MDX. */
   mdx?: boolean
+  /** Conditional blocks are resolved before extracting searchable content. */
+  conditionalBlocks?: JsConditionalBlockOptions
 }
 
 /** Search options for JavaScript. */
@@ -2538,6 +2556,12 @@ export interface JsTransformOptions {
    * Default: disabled.
    */
   timelines?: JsTimelineOptions
+  /**
+   * Opt-in static `::: if` / `::: else` conditional blocks.
+   *
+   * Default: disabled.
+   */
+  conditionalBlocks?: JsConditionalBlockOptions
   /**
    * Opt-in `::: card` / `::: link-card` / `::: card-grid` blocks.
    *

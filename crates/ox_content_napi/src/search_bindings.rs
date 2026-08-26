@@ -3,7 +3,7 @@ use napi_derive::napi;
 use ox_content_parser::ParserOptions;
 use ox_content_search::{SearchDocument, SearchIndex, SearchOptions, SearchRuntimeOptions};
 
-use crate::{JsParserOptions, JsPublishStateOptions};
+use crate::{JsConditionalBlockOptions, JsParserOptions, JsPublishStateOptions};
 
 /// Search document for JavaScript.
 #[napi(object)]
@@ -138,6 +138,8 @@ pub struct JsSearchIndexBuildOptions {
     pub publish_state: Option<JsPublishStateOptions>,
     /// Explicit MDX parser override. When omitted, `.mdx` files enable MDX.
     pub mdx: Option<bool>,
+    /// Conditional blocks are resolved before extracting searchable content.
+    pub conditional_blocks: Option<JsConditionalBlockOptions>,
 }
 
 /// Builds a search index directly from Markdown files under a source directory.
@@ -154,6 +156,7 @@ pub fn build_search_index_from_directory(
     let build_options = options.map(|opts| ox_content_search::SearchIndexBuildOptions {
         publish_state: opts.publish_state.map(Into::into),
         mdx: opts.mdx,
+        conditional_blocks: opts.conditional_blocks.map(Into::into),
     });
     ox_content_search::build_search_index_from_directory_with_options(
         &src_dir,

@@ -1806,6 +1806,20 @@ export interface OxContentOptions {
   timelines?: boolean | TimelineOptions;
 
   /**
+   * Opt-in static `::: if` / `::: else` blocks.
+   *
+   * Conditions are evaluated from `conditionalBlocks.values` and page
+   * frontmatter before Markdown is parsed. Non-selected branches are excluded
+   * from rendered HTML, TOC, and generated search payloads. The expression
+   * language supports `==`, `!=`, `in`, `and`, `or`, parentheses, string /
+   * number / boolean / null literals, and array literals. No JavaScript is
+   * executed.
+   *
+   * @default false
+   */
+  conditionalBlocks?: boolean | ConditionalBlockOptions;
+
+  /**
    * Opt-in page-bundle resources and build-time image processing.
    *
    * Off by default. `true` or `{}` treats each page directory as a bundle:
@@ -2164,6 +2178,10 @@ export interface ResolvedOptions {
    * Present after `resolveOptions`. Omitted in hand-built fixtures means off.
    */
   timelines?: ResolvedTimelineOptions;
+  /**
+   * Present after `resolveOptions`. Omitted in hand-built fixtures means off.
+   */
+  conditionalBlocks?: ResolvedConditionalBlockOptions;
   codeImports: ResolvedCodeImportOptions;
   includes: ResolvedIncludeOptions;
   /**
@@ -2674,6 +2692,32 @@ export interface ResolvedTimelineOptions {
   invalidDate: "error" | "warn" | "ignore";
   unknownMeta: "error" | "warn" | "ignore";
   empty: "error" | "warn" | "ignore";
+}
+
+/**
+ * Options for opt-in static conditional blocks.
+ */
+export interface ConditionalBlockOptions {
+  /**
+   * Enable `::: if` / `::: else` blocks.
+   *
+   * @default true when the options object is supplied.
+   */
+  enabled?: boolean;
+
+  /**
+   * Build-time values available as `config.*` or bare identifiers. Page
+   * frontmatter wins for bare identifiers; use `config.name` to force config.
+   */
+  values?: Record<string, unknown>;
+}
+
+/**
+ * Resolved conditional-block transform options.
+ */
+export interface ResolvedConditionalBlockOptions {
+  enabled: boolean;
+  values: Record<string, unknown>;
 }
 
 /**

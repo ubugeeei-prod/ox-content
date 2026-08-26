@@ -1,5 +1,6 @@
 import * as path from "node:path";
 import { applyCollectionRoutes } from "./apply-permalinks";
+import { toJsConditionalBlockOptions } from "./conditional-block-options";
 import { toJsDataTableOptions } from "./data-table-options";
 import { toJsFileTreeOptions } from "./file-tree-options";
 import { toJsImageGalleryOptions } from "./image-gallery-options";
@@ -83,11 +84,17 @@ type NativeTransformOptions = {
     unknownMeta?: "error" | "warn" | "ignore";
     empty?: "error" | "warn" | "ignore";
   };
+  conditionalBlocks?: {
+    enabled?: boolean;
+    values?: Record<string, unknown>;
+  };
   cjkEmphasis?: boolean;
   codeImports?: { enabled?: boolean; rootDir?: string };
   includes?: { enabled?: boolean; rootDir?: string };
   partials?: { enabled?: boolean; rootDir?: string; root?: string; missing?: string };
+  cards?: { enabled?: boolean };
   steps?: { enabled?: boolean };
+  codeGroups?: { enabled?: boolean };
   fileTree?: {
     enabled?: boolean;
     defaultOpen?: boolean;
@@ -289,6 +296,7 @@ function createNativeTransformOptions(options: ResolvedOptions): NativeTransform
       : undefined,
     imageGalleries: toJsImageGalleryOptions(options.imageGalleries, options.images),
     timelines: toJsTimelineOptions(options.timelines),
+    conditionalBlocks: toJsConditionalBlockOptions(options.conditionalBlocks),
     cjkEmphasis: options.cjkEmphasis ?? false,
     codeImports: options.codeImports?.enabled
       ? {

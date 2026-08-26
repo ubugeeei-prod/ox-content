@@ -4,11 +4,11 @@ use ox_content_transform::{MathOptions, TransformOptions};
 
 use super::{
     JsAbbreviationsOptions, JsAttrsOptions, JsBadgeOptions, JsCardOptions, JsCodeGroupOptions,
-    JsCodeImportOptions, JsContainerOptions, JsDataTableOptions, JsDefinitionListOptions,
-    JsEditThisPageOptions, JsEmojiShortcodeOptions, JsFileTreeOptions, JsImageGalleryOptions,
-    JsImageOptions, JsIncludeOptions, JsKeyboardKeysOptions, JsMagicLinkOptions, JsMathOptions,
-    JsNotByAiOptions, JsPartialsOptions, JsSanitizeOptions, JsStepsOptions, JsTimelineOptions,
-    JsWikiLinkOptions,
+    JsCodeImportOptions, JsConditionalBlockOptions, JsContainerOptions, JsDataTableOptions,
+    JsDefinitionListOptions, JsEditThisPageOptions, JsEmojiShortcodeOptions, JsFileTreeOptions,
+    JsImageGalleryOptions, JsImageOptions, JsIncludeOptions, JsKeyboardKeysOptions,
+    JsMagicLinkOptions, JsMathOptions, JsNotByAiOptions, JsPartialsOptions, JsSanitizeOptions,
+    JsStepsOptions, JsTimelineOptions, JsWikiLinkOptions,
 };
 
 /// Transform options for JavaScript.
@@ -245,6 +245,11 @@ pub struct JsTransformOptions {
     /// Default: disabled.
     pub timelines: Option<JsTimelineOptions>,
 
+    /// Opt-in static `::: if` / `::: else` conditional blocks.
+    ///
+    /// Default: disabled.
+    pub conditional_blocks: Option<JsConditionalBlockOptions>,
+
     /// Opt-in `::: card` / `::: link-card` / `::: card-grid` blocks.
     ///
     /// Default: disabled.
@@ -311,6 +316,7 @@ impl From<JsTransformOptions> for TransformOptions {
             images: value.images.map(Into::into),
             image_galleries: value.image_galleries.map(Into::into),
             timelines: value.timelines.map(Into::into),
+            conditional_blocks: value.conditional_blocks.map(Into::into),
             cards: value.cards.map(Into::into),
             math: match value.math {
                 Some(Either::A(enabled)) => Some(MathOptions { enabled: Some(enabled) }),

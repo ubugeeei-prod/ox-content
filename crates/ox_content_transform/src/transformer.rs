@@ -66,7 +66,11 @@ impl MarkdownTransformer {
 
     pub fn transform(&self, source: &str) -> TransformResult {
         let prepared = self.prepare_source(source);
-        let preprocessed = features::preprocess_markdown(&prepared.content, &self.feature_options);
+        let preprocessed = features::preprocess_markdown_with_frontmatter(
+            &prepared.content,
+            &self.feature_options,
+            &prepared.frontmatter,
+        );
         let content = preprocessed.source.as_ref();
         // Preprocessors may return borrowed or owned content. Size the arena
         // from the exact slice that will be parsed, not the original source, so
@@ -117,7 +121,11 @@ impl MarkdownTransformer {
 
     pub fn transform_mdast_raw(&self, source: &str) -> ox_content_mdast::transfer::Result<Vec<u8>> {
         let prepared = self.prepare_source(source);
-        let preprocessed = features::preprocess_markdown(&prepared.content, &self.feature_options);
+        let preprocessed = features::preprocess_markdown_with_frontmatter(
+            &prepared.content,
+            &self.feature_options,
+            &prepared.frontmatter,
+        );
         let content = preprocessed.source.as_ref();
         let content_bytes = content.as_bytes().to_vec();
         let frontmatter_bytes = serde_json::to_vec(&prepared.frontmatter)
