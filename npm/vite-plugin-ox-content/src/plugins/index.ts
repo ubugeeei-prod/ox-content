@@ -48,6 +48,13 @@ import {
 } from "./ogp";
 import { transformMermaidStatic, mermaidClientScript, type MermaidOptions } from "./mermaid";
 import { normalizeBlockEmbedParagraphs } from "./block-structure";
+import {
+  documentLocalComponentNames,
+  filterReservedBuiltinComponentNames,
+  isReservedBuiltinComponent,
+  restoreReservedBuiltinIslands,
+  RESERVED_BUILTIN_COMPONENTS,
+} from "./embed-transform";
 
 export {
   transformTabs,
@@ -77,6 +84,11 @@ export {
   transformMermaidStatic,
   mermaidClientScript,
   normalizeBlockEmbedParagraphs,
+  restoreReservedBuiltinIslands,
+  isReservedBuiltinComponent,
+  documentLocalComponentNames,
+  filterReservedBuiltinComponentNames,
+  RESERVED_BUILTIN_COMPONENTS,
 };
 
 export type {
@@ -97,14 +109,15 @@ export type {
 };
 
 const SELF_CLOSING_EMBED_TAG =
-  /<(GitHub|OgCard|Tweet|XPost|Bluesky|Spotify|StackBlitz|WebContainer|YouTube)((?:[^>"']|"[^"]*"|'[^']*')*?)\s*\/>/gi;
+  /<(GitHub|OgCard|Tweet|XPost|Bluesky|Spotify|StackBlitz|WebContainer|YouTube)((?:[^>"']|"[^"]*"|'[^']*')*?)\s*\/>(?:\s*<\/\1\s*>)?/gi;
 
 /**
  * Custom embed tags are not HTML void elements, so a self-closing authoring
  * form like `<GitHub ... />` reaches the HTML re-parsers (syntax highlighting,
  * embed transforms) as an unclosed element that swallows the rest of the
  * document. Normalize to an explicit open/close pair before any rehype pass
- * runs.
+ * runs. A leftover `</Tweet>` after `/>` (CommonMark HTML + self-close) is
+ * consumed so the closer cannot survive the embed rewrite.
  */
 export function normalizeSelfClosingEmbeds(html: string): string {
   return html.replace(SELF_CLOSING_EMBED_TAG, (_match, tag: string, attrs: string) => {
@@ -226,9 +239,16 @@ export async function transformBuiltinEmbeds(
     twitter?: boolean | TwitterEmbedOptions;
     bluesky?: boolean;
     webContainer?: boolean;
+    /**
+     * Document-local import bindings. A reserved built-in name in this set
+     * stays an MDX island instead of running the first-party embed transform.
+     */
+    localNames?: Iterable<string>;
   },
 ): Promise<string> {
-  let result = await normalizeBlockEmbedParagraphs(normalizeSelfClosingEmbeds(html));
+  let result = await normalizeBlockEmbedParagraphs(
+    restoreReservedBuiltinIslands(normalizeSelfClosingEmbeds(html), options.localNames),
+  );
 
   if (options.github) {
     result = await transformGitHub(result, undefined, {
