@@ -1,5 +1,6 @@
 mod apple_music;
 mod html;
+mod native;
 mod render;
 #[cfg(test)]
 mod tests;
@@ -7,7 +8,8 @@ mod tests;
 use crate::{MediaEmbedsOptions, html_scan::find_ci};
 
 use apple_music::render_apple_music;
-use html::{ComponentElement, find_component};
+use html::{ComponentElement, find_component, find_pascal_component};
+use native::{render_audio, render_video};
 use render::{
     render_bluesky, render_spotify, render_stackblitz, render_tweet, render_webcontainer,
 };
@@ -26,6 +28,12 @@ pub fn transform_media_embeds(html: &str, options: Option<&MediaEmbedsOptions>) 
     }
     if options.apple_music.unwrap_or(false) && contains_ci(&current, "<applemusic") {
         current = transform_component(&current, "applemusic", render_apple_music);
+    }
+    if options.audio.unwrap_or(false) && current.contains("<Audio") {
+        current = transform_pascal_component(&current, "Audio", render_audio);
+    }
+    if options.video.unwrap_or(false) && current.contains("<Video") {
+        current = transform_pascal_component(&current, "Video", render_video);
     }
     if options.stack_blitz.unwrap_or(false) && contains_ci(&current, "<stackblitz") {
         current = transform_component(&current, "stackblitz", render_stackblitz);
@@ -48,6 +56,8 @@ pub fn transform_media_embeds(html: &str, options: Option<&MediaEmbedsOptions>) 
 fn has_enabled_embed(options: &MediaEmbedsOptions) -> bool {
     options.spotify.unwrap_or(false)
         || options.apple_music.unwrap_or(false)
+        || options.audio.unwrap_or(false)
+        || options.video.unwrap_or(false)
         || options.stack_blitz.unwrap_or(false)
         || options.twitter.unwrap_or(false)
         || options.bluesky.unwrap_or(false)
@@ -58,16 +68,33 @@ fn contains_ci(html: &str, needle: &str) -> bool {
     find_ci(html, 0, needle).is_some()
 }
 
+fn transform_pascal_component(
+    html: &str,
+    name: &str,
+    render: fn(&ComponentElement<'_>) -> Option<String>,
+) -> String {
+    rewrite_components(html, name, render, find_pascal_component)
+}
+
 fn transform_component(
     html: &str,
     name: &str,
     render: fn(&ComponentElement<'_>) -> Option<String>,
 ) -> String {
+    rewrite_components(html, name, render, find_component)
+}
+
+fn rewrite_components(
+    html: &str,
+    name: &str,
+    render: fn(&ComponentElement<'_>) -> Option<String>,
+    find: for<'a> fn(&'a str, usize, &str, &str) -> Option<ComponentElement<'a>>,
+) -> String {
     let mut out = String::with_capacity(html.len());
     let mut cursor = 0usize;
     let open = format!("<{name}");
 
-    while let Some(element) = find_component(html, cursor, &open, name) {
+    while let Some(element) = find(html, cursor, &open, name) {
         out.push_str(&html[cursor..element.span.0]);
         if let Some(rendered) = render(&element) {
             out.push_str(&rendered);

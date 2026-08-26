@@ -300,6 +300,8 @@ export default defineConfig(({ mode }) => {
           webContainer: true,
           spotify: true,
           appleMusic: true,
+          audio: true,
+          video: true,
         },
 
         // Mermaid diagrams (native mmdc via NAPI)

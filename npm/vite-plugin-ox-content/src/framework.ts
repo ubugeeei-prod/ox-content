@@ -125,6 +125,8 @@ export function createFrameworkMarkdownOptions(options: FrameworkMarkdownOptions
       pm: false,
       spotify: false,
       appleMusic: false,
+      audio: false,
+      video: false,
       stackBlitz: false,
       twitter: false,
       bluesky: false,

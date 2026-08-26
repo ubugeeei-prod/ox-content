@@ -109,7 +109,7 @@ export type {
 };
 
 const SELF_CLOSING_EMBED_TAG =
-  /<(GitHub|OgCard|Tweet|XPost|Bluesky|Spotify|AppleMusic|StackBlitz|WebContainer|YouTube|NotByAI)((?:[^>"']|"[^"]*"|'[^']*')*?)\s*\/>(?:\s*<\/\1\s*>)?/gi;
+  /<(GitHub|OgCard|Tweet|XPost|Bluesky|Spotify|AppleMusic|Audio|Video|StackBlitz|WebContainer|YouTube|NotByAI)((?:[^>"']|"[^"]*"|'[^']*')*?)\s*\/>(?:\s*<\/\1\s*>)?/gi;
 
 /**
  * Custom embed tags are not HTML void elements, so a self-closing authoring
@@ -145,6 +145,8 @@ export interface TransformAllOptions {
   githubToken?: string;
   spotify?: boolean;
   appleMusic?: boolean;
+  audio?: boolean;
+  video?: boolean;
   stackBlitz?: boolean;
   twitter?: boolean | TwitterEmbedOptions;
   bluesky?: boolean;
@@ -169,6 +171,8 @@ export async function transformAllPlugins(
     githubToken,
     spotify = false,
     appleMusic = false,
+    audio = false,
+    video = false,
     stackBlitz = false,
     twitter = false,
     bluesky = false,
@@ -212,7 +216,16 @@ export async function transformAllPlugins(
     );
   }
 
-  const mediaOptions = { spotify, appleMusic, stackBlitz, twitter, bluesky, webContainer };
+  const mediaOptions = {
+    spotify,
+    appleMusic,
+    audio,
+    video,
+    stackBlitz,
+    twitter,
+    bluesky,
+    webContainer,
+  };
   if (Object.values(mediaOptions).some(Boolean)) {
     result = await transformMediaEmbeds(result, mediaOptions);
   }
@@ -238,6 +251,8 @@ export async function transformBuiltinEmbeds(
     pm?: PmOptions | false;
     spotify?: boolean;
     appleMusic?: boolean;
+    audio?: boolean;
+    video?: boolean;
     stackBlitz?: boolean;
     twitter?: boolean | TwitterEmbedOptions;
     bluesky?: boolean;
@@ -271,6 +286,8 @@ export async function transformBuiltinEmbeds(
   const mediaOptions: MediaEmbedOptions = {
     spotify: options.spotify,
     appleMusic: options.appleMusic,
+    audio: options.audio,
+    video: options.video,
     stackBlitz: options.stackBlitz,
     twitter: options.twitter,
     bluesky: options.bluesky,

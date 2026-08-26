@@ -2171,6 +2171,18 @@ export interface BuiltinEmbedOptions {
   appleMusic?: boolean;
 
   /**
+   * Render `<Audio src="https://...">` native audio players.
+   * @default false
+   */
+  audio?: boolean;
+
+  /**
+   * Render `<Video src="https://...">` native video players.
+   * @default false
+   */
+  video?: boolean;
+
+  /**
    * Render `<StackBlitz url="https://stackblitz.com/edit/...">` iframes.
    * @default false
    */
@@ -2217,6 +2229,8 @@ export interface ResolvedBuiltinEmbedOptions {
   pm: BuiltinPmOptions | false;
   spotify: boolean;
   appleMusic: boolean;
+  audio?: boolean;
+  video?: boolean;
   stackBlitz: boolean;
   twitter: TwitterEmbedOptions | false;
   bluesky: boolean;

@@ -247,7 +247,7 @@ fn render_iframe(class_name: &str, src: &str, title: &str, width: &str, height: 
     html
 }
 
-fn escape_text(value: &str, out: &mut String) {
+pub(super) fn escape_text(value: &str, out: &mut String) {
     for ch in value.chars() {
         match ch {
             '&' => out.push_str("&amp;"),

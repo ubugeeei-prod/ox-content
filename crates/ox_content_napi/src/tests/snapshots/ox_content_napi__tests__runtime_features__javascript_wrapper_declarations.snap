@@ -1320,6 +1320,18 @@ export interface JsMediaEmbedsOptions {
    * Default: `false`.
    */
   webContainer?: boolean
+  /**
+   * Render `<Audio>` native players.
+   *
+   * Default: `false`.
+   */
+  audio?: boolean
+  /**
+   * Render `<Video>` native players.
+   *
+   * Default: `false`.
+   */
+  video?: boolean
 }
 
 /** Opt-in `<NotByAI />` authorship badge. */

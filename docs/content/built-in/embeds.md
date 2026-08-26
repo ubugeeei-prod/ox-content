@@ -18,6 +18,8 @@ markup; everything else is opt-in.
 | Bluesky              | `embeds.bluesky`      | `false` | `<Bluesky />`                      |
 | Spotify              | `embeds.spotify`      | `false` | `<Spotify url="https://..." />`    |
 | Apple Music          | `embeds.appleMusic`   | `false` | `<AppleMusic url="https://..." />` |
+| Audio                | `embeds.audio`        | `false` | `<Audio src="https://..." />`      |
+| Video                | `embeds.video`        | `false` | `<Video src="https://..." />`      |
 | StackBlitz           | `embeds.stackBlitz`   | `false` | `<StackBlitz url="https://..." />` |
 | WebContainer         | `embeds.webContainer` | `false` | `<WebContainer />`                 |
 
@@ -399,6 +401,42 @@ Sites that set a Content-Security-Policy need
 `frame-src https://embed.music.apple.com` (or the equivalent `child-src`)
 before the player can load. See [Apple Music Embed](../examples/apple-music-embed.md)
 for authoring details.
+
+## Audio and Video
+
+`embeds.audio` and `embeds.video` render native `<audio>` / `<video>` players.
+They stay off by default and never load a third-party iframe.
+
+```ts
+oxContent({ embeds: { audio: true, video: true } });
+```
+
+```mdx
+<Audio
+  src="https://cdn.example.com/intro.mp3"
+  title="Episode intro"
+  transcript="/intro.txt"
+  download="/intro.mp3"
+/>
+
+<Video
+  src="/talk.mp4"
+  poster="/talk.jpg"
+  captions="/talk.en.vtt"
+  srclang="en"
+  label="English"
+  width="1280"
+  height="720"
+  title="Release talk"
+/>
+```
+
+Sources must be HTTPS or same-origin relative paths. `javascript:`, `data:`,
+`http:`, and protocol-relative URLs stay as authored markup. Nested `<track>`
+elements supply extra captions or subtitles. Native controls are labeled with
+`title` (or `Audio` / `Video`). Width and height reserve the video aspect ratio
+so the layout does not shift. See
+[Audio and Video Embed](../examples/audio-video-embed.md).
 
 ## StackBlitz
 

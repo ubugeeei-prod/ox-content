@@ -16,6 +16,18 @@ export interface MediaEmbedOptions {
   appleMusic?: boolean;
 
   /**
+   * Render `<Audio>` native players.
+   * @default false
+   */
+  audio?: boolean;
+
+  /**
+   * Render `<Video>` native players.
+   * @default false
+   */
+  video?: boolean;
+
+  /**
    * Render `<StackBlitz>` embeds.
    * @default false
    */
@@ -59,6 +71,8 @@ export async function transformMediaEmbeds(
   return mod.transformMediaEmbeds(result, {
     spotify: options.spotify,
     appleMusic: options.appleMusic,
+    audio: options.audio,
+    video: options.video,
     stackBlitz: options.stackBlitz,
     twitter: Boolean(options.twitter),
     bluesky: options.bluesky,
@@ -70,6 +84,8 @@ function hasEnabledMediaEmbed(options: MediaEmbedOptions): boolean {
   return Boolean(
     options.spotify ||
     options.appleMusic ||
+    options.audio ||
+    options.video ||
     options.stackBlitz ||
     options.twitter ||
     options.bluesky ||
@@ -78,5 +94,8 @@ function hasEnabledMediaEmbed(options: MediaEmbedOptions): boolean {
 }
 
 function hasMediaMarker(html: string): boolean {
-  return /<(spotify|applemusic|stackblitz|tweet|xpost|bluesky|webcontainer)[\s/>]/i.test(html);
+  return (
+    /<(spotify|applemusic|stackblitz|tweet|xpost|bluesky|webcontainer)[\s/>]/i.test(html) ||
+    /<(Audio|Video)[\s/>]/.test(html)
+  );
 }

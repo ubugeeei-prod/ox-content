@@ -3,13 +3,15 @@ use std::collections::HashMap;
 use napi_derive::napi;
 use ox_content_transform::{
     AttrsOptions, CodeBlockLintOptions, CodeImportOptions, ContainerOptions, ContainerTypeOptions,
-    DocsTestOptions, EditThisPageOptions, EmojiShortcodeOptions, IncludeOptions,
-    MediaEmbedsOptions, SanitizeOptions, WikiLinkOptions,
+    DocsTestOptions, EditThisPageOptions, EmojiShortcodeOptions, IncludeOptions, SanitizeOptions,
+    WikiLinkOptions,
 };
 
 mod image_options;
+mod media_embeds_options;
 mod not_by_ai_options;
 pub use image_options::JsImageOptions;
+pub use media_embeds_options::JsMediaEmbedsOptions;
 pub use not_by_ai_options::JsNotByAiOptions;
 
 /// Wiki-link transform options.
@@ -296,54 +298,6 @@ impl From<JsDocsTestOptions> for DocsTestOptions {
             enabled: value.enabled,
             languages: value.languages,
             require_meta: value.require_meta,
-        }
-    }
-}
-
-/// Built-in media embed transform switches.
-#[napi(object)]
-#[derive(Default, Clone)]
-pub struct JsMediaEmbedsOptions {
-    /// Render `<Spotify>` embeds.
-    ///
-    /// Default: `false`.
-    pub spotify: Option<bool>,
-
-    /// Render `<AppleMusic>` embeds.
-    ///
-    /// Default: `false`.
-    pub apple_music: Option<bool>,
-
-    /// Render `<StackBlitz>` embeds.
-    ///
-    /// Default: `false`.
-    pub stack_blitz: Option<bool>,
-
-    /// Render `<Tweet>` / `<XPost>` static cards.
-    ///
-    /// Default: `false`.
-    pub twitter: Option<bool>,
-
-    /// Render `<Bluesky>` static cards.
-    ///
-    /// Default: `false`.
-    pub bluesky: Option<bool>,
-
-    /// Render `<WebContainer>` lazy placeholder blocks.
-    ///
-    /// Default: `false`.
-    pub web_container: Option<bool>,
-}
-
-impl From<JsMediaEmbedsOptions> for MediaEmbedsOptions {
-    fn from(value: JsMediaEmbedsOptions) -> Self {
-        Self {
-            spotify: value.spotify,
-            apple_music: value.apple_music,
-            stack_blitz: value.stack_blitz,
-            twitter: value.twitter,
-            bluesky: value.bluesky,
-            web_container: value.web_container,
         }
     }
 }

@@ -12,10 +12,29 @@ pub(super) fn find_component<'a>(
     open: &str,
     name: &str,
 ) -> Option<ComponentElement<'a>> {
+    find_tagged(html, from, open, name, true)
+}
+
+pub(super) fn find_pascal_component<'a>(
+    html: &'a str,
+    from: usize,
+    open: &str,
+    name: &str,
+) -> Option<ComponentElement<'a>> {
+    find_tagged(html, from, open, name, false)
+}
+
+fn find_tagged<'a>(
+    html: &'a str,
+    from: usize,
+    open: &str,
+    name: &str,
+    ignore_case: bool,
+) -> Option<ComponentElement<'a>> {
     let bytes = html.as_bytes();
     let mut search = from;
     loop {
-        let tag_start = find_ci(html, search, open)?;
+        let tag_start = find_open(html, search, open, ignore_case)?;
         let after_name = tag_start + open.len();
         let boundary = bytes.get(after_name).copied();
         if !matches!(boundary, Some(b) if b == b'>' || b == b'/' || b.is_ascii_whitespace()) {
@@ -39,6 +58,14 @@ pub(super) fn find_component<'a>(
             attrs,
             body: &html[start_tag.end..body_end],
         });
+    }
+}
+
+fn find_open(html: &str, from: usize, open: &str, ignore_case: bool) -> Option<usize> {
+    if ignore_case {
+        find_ci(html, from, open)
+    } else {
+        html.get(from..)?.find(open).map(|rel| from + rel)
     }
 }
 
@@ -83,7 +110,7 @@ fn scan_start_tag(html: &str, start: usize) -> Option<StartTag> {
     None
 }
 
-fn parse_attrs(inner: &str) -> Vec<(&str, &str)> {
+pub(super) fn parse_attrs(inner: &str) -> Vec<(&str, &str)> {
     let bytes = inner.as_bytes();
     let mut attrs = Vec::new();
     let mut cursor = 0usize;

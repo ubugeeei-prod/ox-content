@@ -80,6 +80,20 @@ fn full_tweet_pages_ship_gated_full_card_css() {
 }
 
 #[test]
+fn native_media_pages_ship_social_css() {
+    for class_name in ["ox-audio", "ox-video"] {
+        let html = generate_html(
+            &page(&format!(r#"<figure class="{class_name}"></figure>"#)),
+            &[],
+            &config(),
+        );
+        assert!(html.contains("ox-content:css:plugin-social:start"), "{class_name}");
+        assert!(html.contains(&format!(".{class_name}")), "{class_name}");
+        assert!(!html.contains("ox-content:css:plugin-social-tweet-full:start"), "{class_name}");
+    }
+}
+
+#[test]
 fn full_tweet_css_keeps_rich_copy_and_replies_affordances() {
     assert!(SOCIAL_TWEET_FULL_CSS.contains("--ox-tweet-icon-copy"));
     assert!(SOCIAL_TWEET_FULL_CSS.contains(".ox-tweet__icon--copy"));

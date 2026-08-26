@@ -16,6 +16,8 @@ description: Markdown 中の HTML 風タグで書く GitHub / OG カード、パ
 | Bluesky                  | `embeds.bluesky`      | `false` | `<Bluesky />`                      |
 | Spotify                  | `embeds.spotify`      | `false` | `<Spotify url="https://..." />`    |
 | Apple Music              | `embeds.appleMusic`   | `false` | `<AppleMusic url="https://..." />` |
+| Audio                    | `embeds.audio`        | `false` | `<Audio src="https://..." />`      |
+| Video                    | `embeds.video`        | `false` | `<Video src="https://..." />`      |
 | StackBlitz               | `embeds.stackBlitz`   | `false` | `<StackBlitz url="https://..." />` |
 | WebContainer             | `embeds.webContainer` | `false` | `<WebContainer />`                 |
 
@@ -303,6 +305,36 @@ oxContent({
 `music.apple.com` の共有 URL は `embed.music.apple.com` に書き換えられ、ストアフロントとパス、曲選択の `i=` クエリは残します。すでに埋め込み用の `embed.music.apple.com` URL も、同じホスト／パス検査のあと受け付けます。HTTPS でない URL、似せたホスト、認証情報、フラグメント、不正なパスは iframe にせず、書いたまま残します。
 
 プレーヤーは第三者 iframe なので、オプションは既定でオフです。Content-Security-Policy を設定しているサイトでは、プレーヤーを読み込むために `frame-src https://embed.music.apple.com`（または同等の `child-src`）が必要です。書き方の詳細は [Apple Music Embed](/examples/apple-music-embed.md) を見てください。
+
+## Audio / Video
+
+`embeds.audio` と `embeds.video` はネイティブの `<audio>` / `<video>` プレーヤーを描画します。既定はオフで、第三者 iframe は使いません。
+
+```ts
+oxContent({ embeds: { audio: true, video: true } });
+```
+
+```mdx
+<Audio
+  src="https://cdn.example.com/intro.mp3"
+  title="Episode intro"
+  transcript="/intro.txt"
+  download="/intro.mp3"
+/>
+
+<Video
+  src="/talk.mp4"
+  poster="/talk.jpg"
+  captions="/talk.en.vtt"
+  srclang="en"
+  label="English"
+  width="1280"
+  height="720"
+  title="Release talk"
+/>
+```
+
+ソースは HTTPS か同一オリジンの相対パスだけです。`javascript:`、`data:`、`http:`、プロトコル相対 URL は書いたまま残します。入れ子の `<track>` で追加のキャプション／字幕を渡せます。ネイティブ controls は `title`（なければ `Audio` / `Video`）でラベルされます。`width` / `height` で動画のアスペクト比を確保し、レイアウトシフトを避けます。詳細は [Audio and Video Embed](/examples/audio-video-embed.md) を見てください。
 
 ## StackBlitz
 

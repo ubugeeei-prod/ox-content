@@ -332,6 +332,8 @@ async function renderPage(
     pm: options.embeds.pm,
     spotify: options.embeds.spotify,
     appleMusic: options.embeds.appleMusic,
+    audio: options.embeds.audio,
+    video: options.embeds.video,
     stackBlitz: options.embeds.stackBlitz,
     twitter: options.embeds.twitter,
     bluesky: options.embeds.bluesky,

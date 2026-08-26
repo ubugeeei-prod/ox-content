@@ -435,6 +435,31 @@ literally even if it contains annotation-looking text:</p>
 <span class="line"><span style="color:var(--octc-syntax-token-punctuation, #c9d1d9)">\`\`\`</span></span>
 <span class="line"></span></code></pre>
 ",
+  "nativeAv": "<h1 id="audio-and-video-embed">Audio and Video Embed</h1>
+<p>Native audio and video embeds are opt-in and render to <code>&#x3C;audio></code> / <code>&#x3C;video></code>,
+not third-party iframes.</p>
+<pre><code class="language-ts">import { oxContent } from "@ox-content/vite-plugin";
+
+export default {
+  plugins: [
+    oxContent({
+      embeds: {
+        audio: true,
+        video: true,
+      },
+    }),
+  ],
+};
+</code></pre>
+<pre><code class="language-html">&#x3C;audio src="https://cdn.example.com/intro.mp3" title="Intro" transcript="/intro.txt">&#x3C;/audio>
+&#x3C;video src="/talk.mp4" poster="/talk.jpg" captions="/talk.en.vtt" width="1280" height="720">&#x3C;/video>
+</code></pre>
+<p><code>src</code> (or <code>url</code> / <code>href</code>) must be HTTPS or a same-origin relative path.
+<code>javascript:</code>, <code>data:</code>, <code>http:</code>, and <code>//host/...</code> sources are rejected and left
+as authored markup. Video accepts <code>poster</code>, <code>captions</code> / nested <code>&#x3C;track></code>,
+<code>title</code>, <code>transcript</code>, <code>download</code>, and <code>width</code> / <code>height</code> for aspect-ratio
+reservation. Native controls stay labeled.</p>
+",
   "stackBlitz": "<h1 id="stackblitz-embed">StackBlitz Embed</h1>
 <p>StackBlitz embeds are opt-in through the built-in embed options.</p>
 <pre><code class="language-ts">import { oxContent } from "@ox-content/vite-plugin";
