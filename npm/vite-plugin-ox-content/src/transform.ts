@@ -305,6 +305,10 @@ interface JsTransformOptions {
     style?: string;
   };
 
+  definitionLists?: {
+    enabled?: boolean;
+  };
+
   magicLinks?: {
     enabled?: boolean;
     aliases?: Record<string, { href: string; label?: string; image?: string }>;
@@ -637,6 +641,7 @@ export async function transformMarkdown(
           style: options.keyboardKeys.style,
         }
       : undefined,
+    definitionLists: options.definitionLists?.enabled ? { enabled: true } : undefined,
     magicLinks: options.magicLinks?.enabled
       ? {
           enabled: true,

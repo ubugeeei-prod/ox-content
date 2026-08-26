@@ -504,6 +504,16 @@ export interface JsDataTableOptions {
   missing?: string
 }
 
+/** Opt-in PHP Markdown Extra / mdBook-style definition lists. */
+export interface JsDefinitionListOptions {
+  /**
+   * Enable `Term` / `: definition` expansion.
+   *
+   * Default: `false`.
+   */
+  enabled?: boolean
+}
+
 /** Normalized documentation entry used by generated API docs. */
 export interface JsDocEntry {
   name: string
@@ -2330,6 +2340,12 @@ export interface JsTransformOptions {
    * Default: disabled.
    */
   keyboardKeys?: JsKeyboardKeysOptions
+  /**
+   * Opt-in PHP Markdown Extra / mdBook-style definition lists.
+   *
+   * Default: disabled.
+   */
+  definitionLists?: JsDefinitionListOptions
   /**
    * Opt-in `{link:...}` rich magic links.
    *
