@@ -45,8 +45,8 @@
   outline: none;
 }
 .content .ox-file-tree summary:focus-visible {
-  outline: 2px solid var(--octc-color-primary);
-  outline-offset: 2px;
+  outline: var(--octc-focus-ring);
+  outline-offset: var(--octc-focus-offset);
   border-radius: 2px;
 }
 .content .ox-file-tree__twisty {

@@ -27,6 +27,7 @@ mod navigation_state;
 mod rendering;
 mod social;
 mod theme;
+mod theme_quality;
 
 #[test]
 fn search_keydown_ignores_ime_composition() {

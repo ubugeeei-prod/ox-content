@@ -75,7 +75,7 @@
 
 /* Focus styles for accessibility */
 .ox-tabs input[type="radio"]:focus-visible + label {
-  outline: 2px solid var(--octc-color-primary);
+  outline: var(--octc-focus-ring);
   outline-offset: -2px;
 }
 

@@ -6,8 +6,8 @@
   vertical-align: middle;
 }
 .ox-not-by-ai:focus-visible {
-  outline: 2px solid var(--octc-color-primary, currentColor);
-  outline-offset: 2px;
+  outline: var(--octc-focus-ring, 2px solid currentColor);
+  outline-offset: var(--octc-focus-offset, 2px);
 }
 .ox-not-by-ai__badge {
   display: block;

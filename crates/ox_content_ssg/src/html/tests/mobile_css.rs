@@ -77,8 +77,10 @@ fn menu_stays_reachable_and_touch_safe() {
         "the menu overlay must cover the reading pane instead of staying transparent"
     );
     assert!(
-        SSG_CSS.contains(".sidebar .nav-link {\n    min-height: 44px;")
-            && SSG_CSS.contains(".sidebar .nav-title--summary {\n    min-height: 44px;"),
+        SSG_CSS.contains(".sidebar .nav-link {\n    min-height: var(--octc-touch-target);")
+            && SSG_CSS.contains(
+                ".sidebar .nav-title--summary {\n    min-height: var(--octc-touch-target);"
+            ),
         "every mobile navigation control needs a reliable touch target"
     );
     assert!(

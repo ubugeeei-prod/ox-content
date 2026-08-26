@@ -70,7 +70,7 @@
   min-height: 2.25rem;
   padding: 0.35rem 1.25rem;
   background: var(--octc-color-primary);
-  color: #fff;
+  color: var(--octc-color-on-primary);
   font-size: 0.875rem;
 }
 .ox-announce[hidden] {
@@ -85,7 +85,7 @@
 }
 .ox-announce-dismiss {
   background: transparent;
-  border: 1px solid color-mix(in srgb, #fff 55%, transparent);
+  border: 1px solid color-mix(in srgb, var(--octc-color-on-primary) 55%, transparent);
   border-radius: 4px;
   color: inherit;
   cursor: pointer;
