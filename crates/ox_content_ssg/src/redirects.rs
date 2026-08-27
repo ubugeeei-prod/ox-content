@@ -14,7 +14,7 @@ pub struct RedirectPage {
 }
 
 /// Switches and the config rewrite map.
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone)]
 pub struct RedirectsOptions {
     /// When false, no files or host rules are generated.
     pub enabled: bool,
@@ -28,6 +28,32 @@ pub struct RedirectsOptions {
     pub json: bool,
     /// When true, `http://` and `https://` destinations are allowed.
     pub allow_external: bool,
+    /// When false, no static HTML redirects are produced — the host files
+    /// still are, so a deploy target that handles redirects itself does not
+    /// also get a tree of meta-refresh pages.
+    pub html: bool,
+    /// Site base path. Prefixed onto same-origin destinations in the generated
+    /// HTML, so a site served under a subdirectory links within it. The `to`
+    /// recorded on the entry stays unprefixed, which is what the host files
+    /// want.
+    pub base: Option<String>,
+}
+
+impl Default for RedirectsOptions {
+    fn default() -> Self {
+        Self {
+            enabled: false,
+            map: Vec::new(),
+            netlify: false,
+            headers: false,
+            json: false,
+            allow_external: false,
+            // Matches the plugin, which resolves `html` to true whenever
+            // redirects are enabled at all.
+            html: true,
+            base: None,
+        }
+    }
 }
 
 /// One static HTML redirect to write at `from`.
@@ -39,6 +65,8 @@ pub struct RedirectEntry {
     pub to: String,
     /// Escaped static HTML body.
     pub html: String,
+    /// Path of the file to write, relative to the output directory.
+    pub relative_path: String,
 }
 
 /// Generated redirect pages and optional machine-readable host files.
@@ -70,17 +98,17 @@ pub fn generate_redirects(options: &RedirectsOptions, pages: &[RedirectPage]) ->
             continue;
         };
         for alias in &page.aliases {
-            upsert(&mut entries, &mut index, &occupied, alias, &to);
+            upsert(&mut entries, &mut index, &occupied, alias, &to, options.base.as_deref());
         }
         if let Some(redirect) = page.redirect.as_deref() {
-            upsert(&mut entries, &mut index, &occupied, redirect, &to);
+            upsert(&mut entries, &mut index, &occupied, redirect, &to, options.base.as_deref());
         }
     }
     for (from, to) in &options.map {
         let Some(to) = normalize_dest(to, options.allow_external) else {
             continue;
         };
-        upsert(&mut entries, &mut index, &occupied, from, &to);
+        upsert(&mut entries, &mut index, &occupied, from, &to, options.base.as_deref());
     }
 
     if entries.is_empty() {
@@ -90,7 +118,11 @@ pub fn generate_redirects(options: &RedirectsOptions, pages: &[RedirectPage]) ->
     let netlify = options.netlify.then(|| netlify_body(&entries));
     let headers = options.headers.then(|| headers_body(&entries));
     let json = options.json.then(|| json_body(&entries));
-    let pages = entries.into_iter().filter(|entry| !is_host_wildcard_source(&entry.from)).collect();
+    let pages = if options.html {
+        entries.into_iter().filter(|entry| !is_host_wildcard_source(&entry.from)).collect()
+    } else {
+        Vec::new()
+    };
     RedirectsOutput { pages, netlify, headers, json }
 }
 
@@ -172,6 +204,7 @@ fn upsert(
     occupied: &FxHashSet<String>,
     from: &str,
     to: &str,
+    base: Option<&str>,
 ) {
     let Some(from) = normalize_path(from) else {
         return;
@@ -179,13 +212,33 @@ fn upsert(
     if from == to || occupied.contains(&from) {
         return;
     }
+    // The link in the page is base-prefixed; `to` is not, because the host
+    // files describe origin-relative routes.
+    let html = generate_redirect_html(&apply_base(to, base));
+    let relative_path = relative_path_for(&from);
     if let Some(slot) = index.get(&from).copied() {
         entries[slot].to = to.to_string();
-        entries[slot].html = generate_redirect_html(to);
+        entries[slot].html = html;
+        entries[slot].relative_path = relative_path;
         return;
     }
     index.insert(from.clone(), entries.len());
-    entries.push(RedirectEntry { from, to: to.to_string(), html: generate_redirect_html(to) });
+    entries.push(RedirectEntry { from, to: to.to_string(), html, relative_path });
+}
+
+fn apply_base(dest: &str, base: Option<&str>) -> String {
+    let Some(base) = base.filter(|value| !value.is_empty() && *value != "/") else {
+        return dest.to_string();
+    };
+    if is_http_url(dest) {
+        return dest.to_string();
+    }
+    let prefix = base.trim_end_matches('/');
+    if dest == "/" { format!("{prefix}/") } else { format!("{prefix}{dest}") }
+}
+
+fn relative_path_for(from: &str) -> String {
+    if from == "/" { "index.html".to_string() } else { format!("{}/index.html", &from[1..]) }
 }
 
 fn netlify_body(entries: &[RedirectEntry]) -> String {

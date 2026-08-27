@@ -244,3 +244,49 @@ fn wildcard_only_map_emits_host_files_without_html_pages() {
     assert!(output.pages.is_empty(), "{output:?}");
     assert_eq!(output.netlify.as_deref(), Some("/talks* /works/talks 301\n"));
 }
+
+#[test]
+fn relative_path_puts_each_redirect_at_its_own_index_html() {
+    let options = enabled(&[("/old", "/guide"), ("/", "/guide")]);
+    let output = generate_redirects(&options, &[]);
+
+    let paths: Vec<&str> = output.pages.iter().map(|page| page.relative_path.as_str()).collect();
+    assert_eq!(paths, vec!["old/index.html", "index.html"], "{output:?}");
+}
+
+#[test]
+fn base_prefixes_the_link_in_the_page_but_not_the_recorded_dest() {
+    let mut options = enabled(&[("/old", "/guide")]);
+    options.base = Some("/docs/".to_string());
+    options.netlify = true;
+    let output = generate_redirects(&options, &[]);
+
+    let page = &output.pages[0];
+    // The reader is sent inside the subdirectory...
+    assert!(page.html.contains("/docs/guide"), "{}", page.html);
+    // ...while the host file still describes the origin-relative route.
+    assert_eq!(page.to, "/guide");
+    assert_eq!(output.netlify.as_deref(), Some("/old /guide 301\n"));
+}
+
+#[test]
+fn base_leaves_an_external_destination_alone() {
+    let mut options = enabled(&[("/old", "https://example.com/x")]);
+    options.base = Some("/docs/".to_string());
+    options.allow_external = true;
+    let output = generate_redirects(&options, &[]);
+
+    assert!(output.pages[0].html.contains("https://example.com/x"), "{output:?}");
+    assert!(!output.pages[0].html.contains("/docs/https"), "{output:?}");
+}
+
+#[test]
+fn html_false_keeps_the_host_files_and_drops_the_pages() {
+    let mut options = enabled(&[("/old", "/guide")]);
+    options.html = false;
+    options.netlify = true;
+    let output = generate_redirects(&options, &[]);
+
+    assert!(output.pages.is_empty(), "{output:?}");
+    assert_eq!(output.netlify.as_deref(), Some("/old /guide 301\n"));
+}
