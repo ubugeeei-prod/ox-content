@@ -532,20 +532,29 @@ default. Authors can pass stable metadata with attributes such as `title`,
 </Mastodon>
 ```
 
-| Option     | Default   | Purpose                                          |
-| ---------- | --------- | ------------------------------------------------ |
-| `fetch`    | `true`    | Fetch article/package/playground/video metadata. |
-| `timeout`  | `10000`   | Metadata request timeout in milliseconds.        |
-| `cache`    | `true`    | Cache fetched metadata in memory for this build. |
-| `cacheTTL` | `3600000` | Freshness window in milliseconds.                |
-| `iframe`   | `false`   | Add lazy playground/video iframe URLs.           |
-| `parent`   | `[]`      | Twitch iframe parent domain or domains.          |
+| Option         | Default                       | Purpose                                          |
+| -------------- | ----------------------------- | ------------------------------------------------ |
+| `fetch`        | `true`                        | Fetch article/package/playground/video metadata. |
+| `timeout`      | `10000`                       | Metadata request timeout in milliseconds.        |
+| `cache`        | `true`                        | Cache fetched metadata in memory for this build. |
+| `cacheTTL`     | `3600000`                     | Freshness window in milliseconds.                |
+| `persistCache` | `false`                       | Keep metadata across builds, on disk.            |
+| `cacheDir`     | `.cache/ox-content/providers` | Persistent cache directory.                      |
+| `iframe`       | `false`                       | Add lazy playground/video iframe URLs.           |
+| `parent`       | `[]`                          | Twitch iframe parent domain or domains.          |
 
 CodeSandbox accepts all four ways a sandbox is named — `/s/{id}`,
 `/p/sandbox/{id}`, `/p/devbox/{id}`, and `/embed/{id}`. Unlike the other
 playgrounds it fetches nothing: the card is built from the URL and whatever
 attributes you pass, so a deleted sandbox still renders a card pointing at it
 rather than failing the build.
+
+`cache` alone lives for one build. `persistCache: true` writes metadata to disk
+as well, so a clean build or a fresh CI worker reuses what the last one fetched
+instead of asking every provider again. Lookups that found nothing are
+remembered too — a provider that is down is not retried once per embed on every
+build. Corrupt entries are discarded and re-fetched rather than failing a build,
+and the directory is keyed by hash, so a provider URL cannot reach outside it.
 
 `<Fediverse>`, `<Mastodon>`, `<Misskey>`, and `<Mixi2>` share the
 `embeds.fediverse` option. Google Maps accepts an optional safe Google Maps

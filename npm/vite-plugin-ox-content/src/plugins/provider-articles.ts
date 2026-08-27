@@ -1,4 +1,24 @@
+import {
+  readProviderCache,
+  resolveProviderCacheDir,
+  writeProviderCache,
+} from "./provider-disk-cache";
 import { decodeProviderArticleAttr, escapeProviderArticleAttr } from "./provider-article-attrs";
+import {
+  appendAttr,
+  compactMeta,
+  count,
+  dateLabel,
+  excerpt,
+  namesList,
+  readAttr,
+  record,
+  safeHttps,
+  safeId,
+  safeSegments,
+  safeSlug,
+  trimmed,
+} from "./provider-article-values";
 
 const ARTICLE_TAG = /<(qiita|zenn)\b((?:[^>"']|"[^"]*"|'[^']*')*)>([\s\S]*?)<\/\1\s*>/gi;
 const DEFAULT_TIMEOUT = 10_000;
@@ -13,6 +33,10 @@ export interface ProviderArticleEmbedOptions {
   cache?: boolean;
   /** Cache TTL in milliseconds. @default 3600000 */
   cacheTTL?: number;
+  /** Persist metadata across builds. Off by default. */
+  persistCache?: boolean;
+  /** Directory for the persistent cache. */
+  cacheDir?: string;
 }
 
 export interface ResolvedProviderArticleEmbedOptions {
@@ -20,6 +44,8 @@ export interface ResolvedProviderArticleEmbedOptions {
   timeout: number;
   cache: boolean;
   cacheTTL: number;
+  persistCache: boolean;
+  cacheDir?: string;
 }
 
 interface ArticleReference {
@@ -27,7 +53,7 @@ interface ArticleReference {
   apiUrl: string;
 }
 
-interface ArticleMeta {
+export interface ArticleMeta {
   title?: string;
   author?: string;
   avatar?: string;
@@ -67,6 +93,8 @@ export function resolveProviderArticleEmbedOptions(
     timeout: options.timeout ?? DEFAULT_TIMEOUT,
     cache: options.cache ?? true,
     cacheTTL: options.cacheTTL ?? DEFAULT_CACHE_TTL,
+    persistCache: options.persistCache ?? false,
+    cacheDir: options.cacheDir,
   };
 }
 
@@ -156,6 +184,17 @@ async function fetchArticleMeta(
     if (cached && now - cached.timestamp < options.cacheTTL) return cached.data;
   }
 
+  // A warm disk cache is what makes a clean build cheap; the memory map only
+  // helps within one run.
+  const cacheDir = resolveProviderCacheDir(options);
+  const stored = options.cache
+    ? await readProviderCache<ArticleMeta>(cacheDir, key, options.cacheTTL, now)
+    : undefined;
+  if (stored !== undefined) {
+    memoryCache.set(key, { data: stored, timestamp: now });
+    return stored;
+  }
+
   const pending = inflight.get(key);
   if (pending) return pending;
 
@@ -166,6 +205,7 @@ async function fetchArticleMeta(
 
   const data = await request;
   if (options.cache) memoryCache.set(key, { data, timestamp: now });
+  await writeProviderCache(cacheDir, key, data, now);
   return data;
 }
 
@@ -263,83 +303,4 @@ function zennMeta(value: unknown): ArticleMeta | null {
     image: safeHttps(trimmed(item.og_image_url) ?? trimmed(item.cover_image_small_url)),
     body: excerpt(trimmed(item.summary)),
   });
-}
-
-function appendAttr(attrs: string, name: string, value: string | undefined): string {
-  if (!value || readAttr(attrs, name)) return attrs;
-  return `${attrs} ${name}="${escapeProviderArticleAttr(value)}"`;
-}
-
-function readAttr(attrs: string, name: string): string | undefined {
-  const match = attrs.match(new RegExp(`\\b${name}\\s*=\\s*("([^"]*)"|'([^']*)')`, "i"));
-  const value = match?.[2] ?? match?.[3];
-  return value ? decodeProviderArticleAttr(value) : undefined;
-}
-
-function namesList(value: unknown): string | undefined {
-  if (!Array.isArray(value)) return undefined;
-  const names = value.map((item) => trimmed(record(item)?.name)).filter(Boolean);
-  return names.length ? names.join(", ") : undefined;
-}
-
-function count(value: unknown): string | undefined {
-  return typeof value === "number" && Number.isFinite(value) && value >= 0
-    ? String(Math.floor(value))
-    : undefined;
-}
-
-function dateLabel(value: string | undefined): string | undefined {
-  return value && /^\d{4}-\d{2}-\d{2}/.test(value) ? value.slice(0, 10) : undefined;
-}
-
-function excerpt(value: string | undefined): string | undefined {
-  const normalized = value
-    ?.replace(/```[\s\S]*?```/g, " ")
-    .replace(/`([^`]*)`/g, "$1")
-    .replace(/!\[[^\]]*\]\([^)]*\)/g, " ")
-    .replace(/\[([^\]]+)\]\([^)]*\)/g, "$1")
-    .replace(/^#+\s*/gm, "")
-    .replace(/\s+/g, " ")
-    .trim();
-  if (!normalized) return undefined;
-  return normalized.length <= 280 ? normalized : `${normalized.slice(0, 279).trimEnd()}...`;
-}
-
-function compactMeta(meta: ArticleMeta): ArticleMeta {
-  return Object.fromEntries(Object.entries(meta).filter(([, value]) => value)) as ArticleMeta;
-}
-
-function safeHttps(value: string | undefined): string | undefined {
-  try {
-    const url = value ? new URL(value) : null;
-    return url?.protocol === "https:" && !url.username && !url.password ? value : undefined;
-  } catch {
-    return undefined;
-  }
-}
-
-function safeSegments(url: URL): string[] | null {
-  try {
-    return url.pathname.split("/").filter(Boolean).map(decodeURIComponent);
-  } catch {
-    return null;
-  }
-}
-
-function safeSlug(value: string | undefined): boolean {
-  return Boolean(value && /^[A-Za-z0-9][A-Za-z0-9_-]{1,127}$/.test(value));
-}
-
-function safeId(value: string | undefined): boolean {
-  return Boolean(value && /^[A-Za-z0-9][A-Za-z0-9_-]{5,127}$/.test(value));
-}
-
-function trimmed(value: unknown): string | undefined {
-  return typeof value === "string" && value.trim() ? value.trim() : undefined;
-}
-
-function record(value: unknown): Record<string, unknown> | undefined {
-  return value && typeof value === "object" && !Array.isArray(value)
-    ? (value as Record<string, unknown>)
-    : undefined;
 }

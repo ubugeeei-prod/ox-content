@@ -1,3 +1,8 @@
+import {
+  readProviderCache,
+  resolveProviderCacheDir,
+  writeProviderCache,
+} from "./provider-disk-cache";
 import { decodeProviderArticleAttr, escapeProviderArticleAttr } from "./provider-article-attrs";
 
 const PLAYGROUND_TAG =
@@ -16,6 +21,10 @@ export interface ProviderPlaygroundEmbedOptions {
   cache?: boolean;
   /** Cache TTL in milliseconds. @default 3600000 */
   cacheTTL?: number;
+  /** Persist metadata across builds. Off by default. */
+  persistCache?: boolean;
+  /** Directory for the persistent cache. */
+  cacheDir?: string;
 }
 
 export interface ResolvedProviderPlaygroundEmbedOptions {
@@ -24,6 +33,8 @@ export interface ResolvedProviderPlaygroundEmbedOptions {
   timeout: number;
   cache: boolean;
   cacheTTL: number;
+  persistCache: boolean;
+  cacheDir?: string;
 }
 
 export interface PlaygroundReference {
@@ -65,6 +76,8 @@ export function resolveProviderPlaygroundEmbedOptions(
     timeout: options.timeout ?? DEFAULT_TIMEOUT,
     cache: options.cache ?? true,
     cacheTTL: options.cacheTTL ?? DEFAULT_CACHE_TTL,
+    persistCache: options.persistCache ?? false,
+    cacheDir: options.cacheDir,
   };
 }
 
@@ -160,6 +173,17 @@ async function fetchPlaygroundMeta(
     const cached = memoryCache.get(reference.apiUrl);
     if (cached && now - cached.timestamp < options.cacheTTL) return cached.data;
   }
+
+  // A warm disk cache is what makes a clean build cheap; the memory map only
+  // helps within one run.
+  const cacheDir = resolveProviderCacheDir(options);
+  const stored = options.cache
+    ? await readProviderCache<PlaygroundMeta>(cacheDir, reference.apiUrl, options.cacheTTL, now)
+    : undefined;
+  if (stored !== undefined) {
+    memoryCache.set(reference.apiUrl, { data: stored, timestamp: now });
+    return stored;
+  }
   const pending = inflight.get(reference.apiUrl);
   if (pending) return pending;
 
@@ -169,6 +193,7 @@ async function fetchPlaygroundMeta(
   inflight.set(reference.apiUrl, request);
   const data = await request;
   if (options.cache) memoryCache.set(reference.apiUrl, { data, timestamp: now });
+  await writeProviderCache(cacheDir, reference.apiUrl, data, now);
   return data;
 }
 

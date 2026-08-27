@@ -1,3 +1,8 @@
+import {
+  readProviderCache,
+  resolveProviderCacheDir,
+  writeProviderCache,
+} from "./provider-disk-cache";
 import { decodeProviderArticleAttr, escapeProviderArticleAttr } from "./provider-article-attrs";
 import { packageMetaFromJson, type PackageMeta } from "./provider-package-metadata";
 
@@ -15,6 +20,10 @@ export interface ProviderPackageEmbedOptions {
   cache?: boolean;
   /** Cache TTL in milliseconds. @default 3600000 */
   cacheTTL?: number;
+  /** Persist metadata across builds. Off by default. */
+  persistCache?: boolean;
+  /** Directory for the persistent cache. */
+  cacheDir?: string;
 }
 
 export interface ResolvedProviderPackageEmbedOptions {
@@ -22,6 +31,8 @@ export interface ResolvedProviderPackageEmbedOptions {
   timeout: number;
   cache: boolean;
   cacheTTL: number;
+  persistCache: boolean;
+  cacheDir?: string;
 }
 
 export interface PackageRegistryReference {
@@ -55,6 +66,8 @@ export function resolveProviderPackageEmbedOptions(
     timeout: options.timeout ?? DEFAULT_TIMEOUT,
     cache: options.cache ?? true,
     cacheTTL: options.cacheTTL ?? DEFAULT_CACHE_TTL,
+    persistCache: options.persistCache ?? false,
+    cacheDir: options.cacheDir,
   };
 }
 
@@ -159,6 +172,17 @@ async function fetchPackageMeta(
     const cached = memoryCache.get(key);
     if (cached && now - cached.timestamp < options.cacheTTL) return cached.data;
   }
+
+  // A warm disk cache is what makes a clean build cheap; the memory map only
+  // helps within one run.
+  const cacheDir = resolveProviderCacheDir(options);
+  const stored = options.cache
+    ? await readProviderCache<PackageMeta>(cacheDir, key, options.cacheTTL, now)
+    : undefined;
+  if (stored !== undefined) {
+    memoryCache.set(key, { data: stored, timestamp: now });
+    return stored;
+  }
   const pending = inflight.get(key);
   if (pending) return pending;
 
@@ -168,6 +192,7 @@ async function fetchPackageMeta(
   inflight.set(key, request);
   const data = await request;
   if (options.cache) memoryCache.set(key, { data, timestamp: now });
+  await writeProviderCache(cacheDir, key, data, now);
   return data;
 }
 
