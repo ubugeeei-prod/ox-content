@@ -8,12 +8,12 @@ If you just want to use the plugin or APIs, go back to [Getting Started](./getti
 
 Before you begin, ensure you have the following installed:
 
-| Requirement   | Version | Installation                                                                         |
-| ------------- | ------- | ------------------------------------------------------------------------------------ |
+| Requirement   | Version | Installation                                                                                   |
+| ------------- | ------- | ---------------------------------------------------------------------------------------------- |
 | **Rust**      | 1.95+   | Provided by `nix develop` (pinned in `rust-toolchain.toml`) or [rustup.rs](https://rustup.rs/) |
-| **Node.js**   | 26+     | Provided by `nix develop` or managed via `.node-version`                             |
-| **Vite+**     | Latest  | Available as `vp` inside the dev shell                                               |
-| **wasm-pack** | Latest  | Provided by `nix develop`; needed when you run `vp run build:wasm`                   |
+| **Node.js**   | 26+     | Provided by `nix develop` or managed via `.node-version`                                       |
+| **Vite+**     | Latest  | Available as `vp` inside the dev shell                                                         |
+| **wasm-pack** | Latest  | Provided by `nix develop`; needed when you run `vp run build:wasm`                             |
 
 ## Clone and Bootstrap
 
