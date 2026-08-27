@@ -62,6 +62,7 @@ normalizeVitePressFrontmatter
 parse
 parseAndRender
 parseAndRenderAsync
+parseFeedDate
 parseMdastRaw
 parseScopedSearchQuery
 parseTransferRaw

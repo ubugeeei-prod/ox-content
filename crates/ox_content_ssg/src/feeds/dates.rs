@@ -5,7 +5,7 @@ const MONTHS: [&str; 12] =
     ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 
 #[derive(Clone, Copy)]
-pub(super) struct ParsedDate {
+pub struct ParsedDate {
     unix: i64,
     year: i32,
     month: u32,
@@ -16,18 +16,26 @@ pub(super) struct ParsedDate {
 }
 
 impl ParsedDate {
-    pub(super) fn unix(self) -> i64 {
+    /// Seconds since the Unix epoch.
+    pub fn unix(self) -> i64 {
         self.unix
     }
 
-    pub(super) fn rfc3339(self) -> String {
+    /// `YYYY-MM-DDTHH:MM:SSZ`, as Atom and JSON Feed want it.
+    pub fn rfc3339(self) -> String {
         format!(
             "{:04}-{:02}-{:02}T{:02}:{:02}:{:02}Z",
             self.year, self.month, self.day, self.hour, self.minute, self.second
         )
     }
 
-    pub(super) fn rfc822(self) -> String {
+    /// `Day, DD Mon YYYY HH:MM:SS +0000`, as RSS wants it.
+    /// Civil date-time parts in UTC: year, month, day, hour, minute, second.
+    pub fn parts(self) -> (i32, u32, u32, u32, u32, u32) {
+        (self.year, self.month, self.day, self.hour, self.minute, self.second)
+    }
+
+    pub fn rfc822(self) -> String {
         format!(
             "{}, {:02} {} {:04} {:02}:{:02}:{:02} +0000",
             WEEKDAYS[weekday_utc(self.year, self.month, self.day)],
@@ -41,7 +49,7 @@ impl ParsedDate {
     }
 }
 
-pub(super) fn parse_date(value: Option<&str>) -> Option<ParsedDate> {
+pub fn parse_date(value: Option<&str>) -> Option<ParsedDate> {
     let value = value?.trim();
     if value.is_empty() {
         return None;

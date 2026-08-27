@@ -7,6 +7,8 @@ use crate::{
 };
 
 mod converters;
+mod feed_dates;
+pub use feed_dates::*;
 mod git;
 pub use git::*;
 mod head;

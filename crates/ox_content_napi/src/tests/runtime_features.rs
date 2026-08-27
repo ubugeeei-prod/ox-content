@@ -80,6 +80,7 @@ fn javascript_wrapper_and_declarations_cover_expected_exports() {
         "parse",
         "parseAndRender",
         "parseAndRenderAsync",
+        "parseFeedDate",
         "parseMdastRaw",
         "parseScopedSearchQuery",
         "parseTransferRaw",

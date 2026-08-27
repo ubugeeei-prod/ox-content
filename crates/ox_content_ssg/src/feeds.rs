@@ -2,7 +2,7 @@
 
 mod dates;
 
-use dates::parse_date;
+pub use dates::{ParsedDate, parse_date};
 
 const MISSING_SITE_URL: &str = "[ox-content] feeds is enabled but ssg.siteUrl is not set; RSS, Atom, and JSON feeds were not written";
 

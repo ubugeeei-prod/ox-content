@@ -1587,6 +1587,31 @@ export interface JsPagerOverride {
 }
 
 /**
+ * A feed date after parsing: the instant, its civil parts in UTC, and the two
+ * serializations the feed formats ask for.
+ */
+export interface JsParsedFeedDate {
+  /** Seconds since the Unix epoch. */
+  unix: number
+  /** Civil year in UTC. */
+  year: number
+  /** Civil month, 1-12. */
+  month: number
+  /** Civil day of month, 1-31. */
+  day: number
+  /** Hour, 0-23. */
+  hour: number
+  /** Minute, 0-59. */
+  minute: number
+  /** Second, 0-60. */
+  second: number
+  /** `YYYY-MM-DDTHH:MM:SSZ`, as Atom and JSON Feed want it. */
+  rfc3339: string
+  /** `Day, DD Mon YYYY HH:MM:SS +0000`, as RSS wants it. */
+  rfc822: string
+}
+
+/**
  * Parser options for JavaScript.
  *
  * When `gfm` is `true`, omitted extension flags inherit the GFM profile.
@@ -2832,6 +2857,13 @@ export declare function parseAndRender(source: string, options?: JsParserOptions
 
 /** Parses Markdown and renders to HTML asynchronously (runs on worker thread). */
 export declare function parseAndRenderAsync(source: string, options?: JsParserOptions | undefined | null): Promise<unknown>
+
+/**
+ * Parses a feed date — an epoch seconds/milliseconds integer, or a civil
+ * date-time with an optional zone offset — returning `null` when the value
+ * names no instant.
+ */
+export declare function parseFeedDate(value?: string | undefined | null): JsParsedFeedDate | null
 
 /** Parses Markdown source into a raw mdast memory block for JavaScript-side deserialization. */
 export declare function parseMdastRaw(source: string, options?: JsParserOptions | undefined | null): Uint8Array

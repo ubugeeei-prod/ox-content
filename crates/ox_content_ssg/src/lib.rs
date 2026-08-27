@@ -91,7 +91,9 @@ mod vitepress;
 pub use assets::{
     ExternalizedAssets, GeneratedHtmlPage, SharedAsset, externalize_shared_page_assets,
 };
-pub use feeds::{FeedFormat, FeedItem, FeedsOptions, FeedsOutput, generate_feeds};
+pub use feeds::{
+    FeedFormat, FeedItem, FeedsOptions, FeedsOutput, ParsedDate, generate_feeds, parse_date,
+};
 pub use html::{
     A11y, BarePageData, Contributor, EntryPageConfig, FeatureConfig, GeneratedHtml, HeadAlternate,
     HeadDiagnostic, HeadInput, HeadJsonLd, HeadLink, HeadMeta, HeadValidation, HeaderNavItem,

@@ -245,4 +245,5 @@ module.exports.checkI18nProject = binding.checkI18nProject;
 module.exports.extractTranslationKeys = binding.extractTranslationKeys;
 module.exports.renderFrameworkComponentCode = binding.renderFrameworkComponentCode;
 module.exports.renderSsgSectionIndex = binding.renderSsgSectionIndex;
+module.exports.parseFeedDate = binding.parseFeedDate;
 module.exports.escapeSvelteMarkup = binding.escapeSvelteMarkup;
