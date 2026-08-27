@@ -48,7 +48,9 @@ this tree-sitter line.
 | Rust       | `rust`, `rs`                                                              |
 | JSON       | `json`, `jsonc`, `json5`, `webmanifest`                                   |
 | CSS        | `css`                                                                     |
+| Less       | `less`                                                                    |
 | HTML       | `html`, `vue`, `svelte`, `astro`, `angular`                               |
+| XML        | `xml`, `svg`, `xsl`, `xslt`, `rss`, `atom`, `plist`, `xsd`                |
 | Python     | `python`, `py`                                                            |
 | Go         | `go`, `golang`                                                            |
 | Java       | `java`                                                                    |
@@ -69,6 +71,10 @@ this tree-sitter line.
 | Swift      | `swift`                                                                   |
 | Kotlin     | `kotlin`, `kt`                                                            |
 | GLSL       | `glsl`                                                                    |
+| Lua        | `lua`                                                                     |
+| HCL        | `hcl`, `terraform`, `tf`, `tfvars`                                        |
+| Make       | `make`, `makefile`, `mk`                                                  |
+| Diff       | `diff`, `patch`, `udiff`                                                  |
 
 Unknown tags stay ordinary `<pre><code>` — for example `haskell`, `scala`,
 `elixir`, `perl`, `elm`, `assembly`, `asm`, `llvm`, `clojure`, and

@@ -80,6 +80,14 @@ pub(super) fn grammars() -> &'static [Grammar] {
             "",
         ),
         grammar!(
+            "less",
+            ["less"],
+            tree_sitter_less::language(),
+            tree_sitter_less::HIGHLIGHTS_QUERY,
+            "",
+            "",
+        ),
+        grammar!(
             "html",
             ["html", "vue", "svelte", "astro", "angular"],
             tree_sitter_html::LANGUAGE,

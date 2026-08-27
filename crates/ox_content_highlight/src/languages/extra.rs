@@ -85,6 +85,14 @@ pub(super) fn grammars() -> &'static [Grammar] {
             "",
         ),
         grammar!(
+            "lua",
+            ["lua"],
+            tree_sitter_lua::LANGUAGE,
+            tree_sitter_lua::HIGHLIGHTS_QUERY,
+            tree_sitter_lua::INJECTIONS_QUERY,
+            tree_sitter_lua::LOCALS_QUERY,
+        ),
+        grammar!(
             "glsl",
             ["glsl"],
             tree_sitter_glsl::LANGUAGE_GLSL,

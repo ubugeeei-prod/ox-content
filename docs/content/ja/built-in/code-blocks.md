@@ -47,7 +47,9 @@ tree-sitter 系列と合うメンテされた専用文法がまだありませ�
 | Rust       | `rust`, `rs`                                                              |
 | JSON       | `json`, `jsonc`, `json5`, `webmanifest`                                   |
 | CSS        | `css`                                                                     |
+| Less       | `less`                                                                    |
 | HTML       | `html`, `vue`, `svelte`, `astro`, `angular`                               |
+| XML        | `xml`, `svg`, `xsl`, `xslt`, `rss`, `atom`, `plist`, `xsd`                |
 | Python     | `python`, `py`                                                            |
 | Go         | `go`, `golang`                                                            |
 | Java       | `java`                                                                    |
@@ -68,6 +70,10 @@ tree-sitter 系列と合うメンテされた専用文法がまだありませ�
 | Swift      | `swift`                                                                   |
 | Kotlin     | `kotlin`, `kt`                                                            |
 | GLSL       | `glsl`                                                                    |
+| Lua        | `lua`                                                                     |
+| HCL        | `hcl`, `terraform`, `tf`, `tfvars`                                        |
+| Make       | `make`, `makefile`, `mk`                                                  |
+| Diff       | `diff`, `patch`, `udiff`                                                  |
 
 未知のタグは普通の `<pre><code>` のままです。例: `haskell`、`scala`、
 `elixir`、`perl`、`elm`、`assembly`、`asm`、`llvm`、`clojure`、

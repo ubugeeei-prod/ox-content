@@ -64,5 +64,37 @@ pub(super) fn grammars() -> &'static [Grammar] {
             "",
             "",
         ),
+        grammar!(
+            "xml",
+            ["xml", "svg", "xsl", "xslt", "rss", "atom", "plist", "xsd"],
+            tree_sitter_xml::LANGUAGE_XML,
+            tree_sitter_xml::XML_HIGHLIGHT_QUERY,
+            "",
+            "",
+        ),
+        grammar!(
+            "diff",
+            ["diff", "patch", "udiff"],
+            tree_sitter_diff::LANGUAGE,
+            tree_sitter_diff::HIGHLIGHTS_QUERY,
+            "",
+            "",
+        ),
+        grammar!(
+            "hcl",
+            ["hcl", "terraform", "tf", "tfvars"],
+            tree_sitter_hcl::LANGUAGE,
+            include_str!("../../queries/hcl-highlights.scm"),
+            "",
+            "",
+        ),
+        grammar!(
+            "make",
+            ["make", "makefile", "mk"],
+            tree_sitter_make::LANGUAGE,
+            tree_sitter_make::HIGHLIGHTS_QUERY,
+            "",
+            "",
+        ),
     ]
 }

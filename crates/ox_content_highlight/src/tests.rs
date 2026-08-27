@@ -44,6 +44,19 @@ fn aliases_resolve_to_the_same_grammar() {
         assert!(supports(alias), "{alias} should be supported");
     }
     assert!(supports("glsl"));
+    assert!(supports("diff"));
+    assert!(supports("patch"));
+    assert!(supports("less"));
+    for alias in ["xml", "svg", "xsl", "rss", "plist"] {
+        assert!(supports(alias), "{alias} should be supported");
+    }
+    assert!(supports("lua"));
+    for alias in ["hcl", "terraform", "tf"] {
+        assert!(supports(alias), "{alias} should be supported");
+    }
+    for alias in ["makefile", "make", "mk"] {
+        assert!(supports(alias), "{alias} should be supported");
+    }
     assert!(!supports("assembly"));
     assert!(!supports("asm"));
     assert_eq!(
@@ -290,6 +303,12 @@ fn added_grammars_tokenize_and_escape() {
         ("let s = \"a < b & c\"\n", "swift"),
         ("fun main() { val s = \"a < b & c\" }\n", "kt"),
         ("void main() { bool b = 1.0 < 2.0 && true; }\n", "glsl"),
+        ("--- a/x\n+++ b/x\n-a < b & c\n+a < b & d\n", "diff"),
+        ("@c: red;\n.a::after { content: \"a < b & c\"; }\n", "less"),
+        ("<?xml version=\"1.0\"?>\n<a b=\"c\">x &lt; y &amp; z</a>\n", "xml"),
+        ("local s = \"a < b & c\"\n", "lua"),
+        ("variable \"x\" {\n  default = \"a < b & c\"\n}\n", "terraform"),
+        ("# a < b & c\nall:\n\techo hi\n", "makefile"),
     ] {
         let html = highlight_to_html(code, lang).expect(lang);
         assert_eq!(visible_text(&html), code, "lang={lang}");
