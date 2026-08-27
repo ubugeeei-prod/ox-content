@@ -337,8 +337,17 @@ jobs:
           vp exec --filter @ox-content/vite-plugin -- playwright install --with-deps chromium
           vp exec --filter @ox-content/vite-plugin -- puppeteer browsers install chrome-headless-shell
 
-      - name: Build
-        run: vp run build
+      - name: Build packages for docs
+        run: vp run build:npm
+
+      - name: Build documentation site
+        run: vp run --ignore-depends-on build:docs
+
+      - name: Build playground
+        run: vp run --ignore-depends-on build:playground
+
+      - name: Build Rust documentation
+        run: vp run --ignore-depends-on doc:cargo
 
       - name: Check generated documentation links
         run: >-
