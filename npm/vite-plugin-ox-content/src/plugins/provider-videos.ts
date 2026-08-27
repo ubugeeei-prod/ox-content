@@ -1,3 +1,5 @@
+import type { EmbedFailure } from "./provider-failure";
+import { classifyError, classifyStatus, warnEmbedFailure } from "./provider-failure";
 import {
   readProviderCache,
   resolveProviderCacheDir,
@@ -206,12 +208,12 @@ async function requestVideoMeta(
       signal: controller.signal,
     });
     if (!response.ok) {
-      warnVideoFallback(reference, String(response.status));
+      warnVideoFallback(reference, classifyStatus(response.status));
       return null;
     }
     return vimeoMetaFromJson(await response.json());
   } catch (error) {
-    warnVideoFallback(reference, error instanceof Error ? error.message : "unknown error");
+    warnVideoFallback(reference, classifyError(error));
     return null;
   } finally {
     clearTimeout(timeout);
@@ -229,8 +231,6 @@ function readAttr(attrs: string, name: string): string | undefined {
   return value ? decodeProviderArticleAttr(value) : undefined;
 }
 
-function warnVideoFallback(reference: VideoProviderReference, reason: string): void {
-  console.warn(
-    `[ox-content] Failed to fetch ${reference.provider} metadata for ${reference.canonicalUrl}: ${reason}; rendering a link-only video card.`,
-  );
+function warnVideoFallback(reference: VideoProviderReference, failure: EmbedFailure): void {
+  warnEmbedFailure(reference.provider, reference.apiUrl, failure, "a link-only video card");
 }

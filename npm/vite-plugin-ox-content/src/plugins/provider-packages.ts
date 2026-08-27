@@ -1,3 +1,5 @@
+import type { EmbedFailure } from "./provider-failure";
+import { classifyError, classifyStatus, warnEmbedFailure } from "./provider-failure";
 import {
   readProviderCache,
   resolveProviderCacheDir,
@@ -209,23 +211,21 @@ async function requestPackageMeta(
       signal: controller.signal,
     });
     if (!response.ok) {
-      warnPackageFallback(reference, String(response.status));
+      warnPackageFallback(reference, classifyStatus(response.status));
       return null;
     }
     const value = await response.json();
     return packageMetaFromJson(value, reference);
   } catch (error) {
-    warnPackageFallback(reference, error instanceof Error ? error.message : "unknown error");
+    warnPackageFallback(reference, classifyError(error));
     return null;
   } finally {
     clearTimeout(timeout);
   }
 }
 
-function warnPackageFallback(reference: PackageRegistryReference, reason: string): void {
-  console.warn(
-    `[ox-content] Failed to fetch ${reference.provider} metadata for ${reference.name}: ${reason}; rendering a link-only package card.`,
-  );
+function warnPackageFallback(reference: PackageRegistryReference, failure: EmbedFailure): void {
+  warnEmbedFailure(reference.provider, reference.name, failure, "a link-only package card");
 }
 
 function npmReference(url: URL, segments: string[]): PackageRegistryReference | null {

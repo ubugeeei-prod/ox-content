@@ -1,3 +1,5 @@
+import type { EmbedFailure } from "./provider-failure";
+import { classifyError, classifyStatus, warnEmbedFailure } from "./provider-failure";
 import {
   readProviderCache,
   resolveProviderCacheDir,
@@ -210,12 +212,12 @@ async function requestPlaygroundMeta(
       signal: controller.signal,
     });
     if (!response.ok) {
-      warnPlaygroundFallback(reference, String(response.status));
+      warnPlaygroundFallback(reference, classifyStatus(response.status));
       return null;
     }
     return playgroundMetaFromJson(await response.json());
   } catch (error) {
-    warnPlaygroundFallback(reference, error instanceof Error ? error.message : "unknown error");
+    warnPlaygroundFallback(reference, classifyError(error));
     return null;
   } finally {
     clearTimeout(timeout);
@@ -329,10 +331,8 @@ function titleize(value: string): string {
   return value.replaceAll("-", " ").replaceAll("_", " ");
 }
 
-function warnPlaygroundFallback(reference: PlaygroundReference, reason: string): void {
-  console.warn(
-    `[ox-content] Failed to fetch ${reference.provider} metadata for ${reference.canonicalUrl}: ${reason}; rendering a link-only playground card.`,
-  );
+function warnPlaygroundFallback(reference: PlaygroundReference, failure: EmbedFailure): void {
+  warnEmbedFailure(reference.provider, reference.apiUrl, failure, "a link-only playground card");
 }
 
 function compactMeta(meta: PlaygroundMeta): PlaygroundMeta {

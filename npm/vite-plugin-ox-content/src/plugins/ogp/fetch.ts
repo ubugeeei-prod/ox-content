@@ -1,3 +1,4 @@
+import { classifyError, classifyStatus, warnEmbedFailure } from "../provider-failure";
 import { readDiskOgp, readMemoryOgp, writeDiskOgp, writeMemoryOgp } from "./cache";
 import type { OgpData, OgpOptions, ResolvedOgpOptions } from "./types";
 import { resolveOgpOptions } from "./types";
@@ -63,17 +64,13 @@ async function requestOgpData(url: string, options: ResolvedOgpOptions): Promise
     clearTimeout(timeoutId);
 
     if (!response.ok) {
-      console.warn(`Failed to fetch OGP for ${url}: ${response.status}`);
+      warnEmbedFailure("ogp", url, classifyStatus(response.status), "a link-only card");
       return null;
     }
 
     return parseOgpFromHtml(await response.text(), url);
   } catch (error) {
-    if (error instanceof Error && error.name === "AbortError") {
-      console.warn(`Timeout fetching OGP for ${url}`);
-    } else {
-      console.warn(`Error fetching OGP for ${url}:`, error);
-    }
+    warnEmbedFailure("ogp", url, classifyError(error), "a link-only card");
     return null;
   }
 }

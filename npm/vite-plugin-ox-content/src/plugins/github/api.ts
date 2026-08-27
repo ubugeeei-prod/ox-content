@@ -1,3 +1,4 @@
+import { classifyError, classifyStatus, warnEmbedFailure } from "../provider-failure";
 import { Buffer } from "node:buffer";
 import { gitHubResourceDataFromJson } from "./resource-metadata";
 import { resourceKey } from "./resource";
@@ -62,6 +63,14 @@ async function fetchSourceCommit(
     )}&sha=${encodeURIComponent(source.ref)}&per_page=1`;
     const response = await fetch(apiUrl, { headers: githubHeaders(options) });
     if (!response.ok) {
+      // A failed commit lookup is why a source card loses its "last changed"
+      // line, which is otherwise invisible.
+      warnEmbedFailure(
+        "github commit",
+        `${source.repo}/${source.path}`,
+        classifyStatus(response.status),
+        "a card without commit details",
+      );
       return undefined;
     }
 
@@ -111,7 +120,7 @@ export async function fetchRepoData(
     });
 
     if (!response.ok) {
-      console.warn(`Failed to fetch GitHub repo ${repo}: ${response.status}`);
+      warnEmbedFailure("github", repo, classifyStatus(response.status), "a link-only card");
       return null;
     }
 
@@ -122,7 +131,7 @@ export async function fetchRepoData(
 
     return data;
   } catch (error) {
-    console.warn(`Error fetching GitHub repo ${repo}:`, error);
+    warnEmbedFailure("github", repo, classifyError(error), "a link-only card");
     return null;
   }
 }
@@ -160,7 +169,12 @@ export async function fetchGitHubSource(
     ]);
 
     if (!response.ok) {
-      console.warn(`Failed to fetch GitHub source ${source.permalink}: ${response.status}`);
+      warnEmbedFailure(
+        "github",
+        source.permalink,
+        classifyStatus(response.status),
+        "a link-only card",
+      );
       return null;
     }
 
@@ -197,7 +211,7 @@ export async function fetchGitHubSource(
 
     return sourceData;
   } catch (error) {
-    console.warn(`Error fetching GitHub source ${source.permalink}:`, error);
+    warnEmbedFailure("github", source.permalink, classifyError(error), "a link-only card");
     return null;
   }
 }
@@ -220,8 +234,11 @@ export async function fetchGitHubResource(
   try {
     const response = await fetch(resource.apiUrl, { headers: githubPublicHeaders() });
     if (!response.ok) {
-      console.warn(
-        `Failed to fetch GitHub ${resource.kind} ${resource.permalink}: ${response.status}`,
+      warnEmbedFailure(
+        `github ${resource.kind}`,
+        resource.permalink,
+        classifyStatus(response.status),
+        "a link-only card",
       );
       return null;
     }
@@ -232,7 +249,12 @@ export async function fetchGitHubResource(
     }
     return data;
   } catch (error) {
-    console.warn(`Error fetching GitHub ${resource.kind} ${resource.permalink}:`, error);
+    warnEmbedFailure(
+      `github ${resource.kind}`,
+      resource.permalink,
+      classifyError(error),
+      "a link-only card",
+    );
     return null;
   }
 }

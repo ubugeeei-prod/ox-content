@@ -1,3 +1,5 @@
+import type { EmbedFailure } from "./provider-failure";
+import { classifyError, classifyStatus, warnEmbedFailure } from "./provider-failure";
 import {
   readProviderCache,
   resolveProviderCacheDir,
@@ -221,14 +223,22 @@ async function requestArticleMeta(
       headers: { accept: "application/json" },
       signal: controller.signal,
     });
-    if (!response.ok) return null;
+    if (!response.ok) {
+      warnArticleFallback(reference, classifyStatus(response.status));
+      return null;
+    }
     const value = await response.json();
     return reference.provider === "qiita" ? qiitaMeta(value) : zennMeta(value);
-  } catch {
+  } catch (error) {
+    warnArticleFallback(reference, classifyError(error));
     return null;
   } finally {
     clearTimeout(timeout);
   }
+}
+
+function warnArticleFallback(reference: ArticleReference, failure: EmbedFailure): void {
+  warnEmbedFailure(reference.provider, reference.apiUrl, failure, "a link-only article card");
 }
 
 function articleReference(provider: "qiita" | "zenn", attrs: string): ArticleReference | null {

@@ -1,3 +1,4 @@
+import { classifyError, classifyStatus, warnEmbedFailure } from "../provider-failure";
 import type { RedditPostData, RedditPostReference, ResolvedRedditEmbedOptions } from "./types";
 import {
   isSafeExternalUrl,
@@ -65,9 +66,18 @@ export async function requestRedditPostData(
       },
       signal: controller.signal,
     });
-    if (!response.ok) return null;
+    if (!response.ok) {
+      warnEmbedFailure(
+        "reddit",
+        reference.apiUrl,
+        classifyStatus(response.status),
+        "a link-only card",
+      );
+      return null;
+    }
     return parseRedditListing(await response.json(), reference);
-  } catch {
+  } catch (error) {
+    warnEmbedFailure("reddit", reference.apiUrl, classifyError(error), "a link-only card");
     return null;
   } finally {
     clearTimeout(timeoutId);

@@ -1,3 +1,5 @@
+import { classifyError, classifyStatus, warnEmbedFailure } from "./provider-failure";
+
 const SPEAKERDECK_TAG =
   /<speakerdeck\b((?:[^>"']|"[^"]*"|'[^']*')*)>([\s\S]*?)<\/speakerdeck\s*>/gi;
 const OEMBED_ENDPOINT = "https://speakerdeck.com/oembed.json?url=";
@@ -101,6 +103,7 @@ async function fetchOembed(
       headers: { accept: "application/json" },
     });
     if (!response.ok) {
+      warnEmbedFailure("speakerdeck", url, classifyStatus(response.status), "a link-only card");
       return null;
     }
     const data = (await response.json()) as Record<string, unknown>;
@@ -118,7 +121,8 @@ async function fetchOembed(
       author,
       preview: preview && isSafeHttpsUrl(preview) ? preview : undefined,
     };
-  } catch {
+  } catch (error) {
+    warnEmbedFailure("speakerdeck", url, classifyError(error), "a link-only card");
     return null;
   }
 }
