@@ -14,10 +14,10 @@ use super::package_cards::{render_crates_io, render_docker_hub, render_npm_packa
 use super::playground_cards::{
     render_code_sandbox, render_codepen, render_jsfiddle, render_observable, render_replit,
 };
+use super::document_cards::{render_figma, render_google_slides, render_note};
 use super::provider_cards::{
-    render_discord, render_facebook, render_fediverse, render_figma, render_google_maps,
-    render_google_slides, render_instagram, render_mastodon, render_misskey, render_mixi2,
-    render_note, render_qiita, render_threads, render_zenn,
+    render_discord, render_facebook, render_fediverse, render_google_maps, render_instagram,
+    render_mastodon, render_misskey, render_mixi2, render_qiita, render_threads, render_zenn,
 };
 use super::render::{
     render_bluesky, render_spotify, render_stackblitz, render_tweet, render_webcontainer,

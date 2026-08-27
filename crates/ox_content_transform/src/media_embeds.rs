@@ -1,4 +1,7 @@
 mod apple_music;
+#[cfg(test)]
+mod catalog_tests;
+mod document_cards;
 mod fallback;
 #[cfg(test)]
 mod fallback_tests;

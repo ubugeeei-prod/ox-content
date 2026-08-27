@@ -916,10 +916,7 @@ export interface JsEmbedDiagnostic {
   fallback: string
 }
 
-/**
- * Rewrites embeds and reports the tags no provider would render.
- * One provider tag as authors write it.
- */
+/** One provider tag as authors write it. */
 export interface JsEmbedTag {
   name: string
   /**
@@ -3254,6 +3251,7 @@ export declare function transformMdastRaw(source: string, options?: JsTransformO
 
 export declare function transformMediaEmbeds(html: string, options?: JsMediaEmbedsOptions | undefined | null): string
 
+/** Rewrites embeds and reports the tags no provider would render. */
 export declare function transformMediaEmbedsWithDiagnostics(html: string, options?: JsMediaEmbedsOptions | undefined | null): JsMediaEmbedsResult
 
 /** Transforms mermaid code blocks in HTML to rendered SVG diagrams. */

@@ -17,6 +17,7 @@
 mod collection_bindings;
 mod cross_reference_bindings;
 mod docs_bindings;
+mod embed_tag_bindings;
 mod docs_graph_types;
 mod docs_markdown_types;
 mod docs_openapi_types;
@@ -72,6 +73,7 @@ pub use og_image_bindings::*;
 pub use parse_bindings::*;
 pub use parser_options::JsParserOptions;
 pub use publish_state_bindings::*;
+pub use embed_tag_bindings::*;
 pub use redirect_bindings::*;
 pub use search_bindings::*;
 pub use site_map_bindings::*;
