@@ -144,7 +144,6 @@
             workspaceVp
             blacksmith
             rustToolchain
-            pkgs.rust-analyzer
             pkgs.wasm-pack
             pkgs.wasm-bindgen-cli
             pkgs.binaryen
