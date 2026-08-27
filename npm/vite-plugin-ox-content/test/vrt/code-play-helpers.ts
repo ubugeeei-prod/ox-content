@@ -51,6 +51,32 @@ export function corsHeaders(): Record<string, string> {
   };
 }
 
+export async function expectCompactCodePlayChrome(page: Page): Promise<void> {
+  const metrics = await page.locator(".ox-code-play").evaluate((widget) => {
+    if (!(widget instanceof HTMLElement)) {
+      throw new Error("Missing Code Play widget");
+    }
+    const toolbar = widget.querySelector(".ox-code-play__toolbar");
+    const runButton = widget.querySelector('[data-ox-action="run"]');
+    const chips = [...widget.querySelectorAll(".ox-code-play__runtime-chip")];
+    if (
+      !(toolbar instanceof HTMLElement) ||
+      !(runButton instanceof HTMLElement) ||
+      chips.length === 0
+    ) {
+      throw new Error("Missing compact Code Play chrome");
+    }
+    return {
+      buttonHeight: runButton.getBoundingClientRect().height,
+      maxChipWidth: Math.max(...chips.map((chip) => chip.getBoundingClientRect().width)),
+      toolbarHeight: toolbar.getBoundingClientRect().height,
+    };
+  });
+  expect(metrics.buttonHeight).toBeLessThanOrEqual(34);
+  expect(metrics.maxChipWidth).toBeLessThanOrEqual(180);
+  expect(metrics.toolbarHeight).toBeLessThanOrEqual(54);
+}
+
 export async function fitsViewport(page: Page): Promise<boolean> {
   return page.evaluate(() => {
     const doc = document.documentElement;

@@ -3,6 +3,7 @@ import { fileURLToPath } from "node:url";
 import { defineConfig } from "vite-plus";
 import { oxContent, defineTheme, defaultTheme } from "@ox-content/vite-plugin";
 import { codePlay } from "@ox-content/code-play";
+import { docsEmbedProviders } from "./embed-providers.config";
 
 /**
  * Ox Content Documentation Site
@@ -300,39 +301,7 @@ export default defineConfig(({ mode }) => {
         fileTree: true,
         dataTables: true,
         typedHover: true,
-        embeds: {
-          pm: true,
-          googleMaps: true,
-          qiita: { fetch: false },
-          zenn: { fetch: false },
-          packageRegistry: { fetch: false },
-          playgrounds: { fetch: false },
-          vimeo: { fetch: false },
-          twitch: { fetch: false },
-          discord: true,
-          fediverse: true,
-          facebook: true,
-          threads: true,
-          instagram: true,
-          loom: true,
-          asciinema: true,
-          figma: true,
-          note: true,
-          googleSlides: true,
-          stackBlitz: true,
-          twitter: {
-            fetch: true,
-            mediaOutputDir: "public/twitter",
-            mediaPublicPath: `${base}twitter`,
-          },
-          bluesky: true,
-          webContainer: true,
-          spotify: true,
-          appleMusic: true,
-          speakerDeck: true,
-          audio: true,
-          video: true,
-        },
+        embeds: docsEmbedProviders(base),
         mermaid: true,
         // API documentation generation (like cargo doc)
         docs: {

@@ -81,7 +81,7 @@ export const CODE_PLAY_STYLES = `
 }
 .ox-code-play__runtime-chip {
   display: inline-flex;
-  gap: 0.35rem;
+  gap: 0.3rem;
   align-items: baseline;
   min-width: 0;
   padding: 0;
@@ -95,7 +95,7 @@ export const CODE_PLAY_STYLES = `
   opacity: 0.62;
 }
 .ox-code-play__runtime-chip strong {
-  font: 650 0.75rem/1.2 ui-sans-serif, system-ui, sans-serif;
+  font: 650 0.72rem/1.2 ui-sans-serif, system-ui, sans-serif;
 }
 .ox-code-play__runtime-chip--ok strong { color: var(--octc-color-primary, var(--octc-accent, #4f46e5)); }
 .ox-code-play__runtime-chip--warn strong { color: var(--octc-warning, #b54708); }

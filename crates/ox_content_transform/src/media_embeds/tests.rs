@@ -66,8 +66,8 @@ npm run dev
 
     assert!(html.contains(r#"class="ox-webcontainer""#), "{html}");
     assert!(html.contains(r#"data-entry="src/main.ts""#), "{html}");
-    assert!(html.contains(r#"<strong>Demo &amp; Tools</strong>"#), "{html}");
-    assert!(html.contains(r#"<code>src/main.ts</code>"#), "{html}");
+    assert!(html.contains(r"<strong>Demo &amp; Tools</strong>"), "{html}");
+    assert!(html.contains(r"<code>src/main.ts</code>"), "{html}");
     assert!(html.contains("Boots on interaction"), "{html}");
     assert!(html.contains("<span>2 commands</span>"), "{html}");
     assert!(html.contains("<span>Static source bundle</span>"), "{html}");

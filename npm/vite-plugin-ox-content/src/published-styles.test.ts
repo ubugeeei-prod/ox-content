@@ -34,6 +34,7 @@ const CRATE_SOURCES: Record<
   "magic-links.css": ["plugins/magic-links.css"],
   "social.css": [
     "plugins/social.css",
+    "plugins/webcontainer.css",
     "plugins/provider-cards.css",
     "plugins/social-twitter-rich.css",
     "plugins/reddit.css",

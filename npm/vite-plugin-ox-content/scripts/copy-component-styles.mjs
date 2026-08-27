@@ -24,6 +24,7 @@ export const STYLE_ENTRIES = /** @type {const} */ ([
     name: "social.css",
     sources: [
       "plugins/social.css",
+      "plugins/webcontainer.css",
       "plugins/provider-cards.css",
       "plugins/social-twitter-rich.css",
       "plugins/reddit.css",

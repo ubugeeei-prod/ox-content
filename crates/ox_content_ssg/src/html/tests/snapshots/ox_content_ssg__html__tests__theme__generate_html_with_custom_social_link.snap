@@ -93,8 +93,8 @@ expression: "super::snapshot_text(&html)"
   --octc-focus-offset: 2px;
   --octc-motion-base: 150ms;
   --octc-motion-ease: ease;
-  --octc-code-pad-block: 1rem;
-  --octc-code-pad-inline: 1.25rem;
+  --octc-code-pad-block: 1.05rem;
+  --octc-code-pad-inline: 1rem;
   --octc-code-title-pad-block: 0.75rem;
   --octc-code-title-gap: 0.875rem;
   --octc-table-cell-pad-block: 0.75rem;
@@ -1047,11 +1047,11 @@ a:hover {
   margin-bottom: 0;
 }
 .content .ox-steps {
-  margin: 1.75rem 0 2rem;
-  padding: 1.1rem 1rem 1.1rem 0;
+  margin: 1.25rem 0 1.5rem;
+  padding: 0.85rem 0.9rem;
   border: 1px solid var(--octc-color-border);
-  border-radius: 8px;
-  background: color-mix(in srgb, var(--octc-color-bg-alt) 42%, transparent);
+  border-radius: 6px;
+  background: color-mix(in srgb, var(--octc-color-bg-alt) 34%, transparent);
 }
 .content .ox-steps__list {
   list-style: none;
@@ -1061,20 +1061,20 @@ a:hover {
 }
 .content .ox-steps__item {
   position: relative;
-  margin: 0 0 1rem;
-  padding-left: 2.5rem;
+  margin: 0 0 0.85rem;
+  padding-left: 2.2rem;
   counter-increment: ox-steps;
 }
 .content .ox-steps__item::before {
   content: counter(ox-steps);
   position: absolute;
   left: 0;
-  top: 0.15rem;
+  top: 0.12rem;
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 1.6rem;
-  height: 1.6rem;
+  width: 1.45rem;
+  height: 1.45rem;
   border-radius: 999px;
   background: var(--octc-color-primary);
   color: var(--octc-color-bg);
@@ -1262,13 +1262,13 @@ a:hover {
   position: relative;
 }
 .content pre.ox-code-block.line-numbers-mode .line {
-  padding-left: 4rem;
+  padding-left: 3rem;
 }
 .content pre.ox-code-block.line-numbers-mode .line::before {
   content: attr(data-line-number);
   position: absolute;
   left: var(--octc-code-pad-inline);
-  width: 2rem;
+  width: 1.65rem;
   text-align: right;
   color: var(--octc-color-code-line-number);
   user-select: none;
@@ -2170,10 +2170,10 @@ a:hover {
     font-size: 0.82rem !important;
   }
   .content pre.ox-code-block.line-numbers-mode .line {
-    padding-left: 3.7rem;
+    padding-left: 2.85rem;
   }
   .content pre.ox-code-block.line-numbers-mode .line::before {
-    width: 1.75rem;
+    width: 1.65rem;
   }
   .content table {
     margin: 1rem 0;
