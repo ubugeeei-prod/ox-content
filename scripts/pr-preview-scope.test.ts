@@ -55,6 +55,16 @@ describe("detect-pr-preview-scope", () => {
     expect(parseOutputs(result.stdout)).toEqual({ preview: "false" });
   });
 
+  it("skips rust documentation scope helper edits", () => {
+    const result = runScope([
+      ".github/scripts/detect-rust-doc-scope.mjs",
+      "scripts/rust-doc-scope.test.ts",
+    ]);
+
+    expect(result.status).toBe(0);
+    expect(parseOutputs(result.stdout)).toEqual({ preview: "false" });
+  });
+
   it("falls back to preview builds for unclassified paths", () => {
     const result = runScope(["tools/new-publish-surface/file.ts"]);
 

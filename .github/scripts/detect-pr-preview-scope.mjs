@@ -24,11 +24,12 @@ const TEST_ONLY_PATTERNS = [
 
 const PREVIEW_NEUTRAL_PATTERNS = [
   /^\.github\/(?:ISSUE_TEMPLATE|PULL_REQUEST_TEMPLATE)\//,
-  /^\.github\/scripts\/(?:detect-pr-benchmark-scope|run-pr-benchmark|compare-pr-benchmark)\.mjs$/,
+  /^\.github\/scripts\/(?:detect-pr-benchmark-scope|detect-rust-doc-scope|run-pr-benchmark|compare-pr-benchmark)\.mjs$/,
   /^\.github\/workflows\/(?!nightly\.yml$|publish\.yml$)/,
   /^benchmarks\//,
   /^docs\//,
   /^examples\//,
+  /^scripts\/(?:pr-preview-scope|rust-doc-scope)\.test\.ts$/,
   /^README\.md$/,
   /^CHANGELOG\.md$/,
   /^CHENGELOG\.md$/,

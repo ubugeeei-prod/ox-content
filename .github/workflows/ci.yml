@@ -346,8 +346,30 @@ jobs:
       - name: Build playground
         run: vp run --ignore-depends-on build:playground
 
+      - name: Detect Rust documentation scope
+        id: rust-docs
+        if: github.event_name == 'pull_request'
+        env:
+          BASE_REPOSITORY: ${{ github.repository }}
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          git fetch --no-tags --depth=1 "https://github.com/$BASE_REPOSITORY.git" "$BASE_SHA"
+          git diff --name-only "$BASE_SHA" "$GITHUB_SHA" > "$RUNNER_TEMP/rust-doc-changed-files.txt"
+          node .github/scripts/detect-rust-doc-scope.mjs "$RUNNER_TEMP/rust-doc-changed-files.txt" >> "$GITHUB_OUTPUT"
+
+          echo "Changed files:"
+          sed 's/^/  /' "$RUNNER_TEMP/rust-doc-changed-files.txt"
+
       - name: Build Rust documentation
+        if: github.event_name != 'pull_request' || steps.rust-docs.outputs.rust_docs == 'true'
         run: vp run --ignore-depends-on doc:cargo
+
+      - name: Skip Rust documentation
+        if: github.event_name == 'pull_request' && steps.rust-docs.outputs.rust_docs != 'true'
+        run: echo "No Rust/Cargo documentation inputs changed."
 
       - name: Check generated documentation links
         run: >-
