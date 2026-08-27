@@ -3,8 +3,8 @@
 
 use super::html::{ComponentElement, attr};
 use super::provider_cards::{
-    Card, body_text, first_attr, host_in, is_safe_https_url, parse_https_url, path_segments,
-    article_card, provider_url, render_card,
+    Card, article_card, body_text, first_attr, host_in, is_safe_https_url, parse_https_url,
+    path_segments, provider_url, render_card,
 };
 
 /// note.com long-form posts: `/{user}/n/{id}`, and the magazine form
