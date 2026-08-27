@@ -846,6 +846,24 @@ export interface JsEditThisPageOptions {
   label?: string
 }
 
+/**
+ * Transform opt-in static media embed components in already-rendered HTML.
+ * One tag an enabled provider refused, and what the transform did instead.
+ */
+export interface JsEmbedDiagnostic {
+  /** Tag name as the provider registers it, for example `speakerdeck`. */
+  provider: string
+  /** The URL the tag carried, when it carried one worth naming. */
+  url?: string
+  /** 1-based line of the opening tag in the transformed HTML. */
+  line: number
+  /**
+   * `"linked"` when the tag became a plain link, `"kept"` when its markup
+   * was left as authored.
+   */
+  fallback: string
+}
+
 /** Emoji-shortcode transform options. */
 export interface JsEmojiShortcodeOptions {
   /**
@@ -1496,6 +1514,12 @@ export interface JsMediaEmbedsOptions {
    * Default: `false`.
    */
   video?: boolean
+}
+
+/** Rewritten HTML plus every tag an enabled provider refused. */
+export interface JsMediaEmbedsResult {
+  html: string
+  diagnostics: Array<JsEmbedDiagnostic>
 }
 
 /** Opt-in `<NotByAI />` authorship badge. */
@@ -2982,8 +3006,10 @@ export declare function transformAsync(source: string, options?: JsTransformOpti
  */
 export declare function transformMdastRaw(source: string, options?: JsTransformOptions | undefined | null): Uint8Array
 
-/** Transform opt-in static media embed components in already-rendered HTML. */
 export declare function transformMediaEmbeds(html: string, options?: JsMediaEmbedsOptions | undefined | null): string
+
+/** Rewrites embeds and reports the tags no provider would render. */
+export declare function transformMediaEmbedsWithDiagnostics(html: string, options?: JsMediaEmbedsOptions | undefined | null): JsMediaEmbedsResult
 
 /** Transforms mermaid code blocks in HTML to rendered SVG diagrams. */
 export declare function transformMermaid(html: string, mmdcPath: string): MermaidTransformResult

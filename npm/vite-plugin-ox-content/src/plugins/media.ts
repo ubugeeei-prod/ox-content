@@ -213,7 +213,7 @@ export async function transformMediaEmbeds(
   if (!hasMediaMarker(result)) return result;
 
   const mod = await importNapiModule();
-  return mod.transformMediaEmbeds(result, {
+  const transformed = mod.transformMediaEmbedsWithDiagnostics(result, {
     spotify: options.spotify,
     appleMusic: options.appleMusic,
     speakerDeck: options.speakerDeck,
@@ -236,6 +236,9 @@ export async function transformMediaEmbeds(
     instagram: options.instagram,
     webContainer: options.webContainer,
   });
+
+  reportRefusedEmbeds(transformed.diagnostics);
+  return transformed.html;
 }
 
 function hasEnabledMediaEmbed(options: MediaEmbedOptions): boolean {
@@ -271,4 +274,25 @@ function hasMediaMarker(html: string): boolean {
       html,
     ) || /<(Audio|Video)[\s/>]/.test(html)
   );
+}
+
+/**
+ * Warns about tags an enabled provider refused.
+ *
+ * A refusal is invisible in the output — the tag becomes a plain link, or stays
+ * as authored — so a mistyped URL would otherwise ship without a word.
+ */
+function reportRefusedEmbeds(
+  diagnostics: readonly { provider: string; url?: string | null; line: number; fallback: string }[],
+): void {
+  for (const diagnostic of diagnostics) {
+    const target = diagnostic.url ? ` for ${diagnostic.url}` : "";
+    const outcome =
+      diagnostic.fallback === "linked"
+        ? "rendered as a plain link instead"
+        : "left as authored markup; it carries no URL safe to link to";
+    console.warn(
+      `[ox-content:embeds] <${diagnostic.provider}> on line ${diagnostic.line} did not resolve${target}; ${outcome}.`,
+    );
+  }
 }

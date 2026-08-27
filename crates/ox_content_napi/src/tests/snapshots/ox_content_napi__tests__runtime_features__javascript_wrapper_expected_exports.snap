@@ -80,6 +80,7 @@ searchIndex
 transform
 transformAsync
 transformMediaEmbeds
+transformMediaEmbedsWithDiagnostics
 transformMdastRaw
 transformPmEmbeds
 transformTabsEmbeds

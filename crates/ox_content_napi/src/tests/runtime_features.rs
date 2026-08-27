@@ -98,6 +98,7 @@ fn javascript_wrapper_and_declarations_cover_expected_exports() {
         "transform",
         "transformAsync",
         "transformMediaEmbeds",
+        "transformMediaEmbedsWithDiagnostics",
         "transformMdastRaw",
         "transformPmEmbeds",
         "transformTabsEmbeds",

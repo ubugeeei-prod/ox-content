@@ -4,7 +4,7 @@
 //! link-safe URL degrades to a neutral link, and one that does not keeps its
 //! markup because there is nothing better to say.
 
-use super::transform_media_embeds;
+use super::{EmbedFallback, transform_media_embeds, transform_media_embeds_with_diagnostics};
 use crate::MediaEmbedsOptions;
 
 /// A rejected tag either degrades to a neutral link or keeps its markup,
@@ -155,4 +155,54 @@ fn a_disabled_provider_is_left_completely_alone() {
     let source = r#"<Qiita url="https://qiita.com/ubugeeei"></Qiita>"#;
     let rendered = transform_media_embeds(source, Some(&MediaEmbedsOptions::default()));
     assert_eq!(rendered, source);
+}
+
+#[test]
+fn a_refused_tag_is_reported_with_its_url_and_line() {
+    let options = MediaEmbedsOptions { qiita: Some(true), ..Default::default() };
+    let source = concat!(
+        "<p>intro</p>\n",
+        "<p>more</p>\n",
+        r#"<Qiita url="https://qiita.com/ubugeeei"></Qiita>"#,
+    );
+
+    let (_, diagnostics) = transform_media_embeds_with_diagnostics(source, Some(&options));
+
+    assert_eq!(diagnostics.len(), 1, "{diagnostics:?}");
+    let diagnostic = &diagnostics[0];
+    assert_eq!(diagnostic.provider, "qiita");
+    assert_eq!(diagnostic.url.as_deref(), Some("https://qiita.com/ubugeeei"));
+    assert_eq!(diagnostic.line, 3);
+    assert_eq!(diagnostic.fallback, EmbedFallback::Linked);
+}
+
+#[test]
+fn a_tag_with_no_safe_url_reports_that_its_markup_was_kept() {
+    let options = MediaEmbedsOptions { speaker_deck: Some(true), ..Default::default() };
+    let (html, diagnostics) = transform_media_embeds_with_diagnostics(
+        r#"<SpeakerDeck url="javascript:alert(1)"></SpeakerDeck>"#,
+        Some(&options),
+    );
+
+    assert_eq!(diagnostics.len(), 1, "{diagnostics:?}");
+    assert_eq!(diagnostics[0].fallback, EmbedFallback::Kept);
+    assert_eq!(diagnostics[0].url, None);
+    assert!(html.contains("<SpeakerDeck"), "{html}");
+}
+
+#[test]
+fn a_provider_that_resolves_reports_nothing() {
+    let options = MediaEmbedsOptions { qiita: Some(true), ..Default::default() };
+    let (_, diagnostics) = transform_media_embeds_with_diagnostics(
+        r#"<Qiita url="https://qiita.com/ubugeeei/items/abcdef123456"></Qiita>"#,
+        Some(&options),
+    );
+    assert!(diagnostics.is_empty(), "{diagnostics:?}");
+
+    // And a disabled provider is not the transform's business to report.
+    let (_, none) = transform_media_embeds_with_diagnostics(
+        r#"<Qiita url="https://qiita.com/ubugeeei"></Qiita>"#,
+        Some(&MediaEmbedsOptions::default()),
+    );
+    assert!(none.is_empty(), "{none:?}");
 }
