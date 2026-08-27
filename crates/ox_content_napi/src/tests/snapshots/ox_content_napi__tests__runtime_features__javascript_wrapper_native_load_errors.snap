@@ -252,6 +252,7 @@ module.exports.renderFrameworkComponentCode = binding.renderFrameworkComponentCo
 module.exports.renderSsgSectionIndex = binding.renderSsgSectionIndex;
 module.exports.parseFeedDate = binding.parseFeedDate;
 module.exports.generateFeedBodies = binding.generateFeedBodies;
+module.exports.mediaEmbedTags = binding.mediaEmbedTags;
 module.exports.transformCrossReferences = binding.transformCrossReferences;
 module.exports.planRedirects = binding.planRedirects;
 module.exports.renderRedirectHtml = binding.renderRedirectHtml;
