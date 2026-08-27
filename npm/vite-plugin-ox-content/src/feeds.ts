@@ -1,14 +1,14 @@
 /**
  * Opt-in RSS / Atom / JSON Feed helpers.
  *
- * String bodies follow `ox_content_ssg::generate_feeds`. The Vite plugin
- * writes those files during SSG without adding a NAPI surface.
+ * Bodies come from `ox_content_ssg::generate_feeds` through the NAPI binding.
+ * What stays here is the part that binding does not model: which entries a
+ * channel publishes, where each file lands, and writing them.
  */
 
 import * as fs from "node:fs/promises";
 import * as path from "node:path";
-import { applyAtomMeta, applyJsonMeta, applyRssMeta, channelMeta } from "./feed-channel-meta";
-import { generateAtom, generateJson, generateRss } from "./feed-format";
+import { renderFeedBodies } from "./feeds-native";
 import type { FeedDocument } from "./feed-format";
 import {
   feedContentType,
@@ -144,19 +144,17 @@ export function generateFeeds(input: FeedsRenderInput): FeedsRenderResult {
     return { warning };
   }
 
-  const published = publishedItems(input);
-  const doc = feedDocument(input);
-  const meta = channelMeta(doc, input.options);
+  const bodies = renderFeedBodies(
+    feedDocument(input),
+    publishedItems(input),
+    input.options.formats,
+    input.options,
+    input.siteUrl,
+  );
   const result: FeedsRenderResult = {};
-  if (input.options.formats.includes("rss")) {
-    result.rssXml = applyRssMeta(generateRss(doc, published), meta);
-  }
-  if (input.options.formats.includes("atom")) {
-    result.atomXml = applyAtomMeta(generateAtom(doc, published), meta);
-  }
-  if (input.options.formats.includes("json")) {
-    result.jsonFeed = applyJsonMeta(generateJson(doc, published), meta);
-  }
+  if (bodies.rssXml != null) result.rssXml = bodies.rssXml;
+  if (bodies.atomXml != null) result.atomXml = bodies.atomXml;
+  if (bodies.jsonFeed != null) result.jsonFeed = bodies.jsonFeed;
   return result;
 }
 

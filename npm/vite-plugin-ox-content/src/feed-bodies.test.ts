@@ -1,19 +1,21 @@
 import { describe, expect, it } from "vite-plus/test";
-import { applyAtomMeta, applyJsonMeta, applyRssMeta, channelMeta } from "./feed-channel-meta";
-import { generateAtom, generateJson, generateRss } from "./feed-format";
-import { parseDate } from "./feed-date";
 import { importNapiModuleSync } from "./napi";
-import type { FeedDocument, FeedEntry } from "./feed-format";
+import type { FeedDocument } from "./feed-format";
 
 /**
- * The TypeScript writer and `ox_content_ssg::generate_feeds` both produce feed
- * bodies, and `feed-format.ts` says it follows the Rust one. Nothing checked
- * that, and by the time #1074 was filed the two had drifted: six item fields
- * existed only in TypeScript.
+ * The feed corpus, now asserted against the native renderer alone.
  *
- * This corpus exercises every one of them, so the two cannot part ways again
- * without a red test.
+ * This began as a parity check between `feed-format.ts` and
+ * `ox_content_ssg::generate_feeds`. The TypeScript renderer is gone — it was a
+ * second implementation kept in step by this file, and it had already drifted
+ * once (#1074: six item fields existed only in TypeScript) while its sibling
+ * date parser drifted far enough to be wrong on live input (#1068).
+ *
+ * The corpus outlives the comparison: every field that drift touched is still
+ * exercised here, now against recorded bodies, so a change to the Rust side
+ * shows up as a reviewable diff.
  */
+
 const DOC: FeedDocument = {
   siteName: "Docs & Co <x>",
   siteDescription: "Example docs",
@@ -60,14 +62,21 @@ const ITEMS = [
   { title: "NoDate", loc: "https://example.com/d", description: "no date" },
 ];
 
-function nativeBodies() {
+interface Bodies {
+  rssXml?: string;
+  atomXml?: string;
+  jsonFeed?: string;
+}
+
+function generate(options: Record<string, unknown>, items: unknown[]): Bodies {
   const napi = importNapiModuleSync() as unknown as {
-    generateFeedBodies(
-      options: Record<string, unknown>,
-      items: unknown[],
-    ): { rssXml?: string; atomXml?: string; jsonFeed?: string };
+    generateFeedBodies(options: Record<string, unknown>, items: unknown[]): Bodies;
   };
-  return napi.generateFeedBodies(
+  return napi.generateFeedBodies(options, items);
+}
+
+function nativeBodies(): Bodies {
+  return generate(
     {
       enabled: true,
       siteUrl: "https://example.com",
@@ -84,24 +93,17 @@ function nativeBodies() {
   );
 }
 
-function tsEntries(): FeedEntry[] {
-  return ITEMS.map((item) => ({
-    ...item,
-    date: item.date ? parseDate(item.date) : undefined,
-  })) as FeedEntry[];
-}
-
-describe("feed generation parity", () => {
-  it("produces the same RSS body in both implementations", () => {
-    expect(nativeBodies().rssXml).toBe(generateRss(DOC, tsEntries()));
+describe("feed bodies", () => {
+  it("renders the RSS body", () => {
+    expect(nativeBodies().rssXml).toMatchSnapshot();
   });
 
-  it("produces the same Atom body in both implementations", () => {
-    expect(nativeBodies().atomXml).toBe(generateAtom(DOC, tsEntries()));
+  it("renders the Atom body", () => {
+    expect(nativeBodies().atomXml).toMatchSnapshot();
   });
 
-  it("produces the same JSON Feed body in both implementations", () => {
-    expect(nativeBodies().jsonFeed).toBe(generateJson(DOC, tsEntries()));
+  it("renders the JSON Feed body", () => {
+    expect(nativeBodies().jsonFeed).toMatchSnapshot();
   });
 
   it("carries the fields that used to exist only in TypeScript", () => {
@@ -125,14 +127,8 @@ const CHANNEL = {
   copyright: "© 2026 Docs & Co",
 };
 
-function nativeWithChannel(items: unknown[]) {
-  const napi = importNapiModuleSync() as unknown as {
-    generateFeedBodies(
-      options: Record<string, unknown>,
-      items: unknown[],
-    ): { rssXml?: string; atomXml?: string; jsonFeed?: string };
-  };
-  return napi.generateFeedBodies(
+function nativeWithChannel(items: unknown[]): Bodies {
+  return generate(
     {
       enabled: true,
       siteUrl: "https://example.com",
@@ -163,40 +159,24 @@ const LOCALISED = [
   },
 ];
 
-function tsWithChannel(items: typeof PLAIN) {
-  const entries = items.map((item) => ({
-    ...item,
-    date: item.date ? parseDate(item.date) : undefined,
-  })) as FeedEntry[];
-  const meta = channelMeta(DOC, CHANNEL);
-  return {
-    rss: applyRssMeta(generateRss(DOC, entries), meta),
-    atom: applyAtomMeta(generateAtom(DOC, entries), meta),
-    json: applyJsonMeta(generateJson(DOC, entries), meta),
-  };
-}
-
-describe("feed channel metadata parity", () => {
-  it("matches the TypeScript layer on every format", () => {
-    const rust = nativeWithChannel(PLAIN);
-    const ts = tsWithChannel(PLAIN);
-    expect(rust.rssXml).toBe(ts.rss);
-    expect(rust.atomXml).toBe(ts.atom);
-    expect(rust.jsonFeed).toBe(ts.json);
+describe("feed channel metadata", () => {
+  it("carries title, language, image, favicon, and copyright into every format", () => {
+    const bodies = nativeWithChannel(PLAIN);
+    expect(bodies.rssXml).toMatchSnapshot();
+    expect(bodies.atomXml).toMatchSnapshot();
+    expect(bodies.jsonFeed).toMatchSnapshot();
   });
 
-  it("still matches on RSS and JSON when an item carries its own language", () => {
-    const rust = nativeWithChannel(LOCALISED);
-    const ts = tsWithChannel(LOCALISED as typeof PLAIN);
-    expect(rust.rssXml).toBe(ts.rss);
-    expect(rust.jsonFeed).toBe(ts.json);
+  it("keeps channel metadata when an item carries its own language", () => {
+    const bodies = nativeWithChannel(LOCALISED);
+    expect(bodies.rssXml).toContain("<copyright>");
+    expect(bodies.jsonFeed).toContain('"favicon"');
   });
 
-  // A recorded difference. The TypeScript layer patches the generated string
-  // and anchors on the literal `  <entry>`, which a localised entry does not
-  // match — so its icon, logo, and rights land *after* every entry, but only
-  // when some item happens to carry an `xml:lang`. Generating the metadata in
-  // place puts it ahead of the entries either way.
+  // The renderer this replaced patched the finished string and anchored on the
+  // literal `  <entry>`, which a localised entry does not match — so its icon,
+  // logo, and rights landed *after* every entry whenever some item carried an
+  // `xml:lang`. Generating the metadata in place puts it ahead either way.
   it("keeps Atom channel metadata ahead of the entries regardless of item language", () => {
     for (const items of [PLAIN, LOCALISED]) {
       const atom = nativeWithChannel(items).atomXml ?? "";
@@ -204,9 +184,5 @@ describe("feed channel metadata parity", () => {
       expect(atom.indexOf("<icon>")).toBeLessThan(atom.indexOf("<entry"));
       expect(atom.indexOf("<rights>")).toBeLessThan(atom.indexOf("<entry"));
     }
-
-    // The behaviour this replaces, so the change is visible if anyone reverts it.
-    const legacy = tsWithChannel(LOCALISED as typeof PLAIN).atom;
-    expect(legacy.indexOf("<icon>")).toBeGreaterThan(legacy.indexOf("<entry"));
   });
 });
