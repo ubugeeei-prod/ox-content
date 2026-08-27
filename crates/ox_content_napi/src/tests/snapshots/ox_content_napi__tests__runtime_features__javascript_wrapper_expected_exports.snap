@@ -37,6 +37,7 @@ generateI18nModule
 generateOgImageSvg
 generateSearchModule
 generateSearchModuleFromOptions
+generateSiteMapBodies
 generateSsgBareHtml
 generateSsgBarePage
 highlightCodeBlock

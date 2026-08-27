@@ -205,6 +205,9 @@ export declare function generateSearchModule(optionsJson: string, indexPath: str
 /** Generates the client-side search runtime module from typed options. */
 export declare function generateSearchModuleFromOptions(options: JsSearchRuntimeOptions, indexPath: string): string
 
+/** Builds `sitemap.xml`, `robots.txt`, and `llms.txt` bodies without writing files. */
+export declare function generateSiteMapBodies(options: JsSiteMapsOptions, pages: Array<JsSiteMapPage>): JsSiteMapsOutput
+
 /** Generates a bare SSG HTML page without navigation or styles. */
 export declare function generateSsgBareHtml(content: string, title: string): string
 
@@ -1971,6 +1974,36 @@ export interface JsSectionIndexItem {
   href: string
   /** Optional card description. Escaped in HTML. */
   description?: string
+}
+
+/** One page considered for the crawl manifests. */
+export interface JsSiteMapPage {
+  loc: string
+  title: string
+  description?: string
+  /** Source-file git commit time in milliseconds. `None` omits `<lastmod>`. */
+  lastUpdated?: number
+  draft?: boolean
+  unlisted?: boolean
+}
+
+/** Switches and site metadata for crawl-manifest generation. */
+export interface JsSiteMapsOptions {
+  enabled: boolean
+  siteUrl?: string
+  sitemapLoc: string
+  siteName: string
+  siteDescription?: string
+  robots: boolean
+  llms: boolean
+}
+
+/** Generated crawl-manifest bodies, or a warning when generation is skipped. */
+export interface JsSiteMapsOutput {
+  sitemapXml?: string
+  robotsTxt?: string
+  llmsTxt?: string
+  warning?: string
 }
 
 /** Custom social link for JavaScript. */

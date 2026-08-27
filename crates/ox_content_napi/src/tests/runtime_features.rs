@@ -55,6 +55,7 @@ fn javascript_wrapper_and_declarations_cover_expected_exports() {
         "generateOgImageSvg",
         "generateSearchModule",
         "generateSearchModuleFromOptions",
+        "generateSiteMapBodies",
         "generateSsgBareHtml",
         "generateSsgBarePage",
         "highlightCodeBlock",

@@ -181,9 +181,6 @@ export declare function generateDocsNavMetadataFromDocs(docs: Array<JsDocsMarkdo
 /** Builds RSS / Atom / JSON Feed bodies without writing files. */
 export declare function generateFeedBodies(options: JsFeedsOptions, items: Array<JsFeedItem>): JsFeedsOutput
 
-/** Builds `sitemap.xml`, `robots.txt`, and `llms.txt` bodies without writing files. */
-export declare function generateSiteMapBodies(options: JsSiteMapsOptions, pages: Array<JsSiteMapPage>): JsSiteMapsOutput
-
 /** Generates the `virtual:ox-content/i18n` runtime module. */
 export declare function generateI18nModule(dictDir: string, config: JsI18NRuntimeConfig): string
 
@@ -1032,36 +1029,6 @@ export interface JsFeedsOptions {
   image?: string
   favicon?: string
   copyright?: string
-}
-
-/** One page considered for the crawl manifests. */
-export interface JsSiteMapPage {
-  loc: string
-  title: string
-  description?: string
-  /** Source-file git commit time in milliseconds. `None` omits `<lastmod>`. */
-  lastUpdated?: number
-  draft?: boolean
-  unlisted?: boolean
-}
-
-/** Switches and site metadata for crawl-manifest generation. */
-export interface JsSiteMapsOptions {
-  enabled: boolean
-  siteUrl?: string
-  sitemapLoc: string
-  siteName: string
-  siteDescription?: string
-  robots: boolean
-  llms: boolean
-}
-
-/** Generated crawl-manifest bodies, or a warning when generation is skipped. */
-export interface JsSiteMapsOutput {
-  sitemapXml?: string
-  robotsTxt?: string
-  llmsTxt?: string
-  warning?: string
 }
 
 /** Generated feed bodies, or a warning when generation is skipped. */
