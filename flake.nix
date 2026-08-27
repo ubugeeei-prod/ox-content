@@ -29,14 +29,7 @@
         lib = pkgs.lib;
         nodejs = pkgs.nodejs_26;
         pnpm = pkgs.pnpm;
-        rustToolchain = pkgs.rust-bin.stable."1.98.0".default.override {
-          extensions = [
-            "clippy"
-            "rust-src"
-            "rustfmt"
-          ];
-          targets = [ "wasm32-unknown-unknown" ];
-        };
+        rustToolchain = pkgs.rust-bin.fromRustupToolchainFile ./rust-toolchain.toml;
         workspaceVp = pkgs.writeShellApplication {
           name = "vp";
           runtimeInputs = [
