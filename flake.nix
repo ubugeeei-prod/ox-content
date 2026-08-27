@@ -115,7 +115,7 @@
             nativeBuildInputs = [
               pkgs.makeWrapper
             ]
-            ++ lib.optionals pkgs.stdenv.isLinux [ pkgs.autoPatchelfHook ];
+            ++ lib.optionals pkgs.stdenv.hostPlatform.isLinux [ pkgs.autoPatchelfHook ];
 
             installPhase = ''
               runHook preInstall
@@ -163,7 +163,7 @@
             pkgs.pkg-config
             pkgs.rsync
           ]
-          ++ lib.optionals pkgs.stdenv.isDarwin [ pkgs.libiconv ];
+          ++ lib.optionals pkgs.stdenv.hostPlatform.isDarwin [ pkgs.libiconv ];
 
           RUST_BACKTRACE = "1";
           RUST_SRC_PATH = "${rustToolchain}/lib/rustlib/src/rust/library";
