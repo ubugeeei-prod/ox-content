@@ -506,12 +506,12 @@ export default {
 </code></pre>
 <p>Resolved player URL (no network request):</p>
 <pre><code class="language-html">&#x3C;SpeakerDeck
-  url="https://speakerdeck.com/player/abcdef1234567890"
+  url="https://speakerdeck.com/jane/my-talk"
   title="My Talk"
   author="Jane Doe"
 >&#x3C;/SpeakerDeck>
 </code></pre>
-<figure class="ox-speaker-deck"><iframe class="ox-speaker-deck" src="https://speakerdeck.com/player/abcdef1234567890" title="My Talk" width="100%" height="480" loading="lazy" allowfullscreen sandbox="allow-scripts allow-same-origin allow-popups allow-popups-to-escape-sandbox allow-presentation" referrerpolicy="strict-origin-when-cross-origin"></iframe><figcaption class="ox-speaker-deck__meta"><a href="https://speakerdeck.com/player/abcdef1234567890" target="_blank" rel="noopener noreferrer"><strong class="ox-speaker-deck__title">My Talk</strong><span class="ox-speaker-deck__author">Jane Doe</span></a></figcaption></figure>
+<a class="ox-speaker-deck ox-speaker-deck--fallback" href="https://speakerdeck.com/jane/my-talk" target="_blank" rel="noopener noreferrer"><span class="ox-speaker-deck__title">My Talk</span><span class="ox-speaker-deck__author">Jane Doe</span></a>
 <p>Share URLs (<code>https://speakerdeck.com/{user}/{slug}</code>) fetch oEmbed metadata at
 build time and inject the player id, title, and author. <code>javascript:</code> and
 <code>data:</code> URLs are rejected and stay as authored markup.</p>
