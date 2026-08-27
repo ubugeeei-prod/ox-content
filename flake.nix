@@ -12,11 +12,7 @@
   outputs =
     inputs@{ flake-parts, ... }:
     flake-parts.lib.mkFlake { inherit inputs; } {
-      systems = [
-        "aarch64-darwin"
-        "aarch64-linux"
-        "x86_64-linux"
-      ];
+      systems = import ./nix/systems.nix;
 
       imports = [
         ./nix/blacksmith.nix
