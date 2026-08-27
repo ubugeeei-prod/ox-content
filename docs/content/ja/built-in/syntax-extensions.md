@@ -15,6 +15,7 @@ description: オプトインの執筆構文 — 絵文字ショートコード�
 | `crossReferences` | `boolean` / `CrossReferencesOptions` | `false` |
 | `xrefs`           | `crossReferences` の alias           | `false` |
 | `citations`       | `boolean` / `CitationsOptions`       | `false` |
+| `budoux`          | `boolean` / `BudouxOptions`          | `false` |
 | `cjkEmphasis`     | `boolean`                            | `false` |
 | `magicLinks`      | `boolean` / `MagicLinkOptions`       | `false` |
 | `notByAi`         | `boolean` / `NotByAiOptions`         | `false` |
@@ -175,6 +176,10 @@ A**強調。**B
 
 `[@key]` と `[@key; -@other]` を、ローカル CSL JSON から生成した bibliography entry へのリンクにします。既定はオフです。詳細は [引用](./citations.md) を見てください。
 
+## BudouX
+
+オプトインの `budoux` は、より自然な日本語改行のために visible prose へ zero-width space をビルド時に挿入します。tag、attribute、URL、entity、code、生 HTML block、island JSON payload は変えません。既定はオフです。詳細は [BudouX](./budoux.md) を見てください。
+
 ## NotByAI バッジ
 
 オプトインの `<NotByAI />` は静的な人の執筆開示です。状態バッジではありません。既定はオフです。詳細は [NotByAI バッジ](./not-by-ai.md) を見てください。
@@ -201,6 +206,7 @@ A**強調。**B
 - [マジックリンク](./magic-links.md) — GitHub・エイリアス・URL の設定可能なリンク。
 - [相互参照](./cross-references.md) — セクション、図、表の生成 label。
 - [引用](./citations.md) — bibliography に基づく生成参照。
+- [BudouX](./budoux.md) — ビルド時の日本語フレーズ分割。
 - [キーボードキー](./keyboard-keys.md) — `{kbd:Ctrl+K}` ショートカット。
 - [略語・用語集](./abbreviations.md) — `*[TERM]:` 用語展開。
 - [定義リスト](./definition-lists.md) — オプトインの `Term` / `: definition`

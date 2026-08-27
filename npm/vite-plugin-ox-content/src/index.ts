@@ -913,6 +913,7 @@ export {
   resolveBlogCollectionName,
   readingTimeMinutes,
 } from "./blog";
+export { resolveBudouxOptions, transformBudouxHtml } from "./budoux";
 export { resolvePwaOptions } from "./pwa";
 export { resolveTaxonomiesOptions } from "./taxonomies";
 export { resolveVersionsOptions } from "./versions";

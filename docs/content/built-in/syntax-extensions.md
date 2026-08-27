@@ -16,6 +16,7 @@ everywhere until a site explicitly enables an extension.
 | `crossReferences` | `boolean` / `CrossReferencesOptions` | `false` |
 | `xrefs`           | Alias for `crossReferences`          | `false` |
 | `citations`       | `boolean` / `CitationsOptions`       | `false` |
+| `budoux`          | `boolean` / `BudouxOptions`          | `false` |
 | `cjkEmphasis`     | `boolean`                            | `false` |
 | `magicLinks`      | `boolean` / `MagicLinkOptions`       | `false` |
 | `notByAi`         | `boolean` / `NotByAiOptions`         | `false` |
@@ -210,6 +211,13 @@ Opt-in `[@key]` and `[@key; -@other]` references link to generated bibliography
 entries loaded from local CSL JSON. Off by default. See
 [Citations](./citations.md).
 
+## BudouX
+
+Opt-in `budoux` inserts zero-width spaces into visible prose at build time for
+better Japanese line breaking. It leaves tags, attributes, URLs, entities,
+code, raw HTML blocks, and island JSON payloads unchanged. Off by default. See
+[BudouX](./budoux.md).
+
 ## NotByAI Badge
 
 Opt-in `<NotByAI />` emits a static human-authorship disclosure. It is not a
@@ -239,6 +247,7 @@ Opt-in `Term` / `: definition` glossary lists. Off by default. See
 - [Cross References](./cross-references.md) — generated labels for sections,
   figures, and tables.
 - [Citations](./citations.md) — generated bibliography-backed references.
+- [BudouX](./budoux.md) — build-time Japanese phrase segmentation.
 - [Keyboard Keys](./keyboard-keys.md) — `{kbd:Ctrl+K}` shortcut markup.
 - [Abbreviations](./abbreviations.md) — `*[TERM]:` glossary expansion.
 - [Definition Lists](./definition-lists.md) — opt-in `Term` / `: definition`

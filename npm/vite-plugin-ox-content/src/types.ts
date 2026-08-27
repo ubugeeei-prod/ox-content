@@ -26,6 +26,7 @@ import type {
   CitationsOptions,
   ResolvedCitationsOptions,
 } from "./citation-types";
+import type { BudouxOptions, ResolvedBudouxOptions } from "./budoux-types";
 import type { ThemeComponent } from "./theme-renderer";
 
 export type {
@@ -35,6 +36,12 @@ export type {
   CitationsOptions,
   ResolvedCitationsOptions,
 } from "./citation-types";
+export type {
+  BudouxLanguage,
+  BudouxOptions,
+  BudouxParser,
+  ResolvedBudouxOptions,
+} from "./budoux-types";
 
 // =============================================================================
 // Entry Page Types (VitePress-like)
@@ -1821,6 +1828,17 @@ export interface OxContentOptions {
   citations?: boolean | CitationsOptions;
 
   /**
+   * Opt-in build-time BudouX phrase segmentation.
+   *
+   * Inserts zero-width spaces into visible prose so Japanese text gets better
+   * line-break opportunities without shipping the BudouX parser to the browser.
+   * Install `budoux` when enabling the default parser, or pass a custom parser.
+   *
+   * @default false
+   */
+  budoux?: boolean | BudouxOptions;
+
+  /**
    * Opt-in `{badge:variant}` inline badges.
    *
    * Passing `true` or an options object enables the built-in variants.
@@ -2291,6 +2309,10 @@ export interface ResolvedOptions {
   attrs: ResolvedAttrsOptions;
   crossReferences: ResolvedCrossReferencesOptions;
   citations: ResolvedCitationsOptions;
+  /**
+   * Present after `resolveOptions`. Omitted in hand-built fixtures means off.
+   */
+  budoux?: ResolvedBudouxOptions;
   badges: ResolvedBadgeOptions;
   /**
    * Present after `resolveOptions`. Omitted in hand-built fixtures means off.

@@ -156,6 +156,7 @@ export function createDocsResolvedOptions(
       malformed: "error",
       bibliographyTitle: "References",
     },
+    budoux: { enabled: false, language: "ja", separator: "\u200b" },
     badges: { enabled: false },
     notByAi: { enabled: false, label: "Written by human, not by AI", href: "https://notbyai.fyi" },
     keyboardKeys: { enabled: false, aliases: {}, style: "words" },

@@ -105,6 +105,7 @@
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",
     "@typescript/native-preview": "catalog:",
+    "budoux": "^0.9.0",
     "katex": "^0.16.22",
     "vite": "catalog:",
     "vite-plus": "catalog:",
@@ -112,6 +113,7 @@
   },
   "peerDependencies": {
     "@vue/compiler-sfc": "^3.4.0",
+    "budoux": "^0.9.0",
     "katex": "^0.16.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
@@ -120,6 +122,9 @@
     "vue": "^3.4.0"
   },
   "peerDependenciesMeta": {
+    "budoux": {
+      "optional": true
+    },
     "katex": {
       "optional": true
     },

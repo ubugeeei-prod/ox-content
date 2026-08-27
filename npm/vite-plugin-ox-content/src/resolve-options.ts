@@ -1,4 +1,5 @@
 import { resolveBlogOptions } from "./blog";
+import { resolveBudouxOptions } from "./budoux";
 import { resolveBuiltinEmbedOptions } from "./builtin-embed-options";
 import { resolveCardOptions } from "./card-options";
 import { resolveCodeGroupOptions } from "./code-group-options";
@@ -79,6 +80,7 @@ export function resolveOptions(options: OxContentOptions): ResolvedOptions {
     attrs: resolveAttrsOptions(options.attrs),
     crossReferences: resolveCrossReferencesOptions(options.crossReferences ?? options.xrefs),
     citations: resolveCitationsOptions(options.citations),
+    budoux: resolveBudouxOptions(options.budoux),
     badges: resolveBadgeOptions(options.badges),
     notByAi: resolveNotByAiOptions(options.notByAi),
     keyboardKeys: resolveKeyboardKeysOptions(options.keyboardKeys),

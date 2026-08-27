@@ -26,6 +26,7 @@ export default defineConfig({
       neverBundle: [
         "vite",
         "@ox-content/napi",
+        "budoux",
         "playwright",
         "rolldown",
         "vue",

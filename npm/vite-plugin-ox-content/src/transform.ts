@@ -42,6 +42,7 @@ import { prepareGraphvizFences, restoreGraphvizPlaceholders } from "./plugins/gr
 import { renderKatexMath } from "./plugins/math";
 import { transformCrossReferences, type CrossReferenceEntry } from "./cross-references";
 import { transformCitations, type BibliographyEntry, type CitationReference } from "./citations";
+import { transformBudouxHtml } from "./budoux";
 import {
   documentLocalComponentNames,
   filterReservedBuiltinComponentNames,
@@ -816,6 +817,8 @@ export async function transformMarkdown(
   if (isMathEnabled(options.math)) {
     html = await renderKatexMath(html);
   }
+
+  html = await transformBudouxHtml(html, options.budoux);
 
   const imports = result.imports ?? [];
   const exports = result.exports ?? [];
