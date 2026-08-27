@@ -36,6 +36,9 @@
 
 import type { MdxImport, ResolvedOptions, TocEntry, TransformResult } from "./types";
 import { highlightPageHtml } from "./highlight";
+
+/** A `<pre>` that names a language but has not been highlighted yet. */
+const UNHIGHLIGHTED_CODE_BLOCK = /<pre(?![^>]*ox-highlight)[^>]*><code class="language-/;
 import { importNapiModule } from "./napi";
 import { transformMermaidStatic } from "./plugins/mermaid";
 import { prepareGraphvizFences, restoreGraphvizPlaceholders } from "./plugins/graphviz";
@@ -796,9 +799,18 @@ export async function transformMarkdown(
     localNames,
   });
 
-  // GitHub source cards are created after the first highlight pass, so run
-  // highlighting again when those blocks are present.
-  if (options.highlight && html.includes("ox-github-code-block")) {
+  // Embed transforms can emit code blocks of their own — GitHub source cards,
+  // package-manager tabs — and those are created after the first highlight
+  // pass. Re-run when the page still holds a block that names a language and
+  // has not been highlighted yet.
+  //
+  // The `<pre>` is what tells the two states apart, not the `<code>`: a
+  // highlighted block keeps its `<code class="language-…">` and gains
+  // `ox-highlight` on the `<pre>`. Matching the `<code>` alone re-runs the pass
+  // over already-highlighted markup, which escapes its entities a second time
+  // and turns a rendered `"` back into `&quot;`. Matching a bare `<pre>` alone
+  // misses GitHub cards, whose `<pre>` carries its own classes.
+  if (options.highlight && UNHIGHLIGHTED_CODE_BLOCK.test(html)) {
     html = await highlightPageHtml(html, napi.mergeHighlightedCodeBlocks);
   }
 

@@ -99,9 +99,14 @@ pub(super) fn render_pm(command: &str, group: u32, options: PmOptions) -> String
 }
 
 /// Wrap a converted command in a `<pre><code>` block, escaping its text.
+///
+/// The language class is what makes the block highlightable. These blocks are
+/// generated after the page's first highlight pass, so without it they reach
+/// the reader as plain text while every authored shell fence beside them is
+/// tokenised.
 fn code_block(command: &str) -> String {
-    let mut out = String::with_capacity(command.len() + 24);
-    out.push_str("<pre><code>");
+    let mut out = String::with_capacity(command.len() + 40);
+    out.push_str("<pre><code class=\"language-bash\">");
     out.push_str(&escape_html(command));
     out.push_str("</code></pre>");
     out
