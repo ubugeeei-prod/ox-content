@@ -532,6 +532,18 @@ default. Authors can pass stable metadata with attributes such as `title`,
 </Mastodon>
 ```
 
+The cards these render, without a network request at build time:
+
+<CratesIo url="https://crates.io/crates/serde" name="serde" description="Serialization framework for Rust" version="1.0.219" downloads="512M" />
+
+<PyPI url="https://pypi.org/project/requests" name="requests" description="HTTP for Humans" version="2.32.3" />
+
+<DockerHub url="https://hub.docker.com/_/nginx" name="nginx" description="Official build of Nginx" />
+
+<JSFiddle url="https://jsfiddle.net/ubugeeei/abc123/2/" title="Layout sandbox" author="ubugeeei" />
+
+<Observable url="https://observablehq.com/@d3/bar-chart" title="Bar chart" author="d3" />
+
 | Option         | Default                       | Purpose                                          |
 | -------------- | ----------------------------- | ------------------------------------------------ |
 | `fetch`        | `true`                        | Fetch article/package/playground/video metadata. |

@@ -108,6 +108,10 @@ pub(super) fn generate_html_inner(
             "ox-audio",
             "ox-video",
             "ox-stackblitz",
+            // `provider-cards.css` rides along in this bundle, so every page
+            // built only from provider cards — Qiita, npm, Vimeo, Mastodon and
+            // the rest — shipped them unstyled without this marker.
+            "ox-provider-card",
         ],
     ) {
         css_sections.push(wrap_css_section("plugin-social", SOCIAL_CSS));

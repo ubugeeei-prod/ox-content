@@ -429,6 +429,18 @@ iframe URL は `{ iframe: true }` のときだけ追加されます。Twitch ifr
 </Mastodon>
 ```
 
+これらが描画するカードです。ビルド時のネットワークリクエストはありません。
+
+<CratesIo url="https://crates.io/crates/serde" name="serde" description="Rust のシリアライズフレームワーク" version="1.0.219" downloads="512M" />
+
+<PyPI url="https://pypi.org/project/requests" name="requests" description="HTTP for Humans" version="2.32.3" />
+
+<DockerHub url="https://hub.docker.com/_/nginx" name="nginx" description="Nginx の公式ビルド" />
+
+<JSFiddle url="https://jsfiddle.net/ubugeeei/abc123/2/" title="レイアウト検証" author="ubugeeei" />
+
+<Observable url="https://observablehq.com/@d3/bar-chart" title="棒グラフ" author="d3" />
+
 | オプション | 既定      | 目的                                                  |
 | ---------- | --------- | ----------------------------------------------------- |
 | `fetch`    | `true`    | 記事 / package / playground / video metadata を取る。 |
