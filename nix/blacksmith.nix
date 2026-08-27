@@ -20,22 +20,22 @@
             x86_64-linux = {
               os = "linux";
               arch = "amd64";
-              sha256 = "38f1c7aef1a36c87e40b9b50bc573ecdbbb785de46b2825e95cb9abafa359bdd";
+              sha256 = "7f60f3b9f8d4d7644d9743f5d962acb3b3dbf675f51676702e5f292e02060bca";
             };
             aarch64-linux = {
               os = "linux";
               arch = "arm64";
-              sha256 = "f8705a89bda30c40aed542319165f48cee47e96fbd5e54ff95e079528c3c872e";
+              sha256 = "04c8d261526e23c7791f05b8acec8f02b9d1fe67c35a1adcf28076627327270a";
             };
             x86_64-darwin = {
               os = "darwin";
               arch = "amd64";
-              sha256 = "6210b98c2b8b7903479456277753dd0959ed34f0226e9d5c40021c97a246f4e1";
+              sha256 = "47281f402ff223f85e5165ea9018cd0281a727f19c69af8121ae4b09658ad313";
             };
             aarch64-darwin = {
               os = "darwin";
               arch = "arm64";
-              sha256 = "a3367ab4151b12a4ea771515c314a0d48b62294c0b671325d42731f2be973f66";
+              sha256 = "607b0f4413e426574527446c7718ea32587d57b24a3ea0749e1ab4138a426584";
             };
           };
           target = selector.${system} or (throw "blacksmith CLI: unsupported system ${system}");
