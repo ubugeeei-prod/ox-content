@@ -1,4 +1,4 @@
-import { expect, test } from "@playwright/test";
+import { expect, test, type Page } from "@playwright/test";
 import { generateHtmlPage } from "../../src/ssg";
 import { transformMarkdown } from "../../src/transform";
 import { createDocsResolvedOptions } from "../fixtures/docs-fixture";
@@ -98,7 +98,10 @@ test("static provider cards render from attributes alone", async ({ page }) => {
   await expect(page.locator(".ox-provider-card")).toHaveCount(17);
   await expect(page.locator("body")).not.toContainText("<Qiita");
 
-  await expect(page.locator(".content")).toHaveScreenshot("provider-cards-resolved.png");
+  // The bug this guards is the stylesheet never shipping on a provider-only
+  // page, which a pixel snapshot would catch only indirectly — and only on the
+  // platform that generated it. Assert the rules actually landed instead.
+  await expectCardStylesApplied(page);
 });
 
 test("cards keep their column on a narrow viewport", async ({ page }) => {
@@ -124,5 +127,23 @@ test("unresolvable provider tags degrade to neutral links", async ({ page }) => 
   await expect(page.locator('[class*="ox-embed-fallback--"]')).toHaveCount(0);
   await expect(page.locator("body")).not.toContainText("<Qiita");
 
-  await expect(page.locator(".content")).toHaveScreenshot("provider-cards-fallback.png");
+  // Neutral means it carries no card styling at all — it is a prose link, and
+  // it has to stay a safe one.
+  const fallback = page.locator("a.ox-embed-fallback").first();
+  await expect(fallback).toHaveAttribute("href", /^https:\/\//);
+  await expect(fallback).toHaveAttribute("rel", "noopener noreferrer");
+  await expect(fallback).toHaveAttribute("target", "_blank");
 });
+
+/**
+ * A provider card is styled when its own rules are in the cascade, not merely
+ * when the element exists. `display` and `border-radius` both come from
+ * provider-cards.css, so an unshipped stylesheet leaves them at their initial
+ * values and this fails.
+ */
+async function expectCardStylesApplied(page: Page): Promise<void> {
+  const card = page.locator(".ox-provider-card").first();
+  await expect(card).toHaveCSS("display", /block|flex|grid/);
+  const radius = await card.evaluate((node) => getComputedStyle(node).borderRadius);
+  expect(radius).not.toBe("0px");
+}
