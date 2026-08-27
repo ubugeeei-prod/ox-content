@@ -143,49 +143,6 @@ fn renders_video_provider_cards() {
 }
 
 #[test]
-fn leaves_provider_cards_when_disabled_or_rejected() {
-    let input = r#"<Qiita url="https://qiita.com/ubugeeei/items/abcdef123456"></Qiita>"#;
-    assert_eq!(transform_media_embeds(input, Some(&MediaEmbedsOptions::default())), input);
-
-    let enabled = MediaEmbedsOptions {
-        google_maps: Some(true),
-        qiita: Some(true),
-        zenn: Some(true),
-        package_registry: Some(true),
-        playgrounds: Some(true),
-        vimeo: Some(true),
-        twitch: Some(true),
-        discord: Some(true),
-        fediverse: Some(true),
-        facebook: Some(true),
-        threads: Some(true),
-        instagram: Some(true),
-        ..Default::default()
-    };
-    for rejected in [
-        r#"<GoogleMaps url="https://google.com.evil.example/maps/place/Tokyo"></GoogleMaps>"#,
-        r#"<Qiita url="https://qiita.com/ubugeeei"></Qiita>"#,
-        r#"<Zenn url="https://zenn.dev/ubugeeei"></Zenn>"#,
-        r#"<NpmPackage url="https://user:pass@npmjs.com/package/vite"></NpmPackage>"#,
-        r#"<CratesIo url="http://crates.io/crates/serde"></CratesIo>"#,
-        r#"<PyPI url="https://pypi.org/user/requests"></PyPI>"#,
-        r#"<DockerHub url="https://hub.docker.com.evil/r/library/nginx"></DockerHub>"#,
-        r#"<CodePen url="https://codepen.io.evil/ubugeeei/pen/abc123"></CodePen>"#,
-        r#"<JSFiddle url="http://jsfiddle.net/ubugeeei/abc123"></JSFiddle>"#,
-        r#"<Observable url="https://observablehq.com/docs"></Observable>"#,
-        r#"<Vimeo url="https://vimeo.com.evil/123456789"></Vimeo>"#,
-        r#"<Twitch url="http://www.twitch.tv/videos/40464143"></Twitch>"#,
-        r#"<Twitch url="https://www.twitch.tv/directory"></Twitch>"#,
-        r#"<Discord url="https://evil.example/channels/1"></Discord>"#,
-        r#"<Facebook url="https://facebook.com.evil.example/post"></Facebook>"#,
-        r#"<Threads url="http://threads.net/@example/post/abc"></Threads>"#,
-        r#"<Instagram url="https://user:pass@instagram.com/p/abc123/"></Instagram>"#,
-    ] {
-        assert_eq!(transform_media_embeds(rejected, Some(&enabled)), rejected);
-    }
-}
-
-#[test]
 fn renders_apple_music_iframe_from_localized_share_url() {
     let html = transform_media_embeds(
         r#"<AppleMusic url="https://music.apple.com/gb/album/1989-taylors-version/1708308989"></AppleMusic>"#,
@@ -220,24 +177,6 @@ fn renders_apple_music_playlist_and_song_selection() {
 }
 
 #[test]
-fn leaves_apple_music_source_when_disabled_or_rejected() {
-    let input = r#"<AppleMusic url="https://music.apple.com/gb/album/1989-taylors-version/1708308989"></AppleMusic>"#;
-    let disabled = transform_media_embeds(input, Some(&MediaEmbedsOptions::default()));
-    assert_eq!(disabled, input);
-
-    let enabled = MediaEmbedsOptions { apple_music: Some(true), ..Default::default() };
-    for rejected in [
-        r#"<AppleMusic url="http://music.apple.com/us/album/folklore/1524801260"></AppleMusic>"#,
-        r#"<AppleMusic url="https://music.apple.com.evil.com/us/album/folklore/1524801260"></AppleMusic>"#,
-        r#"<AppleMusic url="https://user:pass@music.apple.com/us/album/folklore/1524801260"></AppleMusic>"#,
-        r#"<AppleMusic url="https://music.apple.com/us/album"></AppleMusic>"#,
-        r#"<AppleMusic url="https://music.apple.com/us/album/folklore/1524801260#oops"></AppleMusic>"#,
-    ] {
-        assert_eq!(transform_media_embeds(rejected, Some(&enabled)), rejected);
-    }
-}
-
-#[test]
 fn renders_resolved_speaker_deck_card() {
     let html = transform_media_embeds(
         r#"<SpeakerDeck url="https://speakerdeck.com/player/abcdef1234567890" title="My Talk" author="Jane Doe"></SpeakerDeck>"#,
@@ -253,23 +192,6 @@ fn renders_speaker_deck_fallback_link_card() {
         Some(&MediaEmbedsOptions { speaker_deck: Some(true), ..Default::default() }),
     );
     insta::assert_snapshot!(html);
-}
-
-#[test]
-fn leaves_speaker_deck_when_disabled_or_rejected() {
-    let input = r#"<SpeakerDeck url="https://speakerdeck.com/jane/my-cool-talk"></SpeakerDeck>"#;
-    assert_eq!(transform_media_embeds(input, Some(&MediaEmbedsOptions::default())), input);
-
-    let enabled = MediaEmbedsOptions { speaker_deck: Some(true), ..Default::default() };
-    for rejected in [
-        r#"<SpeakerDeck url="javascript:alert(1)"></SpeakerDeck>"#,
-        r#"<SpeakerDeck url="data:text/html,hi"></SpeakerDeck>"#,
-        r#"<SpeakerDeck url="http://speakerdeck.com/jane/talk"></SpeakerDeck>"#,
-        r#"<SpeakerDeck url="https://speakerdeck.com.evil.com/jane/talk"></SpeakerDeck>"#,
-        r#"<SpeakerDeck url="https://user:pass@speakerdeck.com/jane/talk"></SpeakerDeck>"#,
-    ] {
-        assert_eq!(transform_media_embeds(rejected, Some(&enabled)), rejected);
-    }
 }
 
 #[test]
@@ -300,23 +222,6 @@ fn renders_native_audio_and_video_players() {
     assert!(video.contains("height=\"720\""));
     assert!(video.contains("<track kind=\"captions\" src=\"/talk.en.vtt\""));
     assert!(tracked.contains("<track kind=\"subtitles\" src=\"/ja.vtt\""));
-}
-
-#[test]
-fn leaves_native_media_when_disabled_or_rejected() {
-    let audio = r#"<Audio src="https://cdn.example.com/intro.mp3"></Audio>"#;
-    assert_eq!(transform_media_embeds(audio, Some(&MediaEmbedsOptions::default())), audio);
-
-    let enabled = MediaEmbedsOptions { audio: Some(true), video: Some(true), ..Default::default() };
-    for rejected in [
-        r#"<Audio src="javascript:alert(1)"></Audio>"#,
-        r#"<Audio src="data:audio/mp3,abc"></Audio>"#,
-        r#"<Audio src="http://cdn.example.com/intro.mp3"></Audio>"#,
-        r#"<Video src="//evil.example/talk.mp4"></Video>"#,
-        r#"<audio src="https://cdn.example.com/intro.mp3"></audio>"#,
-    ] {
-        assert_eq!(transform_media_embeds(rejected, Some(&enabled)), rejected);
-    }
 }
 
 #[test]

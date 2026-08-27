@@ -1,4 +1,7 @@
 mod apple_music;
+mod fallback;
+#[cfg(test)]
+mod fallback_tests;
 mod html;
 mod native;
 mod package_cards;
@@ -15,6 +18,7 @@ mod video_cards;
 
 use crate::{MediaEmbedsOptions, html_scan::find_ci};
 
+use fallback::render_fallback;
 use html::{ComponentElement, find_component, find_pascal_component};
 use registry::{PROVIDERS, Provider, Tag};
 
@@ -62,10 +66,12 @@ fn rewrite_components(html: &str, provider: &Provider) -> String {
 
     while let Some(element) = find(html, cursor, &open, provider.name) {
         out.push_str(&html[cursor..element.span.0]);
-        if let Some(rendered) = (provider.render)(&element) {
-            out.push_str(&rendered);
-        } else {
-            out.push_str(&html[element.span.0..element.span.1]);
+        let original = &html[element.span.0..element.span.1];
+        // An enabled provider that cannot resolve its input still owes the
+        // reader the link. Only a tag with no safe URL keeps its markup.
+        match (provider.render)(&element).or_else(|| render_fallback(&element)) {
+            Some(rendered) => out.push_str(&rendered),
+            None => out.push_str(original),
         }
         cursor = element.span.1;
     }

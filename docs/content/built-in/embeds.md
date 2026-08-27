@@ -178,6 +178,26 @@ to `/favicon.ico` on that origin. No third-party favicon service is contacted,
 so rendering a card never tells an outside host which links a documentation
 page carries.
 
+## When an embed cannot be resolved
+
+A provider only renders a card for input it recognises. When an enabled
+provider cannot resolve a tag — a host it does not serve, a path shape it does
+not know — the tag degrades to a plain link rather than staying in the page as
+an unknown element:
+
+```html
+<a class="ox-embed-fallback" href="https://qiita.com/ubugeeei" target="_blank" rel="noopener noreferrer">https://qiita.com/ubugeeei</a>
+```
+
+The link text is the tag's body, then its `title`, then the URL. The fallback
+carries no provider name in its class, so a look-alike host cannot borrow a
+provider's styling — a renderer reports only that the input is not its own,
+never whether the host was wrong or merely the path.
+
+A tag whose URL is not safe to link to at all — a non-HTTPS scheme, embedded
+credentials — keeps its original markup, and a provider that is switched off is
+left untouched.
+
 ## Package Manager Tabs
 
 `embeds.pm` expands one npm-style command into an accessible tab group for
