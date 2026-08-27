@@ -15,6 +15,7 @@ env:
   CARGO_TERM_COLOR: always
   OX_CONTENT_BENCHMARK_RUNNER: blacksmith-32vcpu-ubuntu-2404
   OX_CONTENT_BENCHMARK_RUNS: "5"
+  OX_CONTENT_VP_PACKAGE_BUILD_CONCURRENCY: "12"
 
 jobs:
   benchmark:

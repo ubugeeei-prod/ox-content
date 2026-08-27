@@ -1,5 +1,6 @@
 import { spawnSync } from "node:child_process";
 import { defineConfig } from "vite-plus";
+import { packageBuildConcurrencyFlag } from "./scripts/package-build-concurrency";
 
 const lifecycleEnvName = "OX_CONTENT_VP_LIFECYCLE";
 
@@ -113,7 +114,7 @@ export default defineConfig({
       // `./npm/**` (not `./npm/*`): the theme presets live one level deeper at
       // npm/theme/* and npm/theme-color/*, and publish.yml packs them straight
       // from this task's output — a single-star filter would ship them dist-less.
-      "build:npm": task("vp run --filter './npm/**' build", {
+      "build:npm": task(`vp run${packageBuildConcurrencyFlag()} --filter './npm/**' build`, {
         dependsOn: ["build:napi"],
       }),
       "build:docs": task("vp run --filter ./docs build", {

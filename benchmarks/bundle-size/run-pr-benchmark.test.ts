@@ -3,6 +3,10 @@ import { mkdtempSync, readFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { describe, expect, it } from "vite-plus/test";
+import {
+  packageBuildConcurrencyEnvName,
+  packageBuildConcurrencyFlag,
+} from "../../scripts/package-build-concurrency";
 
 const script = resolve(".github/scripts/run-pr-benchmark.mjs");
 
@@ -40,5 +44,21 @@ describe("run-pr-benchmark", () => {
       skipped: true,
       results: [],
     });
+  });
+
+  it("keeps package benchmark builds at the default fanout locally", () => {
+    expect(packageBuildConcurrencyFlag({})).toBe("");
+  });
+
+  it("lets CI raise package benchmark build fanout", () => {
+    expect(packageBuildConcurrencyFlag({ [packageBuildConcurrencyEnvName]: "12" })).toBe(
+      " --concurrency-limit 12",
+    );
+  });
+
+  it("rejects invalid package benchmark build fanout", () => {
+    expect(() => packageBuildConcurrencyFlag({ [packageBuildConcurrencyEnvName]: "0" })).toThrow(
+      `${packageBuildConcurrencyEnvName} must be a positive integer`,
+    );
   });
 });

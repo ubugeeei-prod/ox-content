@@ -15,6 +15,7 @@ concurrency:
 
 env:
   CARGO_TERM_COLOR: always
+  OX_CONTENT_VP_PACKAGE_BUILD_CONCURRENCY: "12"
 
 jobs:
   rustfmt:
