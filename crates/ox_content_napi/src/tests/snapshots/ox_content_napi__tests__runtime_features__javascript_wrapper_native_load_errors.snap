@@ -180,6 +180,7 @@ module.exports.transformMediaEmbeds = binding.transformMediaEmbeds;
 module.exports.transformPmEmbeds = binding.transformPmEmbeds;
 module.exports.transformTabsEmbeds = binding.transformTabsEmbeds;
 module.exports.transformYoutubeEmbeds = binding.transformYoutubeEmbeds;
+module.exports.extractYoutubeVideoId = binding.extractYoutubeVideoId;
 module.exports.extractCodeBlocks = binding.extractCodeBlocks;
 module.exports.lintCodeBlocks = binding.lintCodeBlocks;
 module.exports.extractDocsTests = binding.extractDocsTests;

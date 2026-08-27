@@ -11,7 +11,7 @@
  * check so pages without a `<youtube>` element never cross the NAPI boundary.
  */
 
-import { importNapiModule } from "../napi";
+import { importNapiModule, importNapiModuleSync } from "../napi";
 
 export interface YouTubeOptions {
   /**
@@ -40,26 +40,15 @@ export interface YouTubeOptions {
 }
 
 /**
- * Extract YouTube video ID from various URL formats.
+ * Extract a YouTube video ID from a bare ID or a watch / share / embed /
+ * shorts URL.
+ *
+ * The rule lives in Rust so this function and the `<youtube>` rewrite below
+ * cannot disagree about what counts as a video: `transformYoutubeEmbeds`
+ * resolves IDs with the same code.
  */
 export function extractVideoId(input: string): string | null {
-  // Already a video ID (11 characters, alphanumeric + _ -)
-  if (/^[a-zA-Z0-9_-]{11}$/.test(input)) {
-    return input;
-  }
-
-  // Full URL patterns
-  const patterns = [
-    /(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/|youtube\.com\/v\/)([a-zA-Z0-9_-]{11})/,
-    /youtube\.com\/shorts\/([a-zA-Z0-9_-]{11})/,
-  ];
-
-  for (const pattern of patterns) {
-    const match = input.match(pattern);
-    if (match) return match[1];
-  }
-
-  return null;
+  return importNapiModuleSync().extractYoutubeVideoId(input);
 }
 
 /**

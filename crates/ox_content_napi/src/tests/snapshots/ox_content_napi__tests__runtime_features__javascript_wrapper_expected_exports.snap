@@ -25,6 +25,7 @@ extractFileDocs
 extractSearchContent
 extractSsgTitle
 extractTranslationKeys
+extractYoutubeVideoId
 formatSsgTitle
 generateDocsDataJson
 generateDocsMarkdown

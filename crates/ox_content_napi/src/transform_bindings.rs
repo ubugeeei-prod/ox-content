@@ -128,6 +128,13 @@ pub fn transform_youtube_embeds(html: String, options: Option<JsYouTubeOptions>)
     youtube::transform_youtube(&html, &resolved)
 }
 
+/// Extracts a YouTube video id from a bare id or a watch / share / embed /
+/// shorts URL, returning `null` when the input names no video.
+#[napi]
+pub fn extract_youtube_video_id(input: String) -> Option<String> {
+    youtube::extract_video_id(&input)
+}
+
 /// Rewrites `<tabs><tab>...</tab></tabs>` blocks in rendered HTML into the no-JS
 /// CSS tab widget plus a `<details>` fallback. Rust port of the TS
 /// `transformTabs`. Groups are numbered from `start_group`.

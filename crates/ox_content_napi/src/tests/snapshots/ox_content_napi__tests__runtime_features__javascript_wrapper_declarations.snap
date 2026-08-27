@@ -153,6 +153,12 @@ export declare function extractSsgTitle(content: string, frontmatterTitle?: stri
  */
 export declare function extractTranslationKeys(source: string, filePath: string, functionNames?: Array<string> | undefined | null): Array<I18NKeyUsage>
 
+/**
+ * Extracts a YouTube video id from a bare id or a watch / share / embed /
+ * shorts URL, returning `null` when the input names no video.
+ */
+export declare function extractYoutubeVideoId(input: string): string | null
+
 /** Formats a file or directory segment as an SSG title. */
 export declare function formatSsgTitle(name: string): string
 
