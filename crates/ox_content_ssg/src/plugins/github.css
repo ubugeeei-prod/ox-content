@@ -181,12 +181,12 @@
 
 /* Error state */
 .ox-github-card.error {
-  border-color: #f87171;
+  border-color: var(--octc-color-danger);
   background: transparent;
 }
 
 .ox-github-error {
-  color: #f87171;
+  color: var(--octc-color-danger);
   font-size: 0.875rem;
 }
 

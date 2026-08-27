@@ -346,3 +346,12 @@
   border: 1px solid color-mix(in srgb, var(--octc-color-border) 74%, transparent);
   border-radius: 8px;
 }
+
+/* Slide decks are 4:3. The iframe is emitted with a fixed `height`, which
+   letterboxes the deck on any column narrower than the width that height
+   assumes — most of them, on a phone. The class is on the figure as well as the
+   iframe, so this has to name the iframe. */
+iframe.ox-speaker-deck {
+  height: auto;
+  aspect-ratio: 4 / 3;
+}

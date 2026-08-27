@@ -70,7 +70,7 @@ noscript .ox-island-fallback {
 
 /* Error state */
 [data-ox-island].ox-island-error {
-  border: 1px solid #f87171;
+  border: 1px solid var(--octc-color-danger);
   padding: 1rem;
   border-radius: 4px;
   background: rgba(248, 113, 113, 0.1);
@@ -79,7 +79,7 @@ noscript .ox-island-fallback {
 [data-ox-island].ox-island-error::after {
   content: attr(data-ox-error);
   display: block;
-  color: #f87171;
+  color: var(--octc-color-danger);
   font-size: 0.875rem;
 }
 
