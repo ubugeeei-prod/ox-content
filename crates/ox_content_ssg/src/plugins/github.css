@@ -156,29 +156,6 @@
   background: #89e051;
 }
 
-/* Loading state */
-.ox-github-card.loading {
-  min-height: 100px;
-}
-
-.ox-github-card.loading::after {
-  content: "";
-  display: block;
-  width: 24px;
-  height: 24px;
-  margin: 2rem auto;
-  border: 2px solid var(--octc-color-border);
-  border-top-color: var(--octc-color-primary);
-  border-radius: 50%;
-  animation: ox-github-spin 0.8s linear infinite;
-}
-
-@keyframes ox-github-spin {
-  to {
-    transform: rotate(360deg);
-  }
-}
-
 /* Error state */
 .ox-github-card.error {
   border-color: var(--octc-color-danger);
@@ -278,13 +255,7 @@
   background: transparent !important;
 }
 
-/* The spinner keeps its ring so the card still reads as loading; only the
-   rotation stops. */
 @media (prefers-reduced-motion: reduce) {
-  .ox-github-card.loading::after {
-    animation: none;
-  }
-
   .ox-github-card {
     transition: none;
   }
