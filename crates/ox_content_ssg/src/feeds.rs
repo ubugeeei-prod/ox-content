@@ -1,8 +1,14 @@
 //! Opt-in RSS, Atom, and JSON Feed bodies.
 
+mod atom;
 mod dates;
+mod json;
+mod rss;
 
+use atom::generate_atom;
 pub use dates::{ParsedDate, parse_date};
+use json::generate_json;
+use rss::generate_rss;
 
 const MISSING_SITE_URL: &str = "[ox-content] feeds is enabled but ssg.siteUrl is not set; RSS, Atom, and JSON feeds were not written";
 
@@ -17,8 +23,32 @@ pub enum FeedFormat {
     Json,
 }
 
+/// A person credited on a feed item.
+#[derive(Debug, Clone, Default)]
+pub struct FeedAuthor {
+    /// Display name.
+    pub name: String,
+    /// Optional profile or home page.
+    pub url: Option<String>,
+}
+
+/// A file carried alongside a feed item — audio, video, an image.
+#[derive(Debug, Clone, Default)]
+pub struct FeedAttachment {
+    /// Absolute URL of the file.
+    pub url: String,
+    /// MIME type, when known.
+    pub mime_type: Option<String>,
+    /// Human-readable label.
+    pub title: Option<String>,
+    /// Size in bytes, when known.
+    pub size_in_bytes: Option<i64>,
+    /// Playing time in seconds, for audio and video.
+    pub duration_in_seconds: Option<i64>,
+}
+
 /// One collection entry considered for a feed.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Default)]
 pub struct FeedItem {
     /// Item title.
     pub title: String,
@@ -34,6 +64,18 @@ pub struct FeedItem {
     pub draft: bool,
     /// When true, the item is omitted from listing surfaces (feeds).
     pub unlisted: bool,
+    /// Full item body. Preferred over `description` where a format carries one.
+    pub content: Option<String>,
+    /// Stable identity, when it differs from `loc`.
+    pub id: Option<String>,
+    /// People credited on the item.
+    pub authors: Vec<FeedAuthor>,
+    /// Representative image URL.
+    pub image: Option<String>,
+    /// Files carried alongside the item.
+    pub attachments: Vec<FeedAttachment>,
+    /// BCP 47 language tag for this item.
+    pub language: Option<String>,
 }
 
 /// Switches and site metadata for feed generation.
@@ -146,123 +188,36 @@ fn channel_description(options: &FeedsOptions) -> &str {
         .unwrap_or(options.site_name.as_str())
 }
 
-fn generate_rss(options: &FeedsOptions, items: &[&FeedItem]) -> String {
-    let mut xml = String::from(
-        "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<rss version=\"2.0\">\n  <channel>\n    <title>",
-    );
-    escape_xml(&options.site_name, &mut xml);
-    xml.push_str("</title>\n    <link>");
-    escape_xml(&options.home_page_url, &mut xml);
-    xml.push_str("</link>\n    <description>");
-    escape_xml(channel_description(options), &mut xml);
-    xml.push_str("</description>\n");
-    for item in items {
-        xml.push_str("    <item>\n      <title>");
-        escape_xml(&item.title, &mut xml);
-        xml.push_str("</title>\n      <link>");
-        escape_xml(&item.loc, &mut xml);
-        xml.push_str("</link>\n      <guid>");
-        escape_xml(&item.loc, &mut xml);
-        xml.push_str("</guid>\n");
-        if let Some(description) = item.description.as_deref().filter(|value| !value.is_empty()) {
-            xml.push_str("      <description>");
-            escape_xml(description, &mut xml);
-            xml.push_str("</description>\n");
-        }
-        if let Some(date) = item_date(item) {
-            xml.push_str("      <pubDate>");
-            xml.push_str(&date.rfc822());
-            xml.push_str("</pubDate>\n");
-        }
-        xml.push_str("    </item>\n");
-    }
-    xml.push_str("  </channel>\n</rss>\n");
-    xml
+/// The identity a feed advertises for an item: its own `id` when it has one,
+/// otherwise its URL.
+fn entry_id(item: &FeedItem) -> &str {
+    item.id.as_deref().filter(|value| !value.is_empty()).unwrap_or(&item.loc)
 }
 
-fn generate_atom(options: &FeedsOptions, items: &[&FeedItem]) -> String {
-    let updated = items
-        .first()
-        .and_then(|item| item_date(item))
-        .map_or_else(|| "1970-01-01T00:00:00Z".to_string(), dates::ParsedDate::rfc3339);
-    let mut xml = String::from(
-        "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<feed xmlns=\"http://www.w3.org/2005/Atom\">\n  <title>",
-    );
-    escape_xml(&options.site_name, &mut xml);
-    xml.push_str("</title>\n  <link href=\"");
-    escape_xml(&options.atom_url, &mut xml);
-    xml.push_str("\" rel=\"self\"/>\n  <link href=\"");
-    escape_xml(&options.home_page_url, &mut xml);
-    xml.push_str("\" rel=\"alternate\"/>\n  <id>");
-    escape_xml(&options.home_page_url, &mut xml);
-    xml.push_str("</id>\n  <updated>");
-    xml.push_str(&updated);
-    xml.push_str("</updated>\n");
-    if let Some(description) =
-        options.site_description.as_deref().filter(|value| !value.trim().is_empty())
-    {
-        xml.push_str("  <subtitle>");
-        escape_xml(description, &mut xml);
-        xml.push_str("</subtitle>\n");
-    }
-    for item in items {
-        xml.push_str("  <entry>\n    <title>");
-        escape_xml(&item.title, &mut xml);
-        xml.push_str("</title>\n    <link href=\"");
-        escape_xml(&item.loc, &mut xml);
-        xml.push_str("\"/>\n    <id>");
-        escape_xml(&item.loc, &mut xml);
-        xml.push_str("</id>\n    <updated>");
-        xml.push_str(&item_date(item).map_or_else(|| updated.clone(), dates::ParsedDate::rfc3339));
-        xml.push_str("</updated>\n");
-        if let Some(description) = item.description.as_deref().filter(|value| !value.is_empty()) {
-            xml.push_str("    <summary>");
-            escape_xml(description, &mut xml);
-            xml.push_str("</summary>\n");
-        }
-        xml.push_str("  </entry>\n");
-    }
-    xml.push_str("</feed>\n");
-    xml
+/// The text a single-body format shows. `content` is the fuller of the two, so
+/// it wins where only one can be carried.
+fn item_description(item: &FeedItem) -> Option<&str> {
+    item.content
+        .as_deref()
+        .filter(|value| !value.is_empty())
+        .or_else(|| item.description.as_deref().filter(|value| !value.is_empty()))
 }
 
-fn generate_json(options: &FeedsOptions, items: &[&FeedItem]) -> String {
-    let mut json =
-        String::from("{\n  \"version\": \"https://jsonfeed.org/version/1.1\",\n  \"title\": ");
-    push_json_string(&options.site_name, &mut json);
-    json.push_str(",\n  \"home_page_url\": ");
-    push_json_string(&options.home_page_url, &mut json);
-    json.push_str(",\n  \"feed_url\": ");
-    push_json_string(&options.json_url, &mut json);
-    if let Some(description) =
-        options.site_description.as_deref().filter(|value| !value.trim().is_empty())
-    {
-        json.push_str(",\n  \"description\": ");
-        push_json_string(description, &mut json);
+/// Writes ` name="value"`, or nothing when the value is absent — an attribute
+/// with no value would claim something the item never said.
+fn push_xml_attr(output: &mut String, name: &str, value: Option<&str>) {
+    let Some(value) = value else { return };
+    output.push(' ');
+    output.push_str(name);
+    output.push_str("=\"");
+    escape_xml(value, output);
+    output.push('"');
+}
+
+fn push_xml_attr_number(output: &mut String, name: &str, value: Option<i64>) {
+    if let Some(value) = value {
+        push_xml_attr(output, name, Some(&value.to_string()));
     }
-    json.push_str(",\n  \"items\": [");
-    for (index, item) in items.iter().enumerate() {
-        if index > 0 {
-            json.push(',');
-        }
-        json.push_str("\n    {\n      \"id\": ");
-        push_json_string(&item.loc, &mut json);
-        json.push_str(",\n      \"url\": ");
-        push_json_string(&item.loc, &mut json);
-        json.push_str(",\n      \"title\": ");
-        push_json_string(&item.title, &mut json);
-        if let Some(description) = item.description.as_deref().filter(|value| !value.is_empty()) {
-            json.push_str(",\n      \"content_text\": ");
-            push_json_string(description, &mut json);
-        }
-        if let Some(date) = item_date(item) {
-            json.push_str(",\n      \"date_published\": ");
-            push_json_string(&date.rfc3339(), &mut json);
-        }
-        json.push_str("\n    }");
-    }
-    json.push_str("\n  ]\n}\n");
-    json
 }
 
 fn escape_xml(value: &str, output: &mut String) {

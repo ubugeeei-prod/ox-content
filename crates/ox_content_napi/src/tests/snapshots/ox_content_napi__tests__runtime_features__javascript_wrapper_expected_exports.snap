@@ -27,6 +27,7 @@ extractSsgTitle
 extractTranslationKeys
 extractYoutubeVideoId
 formatSsgTitle
+generateFeedBodies
 generateDocsDataJson
 generateDocsMarkdown
 generateDocsNavCode

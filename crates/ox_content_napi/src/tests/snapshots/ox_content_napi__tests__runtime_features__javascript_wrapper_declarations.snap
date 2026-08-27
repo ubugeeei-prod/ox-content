@@ -182,6 +182,9 @@ export declare function generateDocsNavMetadata(files: Array<string>, basePath?:
  */
 export declare function generateDocsNavMetadataFromDocs(docs: Array<JsDocsMarkdownModule>, options?: JsDocsNavOptions | undefined | null): Array<JsDocsNavItem>
 
+/** Builds RSS / Atom / JSON Feed bodies without writing files. */
+export declare function generateFeedBodies(options: JsFeedsOptions, items: Array<JsFeedItem>): JsFeedsOutput
+
 /** Generates the `virtual:ox-content/i18n` runtime module. */
 export declare function generateI18nModule(dictDir: string, config: JsI18NRuntimeConfig): string
 
@@ -958,6 +961,61 @@ export interface JsFeatureConfig {
   link?: string
   /** Link text. */
   linkText?: string
+}
+
+/** A file carried alongside a feed item. */
+export interface JsFeedAttachment {
+  url: string
+  mimeType?: string
+  title?: string
+  sizeInBytes?: number
+  durationInSeconds?: number
+}
+
+/** A person credited on a feed item. */
+export interface JsFeedAuthor {
+  name: string
+  url?: string
+}
+
+/** One collection entry considered for a feed. */
+export interface JsFeedItem {
+  title: string
+  description?: string
+  loc: string
+  date?: string
+  lastUpdated?: string
+  draft?: boolean
+  unlisted?: boolean
+  content?: string
+  id?: string
+  authors?: Array<JsFeedAuthor>
+  image?: string
+  attachments?: Array<JsFeedAttachment>
+  language?: string
+}
+
+/** Switches and site metadata for feed generation. */
+export interface JsFeedsOptions {
+  enabled: boolean
+  siteUrl?: string
+  siteName: string
+  siteDescription?: string
+  homePageUrl: string
+  rssUrl: string
+  atomUrl: string
+  jsonUrl: string
+  /** Any of `"rss"`, `"atom"`, `"json"`. Unknown names are ignored. */
+  formats: Array<string>
+  limit: number
+}
+
+/** Generated feed bodies, or a warning when generation is skipped. */
+export interface JsFeedsOutput {
+  rssXml?: string
+  atomXml?: string
+  jsonFeed?: string
+  warning?: string
 }
 
 /** Opt-in static `file-tree` fences. */

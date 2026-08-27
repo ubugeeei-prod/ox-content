@@ -15,6 +15,7 @@ fn item(
         last_updated: last_updated.map(str::to_string),
         draft: false,
         unlisted: false,
+        ..FeedItem::default()
     }
 }
 
