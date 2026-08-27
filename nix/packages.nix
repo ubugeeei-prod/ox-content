@@ -24,7 +24,7 @@ in
         default = ox-content;
       };
 
-      apps = lib.genAttrs ox-content.passthru.binaries (name: {
+      apps = lib.genAttrs (lib.attrNames ox-content.passthru.binaries) (name: {
         type = "app";
         program = lib.getExe' ox-content name;
       });
