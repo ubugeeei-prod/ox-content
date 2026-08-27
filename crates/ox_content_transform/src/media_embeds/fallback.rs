@@ -21,16 +21,24 @@ use super::html::{ComponentElement, attr};
 use super::provider_cards::{is_safe_https_url, provider_url};
 use super::render::{escape_attr, escape_text};
 
+/// The URL a refused tag can still be linked to, if any.
+///
+/// Shared with the diagnostic so a report names the same URL the reader ends
+/// up with, rather than one the transform decided against.
+pub(super) fn fallback_url<'a>(element: &'a ComponentElement<'_>) -> Option<&'a str> {
+    provider_url(element).or_else(|| {
+        attr(element, "url")
+            .or_else(|| attr(element, "href"))
+            .filter(|value| is_safe_https_url(value))
+    })
+}
+
 /// A plain link standing in for an embed that could not be resolved.
 ///
 /// Returns `None` when the tag carries no URL safe enough to link to, in which
 /// case the caller keeps the original markup — there is nothing better to say.
 pub(super) fn render_fallback(element: &ComponentElement<'_>) -> Option<String> {
-    let href = provider_url(element).or_else(|| {
-        attr(element, "url")
-            .or_else(|| attr(element, "href"))
-            .filter(|value| is_safe_https_url(value))
-    })?;
+    let href = fallback_url(element)?;
 
     let label = link_label(element, href);
 

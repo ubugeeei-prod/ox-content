@@ -193,6 +193,53 @@ pub fn sanitize_html_binding(html: String, options: Option<JsSanitizeOptions>) -
 }
 
 /// Transform opt-in static media embed components in already-rendered HTML.
+/// One tag an enabled provider refused, and what the transform did instead.
+#[napi(object)]
+pub struct JsEmbedDiagnostic {
+    /// Tag name as the provider registers it, for example `speakerdeck`.
+    pub provider: String,
+    /// The URL the tag carried, when it carried one worth naming.
+    pub url: Option<String>,
+    /// 1-based line of the opening tag in the transformed HTML.
+    pub line: u32,
+    /// `"linked"` when the tag became a plain link, `"kept"` when its markup
+    /// was left as authored.
+    pub fallback: String,
+}
+
+/// Rewritten HTML plus every tag an enabled provider refused.
+#[napi(object)]
+pub struct JsMediaEmbedsResult {
+    pub html: String,
+    pub diagnostics: Vec<JsEmbedDiagnostic>,
+}
+
+/// Rewrites embeds and reports the tags no provider would render.
+#[napi(js_name = "transformMediaEmbedsWithDiagnostics")]
+pub fn transform_media_embeds_with_diagnostics(
+    html: String,
+    options: Option<JsMediaEmbedsOptions>,
+) -> JsMediaEmbedsResult {
+    let options = options.map(Into::into);
+    let (html, diagnostics) =
+        media_embeds::transform_media_embeds_with_diagnostics(&html, options.as_ref());
+    JsMediaEmbedsResult {
+        html,
+        diagnostics: diagnostics
+            .into_iter()
+            .map(|diagnostic| JsEmbedDiagnostic {
+                provider: diagnostic.provider,
+                url: diagnostic.url,
+                line: diagnostic.line,
+                fallback: match diagnostic.fallback {
+                    media_embeds::EmbedFallback::Linked => "linked".to_string(),
+                    media_embeds::EmbedFallback::Kept => "kept".to_string(),
+                },
+            })
+            .collect(),
+    }
+}
+
 #[napi(js_name = "transformMediaEmbeds")]
 pub fn transform_media_embeds(html: String, options: Option<JsMediaEmbedsOptions>) -> String {
     let options = options.map(Into::into);

@@ -177,6 +177,7 @@ module.exports.transformAsync = binding.transformAsync;
 module.exports.transformMdastRaw = binding.transformMdastRaw;
 module.exports.sanitizeHtml = binding.sanitizeHtml;
 module.exports.transformMediaEmbeds = binding.transformMediaEmbeds;
+module.exports.transformMediaEmbedsWithDiagnostics = binding.transformMediaEmbedsWithDiagnostics;
 module.exports.transformPmEmbeds = binding.transformPmEmbeds;
 module.exports.transformTabsEmbeds = binding.transformTabsEmbeds;
 module.exports.transformYoutubeEmbeds = binding.transformYoutubeEmbeds;
