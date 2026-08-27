@@ -15,19 +15,12 @@ fn spotify_iframes_carry_an_accessible_name() {
     let options = MediaEmbedsOptions { spotify: Some(true), ..Default::default() };
 
     // Every kind names itself, so a screen reader announces more than "frame".
-    for (kind, expected) in [
-        ("track", "Spotify track"),
-        ("album", "Spotify album"),
-        ("playlist", "Spotify playlist"),
-        ("episode", "Spotify episode"),
-        ("show", "Spotify show"),
-        ("artist", "Spotify artist"),
-    ] {
+    for kind in ["track", "album", "playlist", "episode", "show", "artist"] {
         let html = transform_media_embeds(
             &format!(r#"<Spotify url="https://open.spotify.com/{kind}/abc123"></Spotify>"#),
             Some(&options),
         );
-        assert!(html.contains(&format!(r#"title="{expected}""#)), "{kind}: {html}");
+        assert!(html.contains(&format!(r#"title="Spotify {kind}""#)), "{kind}: {html}");
     }
 
     // A pre-built embed URL still names its kind.
