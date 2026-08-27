@@ -5,6 +5,7 @@
  * They generate static HTML at build time and require no client-side JS.
  */
 
+import { importNapiModuleSync } from "../napi";
 import {
   transformTabs,
   generateTabsCSS,
@@ -176,8 +177,15 @@ export type {
   ResolvedGraphvizOptions,
 };
 
-const SELF_CLOSING_EMBED_TAG =
-  /<(GitHub|OgCard|Tweet|XPost|Reddit|Bluesky|GoogleMaps|Qiita|Zenn|NpmPackage|CratesIo|PyPI|DockerHub|CodePen|JSFiddle|Observable|Vimeo|Twitch|Discord|Fediverse|Mastodon|Misskey|Mixi2|Facebook|Threads|Instagram|Spotify|AppleMusic|SpeakerDeck|Audio|Video|StackBlitz|WebContainer|YouTube|NotByAI)((?:[^>"']|"[^"]*"|'[^']*')*?)\s*\/>(?:\s*<\/\1\s*>)?/gi;
+/**
+ * Embed tags this package owns, which the Rust provider registry cannot name.
+ *
+ * Everything else in the pattern comes from the registry, because a
+ * hand-maintained copy drifts — and the drift is not cosmetic here.
+ */
+const TYPESCRIPT_ONLY_EMBED_TAGS = ["GitHub", "OgCard", "Reddit", "YouTube", "NotByAI"] as const;
+
+let selfClosingPattern: RegExp | undefined;
 
 /**
  * Custom embed tags are not HTML void elements, so a self-closing authoring
@@ -186,11 +194,30 @@ const SELF_CLOSING_EMBED_TAG =
  * document. Normalize to an explicit open/close pair before any rehype pass
  * runs. A leftover `</Tweet>` after `/>` (CommonMark HTML + self-close) is
  * consumed so the closer cannot survive the embed rewrite.
+ *
+ * The tag list is built from the provider registry rather than written out
+ * here. It had drifted: `<CodeSandbox … />` was absent, so a page using the
+ * self-closing form lost every element after it.
  */
 export function normalizeSelfClosingEmbeds(html: string): string {
-  return html.replace(SELF_CLOSING_EMBED_TAG, (_match, tag: string, attrs: string) => {
+  return html.replace(selfClosingEmbedPattern(), (_match, tag: string, attrs: string) => {
     return `<${tag}${attrs}></${tag}>`;
   });
+}
+
+function selfClosingEmbedPattern(): RegExp {
+  if (selfClosingPattern) return selfClosingPattern;
+  const registryTags = importNapiModuleSync()
+    .mediaEmbedTags()
+    .map((tag: { name: string }) => tag.name);
+  const names = [...new Set([...TYPESCRIPT_ONLY_EMBED_TAGS, ...registryTags])];
+  // Case-insensitive, so the registry's lowercase spelling matches the
+  // PascalCase an author writes; `\1` follows suit.
+  selfClosingPattern = new RegExp(
+    `<(${names.join("|")})((?:[^>"']|"[^"]*"|'[^']*')*?)\\s*\\/>(?:\\s*<\\/\\1\\s*>)?`,
+    "gi",
+  );
+  return selfClosingPattern;
 }
 
 /**
@@ -391,6 +418,11 @@ export async function transformBuiltinEmbeds(
     threads: options.threads,
     instagram: options.instagram,
     webContainer: options.webContainer,
+    loom: options.loom,
+    asciinema: options.asciinema,
+    figma: options.figma,
+    note: options.note,
+    googleSlides: options.googleSlides,
   };
   if (Object.values(mediaOptions).some(Boolean)) {
     result = await transformMediaEmbeds(result, mediaOptions);

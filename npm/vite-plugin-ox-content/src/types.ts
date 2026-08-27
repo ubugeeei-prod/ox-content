@@ -2561,6 +2561,36 @@ export interface BuiltinEmbedOptions {
    * @default false
    */
   webContainer?: boolean;
+
+  /**
+   * Render `<Loom>` recording cards.
+   * @default false
+   */
+  loom?: boolean;
+
+  /**
+   * Render `<Asciinema>` terminal-recording cards.
+   * @default false
+   */
+  asciinema?: boolean;
+
+  /**
+   * Render `<Figma>` file, design, board, and prototype cards.
+   * @default false
+   */
+  figma?: boolean;
+
+  /**
+   * Render `<Note>` note.com article cards.
+   * @default false
+   */
+  note?: boolean;
+
+  /**
+   * Render `<GoogleSlides>` deck cards.
+   * @default false
+   */
+  googleSlides?: boolean;
 }
 
 /**
@@ -2603,6 +2633,11 @@ export interface ResolvedBuiltinEmbedOptions {
   threads?: boolean;
   instagram?: boolean;
   webContainer: boolean;
+  loom?: boolean;
+  asciinema?: boolean;
+  figma?: boolean;
+  note?: boolean;
+  googleSlides?: boolean;
 }
 
 /**

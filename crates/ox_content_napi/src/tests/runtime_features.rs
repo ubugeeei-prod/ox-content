@@ -78,6 +78,7 @@ fn javascript_wrapper_and_declarations_cover_expected_exports() {
         "loadDictionaries",
         "loadDictionariesFlat",
         "matchesSearchScopes",
+        "mediaEmbedTags",
         "mergeHighlightedCodeBlocks",
         "normalizeRedirectPath",
         "normalizeVitePressFrontmatter",

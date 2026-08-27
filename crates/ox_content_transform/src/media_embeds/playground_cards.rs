@@ -1,7 +1,7 @@
 use super::html::{ComponentElement, attr};
 use super::provider_cards::{
-    Card, body_text, first_attr, host_in, is_safe_https_url, parse_https_url, provider_url,
-    render_card,
+    Card, body_text, first_attr, host_in, is_safe_https_url, parse_https_url, path_segments,
+    provider_url, render_card,
 };
 
 pub(super) fn render_codepen(element: &ComponentElement<'_>) -> Option<String> {
@@ -20,11 +20,18 @@ pub(super) fn render_code_sandbox(element: &ComponentElement<'_>) -> Option<Stri
     render_playground_card(element, Provider::CodeSandbox)
 }
 
+/// Replit repls: `/@{user}/{slug}`, and the already-embedded `?embed=true`
+/// form of the same path.
+pub(super) fn render_replit(element: &ComponentElement<'_>) -> Option<String> {
+    render_playground_card(element, Provider::Replit)
+}
+
 enum Provider {
     CodePen,
     JsFiddle,
     Observable,
     CodeSandbox,
+    Replit,
 }
 
 struct PlaygroundReference {
@@ -71,7 +78,25 @@ fn playground_reference(input: &str, provider: Provider) -> Option<PlaygroundRef
         Provider::JsFiddle => jsfiddle_reference(&parsed.host, &segments),
         Provider::Observable => observable_reference(&parsed.host, &segments),
         Provider::CodeSandbox => code_sandbox_reference(&parsed.host, &segments),
+        Provider::Replit => replit_reference(&parsed.host, &segments),
     }
+}
+
+fn replit_reference(host: &str, segments: &[&str]) -> Option<PlaygroundReference> {
+    if !host_in(host, &["replit.com", "www.replit.com"]) {
+        return None;
+    }
+    // The owner segment carries the `@`, which is not a path-safe character
+    // for the slug check, so it is stripped before validating.
+    let owner = segments.first()?.strip_prefix('@')?;
+    let author = safe_segment(owner)?.to_string();
+    let slug = safe_segment(segments.get(1)?)?;
+    Some(PlaygroundReference {
+        modifier: "replit",
+        network: "Replit",
+        title: titleize(slug),
+        author: Some(author),
+    })
 }
 
 fn codepen_reference(host: &str, segments: &[&str]) -> Option<PlaygroundReference> {
@@ -156,12 +181,11 @@ fn is_playground_embed(input: &str, network: &str) -> bool {
             host_in(&parsed.host, &["codesandbox.io", "www.codesandbox.io"])
                 && parsed.path.starts_with("/embed/")
         }
+        // Replit embeds the same path as the repl, switched by a query
+        // parameter, so the host is the whole check.
+        "Replit" => host_in(&parsed.host, &["replit.com", "www.replit.com"]),
         _ => false,
     }
-}
-
-fn path_segments(path: &str) -> Vec<&str> {
-    path.split('/').filter(|segment| !segment.is_empty()).collect()
 }
 
 fn safe_segment(value: &str) -> Option<&str> {

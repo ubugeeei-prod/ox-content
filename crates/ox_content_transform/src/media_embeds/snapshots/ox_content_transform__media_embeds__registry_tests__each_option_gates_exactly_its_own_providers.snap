@@ -14,7 +14,7 @@ googleMaps -> googlemaps
 qiita -> qiita
 zenn -> zenn
 packageRegistry -> npmpackage, cratesio, pypi, dockerhub
-playgrounds -> codepen, jsfiddle, observable, codesandbox
+playgrounds -> replit, codepen, jsfiddle, observable, codesandbox
 vimeo -> vimeo
 twitch -> twitch
 discord -> discord
@@ -23,3 +23,8 @@ facebook -> facebook
 threads -> threads
 instagram -> instagram
 webContainer -> webcontainer
+loom -> loom
+asciinema -> asciinema
+figma -> figma
+note -> note
+googleSlides -> googleslides

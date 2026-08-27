@@ -35,6 +35,11 @@ export function resolveBuiltinEmbedOptions(
       threads: false,
       instagram: false,
       webContainer: false,
+      loom: false,
+      asciinema: false,
+      figma: false,
+      note: false,
+      googleSlides: false,
     };
   }
 
@@ -64,6 +69,11 @@ export function resolveBuiltinEmbedOptions(
     threads: options?.threads === true,
     instagram: options?.instagram === true,
     webContainer: options?.webContainer === true,
+    loom: options?.loom === true,
+    asciinema: options?.asciinema === true,
+    figma: options?.figma === true,
+    note: options?.note === true,
+    googleSlides: options?.googleSlides === true,
   };
 }
 

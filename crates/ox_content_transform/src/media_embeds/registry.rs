@@ -12,17 +12,18 @@ use super::html::ComponentElement;
 use super::native::{render_audio, render_video};
 use super::package_cards::{render_crates_io, render_docker_hub, render_npm_package, render_pypi};
 use super::playground_cards::{
-    render_code_sandbox, render_codepen, render_jsfiddle, render_observable,
+    render_code_sandbox, render_codepen, render_jsfiddle, render_observable, render_replit,
 };
 use super::provider_cards::{
-    render_discord, render_facebook, render_fediverse, render_google_maps, render_instagram,
-    render_mastodon, render_misskey, render_mixi2, render_qiita, render_threads, render_zenn,
+    render_discord, render_facebook, render_fediverse, render_figma, render_google_maps,
+    render_google_slides, render_instagram, render_mastodon, render_misskey, render_mixi2,
+    render_note, render_qiita, render_threads, render_zenn,
 };
 use super::render::{
     render_bluesky, render_spotify, render_stackblitz, render_tweet, render_webcontainer,
 };
 use super::speaker_deck::render_speaker_deck;
-use super::video_cards::{render_twitch, render_vimeo};
+use super::video_cards::{render_asciinema, render_loom, render_twitch, render_vimeo};
 
 /// How a provider's tag is spelled in the document.
 #[derive(Clone, Copy, PartialEq, Eq)]
@@ -52,6 +53,27 @@ fn on(value: Option<bool>) -> bool {
 /// The order is part of the contract: a document is rewritten once per row, so
 /// a renderer only ever sees markup the rows above it have already settled.
 pub(super) const PROVIDERS: &[Provider] = &[
+    Provider { name: "loom", tag: Tag::AnyCase, enabled: |o| on(o.loom), render: render_loom },
+    Provider {
+        name: "asciinema",
+        tag: Tag::AnyCase,
+        enabled: |o| on(o.asciinema),
+        render: render_asciinema,
+    },
+    Provider { name: "figma", tag: Tag::AnyCase, enabled: |o| on(o.figma), render: render_figma },
+    Provider { name: "note", tag: Tag::AnyCase, enabled: |o| on(o.note), render: render_note },
+    Provider {
+        name: "googleslides",
+        tag: Tag::AnyCase,
+        enabled: |o| on(o.google_slides),
+        render: render_google_slides,
+    },
+    Provider {
+        name: "replit",
+        tag: Tag::AnyCase,
+        enabled: |o| on(o.playgrounds),
+        render: render_replit,
+    },
     Provider {
         name: "spotify",
         tag: Tag::AnyCase,

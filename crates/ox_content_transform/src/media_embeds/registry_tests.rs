@@ -36,6 +36,11 @@ const SETTERS: &[(&str, SetOption)] = &[
     ("threads", |o| o.threads = Some(true)),
     ("instagram", |o| o.instagram = Some(true)),
     ("webContainer", |o| o.web_container = Some(true)),
+    ("loom", |o| o.loom = Some(true)),
+    ("asciinema", |o| o.asciinema = Some(true)),
+    ("figma", |o| o.figma = Some(true)),
+    ("note", |o| o.note = Some(true)),
+    ("googleSlides", |o| o.google_slides = Some(true)),
 ];
 
 fn enabled_by(set: SetOption) -> Vec<&'static str> {

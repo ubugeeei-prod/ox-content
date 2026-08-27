@@ -295,6 +295,11 @@ pub struct MediaEmbedsOptions {
     pub threads: Option<bool>,
     pub instagram: Option<bool>,
     pub web_container: Option<bool>,
+    pub loom: Option<bool>,
+    pub asciinema: Option<bool>,
+    pub figma: Option<bool>,
+    pub note: Option<bool>,
+    pub google_slides: Option<bool>,
 }
 
 #[derive(Clone)]

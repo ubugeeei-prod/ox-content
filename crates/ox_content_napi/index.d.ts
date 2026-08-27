@@ -916,6 +916,19 @@ export interface JsEmbedDiagnostic {
   fallback: string
 }
 
+/**
+ * Rewrites embeds and reports the tags no provider would render.
+ * One provider tag as authors write it.
+ */
+export interface JsEmbedTag {
+  name: string
+  /**
+   * True when only the PascalCase spelling is an embed, because the
+   * lowercase one is a real HTML element.
+   */
+  pascalOnly: boolean
+}
+
 /** Emoji-shortcode transform options. */
 export interface JsEmojiShortcodeOptions {
   /**
@@ -1625,6 +1638,36 @@ export interface JsMediaEmbedsOptions {
    * Default: `false`.
    */
   video?: boolean
+  /**
+   * Render `<Loom>` recording cards.
+   *
+   * Default: `false`.
+   */
+  loom?: boolean
+  /**
+   * Render `<Asciinema>` terminal-recording cards.
+   *
+   * Default: `false`.
+   */
+  asciinema?: boolean
+  /**
+   * Render `<Figma>` file, design, board, and prototype cards.
+   *
+   * Default: `false`.
+   */
+  figma?: boolean
+  /**
+   * Render `<Note>` note.com article cards.
+   *
+   * Default: `false`.
+   */
+  note?: boolean
+  /**
+   * Render `<GoogleSlides>` deck cards.
+   *
+   * Default: `false`.
+   */
+  googleSlides?: boolean
 }
 
 /** Rewritten HTML plus every tag an enabled provider refused. */
@@ -3020,6 +3063,15 @@ export interface MdxImportSpecifier {
   kind: 'default' | 'named' | 'namespace'
 }
 
+/**
+ * Every tag the media-embed transform can rewrite.
+ *
+ * A caller that pre-scans a document to decide whether to run the transform
+ * needs this list, and a hand-kept copy drifts — that is how `<CodeSandbox>`
+ * came to be skipped on a page containing nothing else.
+ */
+export declare function mediaEmbedTags(): Array<JsEmbedTag>
+
 /** Restores code block metadata after JavaScript-side syntax highlighting. */
 export declare function mergeHighlightedCodeBlocks(originalHtml: string, highlightedHtml: string): string
 
@@ -3202,7 +3254,6 @@ export declare function transformMdastRaw(source: string, options?: JsTransformO
 
 export declare function transformMediaEmbeds(html: string, options?: JsMediaEmbedsOptions | undefined | null): string
 
-/** Rewrites embeds and reports the tags no provider would render. */
 export declare function transformMediaEmbedsWithDiagnostics(html: string, options?: JsMediaEmbedsOptions | undefined | null): JsMediaEmbedsResult
 
 /** Transforms mermaid code blocks in HTML to rendered SVG diagrams. */

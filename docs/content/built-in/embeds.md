@@ -513,7 +513,19 @@ default. Authors can pass stable metadata with attributes such as `title`,
 
 <Observable url="https://observablehq.com/@d3/bar-chart" />
 
+<Replit url="https://replit.com/@ubugeeei/markdown-playground" />
+
+<Note url="https://note.com/ubugeeei/n/nabcdef123456" />
+
+<Figma url="https://www.figma.com/design/AbC123xyz/Design-System" />
+
+<GoogleSlides url="https://docs.google.com/presentation/d/1AbC_defGHI/edit" />
+
 <Vimeo url="https://vimeo.com/123456789" />
+
+<Loom url="https://www.loom.com/share/abcdef1234567890" />
+
+<Asciinema url="https://asciinema.org/a/569727" />
 
 <Twitch url="https://www.twitch.tv/videos/40464143" />
 

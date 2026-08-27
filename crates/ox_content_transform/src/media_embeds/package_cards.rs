@@ -1,6 +1,6 @@
 use super::html::{ComponentElement, attr};
 use super::provider_cards::{
-    Card, body_text, first_attr, host_in, parse_https_url, provider_url, render_card,
+    Card, body_text, first_attr, host_in, parse_https_url, path_segments, provider_url, render_card,
 };
 
 pub(super) fn render_npm_package(element: &ComponentElement<'_>) -> Option<String> {
@@ -182,10 +182,6 @@ fn version_segment(segments: &[&str], index: usize) -> Option<String> {
             .map(str::to_string);
     }
     None
-}
-
-fn path_segments(path: &str) -> Vec<&str> {
-    path.split('/').filter(|segment| !segment.is_empty()).collect()
 }
 
 fn safe_npm_part(value: &str) -> Option<&str> {

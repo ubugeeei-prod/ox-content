@@ -20,7 +20,13 @@ const RESOLVED = [
   '<CodePen url="https://codepen.io/ubugeeei/pen/abc123" title="Pen" author="ubugeeei" />',
   '<JSFiddle url="https://jsfiddle.net/ubugeeei/abc123/2/" title="Fiddle" author="ubugeeei" />',
   '<Observable url="https://observablehq.com/@d3/bar-chart" title="Bar chart" author="d3" />',
+  '<Replit url="https://replit.com/@ubugeeei/markdown-playground" title="Repl" author="ubugeeei" />',
+  '<Note url="https://note.com/ubugeeei/n/nabcdef123456" title="note article" author="ubugeeei" />',
+  '<Figma url="https://www.figma.com/design/AbC123xyz/Design-System" title="Design system" />',
+  '<GoogleSlides url="https://docs.google.com/presentation/d/1AbC_defGHI/edit" title="Deck" />',
   '<Vimeo url="https://vimeo.com/123456789" title="Vimeo clip" author="Studio" />',
+  '<Loom url="https://www.loom.com/share/abcdef1234567890" title="Loom demo" />',
+  '<Asciinema url="https://asciinema.org/a/569727" title="Terminal cast" />',
   '<Twitch url="https://www.twitch.tv/videos/40464143" title="Stream" author="twitchdev" />',
   '<Discord url="https://discord.com/channels/1/2" title="Discord message" server="Guild" channel="general" />',
   '<Mastodon url="https://mastodon.social/@docs/111" author="@docs@mastodon.social" likes="8">Fediverse note.</Mastodon>',
@@ -66,6 +72,11 @@ const EMBEDS = {
   threads: true,
   instagram: true,
   googleMaps: true,
+  loom: true,
+  asciinema: true,
+  figma: true,
+  note: true,
+  googleSlides: true,
 } as const;
 
 async function renderPage(markdown: string, name: string): Promise<string> {
@@ -95,7 +106,7 @@ test("static provider cards render from attributes alone", async ({ page }) => {
   await page.setContent(html, { waitUntil: "domcontentloaded" });
 
   // Every provider produced a card, not a leftover tag.
-  await expect(page.locator(".ox-provider-card")).toHaveCount(17);
+  await expect(page.locator(".ox-provider-card")).toHaveCount(23);
   await expect(page.locator("body")).not.toContainText("<Qiita");
 
   // The bug this guards is the stylesheet never shipping on a provider-only

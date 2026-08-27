@@ -348,6 +348,11 @@ async function renderPage(
     threads: options.embeds.threads,
     instagram: options.embeds.instagram,
     webContainer: options.embeds.webContainer,
+    loom: options.embeds.loom,
+    asciinema: options.embeds.asciinema,
+    figma: options.embeds.figma,
+    note: options.embeds.note,
+    googleSlides: options.embeds.googleSlides,
     mermaid: true,
     githubToken: process.env.GITHUB_TOKEN,
   });

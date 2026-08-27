@@ -1,7 +1,7 @@
 use super::html::{ComponentElement, attr};
 use super::provider_cards::{
-    Card, body_text, first_attr, host_in, is_safe_https_url, parse_https_url, provider_url,
-    render_card,
+    Card, body_text, first_attr, host_in, is_safe_https_url, parse_https_url, path_segments,
+    provider_url, render_card,
 };
 
 pub(super) fn render_vimeo(element: &ComponentElement<'_>) -> Option<String> {
@@ -12,9 +12,22 @@ pub(super) fn render_twitch(element: &ComponentElement<'_>) -> Option<String> {
     render_video_card(element, Provider::Twitch)
 }
 
+/// Loom demo recordings: `/share/{id}`, and `/embed/{id}` when already
+/// embedded. `/share/folder/{id}` is a folder, not a recording.
+pub(super) fn render_loom(element: &ComponentElement<'_>) -> Option<String> {
+    render_video_card(element, Provider::Loom)
+}
+
+/// asciinema terminal recordings: `/a/{id}`, numeric on the public instance.
+pub(super) fn render_asciinema(element: &ComponentElement<'_>) -> Option<String> {
+    render_video_card(element, Provider::Asciinema)
+}
+
 enum Provider {
     Vimeo,
     Twitch,
+    Loom,
+    Asciinema,
 }
 
 struct VideoReference {
@@ -64,7 +77,46 @@ fn video_reference(input: &str, provider: Provider) -> Option<VideoReference> {
     match provider {
         Provider::Vimeo => vimeo_reference(&parsed.host, &segments),
         Provider::Twitch => twitch_reference(&parsed.host, &segments),
+        Provider::Loom => loom_reference(&parsed.host, &segments),
+        Provider::Asciinema => asciinema_reference(&parsed.host, &segments),
     }
+}
+
+fn loom_reference(host: &str, segments: &[&str]) -> Option<VideoReference> {
+    if !host_in(host, &["loom.com", "www.loom.com"]) {
+        return None;
+    }
+    let id = match segments {
+        // A folder shares the `/share/` prefix but is a listing, not a video.
+        ["share", "folder", ..] => return None,
+        ["share" | "embed", id, ..] => id,
+        _ => return None,
+    };
+    Some(VideoReference {
+        modifier: "loom",
+        network: "Loom",
+        title: format!("Loom {}", safe_slug(id)?),
+        author: None,
+        source_label: "Watch on Loom",
+    })
+}
+
+/// asciinema is self-hostable, so the public host is the one that resolves
+/// here; a private instance still renders through the `embed` attribute.
+fn asciinema_reference(host: &str, segments: &[&str]) -> Option<VideoReference> {
+    if !host_in(host, &["asciinema.org", "www.asciinema.org"]) {
+        return None;
+    }
+    let ["a", id, ..] = segments else {
+        return None;
+    };
+    Some(VideoReference {
+        modifier: "asciinema",
+        network: "asciinema",
+        title: format!("Cast {}", safe_slug(id)?),
+        author: None,
+        source_label: "Play recording",
+    })
 }
 
 fn vimeo_reference(host: &str, segments: &[&str]) -> Option<VideoReference> {
@@ -146,6 +198,14 @@ fn twitch_reference(host: &str, segments: &[&str]) -> Option<VideoReference> {
 }
 
 fn is_video_embed(input: &str, network: &str) -> bool {
+    if network == "Loom" {
+        return parse_https_url(input)
+            .is_some_and(|parsed| host_in(&parsed.host, &["loom.com", "www.loom.com"]));
+    }
+    if network == "asciinema" {
+        return parse_https_url(input)
+            .is_some_and(|parsed| host_in(&parsed.host, &["asciinema.org", "www.asciinema.org"]));
+    }
     let Some(parsed) = parse_https_url(input) else {
         return false;
     };
@@ -182,10 +242,6 @@ fn query_has_param(query: Option<&str>, name: &str) -> bool {
             key == name && !value.is_empty()
         })
     })
-}
-
-fn path_segments(path: &str) -> Vec<&str> {
-    path.split('/').filter(|segment| !segment.is_empty()).collect()
 }
 
 fn safe_numeric_id(value: &str) -> Option<&str> {

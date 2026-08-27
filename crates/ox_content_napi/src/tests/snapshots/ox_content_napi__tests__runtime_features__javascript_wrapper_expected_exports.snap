@@ -60,6 +60,7 @@ lintMarkdownDocuments
 loadDictionaries
 loadDictionariesFlat
 matchesSearchScopes
+mediaEmbedTags
 mergeHighlightedCodeBlocks
 normalizeRedirectPath
 normalizeVitePressFrontmatter

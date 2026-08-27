@@ -44,6 +44,31 @@ pub struct EmbedDiagnostic {
     pub fallback: EmbedFallback,
 }
 
+/// One provider tag as authors write it.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct EmbedTag {
+    /// Tag name as the provider registers it, for example `speakerdeck`.
+    pub name: String,
+    /// True when only the PascalCase spelling is an embed, because the
+    /// lowercase one is a real HTML element — `<audio>`, `<video>`.
+    pub pascal_only: bool,
+}
+
+/// Every tag the transform can rewrite.
+///
+/// Callers that pre-scan a document to decide whether to run the transform at
+/// all need this list. Keeping their own copy is how `<CodeSandbox>` came to be
+/// skipped on a page that contained nothing else.
+pub fn embed_tags() -> Vec<EmbedTag> {
+    PROVIDERS
+        .iter()
+        .map(|provider| EmbedTag {
+            name: provider.name.to_string(),
+            pascal_only: matches!(provider.tag, Tag::Pascal),
+        })
+        .collect()
+}
+
 pub fn transform_media_embeds(html: &str, options: Option<&MediaEmbedsOptions>) -> String {
     transform_media_embeds_with_diagnostics(html, options).0
 }

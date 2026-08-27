@@ -109,6 +109,31 @@ pub struct JsMediaEmbedsOptions {
     ///
     /// Default: `false`.
     pub video: Option<bool>,
+
+    /// Render `<Loom>` recording cards.
+    ///
+    /// Default: `false`.
+    pub loom: Option<bool>,
+
+    /// Render `<Asciinema>` terminal-recording cards.
+    ///
+    /// Default: `false`.
+    pub asciinema: Option<bool>,
+
+    /// Render `<Figma>` file, design, board, and prototype cards.
+    ///
+    /// Default: `false`.
+    pub figma: Option<bool>,
+
+    /// Render `<Note>` note.com article cards.
+    ///
+    /// Default: `false`.
+    pub note: Option<bool>,
+
+    /// Render `<GoogleSlides>` deck cards.
+    ///
+    /// Default: `false`.
+    pub google_slides: Option<bool>,
 }
 
 impl From<JsMediaEmbedsOptions> for MediaEmbedsOptions {
@@ -135,6 +160,11 @@ impl From<JsMediaEmbedsOptions> for MediaEmbedsOptions {
             threads: value.threads,
             instagram: value.instagram,
             web_container: value.web_container,
+            loom: value.loom,
+            asciinema: value.asciinema,
+            figma: value.figma,
+            note: value.note,
+            google_slides: value.google_slides,
         }
     }
 }
