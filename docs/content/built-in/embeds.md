@@ -186,7 +186,13 @@ not know — the tag degrades to a plain link rather than staying in the page as
 an unknown element:
 
 ```html
-<a class="ox-embed-fallback" href="https://qiita.com/ubugeeei" target="_blank" rel="noopener noreferrer">https://qiita.com/ubugeeei</a>
+<a
+  class="ox-embed-fallback"
+  href="https://qiita.com/ubugeeei"
+  target="_blank"
+  rel="noopener noreferrer"
+  >https://qiita.com/ubugeeei</a
+>
 ```
 
 The link text is the tag's body, then its `title`, then the URL. The fallback

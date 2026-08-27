@@ -18,7 +18,7 @@ describe("Apple Music media embed", () => {
     expect(html).not.toMatch(/<\/AppleMusic>/i);
   });
 
-  it("leaves rejected URLs as the authored tag", async () => {
+  it("degrades a rejected URL to a neutral link", async () => {
     const input =
       '<AppleMusic url="https://music.apple.com.evil.com/us/album/folklore/1524801260"></AppleMusic>';
     const html = await transformBuiltinEmbeds(input, {
@@ -26,7 +26,13 @@ describe("Apple Music media embed", () => {
       openGraph: false,
       appleMusic: true,
     });
-    expect(html).toBe(input);
+
+    // A look-alike host is not embedded, but the link the author wrote still
+    // reaches the reader. The fallback names no provider, so a spoofed host
+    // cannot borrow Apple Music's styling.
+    expect(html).toContain('class="ox-embed-fallback"');
+    expect(html).not.toContain("ox-embed-fallback--");
+    expect(html).not.toContain("<AppleMusic");
   });
 
   it("normalizes the self-closing authoring form", () => {

@@ -152,7 +152,13 @@ favicon は対象ページ自身の `<link rel="icon">` から取り、無けれ
 プロバイダは認識できる入力に対してのみカードを描画します。有効なプロバイダがタグを解決できない場合（対象外のホスト、知らないパス形状など）、タグは未知の要素としてページに残るのではなく、素のリンクへ降格します。
 
 ```html
-<a class="ox-embed-fallback" href="https://qiita.com/ubugeeei" target="_blank" rel="noopener noreferrer">https://qiita.com/ubugeeei</a>
+<a
+  class="ox-embed-fallback"
+  href="https://qiita.com/ubugeeei"
+  target="_blank"
+  rel="noopener noreferrer"
+  >https://qiita.com/ubugeeei</a
+>
 ```
 
 リンク文言はタグの本文、次に `title`、最後に URL の順で決まります。フォールバックの class にプロバイダ名は含めません。レンダラは「自分のものではない」ことだけを伝え、ホストが違うのかパスだけが違うのかを区別しないため、名前を付けると偽装ホストがそのプロバイダのスタイルを借りられてしまうからです。
