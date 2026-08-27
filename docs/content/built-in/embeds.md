@@ -577,10 +577,10 @@ matching Twitch's embed requirements.
 playlists, episodes, shows, and artists:
 
 ```mdx
-<Spotify url="https://open.spotify.com/track/4uLU6hMCjMI75M1A2tKUQC" />
+<Spotify url="https://open.spotify.com/track/2VEQTuWiuEC7J8kkA7h7xq" />
 ```
 
-<Spotify url="https://open.spotify.com/track/4uLU6hMCjMI75M1A2tKUQC" />
+<Spotify url="https://open.spotify.com/track/2VEQTuWiuEC7J8kkA7h7xq" />
 
 The output is an `<iframe>` pointing at `open.spotify.com/embed/...` with lazy
 loading. Unlike the static cards above it is a real third-party player, which
@@ -591,7 +591,7 @@ and so on — so a screen reader announces something more useful than "frame".
 Pass `title` to name it yourself:
 
 ```mdx
-<Spotify url="https://open.spotify.com/album/..." title="The album we discuss below" />
+<Spotify url="https://open.spotify.com/album/25Dgs9rR8ETpGCwD0wUv0q" title="Joel Ross — nublues" />
 ```
 
 ## Apple Music
@@ -600,10 +600,10 @@ Pass `title` to name it yourself:
 playlists, songs, artists, and music videos:
 
 ```mdx
-<AppleMusic url="https://music.apple.com/gb/album/1989-taylors-version/1708308989" />
+<AppleMusic url="https://music.apple.com/us/album/ummg-feat-taylor-eigsti/1769360313?i=1769360314" />
 ```
 
-<AppleMusic url="https://music.apple.com/gb/album/1989-taylors-version/1708308989" />
+<AppleMusic url="https://music.apple.com/us/album/ummg-feat-taylor-eigsti/1769360313?i=1769360314" />
 
 Share URLs on `music.apple.com` are rewritten to
 `embed.music.apple.com`, keeping the storefront/path and the `i=` song

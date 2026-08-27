@@ -461,17 +461,17 @@ Twitch player URL は Twitch の embed 要件に合わせ、安全な `parent` d
 `embeds.spotify` はトラック、アルバム、プレイリスト、エピソード、番組、アーティスト向けの公式 iframe プレーヤーを描画します。
 
 ```mdx
-<Spotify url="https://open.spotify.com/track/4uLU6hMCjMI75M1A2tKUQC" />
+<Spotify url="https://open.spotify.com/track/2VEQTuWiuEC7J8kkA7h7xq" />
 ```
 
-<Spotify url="https://open.spotify.com/track/4uLU6hMCjMI75M1A2tKUQC" />
+<Spotify url="https://open.spotify.com/track/2VEQTuWiuEC7J8kkA7h7xq" />
 
 出力は遅延読み込み付きで `open.spotify.com/embed/...` を指す `<iframe>` です。上の静的カードと違い、本物の第三者プレーヤーなのでオプトインのままです。
 
 フレームには再生対象に応じた名前（`Spotify track`、`Spotify playlist` など）が付くので、スクリーンリーダーが「フレーム」より有用な読み上げをします。自分で名前を付けるには `title` を渡します。
 
 ```mdx
-<Spotify url="https://open.spotify.com/album/..." title="下で取り上げるアルバム" />
+<Spotify url="https://open.spotify.com/album/25Dgs9rR8ETpGCwD0wUv0q" title="Joel Ross — nublues" />
 ```
 
 ## Apple Music
@@ -479,10 +479,10 @@ Twitch player URL は Twitch の embed 要件に合わせ、安全な `parent` d
 `embeds.appleMusic` はアルバム、プレイリスト、曲、アーティスト、ミュージックビデオ向けの公式 iframe プレーヤーを描画します。
 
 ```mdx
-<AppleMusic url="https://music.apple.com/gb/album/1989-taylors-version/1708308989" />
+<AppleMusic url="https://music.apple.com/us/album/ummg-feat-taylor-eigsti/1769360313?i=1769360314" />
 ```
 
-<AppleMusic url="https://music.apple.com/gb/album/1989-taylors-version/1708308989" />
+<AppleMusic url="https://music.apple.com/us/album/ummg-feat-taylor-eigsti/1769360313?i=1769360314" />
 
 `music.apple.com` の共有 URL は `embed.music.apple.com` に書き換えられ、ストアフロントとパス、曲選択の `i=` クエリは残します。すでに埋め込み用の `embed.music.apple.com` URL も、同じホスト／パス検査のあと受け付けます。HTTPS でない URL、似せたホスト、認証情報、フラグメント、不正なパスは iframe にせず、書いたまま残します。
 

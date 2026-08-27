@@ -22,7 +22,7 @@ export default {
 ```
 
 ```html
-<Spotify url="https://open.spotify.com/track/abc123"></Spotify>
+<Spotify url="https://open.spotify.com/track/2VEQTuWiuEC7J8kkA7h7xq"></Spotify>
 ```
 
 Supported paths include tracks, albums, playlists, episodes, shows, and artists.
