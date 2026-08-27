@@ -101,6 +101,14 @@ pub struct FeedsOptions {
     pub formats: Vec<FeedFormat>,
     /// Maximum number of published items.
     pub limit: usize,
+    /// BCP 47 language for the whole feed.
+    pub language: Option<String>,
+    /// Channel image URL — RSS `<image>`, Atom `<logo>`, JSON Feed `icon`.
+    pub image: Option<String>,
+    /// Small square icon — Atom `<icon>`, JSON Feed `favicon`.
+    pub favicon: Option<String>,
+    /// Rights statement — RSS `<copyright>`, Atom `<rights>`.
+    pub copyright: Option<String>,
 }
 
 /// Generated feed bodies, or a warning when generation is skipped.
@@ -129,6 +137,10 @@ impl Default for FeedsOptions {
             json_url: String::new(),
             formats: vec![FeedFormat::Rss, FeedFormat::Atom, FeedFormat::Json],
             limit: 20,
+            language: None,
+            image: None,
+            favicon: None,
+            copyright: None,
         }
     }
 }
@@ -218,6 +230,11 @@ fn push_xml_attr_number(output: &mut String, name: &str, value: Option<i64>) {
     if let Some(value) = value {
         push_xml_attr(output, name, Some(&value.to_string()));
     }
+}
+
+/// A channel field worth emitting: present, and not just whitespace.
+fn channel_field(value: Option<&String>) -> Option<&str> {
+    value.map(String::as_str).filter(|value| !value.trim().is_empty())
 }
 
 fn escape_xml(value: &str, output: &mut String) {

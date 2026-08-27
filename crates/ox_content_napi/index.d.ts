@@ -1004,6 +1004,10 @@ export interface JsFeedsOptions {
   /** Any of `"rss"`, `"atom"`, `"json"`. Unknown names are ignored. */
   formats: Array<string>
   limit: number
+  language?: string
+  image?: string
+  favicon?: string
+  copyright?: string
 }
 
 /** Generated feed bodies, or a warning when generation is skipped. */

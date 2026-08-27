@@ -1,8 +1,8 @@
 //! JSON Feed 1.1 bodies.
 
 use super::{
-    FeedAttachment, FeedAuthor, FeedItem, FeedsOptions, entry_id, item_date, item_description,
-    push_json_string,
+    FeedAttachment, FeedAuthor, FeedItem, FeedsOptions, channel_field, entry_id, item_date,
+    item_description, push_json_string,
 };
 
 pub(super) fn generate_json(options: &FeedsOptions, items: &[&FeedItem]) -> String {
@@ -18,6 +18,17 @@ pub(super) fn generate_json(options: &FeedsOptions, items: &[&FeedItem]) -> Stri
     {
         json.push_str(",\n  \"description\": ");
         push_json_string(description, &mut json);
+    }
+    for (key, value) in [
+        ("language", channel_field(options.language.as_ref())),
+        ("icon", channel_field(options.image.as_ref())),
+        ("favicon", channel_field(options.favicon.as_ref())),
+    ] {
+        let Some(value) = value else { continue };
+        json.push_str(",\n  \"");
+        json.push_str(key);
+        json.push_str("\": ");
+        push_json_string(value, &mut json);
     }
     json.push_str(",\n  \"items\": [");
 

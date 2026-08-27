@@ -49,6 +49,10 @@ pub struct JsFeedsOptions {
     /// Any of `"rss"`, `"atom"`, `"json"`. Unknown names are ignored.
     pub formats: Vec<String>,
     pub limit: u32,
+    pub language: Option<String>,
+    pub image: Option<String>,
+    pub favicon: Option<String>,
+    pub copyright: Option<String>,
 }
 
 /// Generated feed bodies, or a warning when generation is skipped.
@@ -120,6 +124,10 @@ pub fn generate_feed_bodies(options: JsFeedsOptions, items: Vec<JsFeedItem>) -> 
         json_url: options.json_url,
         formats: options.formats.iter().filter_map(|name| convert_format(name)).collect(),
         limit: options.limit as usize,
+        language: options.language,
+        image: options.image,
+        favicon: options.favicon,
+        copyright: options.copyright,
     };
     let items: Vec<_> = items.into_iter().map(convert_item).collect();
     let output = ox_content_ssg::generate_feeds(&resolved, &items);

@@ -1,8 +1,8 @@
 //! RSS 2.0 bodies.
 
 use super::{
-    FeedAttachment, FeedItem, FeedsOptions, channel_description, entry_id, escape_xml, item_date,
-    item_description,
+    FeedAttachment, FeedItem, FeedsOptions, channel_description, channel_field, entry_id,
+    escape_xml, item_date, item_description,
 };
 
 /// The Dublin Core namespace, declared only when an item uses it, so a feed
@@ -23,6 +23,7 @@ pub(super) fn generate_rss(options: &FeedsOptions, items: &[&FeedItem]) -> Strin
     xml.push_str("</link>\n    <description>");
     escape_xml(channel_description(options), &mut xml);
     xml.push_str("</description>\n");
+    push_channel_meta(options, &mut xml);
 
     for item in items {
         xml.push_str("    <item>\n      <title>");
@@ -83,4 +84,27 @@ fn push_enclosure(attachment: &FeedAttachment, xml: &mut String) {
     super::push_xml_attr(xml, "type", attachment.mime_type.as_deref());
     super::push_xml_attr_number(xml, "length", attachment.size_in_bytes);
     xml.push_str("/>\n");
+}
+
+/// RSS channel metadata, in the order the standard lists it.
+fn push_channel_meta(options: &FeedsOptions, xml: &mut String) {
+    if let Some(language) = channel_field(options.language.as_ref()) {
+        xml.push_str("    <language>");
+        escape_xml(language, xml);
+        xml.push_str("</language>\n");
+    }
+    if let Some(copyright) = channel_field(options.copyright.as_ref()) {
+        xml.push_str("    <copyright>");
+        escape_xml(copyright, xml);
+        xml.push_str("</copyright>\n");
+    }
+    if let Some(image) = channel_field(options.image.as_ref()) {
+        xml.push_str("    <image>\n      <url>");
+        escape_xml(image, xml);
+        xml.push_str("</url>\n      <title>");
+        escape_xml(&options.site_name, xml);
+        xml.push_str("</title>\n      <link>");
+        escape_xml(&options.home_page_url, xml);
+        xml.push_str("</link>\n    </image>\n");
+    }
 }
