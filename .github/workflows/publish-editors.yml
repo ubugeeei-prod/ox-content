@@ -189,7 +189,7 @@ jobs:
           fi
           mkdir -p dist/zed
           tar -czf "dist/zed/ox-content-zed-${version}.tar.gz" \
-            -C editors/zed extension.toml Cargo.toml README.md LICENSE src
+            -C editors/zed extension.toml Cargo.toml Cargo.lock README.md LICENSE src
 
       - name: Upload Zed artifact
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1

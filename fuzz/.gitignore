@@ -1,7 +1,6 @@
 target
 artifacts
 coverage
-Cargo.lock
 
 # libFuzzer expands the corpus during runs. Only the curated `seed_*` files
 # below each corpus directory are intended to be tracked; everything else

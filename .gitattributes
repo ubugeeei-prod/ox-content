@@ -8,6 +8,11 @@
 /**/docs/api/** linguist-generated=true
 /crates/ox_content_napi/index.d.ts linguist-generated=true
 
+# Cargo lockfiles. They are committed so builds resolve to the same dependency
+# versions everywhere, but they are resolver output rather than source: keep
+# them out of the language statistics and collapsed by default in diffs.
+Cargo.lock linguist-generated=true
+
 # Test sources. `linguist-vendored` is the only marker that drops a path from
 # the language statistics without claiming it is documentation or generated;
 # these are neither, they are just not the implementation the stats are for.

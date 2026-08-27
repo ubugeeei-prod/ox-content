@@ -2,7 +2,6 @@
 /target
 **/target/
 **/*.rs.bk
-Cargo.lock
 
 # IDE
 .idea/
