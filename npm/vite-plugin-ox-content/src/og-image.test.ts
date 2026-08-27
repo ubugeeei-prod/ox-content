@@ -104,12 +104,16 @@ describe("resolveOgImageOptions", () => {
       width: 1200,
       height: 630,
       cache: true,
-      concurrency: 1,
       satori: {
         fonts: [{ path: "fonts/Inter.ttf", name: "Inter", weight: 500 }],
         systemFontFallback: false,
       },
     });
+  });
+
+  it("keeps an explicit concurrency and defaults to more than one", () => {
+    expect(resolveOgImageOptions({ concurrency: 3 }).concurrency).toBe(3);
+    expect(resolveOgImageOptions(undefined).concurrency).toBeGreaterThan(1);
   });
 });
 
@@ -175,5 +179,88 @@ describe("generateOgImages with Satori", () => {
     } finally {
       await fs.rm(dir, { recursive: true, force: true });
     }
+  });
+});
+
+describe("OG image caching", () => {
+  const props = (title: string) => ({
+    title,
+    description: "Browserless OG image rendering",
+    siteName: "Ox Content",
+  });
+
+  async function withDir<T>(run: (dir: string) => Promise<T>): Promise<T> {
+    const dir = await fs.mkdtemp(path.join(os.tmpdir(), "ox-og-cache-"));
+    try {
+      return await run(dir);
+    } finally {
+      await fs.rm(dir, { recursive: true, force: true });
+    }
+  }
+
+  it("serves a second build from cache instead of re-rendering", async () => {
+    await withDir(async (dir) => {
+      const options = resolveOgImageOptions({
+        renderer: "satori",
+        width: 600,
+        height: 315,
+      });
+      const entry = { outputPath: path.join(dir, "og.png"), props: props("Cached page") };
+
+      const [first] = await generateOgImages([entry], options, dir);
+      expect(first).toEqual({ outputPath: entry.outputPath, cached: false });
+
+      await fs.rm(entry.outputPath);
+      const [second] = await generateOgImages([entry], options, dir);
+      expect(second).toEqual({ outputPath: entry.outputPath, cached: true });
+
+      // The output is restored from cache, not left missing.
+      const png = await fs.readFile(entry.outputPath);
+      expect(png.subarray(0, 8).toString("hex")).toBe("89504e470d0a1a0a");
+    });
+  });
+
+  it("re-renders only the page whose props changed", async () => {
+    await withDir(async (dir) => {
+      const options = resolveOgImageOptions({
+        renderer: "satori",
+        width: 600,
+        height: 315,
+      });
+      const stable = { outputPath: path.join(dir, "a.png"), props: props("Stable") };
+      const changing = { outputPath: path.join(dir, "b.png"), props: props("Before") };
+
+      await generateOgImages([stable, changing], options, dir);
+
+      const results = await generateOgImages(
+        [stable, { ...changing, props: props("After") }],
+        options,
+        dir,
+      );
+      expect(results.map((r) => r.cached)).toEqual([true, false]);
+    });
+  });
+
+  it("does not cache when caching is off", async () => {
+    await withDir(async (dir) => {
+      const options = resolveOgImageOptions({
+        renderer: "satori",
+        width: 600,
+        height: 315,
+        cache: false,
+      });
+      const entry = { outputPath: path.join(dir, "og.png"), props: props("Uncached") };
+
+      await generateOgImages([entry], options, dir);
+      const [second] = await generateOgImages([entry], options, dir);
+      expect(second).toEqual({ outputPath: entry.outputPath, cached: false });
+    });
+  });
+
+  // Rendering was serial by default, so a site paid one full page render per
+  // page end to end however many cores it had.
+  it("renders more than one page at a time by default", () => {
+    expect(resolveOgImageOptions(undefined).concurrency).toBeGreaterThan(1);
+    expect(resolveOgImageOptions({ concurrency: 1 }).concurrency).toBe(1);
   });
 });

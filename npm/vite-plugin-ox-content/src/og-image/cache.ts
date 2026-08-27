@@ -23,6 +23,22 @@ export function computeCacheKey(
 }
 
 /**
+ * Whether a cached PNG exists, without reading it.
+ *
+ * Deciding whether the browser has to start at all only needs to know that
+ * every key is present. Reading each file to answer that costs a full pass
+ * over the cache before rendering has begun.
+ */
+export async function isCached(cacheDir: string, key: string): Promise<boolean> {
+  try {
+    await fs.access(path.join(cacheDir, `${key}.png`));
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+/**
  * Checks if a cached PNG exists for the given key.
  * Returns the cached file path if found, null otherwise.
  */

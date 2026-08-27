@@ -204,9 +204,16 @@ generated image looks like this:
 | `width`                     | `1200`       | Image width in pixels.                                                |
 | `height`                    | `630`        | Image height in pixels.                                               |
 | `cache`                     | `true`       | Skip re-rendering unchanged pages.                                    |
-| `concurrency`               | `1`          | Parallel image renders.                                               |
+| `concurrency`               | CPU-aware    | Parallel image renders. Defaults to `min(4, cores - 1)`.              |
 | `satori.fonts`              | `[]`         | Font files for Satori (`.ttf`, `.otf`, or `.woff`).                   |
 | `satori.systemFontFallback` | `true`       | Try common OS font paths when `satori.fonts` is empty.                |
+
+Rendered images are cached under `.cache/og-images`, keyed by a hash of the
+template source and the page's props, so an unchanged page is copied from cache
+instead of re-rendered. Only pages whose title, description, or frontmatter
+changed pay for a render. That directory is gitignored, so a CI job that does
+not restore it renders every page every time — cache it between runs the same
+way you would `node_modules`.
 
 Chromium is the compatibility renderer: it can use normal browser CSS, local
 public assets, and framework templates exactly as a page would. Satori skips

@@ -6,11 +6,12 @@
  */
 import * as path from "path";
 import * as crypto from "crypto";
+import { availableParallelism } from "os";
 import { openBrowser } from "./browser";
 import type { OgBrowserSession } from "./browser";
 import { renderHtmlToPngWithSatori } from "./satori-renderer";
 import { getDefaultSatoriTemplate, getDefaultTemplate } from "./template";
-import { computeCacheKey, getCached, writeCache } from "./cache";
+import { computeCacheKey, getCached, isCached, writeCache } from "./cache";
 import type {
   OgImageOptions,
   ResolvedOgImageOptions,
@@ -34,6 +35,19 @@ export type { OgBrowserSession } from "./browser";
 /**
  * Resolves user-provided OG image options with defaults.
  */
+/**
+ * How many pages to render at once when the caller does not say.
+ *
+ * Rendering was serial by default, so a site paid one Chromium page render per
+ * page, end to end. Pages are cheap next to the browser itself, but they are
+ * not free — this stays well under the core count so a build machine keeps
+ * room for everything else.
+ */
+function defaultConcurrency(): number {
+  const cores = availableParallelism();
+  return Math.max(1, Math.min(4, cores - 1));
+}
+
 export function resolveOgImageOptions(options: OgImageOptions | undefined): ResolvedOgImageOptions {
   return {
     renderer: options?.renderer ?? "chromium",
@@ -42,7 +56,7 @@ export function resolveOgImageOptions(options: OgImageOptions | undefined): Reso
     width: options?.width ?? 1200,
     height: options?.height ?? 630,
     cache: options?.cache ?? true,
-    concurrency: options?.concurrency ?? 1,
+    concurrency: options?.concurrency ?? defaultConcurrency(),
     satori: {
       fonts: options?.satori?.fonts ?? [],
       systemFontFallback: options?.satori?.systemFontFallback ?? true,
@@ -598,14 +612,16 @@ export async function generateOgImages(
   // Cache directory
   const cacheDir = path.join(root, ".cache", "og-images");
 
+  const keyed = withCacheKeys(pages, templateSource, options);
+
   // Try to serve all from cache first if caching is enabled
   if (options.cache) {
-    const allCached = await tryServeAllFromCache(pages, templateSource, options, cacheDir);
+    const allCached = await tryServeAllFromCache(keyed, cacheDir);
     if (allCached) return allCached;
   }
 
   if (options.renderer === "satori") {
-    return renderSatoriPages(pages, templateFn, templateSource, options, cacheDir, root);
+    return renderSatoriPages(keyed, templateFn, options, cacheDir, root);
   }
 
   // Launch browser
@@ -626,11 +642,11 @@ export async function generateOgImages(
   // Process pages with concurrency control
   const concurrency = Math.max(1, options.concurrency);
 
-  for (let i = 0; i < pages.length; i += concurrency) {
-    const batch = pages.slice(i, i + concurrency);
+  for (let i = 0; i < keyed.length; i += concurrency) {
+    const batch = keyed.slice(i, i + concurrency);
     const batchResults = await Promise.all(
       batch.map((entry) =>
-        renderSinglePage(entry, templateFn, templateSource, options, cacheDir, session, publicDir),
+        renderSinglePage(entry, templateFn, options, cacheDir, session, publicDir),
       ),
     );
     results.push(...batchResults);
@@ -640,9 +656,8 @@ export async function generateOgImages(
 }
 
 async function renderSatoriPages(
-  pages: OgImagePageEntry[],
+  pages: KeyedPageEntry[],
   templateFn: OgImageTemplateFn,
-  templateSource: string,
   options: ResolvedOgImageOptions,
   cacheDir: string,
   root: string,
@@ -653,9 +668,7 @@ async function renderSatoriPages(
   for (let i = 0; i < pages.length; i += concurrency) {
     const batch = pages.slice(i, i + concurrency);
     const batchResults = await Promise.all(
-      batch.map((entry) =>
-        renderSingleSatoriPage(entry, templateFn, templateSource, options, cacheDir, root),
-      ),
+      batch.map((entry) => renderSingleSatoriPage(entry, templateFn, options, cacheDir, root)),
     );
     results.push(...batchResults);
   }
@@ -664,64 +677,82 @@ async function renderSatoriPages(
 }
 
 /**
- * Tries to serve all pages from cache.
- * Returns results if ALL pages are cached, null otherwise.
+ * Serves every page from cache when all of them are present.
+ *
+ * The probe is an existence check per key, not a read: on a partial hit this
+ * used to read and write every cached page before discovering the miss, then
+ * throw that work away and let the render loop redo it. Returns null when any
+ * page is missing, which is the signal that a renderer has to start.
  */
 async function tryServeAllFromCache(
+  pages: KeyedPageEntry[],
+  cacheDir: string,
+): Promise<OgImageResult[] | null> {
+  for (const entry of pages) {
+    if (!(await isCached(cacheDir, entry.key))) return null;
+  }
+
+  const results: OgImageResult[] = [];
+  for (const entry of pages) {
+    const cached = await getCached(cacheDir, entry.key);
+    // Raced with a cache eviction between the probe and the read.
+    if (!cached) return null;
+    await writeOutput(entry.outputPath, cached);
+    results.push({ outputPath: entry.outputPath, cached: true });
+  }
+  return results;
+}
+
+/** A page entry with its cache key computed once. */
+interface KeyedPageEntry extends OgImagePageEntry {
+  key: string;
+}
+
+/**
+ * Attaches the cache key to each entry.
+ *
+ * The key is a SHA-256 over the template source and the page props. It used to
+ * be recomputed three times per page — once to probe, once to read, once to
+ * write — over props that can be a whole frontmatter object.
+ */
+function withCacheKeys(
   pages: OgImagePageEntry[],
   templateSource: string,
   options: ResolvedOgImageOptions,
-  cacheDir: string,
-): Promise<OgImageResult[] | null> {
-  const fs = await import("fs/promises");
-  const results: OgImageResult[] = [];
-
-  for (const entry of pages) {
-    const key = computeCacheKey(
+): KeyedPageEntry[] {
+  return pages.map((entry) => ({
+    ...entry,
+    key: computeCacheKey(
       templateSource,
       entry.props as unknown as Record<string, unknown>,
       options.width,
       options.height,
-    );
-    const cached = await getCached(cacheDir, key);
-    if (!cached) return null; // At least one miss, need browser
+    ),
+  }));
+}
 
-    // Write cached file to output
-    await fs.mkdir(path.dirname(entry.outputPath), { recursive: true });
-    await fs.writeFile(entry.outputPath, cached);
-    results.push({ outputPath: entry.outputPath, cached: true });
-  }
-
-  return results;
+async function writeOutput(outputPath: string, png: Buffer): Promise<void> {
+  const fs = await import("fs/promises");
+  await fs.mkdir(path.dirname(outputPath), { recursive: true });
+  await fs.writeFile(outputPath, png);
 }
 
 /**
  * Renders a single page to PNG, with cache support.
  */
 async function renderSinglePage(
-  entry: OgImagePageEntry,
+  entry: KeyedPageEntry,
   templateFn: OgImageTemplateFn,
-  templateSource: string,
   options: ResolvedOgImageOptions,
   cacheDir: string,
   session: OgBrowserSession,
   publicDir?: string,
 ): Promise<OgImageResult> {
-  const fs = await import("fs/promises");
-
   try {
-    // Check cache
     if (options.cache) {
-      const key = computeCacheKey(
-        templateSource,
-        entry.props as unknown as Record<string, unknown>,
-        options.width,
-        options.height,
-      );
-      const cached = await getCached(cacheDir, key);
+      const cached = await getCached(cacheDir, entry.key);
       if (cached) {
-        await fs.mkdir(path.dirname(entry.outputPath), { recursive: true });
-        await fs.writeFile(entry.outputPath, cached);
+        await writeOutput(entry.outputPath, cached);
         return { outputPath: entry.outputPath, cached: true };
       }
     }
@@ -732,19 +763,10 @@ async function renderSinglePage(
     // Render HTML to PNG via session (page create/close handled internally)
     const png = await session.renderPage(html, options.width, options.height, publicDir);
 
-    // Write output
-    await fs.mkdir(path.dirname(entry.outputPath), { recursive: true });
-    await fs.writeFile(entry.outputPath, png);
+    await writeOutput(entry.outputPath, png);
 
-    // Write cache
     if (options.cache) {
-      const key = computeCacheKey(
-        templateSource,
-        entry.props as unknown as Record<string, unknown>,
-        options.width,
-        options.height,
-      );
-      await writeCache(cacheDir, key, png);
+      await writeCache(cacheDir, entry.key, png);
     }
 
     return { outputPath: entry.outputPath, cached: false };
@@ -761,27 +783,17 @@ async function renderSinglePage(
  * Renders a single page to PNG using Satori, with cache support.
  */
 async function renderSingleSatoriPage(
-  entry: OgImagePageEntry,
+  entry: KeyedPageEntry,
   templateFn: OgImageTemplateFn,
-  templateSource: string,
   options: ResolvedOgImageOptions,
   cacheDir: string,
   root: string,
 ): Promise<OgImageResult> {
-  const fs = await import("fs/promises");
-
   try {
     if (options.cache) {
-      const key = computeCacheKey(
-        templateSource,
-        entry.props as unknown as Record<string, unknown>,
-        options.width,
-        options.height,
-      );
-      const cached = await getCached(cacheDir, key);
+      const cached = await getCached(cacheDir, entry.key);
       if (cached) {
-        await fs.mkdir(path.dirname(entry.outputPath), { recursive: true });
-        await fs.writeFile(entry.outputPath, cached);
+        await writeOutput(entry.outputPath, cached);
         return { outputPath: entry.outputPath, cached: true };
       }
     }
@@ -789,17 +801,10 @@ async function renderSingleSatoriPage(
     const html = await templateFn(entry.props);
     const png = await renderHtmlToPngWithSatori(html, options, root);
 
-    await fs.mkdir(path.dirname(entry.outputPath), { recursive: true });
-    await fs.writeFile(entry.outputPath, png);
+    await writeOutput(entry.outputPath, png);
 
     if (options.cache) {
-      const key = computeCacheKey(
-        templateSource,
-        entry.props as unknown as Record<string, unknown>,
-        options.width,
-        options.height,
-      );
-      await writeCache(cacheDir, key, png);
+      await writeCache(cacheDir, entry.key, png);
     }
 
     return { outputPath: entry.outputPath, cached: false };

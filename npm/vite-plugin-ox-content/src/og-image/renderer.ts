@@ -80,7 +80,11 @@ export async function renderHtmlToPng(
   }
 
   const fullHtml = wrapHtml(html, width, height, !!publicDir);
-  await page.setContent(fullHtml, { waitUntil: "networkidle" });
+  // `load` fires once the document and its subresources — images, fonts, the
+  // things a card actually shows — have loaded. `networkidle` additionally
+  // waits out a 500ms quiet window, which a self-contained card spends idle,
+  // and which every page pays whether or not it requests anything.
+  await page.setContent(fullHtml, { waitUntil: "load" });
 
   const screenshot = await page.screenshot({
     type: "png",

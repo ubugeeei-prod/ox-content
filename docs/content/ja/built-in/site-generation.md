@@ -178,9 +178,11 @@ oxContent({
 | `width`                     | `1200`       | 画像幅（ピクセル）。                                             |
 | `height`                    | `630`        | 画像高さ（ピクセル）。                                           |
 | `cache`                     | `true`       | 変わっていないページの再描画を飛ばす。                           |
-| `concurrency`               | `1`          | 並列の画像描画。                                                 |
+| `concurrency`               | CPU 依存     | 並列の画像描画。既定は `min(4, cores - 1)`。                     |
 | `satori.fonts`              | `[]`         | Satori に渡すフォントファイル（`.ttf`、`.otf`、`.woff`）。       |
 | `satori.systemFontFallback` | `true`       | `satori.fonts` が空のとき、よくある OS フォントパスを探す。      |
+
+描画した画像は `.cache/og-images` にキャッシュします。キーはテンプレートのソースとページの props のハッシュなので、変更のないページは再描画せずキャッシュからコピーします。描画コストを払うのはタイトル・説明・frontmatter が変わったページだけです。このディレクトリは gitignore されているため、復元しない CI ジョブは毎回すべてのページを描画します。`node_modules` と同じように、実行間でキャッシュしてください。
 
 Chromium は互換性重視のレンダラーです。通常のブラウザ CSS、ローカル public
 アセット、フレームワークテンプレートをページと同じ感覚で使えます。Satori は
