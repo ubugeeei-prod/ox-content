@@ -10,7 +10,7 @@
 
 | 要件          | バージョン | インストール                                                                             |
 | ------------- | ---------- | ---------------------------------------------------------------------------------------- |
-| **Rust**      | 1.95+      | `nix develop` が提供します（`flake.nix` で固定）。または [rustup.rs](https://rustup.rs/) |
+| **Rust**      | 1.95+      | `nix develop` が提供します（`rust-toolchain.toml` で固定）。または [rustup.rs](https://rustup.rs/) |
 | **Node.js**   | 26+        | `nix develop` が提供するか、`.node-version` で管理します                                 |
 | **Vite+**     | 最新       | 開発シェル内では `vp` として使えます                                                     |
 | **wasm-pack** | 最新       | `nix develop` が提供します。`vp run build:wasm` を回すときに必要です                     |
@@ -95,6 +95,7 @@ vp run bench:bundle
 ox-content/
 ├── Cargo.toml              # Workspace configuration
 ├── flake.nix               # Nix dev shell (Node.js, workspace bootstrap, Rust, Vite+ wrapper)
+├── rust-toolchain.toml     # Rust channel, components, and targets for Nix and rustup alike
 ├── .node-version           # Node.js version for CI / setup-node compatibility
 ├── vite.config.ts          # Vite+ workspace task graph
 ├── crates/                 # Rust crates
