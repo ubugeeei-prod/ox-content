@@ -22,7 +22,9 @@ export default {
 ```
 
 ```html
-<AppleMusic url="https://music.apple.com/us/album/ummg-feat-taylor-eigsti/1769360313?i=1769360314"></AppleMusic>
+<AppleMusic
+  url="https://music.apple.com/us/album/ummg-feat-taylor-eigsti/1769360313?i=1769360314"
+></AppleMusic>
 ```
 
 Supported share hosts are `music.apple.com` and already-embedded
