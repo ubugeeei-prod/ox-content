@@ -113,6 +113,12 @@ test("static provider cards render from attributes alone", async ({ page }) => {
   // page, which a pixel snapshot would catch only indirectly — and only on the
   // platform that generated it. Assert the rules actually landed instead.
   await expectCardStylesApplied(page);
+
+  const firstCardHeight = await page
+    .locator(".ox-provider-card")
+    .first()
+    .evaluate((node) => node.getBoundingClientRect().height);
+  expect(firstCardHeight).toBeLessThan(170);
 });
 
 test("cards keep their column on a narrow viewport", async ({ page }) => {

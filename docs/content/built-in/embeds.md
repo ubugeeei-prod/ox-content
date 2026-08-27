@@ -468,21 +468,22 @@ request is needed at all:
 
 ## Provider Cards
 
-`embeds.googleMaps`, `embeds.qiita`, `embeds.zenn`,
-`embeds.packageRegistry`, `embeds.playgrounds`, `embeds.vimeo`,
-`embeds.twitch`, `embeds.discord`, `embeds.fediverse`, `embeds.facebook`,
-`embeds.threads`, and `embeds.instagram` render static provider cards.
-`qiita: true`, `zenn: true`, `packageRegistry: true`, Vimeo cards, and CodePen
-playground cards fetch public metadata at build time; set `{ fetch: false }` to
-render link cards without network access. Playground and video iframe URLs are
-added only with `{ iframe: true }`. Twitch iframes also require a `parent`
-domain, for example `twitch: { iframe: true, parent: "docs.example.com" }`.
-Other provider cards do not fetch metadata or load third-party scripts by
-default. Authors can pass stable metadata with attributes such as `title`,
-`author`, `avatar`, `date`, `dateLabel`, `tags`, `likes`, `reposts`,
-`replies`, `server`, `channel`, `address`, `image`, `version`, `license`,
-`repository`, `downloads`, `stars`, `language`, `runtime`, `duration`,
-`status`, and `views`.
+Provider cards render rich static previews for maps, articles, packages,
+playgrounds, videos, design links, slides, communities, and social posts. They
+do not load third-party scripts by default, and authors can pass stable metadata
+directly through attributes.
+
+The cards below render without a network request at build time:
+
+<CratesIo url="https://crates.io/crates/serde" name="serde" description="Serialization framework for Rust" version="1.0.219" downloads="512M"></CratesIo>
+
+<PyPI url="https://pypi.org/project/requests" name="requests" description="HTTP for Humans" version="2.32.3"></PyPI>
+
+<DockerHub url="https://hub.docker.com/_/nginx" name="nginx" description="Official build of Nginx"></DockerHub>
+
+<JSFiddle url="https://jsfiddle.net/ubugeeei/abc123/2/" title="Layout sandbox" author="ubugeeei"></JSFiddle>
+
+<Observable url="https://observablehq.com/@d3/bar-chart" title="Bar chart" author="d3"></Observable>
 
 ```mdx
 <GoogleMaps
@@ -543,18 +544,6 @@ default. Authors can pass stable metadata with attributes such as `title`,
   Fediverse release note.
 </Mastodon>
 ```
-
-The cards these render, without a network request at build time:
-
-<CratesIo url="https://crates.io/crates/serde" name="serde" description="Serialization framework for Rust" version="1.0.219" downloads="512M" />
-
-<PyPI url="https://pypi.org/project/requests" name="requests" description="HTTP for Humans" version="2.32.3" />
-
-<DockerHub url="https://hub.docker.com/_/nginx" name="nginx" description="Official build of Nginx" />
-
-<JSFiddle url="https://jsfiddle.net/ubugeeei/abc123/2/" title="Layout sandbox" author="ubugeeei" />
-
-<Observable url="https://observablehq.com/@d3/bar-chart" title="Bar chart" author="d3" />
 
 | Option         | Default                       | Purpose                                          |
 | -------------- | ----------------------------- | ------------------------------------------------ |
@@ -713,7 +702,7 @@ so the layout does not shift. See
 with `embed=1` appended:
 
 ```mdx
-<StackBlitz url="https://stackblitz.com/edit/vitejs-vite" />
+<StackBlitz url="https://stackblitz.com/edit/vitejs-vite"></StackBlitz>
 ```
 
 <StackBlitz url="https://stackblitz.com/edit/vitejs-vite" />

@@ -215,9 +215,13 @@ export async function loadUserSession(request: Request, cache: Map<string, Promi
     if (!(firstLine instanceof HTMLElement)) {
       throw new Error("Missing code line target");
     }
+    const firstLineStyle = getComputedStyle(firstLine);
+    const lineNumberStyle = getComputedStyle(firstLine, "::before");
     return {
       clientWidth: pre.clientWidth,
       firstLineBackground: getComputedStyle(firstLine).backgroundColor,
+      firstLinePaddingLeft: Number.parseFloat(firstLineStyle.paddingLeft),
+      lineNumberWidth: Number.parseFloat(lineNumberStyle.width),
       scrollWidth: pre.scrollWidth,
       whiteSpace: getComputedStyle(pre).whiteSpace,
     };
@@ -226,6 +230,8 @@ export async function loadUserSession(request: Request, cache: Map<string, Promi
   expect(metrics.whiteSpace).toBe("pre-wrap");
   expect(metrics.scrollWidth).toBeLessThanOrEqual(metrics.clientWidth + 1);
   expect(metrics.firstLineBackground).not.toBe("rgba(0, 0, 0, 0)");
+  expect(metrics.firstLinePaddingLeft).toBeLessThanOrEqual(50);
+  expect(metrics.lineNumberWidth).toBeLessThanOrEqual(30);
 
   await expect(page.locator(".content")).toHaveScreenshot("dense-code-affordances-mobile.png", {
     animations: "disabled",

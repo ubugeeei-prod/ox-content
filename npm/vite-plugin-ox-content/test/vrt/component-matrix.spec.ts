@@ -179,6 +179,9 @@ async function expectMatrixContracts(page: Page) {
       hasMermaidOutput:
         content.querySelectorAll(".ox-mermaid, pre[data-language='mermaid'], code.language-mermaid")
           .length > 0,
+      rawDetailsParagraphs: [...content.querySelectorAll("p")].filter(
+        (paragraph) => paragraph.textContent?.trim() === "::: details{open}",
+      ).length,
     };
   });
 
@@ -186,6 +189,7 @@ async function expectMatrixContracts(page: Page) {
   expect(metrics.nestedContainers).toBe(0);
   expect(metrics.nestedTabs).toBe(0);
   expect(metrics.hasMermaidOutput).toBe(true);
+  expect(metrics.rawDetailsParagraphs).toBe(0);
 }
 
 async function contentClip(page: Page) {

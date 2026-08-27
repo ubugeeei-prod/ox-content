@@ -6,13 +6,14 @@
 .content .ox-code > pre,
 .content .ox-code:has(ox-code-play) pre {
   margin: 0;
-  padding-inline-end: calc(var(--ox-copy-reserved-inline-size) + 0.5rem);
+  padding-inline-end: calc(var(--ox-copy-reserved-inline-size) + 0.45rem);
 }
 .ox-code:has(> ox-code-play) .ox-code-play__toolbar {
-  padding-inline-end: calc(var(--ox-copy-reserved-inline-size) + 0.8rem);
+  padding-inline-end: calc(var(--ox-copy-reserved-inline-size) + 0.65rem);
 }
 .content .ox-code > pre[data-code-title]::before {
-  padding-inline-end: var(--ox-copy-reserved-inline-size);
+  margin-inline-end: calc(-1 * (var(--ox-copy-reserved-inline-size) + 0.45rem));
+  padding-inline-end: calc(var(--ox-copy-reserved-inline-size) + 0.45rem);
 }
 .ox-copy {
   position: absolute;
