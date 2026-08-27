@@ -10,7 +10,7 @@
   };
 
   outputs =
-    inputs@{ flake-parts, rust-overlay, ... }:
+    inputs@{ flake-parts, ... }:
     flake-parts.lib.mkFlake { inherit inputs; } {
       systems = [
         "aarch64-darwin"
@@ -19,17 +19,21 @@
         "x86_64-linux"
       ];
 
+      imports = [
+        ./nix/pkgs.nix
+      ];
+
       perSystem =
         {
           lib,
           pkgs,
+          rustToolchain,
           system,
           ...
         }:
         let
           nodejs = pkgs.nodejs_26;
           pnpm = pkgs.pnpm;
-          rustToolchain = pkgs.rust-bin.fromRustupToolchainFile ./rust-toolchain.toml;
           workspaceVp = pkgs.writeShellApplication {
             name = "vp";
             runtimeInputs = [
@@ -137,11 +141,6 @@
             };
         in
         {
-          _module.args.pkgs = import inputs.nixpkgs {
-            inherit system;
-            overlays = [ rust-overlay.overlays.default ];
-          };
-
           devShells.default = pkgs.mkShell {
             packages = [
               nodejs
