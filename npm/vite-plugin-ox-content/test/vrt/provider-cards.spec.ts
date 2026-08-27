@@ -38,6 +38,18 @@ const RESOLVED = [
  */
 const NO_FETCH = { fetch: false } as const;
 
+/**
+ * The same providers given URLs they will not embed — a real host with a shape
+ * they do not serve. Each degrades to the neutral link fallback rather than
+ * shipping its tag to the browser as an unknown element.
+ */
+const FALLBACK = [
+  '<Qiita url="https://qiita.com/ubugeeei">Qiita profile</Qiita>',
+  '<Zenn url="https://zenn.dev/ubugeeei">Zenn profile</Zenn>',
+  '<Vimeo url="https://vimeo.com/">Vimeo home</Vimeo>',
+  '<Observable url="https://observablehq.com/docs">Observable docs</Observable>',
+].join("\n\n");
+
 const EMBEDS = {
   github: false,
   openGraph: false,
@@ -99,4 +111,18 @@ test("cards keep their column on a narrow viewport", async ({ page }) => {
     return content ? content.scrollWidth - content.clientWidth : -1;
   });
   expect(overflow).toBeLessThanOrEqual(0);
+});
+
+test("unresolvable provider tags degrade to neutral links", async ({ page }) => {
+  const html = await renderPage(FALLBACK, "provider-fallbacks");
+  await page.setViewportSize({ width: 720, height: 600 });
+  await page.setContent(html, { waitUntil: "domcontentloaded" });
+
+  await expect(page.locator("a.ox-embed-fallback")).toHaveCount(4);
+  // The fallback names no provider, so a look-alike host cannot borrow the
+  // styling of the provider it is imitating.
+  await expect(page.locator('[class*="ox-embed-fallback--"]')).toHaveCount(0);
+  await expect(page.locator("body")).not.toContainText("<Qiita");
+
+  await expect(page.locator(".content")).toHaveScreenshot("provider-cards-fallback.png");
 });
