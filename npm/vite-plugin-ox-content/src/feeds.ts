@@ -11,8 +11,10 @@ import { applyAtomMeta, applyJsonMeta, applyRssMeta, channelMeta } from "./feed-
 import { generateAtom, generateJson, generateRss } from "./feed-format";
 import type { FeedDocument } from "./feed-format";
 import {
+  feedContentType,
+  feedOutputFileName,
+  feedOutputPath,
   homePageUrl,
-  outputDir,
   feedOutputWarning,
   siteUrlWarning,
   unsafeFeedPathWarning,
@@ -69,10 +71,24 @@ export interface FeedsRenderResult {
   warning?: string;
 }
 
-/** Inputs for writing feeds next to generated HTML. */
-export interface WriteFeedFilesInput extends FeedsRenderInput {
-  outDir: string;
+export interface RenderedFeedFile {
+  path: string;
+  contentType: string;
+  content: string;
+}
+
+export interface RenderFeedFilesInput extends FeedsRenderInput {
   base: string;
+  outDir?: string;
+}
+
+export interface RenderFeedFilesResult {
+  files: RenderedFeedFile[];
+  warning?: string;
+}
+
+export interface WriteFeedFilesInput extends RenderFeedFilesInput {
+  outDir: string;
 }
 
 /**
@@ -144,10 +160,7 @@ export function generateFeeds(input: FeedsRenderInput): FeedsRenderResult {
   return result;
 }
 
-/** Writes enabled feed files into `outDir`. */
-export async function writeFeedFiles(
-  input: WriteFeedFilesInput,
-): Promise<{ files: string[]; warning?: string }> {
+export async function renderFeedFiles(input: RenderFeedFilesInput): Promise<RenderFeedFilesResult> {
   if (input.options?.enabled) {
     const warning = siteUrlWarning(input.siteUrl);
     if (warning) {
@@ -161,8 +174,8 @@ export async function writeFeedFiles(
     return { files: [], warning: outputWarning };
   }
 
-  const files: string[] = [];
-  for (const channel of channels) {
+  const renderedFiles: RenderedFeedFile[] = [];
+  for (const [index, channel] of channels.entries()) {
     const channelItems = await resolveChannelItems(channel, input);
     const generatedInput = channelItems === undefined ? input : { ...input, items: channelItems };
     const generated = generateFeeds({
@@ -172,24 +185,44 @@ export async function writeFeedFiles(
     if (generated.warning) {
       return { files: [], warning: generated.warning };
     }
-    const outputs: Array<[string, string]> = [
-      [generated.rssXml, "feed.xml"],
-      [generated.atomXml, "atom.xml"],
-      [generated.jsonFeed, "feed.json"],
-    ].filter((entry): entry is [string, string] => entry[0] != null);
+    const outputs: Array<[FeedFormat, string]> = [
+      ["rss", generated.rssXml],
+      ["atom", generated.atomXml],
+      ["json", generated.jsonFeed],
+    ].filter((entry): entry is [FeedFormat, string] => entry[1] != null);
     if (outputs.length === 0) {
       continue;
     }
-    const dest = outputDir(input.outDir, channel.path);
-    if (!dest) {
-      return { files: [], warning: unsafeFeedPathWarning(channel, 0) };
+    for (const [format, content] of outputs) {
+      const fileName = feedOutputFileName(format);
+      const outputPath = feedOutputPath(channel.path, fileName);
+      if (!outputPath) {
+        return { files: [], warning: unsafeFeedPathWarning(channel, index) };
+      }
+      renderedFiles.push({
+        path: outputPath,
+        contentType: feedContentType(format),
+        content,
+      });
     }
-    await fs.mkdir(dest, { recursive: true });
-    for (const [body, name] of outputs) {
-      const outputPath = path.join(dest, name);
-      await fs.writeFile(outputPath, body, "utf8");
-      files.push(outputPath);
-    }
+  }
+  return { files: renderedFiles };
+}
+
+export async function writeFeedFiles(
+  input: WriteFeedFilesInput,
+): Promise<{ files: string[]; warning?: string }> {
+  const rendered = await renderFeedFiles(input);
+  if (rendered.warning) {
+    return { files: [], warning: rendered.warning };
+  }
+
+  const files: string[] = [];
+  for (const file of rendered.files) {
+    const outputPath = path.join(input.outDir, ...file.path.split("/"));
+    await fs.mkdir(path.dirname(outputPath), { recursive: true });
+    await fs.writeFile(outputPath, file.content, "utf8");
+    files.push(outputPath);
   }
   return { files };
 }
@@ -264,7 +297,7 @@ function normalizeFormats(formats: readonly FeedFormat[] | undefined): FeedForma
 
 async function resolveChannelItems(
   channel: ResolvedFeedChannel,
-  input: WriteFeedFilesInput,
+  input: RenderFeedFilesInput,
 ): Promise<readonly FeedItemInput[] | undefined> {
   const source = channel.items;
   if (source == null) {
@@ -284,7 +317,7 @@ async function resolveChannelItems(
 
 function feedItemsContext(
   channel: ResolvedFeedChannel,
-  input: WriteFeedFilesInput,
+  input: RenderFeedFilesInput,
 ): FeedItemsResolveContext {
   return {
     name: channel.name,

@@ -12,6 +12,20 @@ const FORMAT_OUTPUTS: Record<FeedFormat, string> = {
   json: "feed.json",
 };
 
+const FORMAT_CONTENT_TYPES: Record<FeedFormat, string> = {
+  rss: "application/rss+xml; charset=utf-8",
+  atom: "application/atom+xml; charset=utf-8",
+  json: "application/feed+json; charset=utf-8",
+};
+
+export function feedOutputFileName(format: FeedFormat): string {
+  return FORMAT_OUTPUTS[format];
+}
+
+export function feedContentType(format: FeedFormat): string {
+  return FORMAT_CONTENT_TYPES[format];
+}
+
 export function homePageUrl(siteUrl: string | undefined, base = "/"): string {
   const origin = (siteUrl ?? "").trim().replace(/\/+$/, "");
   const prefix = !base || base === "/" ? "/" : base.endsWith("/") ? base : `${base}/`;
@@ -43,36 +57,39 @@ function isSafeHttpUrl(value: string): boolean {
 }
 
 export function outputDir(outDir: string, feedPath: string): string | undefined {
-  const relative = feedPath.replace(/^\/+|\/+$/g, "");
+  const relative = feedOutputDirectory(feedPath);
+  if (relative === undefined) {
+    return undefined;
+  }
   if (!relative) {
     return outDir;
   }
-  if (relative.includes("\\")) {
+  return path.join(outDir, ...relative.split("/"));
+}
+
+export function feedOutputPath(feedPath: string, fileName: string): string | undefined {
+  const relative = feedOutputDirectory(feedPath);
+  if (relative === undefined) {
     return undefined;
   }
-  const normalized = path.posix.normalize(relative);
-  if (normalized === ".." || normalized.startsWith("../")) {
-    return undefined;
-  }
-  return path.join(outDir, ...normalized.split("/"));
+  return relative ? `${relative}/${fileName}` : fileName;
 }
 
 export function feedOutputWarning(
-  outDir: string,
+  _outDir: string | undefined,
   channels: readonly ResolvedFeedChannel[],
 ): string | undefined {
   const seen = new Map<string, string>();
   for (const [index, channel] of channels.entries()) {
-    const dest = outputDir(outDir, channel.path);
-    if (!dest) {
-      return unsafeFeedPathWarning(channel, index);
-    }
     for (const fileName of feedOutputFileNames(channel.formats)) {
-      const outputPath = path.join(dest, fileName);
+      const outputPath = feedOutputPath(channel.path, fileName);
+      if (!outputPath) {
+        return unsafeFeedPathWarning(channel, index);
+      }
       const previous = seen.get(outputPath);
       const label = feedChannelLabel(channel, index);
       if (previous) {
-        return `[ox-content] feeds output path "${displayOutputPath(outDir, outputPath)}" is used by both ${previous} and ${label}; feed files were not written`;
+        return `[ox-content] feeds output path "${outputPath}" is used by both ${previous} and ${label}; feed files were not written`;
       }
       seen.set(outputPath, label);
     }
@@ -99,6 +116,20 @@ export function unsafeFeedPathWarning(channel: ResolvedFeedChannel, index: numbe
   return `[ox-content] feeds channel ${feedChannelLabel(channel, index)} uses an unsafe output path; feed files were not written`;
 }
 
-function displayOutputPath(outDir: string, outputPath: string): string {
-  return path.relative(outDir, outputPath).split(path.sep).join("/");
+function feedOutputDirectory(feedPath: string): string | undefined {
+  const relative = feedPath.replace(/^\/+|\/+$/g, "");
+  if (!relative) {
+    return "";
+  }
+  if (relative.includes("\\")) {
+    return undefined;
+  }
+  const normalized = path.posix.normalize(relative);
+  if (normalized === "." || !normalized) {
+    return "";
+  }
+  if (normalized === ".." || normalized.startsWith("../")) {
+    return undefined;
+  }
+  return normalized;
 }

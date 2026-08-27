@@ -113,6 +113,71 @@ oxContent({
 `authors`、`image`、`attachments`、`language` を受け取ります。RSS、Atom、
 JSON Feed の各 renderer は、その形式が対応する field を出力します。
 
+## 独自 dev server
+
+独自 Vite middleware や dev server で、一時ファイルを書かずに同じフィードの
+bytes を返したいときは `renderFeedFiles()` を使います。`writeFeedFiles()` と
+同じ解決済み feed options、collection data、publish-state filtering、`base`、
+SSG site metadata を受け取ります。結果には安全なサイト相対 `path`、
+`contentType`、直列化済み `content` が入ります。
+
+```ts
+import type { Plugin } from "vite";
+import { renderFeedFiles, resolveFeedsOptions } from "@ox-content/vite-plugin";
+
+const feeds = resolveFeedsOptions({
+  media: {
+    formats: ["rss", "atom", "json"],
+    path: "/works/media",
+    title: "Media | ryoppippi.com",
+    items: async () => [
+      {
+        title: "Guest appearance",
+        url: "https://media.example.com/episode",
+        date: "2026-08-01",
+        author: { name: "ryoppippi", url: "https://ryoppippi.com" },
+      },
+    ],
+  },
+});
+
+export function feedMiddleware(): Plugin {
+  return {
+    name: "site-feeds",
+    configureServer(server) {
+      server.middlewares.use(async (req, res, next) => {
+        const rendered = await renderFeedFiles({
+          options: feeds,
+          siteUrl: "https://ryoppippi.com",
+          siteName: "ryoppippi.com",
+          base: "/",
+        });
+        if (rendered.warning) {
+          server.config.logger.warn(rendered.warning);
+          return next();
+        }
+
+        const requestPath = new URL(req.url ?? "/", "http://localhost").pathname.replace(
+          /^\/+/,
+          "",
+        );
+        const file = rendered.files.find((candidate) => candidate.path === requestPath);
+        if (!file) {
+          return next();
+        }
+
+        res.statusCode = 200;
+        res.setHeader("Content-Type", file.contentType);
+        res.end(file.content);
+      });
+    },
+  };
+}
+```
+
+危険な path、不正な site URL、重複した出力 path は `writeFeedFiles()` と同じ
+warning で失敗します。
+
 | オプション    | 型                                         | 既定                                  |
 | ------------- | ------------------------------------------ | ------------------------------------- |
 | `feeds`       | `boolean` / 単一フィード / 名前付き / 配列 | `false`                               |

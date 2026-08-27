@@ -3,7 +3,7 @@ import * as fs from "node:fs/promises";
 import * as os from "node:os";
 import * as path from "node:path";
 import { createDocsResolvedOptions } from "../test/fixtures/docs-fixture";
-import { resolveFeedsOptions } from "./feeds";
+import { renderFeedFiles, resolveFeedsOptions } from "./feeds";
 import { buildSsg } from "./ssg";
 import type { FeedItemsResolveContext } from "./types";
 
@@ -41,6 +41,49 @@ afterEach(async () => {
 });
 
 describe("programmatic feeds", () => {
+  it("renders async media items without requiring an output directory", async () => {
+    let context: FeedItemsResolveContext | undefined;
+
+    const result = await renderFeedFiles({
+      base: "/",
+      siteUrl: "https://ryoppippi.example",
+      siteName: "ryoppippi.com",
+      options: resolveFeedsOptions({
+        media: {
+          formats: ["rss", "atom", "json"],
+          path: "/works/media",
+          title: "Media | ryoppippi.com",
+          language: "ja",
+          items: async (input) => {
+            context = input;
+            return mediaJson
+              .filter((item) => !item.playlist)
+              .map((item) => ({
+                title: item.title,
+                url: item.link,
+                id: `media:${item.link}`,
+                date: item.pubDate,
+                description: `${item.kind === "podcast" ? "Podcast" : "YouTube"} | ${item.title}`,
+                author: { name: "ryoppippi", url: "https://ryoppippi.com" },
+                language: item.lang,
+              }));
+          },
+        },
+      }),
+    });
+
+    expect(context).toMatchObject({ name: "media", path: "/works/media", base: "/" });
+    expect(context?.outDir).toBeUndefined();
+    expect(result.warning).toBeUndefined();
+    expect(result.files.map((file) => [file.path, file.contentType])).toEqual([
+      ["works/media/feed.xml", "application/rss+xml; charset=utf-8"],
+      ["works/media/atom.xml", "application/atom+xml; charset=utf-8"],
+      ["works/media/feed.json", "application/feed+json; charset=utf-8"],
+    ]);
+    expect(result.files[0]?.content).toContain("<title>Guest appearance</title>");
+    expect(result.files[0]?.content).not.toContain("Playlist rollup");
+  });
+
   it("writes async JSON-backed media items during SSG", async () => {
     const root = await makeSite();
     let context: FeedItemsResolveContext | undefined;

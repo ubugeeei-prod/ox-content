@@ -120,6 +120,71 @@ Programmatic items support `title`, `url` or `loc`, optional `id`, `date`,
 `language`. The RSS, Atom, and JSON Feed renderers emit the fields that each
 format supports.
 
+## Custom dev servers
+
+Use `renderFeedFiles()` when a custom Vite middleware or dev server wants the
+same feed bytes without writing temporary files. It accepts the same resolved
+feed options, collection data, publish-state filtering, `base`, and SSG site
+metadata as `writeFeedFiles()`. Each result has a safe site-relative `path`, a
+`contentType`, and the serialized `content`.
+
+```ts
+import type { Plugin } from "vite";
+import { renderFeedFiles, resolveFeedsOptions } from "@ox-content/vite-plugin";
+
+const feeds = resolveFeedsOptions({
+  media: {
+    formats: ["rss", "atom", "json"],
+    path: "/works/media",
+    title: "Media | ryoppippi.com",
+    items: async () => [
+      {
+        title: "Guest appearance",
+        url: "https://media.example.com/episode",
+        date: "2026-08-01",
+        author: { name: "ryoppippi", url: "https://ryoppippi.com" },
+      },
+    ],
+  },
+});
+
+export function feedMiddleware(): Plugin {
+  return {
+    name: "site-feeds",
+    configureServer(server) {
+      server.middlewares.use(async (req, res, next) => {
+        const rendered = await renderFeedFiles({
+          options: feeds,
+          siteUrl: "https://ryoppippi.com",
+          siteName: "ryoppippi.com",
+          base: "/",
+        });
+        if (rendered.warning) {
+          server.config.logger.warn(rendered.warning);
+          return next();
+        }
+
+        const requestPath = new URL(req.url ?? "/", "http://localhost").pathname.replace(
+          /^\/+/,
+          "",
+        );
+        const file = rendered.files.find((candidate) => candidate.path === requestPath);
+        if (!file) {
+          return next();
+        }
+
+        res.statusCode = 200;
+        res.setHeader("Content-Type", file.contentType);
+        res.end(file.content);
+      });
+    },
+  };
+}
+```
+
+Unsafe paths, invalid site URLs, and duplicate output paths fail with the same
+warnings as `writeFeedFiles()`.
+
 | Option        | Type                                        | Default                              |
 | ------------- | ------------------------------------------- | ------------------------------------ |
 | `feeds`       | `boolean` / one feed / named record / array | `false`                              |

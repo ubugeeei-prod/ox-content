@@ -2,7 +2,7 @@ import { afterEach, describe, expect, it } from "vite-plus/test";
 import * as fs from "node:fs/promises";
 import * as os from "node:os";
 import * as path from "node:path";
-import { generateFeeds, resolveFeedsOptions, writeFeedFiles } from "./feeds";
+import { generateFeeds, renderFeedFiles, resolveFeedsOptions, writeFeedFiles } from "./feeds";
 import type { FeedChannelOptions } from "./types";
 
 const blogItems = [
@@ -219,8 +219,7 @@ describe("writeFeedFiles named feeds", () => {
     const outDir = await fs.mkdtemp(path.join(os.tmpdir(), "ox-content-feeds-named-"));
     tempDirs.push(outDir);
 
-    const result = await writeFeedFiles({
-      outDir,
+    const input = {
       siteUrl: "https://example.com",
       base: "/",
       siteName: "example.com",
@@ -230,9 +229,13 @@ describe("writeFeedFiles named feeds", () => {
       ]),
       collections: { blog: blogItems, media: mediaItems },
       collectionNames: ["blog", "media"],
-    });
+    };
+    const rendered = await renderFeedFiles(input);
+    const result = await writeFeedFiles({ outDir, ...input });
 
     expect(result.files).toEqual([]);
+    expect(rendered.files).toEqual([]);
+    expect(rendered.warning).toBe(result.warning);
     expect(result.warning).toContain('feeds output path "feed.xml"');
     expect(result.warning).toContain('"blog"');
     expect(result.warning).toContain('"media"');

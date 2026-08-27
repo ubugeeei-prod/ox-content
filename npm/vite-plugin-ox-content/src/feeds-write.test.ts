@@ -2,7 +2,7 @@ import { afterEach, describe, expect, it } from "vite-plus/test";
 import * as fs from "node:fs/promises";
 import * as os from "node:os";
 import * as path from "node:path";
-import { writeFeedFiles } from "./feeds";
+import { renderFeedFiles, writeFeedFiles } from "./feeds";
 
 const tempDirs: string[] = [];
 
@@ -46,14 +46,17 @@ describe("writeFeedFiles", () => {
     const outDir = await fs.mkdtemp(path.join(os.tmpdir(), "ox-content-feeds-"));
     tempDirs.push(outDir);
 
-    const result = await writeFeedFiles({
-      outDir,
+    const input = {
       base: "/",
       options: { enabled: true, formats: ["rss", "atom", "json"], limit: 20, path: "/" },
       items: sampleItems,
-    });
+    };
+    const rendered = await renderFeedFiles(input);
+    const result = await writeFeedFiles({ outDir, ...input });
 
     expect(result.files).toEqual([]);
+    expect(rendered.files).toEqual([]);
+    expect(rendered.warning).toBe(result.warning);
     expect(result.warning).toContain("ssg.siteUrl is not set");
     await expect(fs.access(path.join(outDir, "feed.xml"))).rejects.toThrow();
   });
@@ -79,15 +82,18 @@ describe("writeFeedFiles", () => {
     const outDir = await fs.mkdtemp(path.join(os.tmpdir(), "ox-content-feeds-"));
     tempDirs.push(outDir);
 
-    const result = await writeFeedFiles({
-      outDir,
+    const input = {
       siteUrl: "https://example.com",
       base: "/",
       options: { enabled: true, formats: ["rss"], limit: 20, path: "../feeds" },
       items: sampleItems,
-    });
+    };
+    const rendered = await renderFeedFiles(input);
+    const result = await writeFeedFiles({ outDir, ...input });
 
     expect(result.files).toEqual([]);
+    expect(rendered.files).toEqual([]);
+    expect(rendered.warning).toBe(result.warning);
     expect(result.warning).toContain("uses an unsafe output path");
     await expect(fs.readdir(outDir)).resolves.toEqual([]);
   });
@@ -121,5 +127,42 @@ describe("writeFeedFiles", () => {
     expect(await fs.readFile(path.join(outDir, "feeds/feed.json"), "utf8")).toContain(
       '"feed_url": "https://example.com/docs/feeds/feed.json"',
     );
+  });
+
+  it("renders the same feed bytes as the filesystem writer", async () => {
+    const outDir = await fs.mkdtemp(path.join(os.tmpdir(), "ox-content-feeds-"));
+    tempDirs.push(outDir);
+    const input = {
+      outDir,
+      siteUrl: "https://example.com",
+      base: "/docs/",
+      siteName: "Docs",
+      siteDescription: "Example docs",
+      options: { enabled: true, formats: ["rss", "atom", "json"], limit: 20, path: "/feeds" },
+      collections: { content: sampleItems },
+      collectionNames: ["content"],
+    };
+
+    const rendered = await renderFeedFiles(input);
+    expect(rendered.warning).toBeUndefined();
+    expect(rendered.files.map((file) => [file.path, file.contentType])).toEqual([
+      ["feeds/feed.xml", "application/rss+xml; charset=utf-8"],
+      ["feeds/atom.xml", "application/atom+xml; charset=utf-8"],
+      ["feeds/feed.json", "application/feed+json; charset=utf-8"],
+    ]);
+    await expect(fs.access(path.join(outDir, "feeds", "feed.xml"))).rejects.toThrow();
+
+    const written = await writeFeedFiles(input);
+    expect(written.warning).toBeUndefined();
+    expect(written.files).toEqual([
+      path.join(outDir, "feeds/feed.xml"),
+      path.join(outDir, "feeds/atom.xml"),
+      path.join(outDir, "feeds/feed.json"),
+    ]);
+    for (const file of rendered.files) {
+      expect(await fs.readFile(path.join(outDir, ...file.path.split("/")), "utf8")).toBe(
+        file.content,
+      );
+    }
   });
 });

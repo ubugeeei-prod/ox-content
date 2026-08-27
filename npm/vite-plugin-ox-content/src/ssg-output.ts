@@ -5,7 +5,7 @@
  * sitemaps, and git lastmod. The host keeps page templates and HTML.
  */
 
-import { resolveFeedsOptions, writeFeedFiles, type FeedItemInput } from "./feeds";
+import { renderFeedFiles, resolveFeedsOptions, writeFeedFiles, type FeedItemInput } from "./feeds";
 import { shouldPublishMarkdownSource, type MarkdownSourcePageInput } from "./markdown-source";
 import { resolvePublishStateOptions } from "./publish-state";
 import { resolveResourcesOptions } from "./resources";
@@ -35,6 +35,7 @@ import type {
 
 export {
   resolveGitLastmod,
+  renderFeedFiles,
   writeFeedFiles,
   writeMarkdownCompanions,
   writeResourceFiles,
@@ -42,13 +43,18 @@ export {
 };
 export type {
   FeedItemInput,
-  WriteFeedFilesInput,
   WriteMarkdownSourceFilesInput,
   WriteResourceFilesInput,
   WriteResourceFilesPage,
   WriteResourceFilesResult,
   WriteSiteMapFilesInput,
 } from "./ssg-output-write";
+export type {
+  RenderedFeedFile,
+  RenderFeedFilesInput,
+  RenderFeedFilesResult,
+  WriteFeedFilesInput,
+} from "./feeds";
 export type { SiteMapPageInput } from "./site-maps";
 export type { SsgOutputPageInput } from "./types";
 

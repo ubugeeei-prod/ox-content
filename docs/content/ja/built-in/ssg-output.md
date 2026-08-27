@@ -19,6 +19,7 @@ Ox Content に次の出力の計画と書き出しを任せられます。
 ```ts
 import {
   planSsgOutputs,
+  renderFeedFiles,
   writeResourceFiles,
   writeMarkdownCompanions,
   writeFeedFiles,
@@ -55,6 +56,7 @@ const plan = planSsgOutputs({
 
 await writeResourceFiles(plan.resources);
 await writeMarkdownCompanions(plan.markdownCompanions);
+const feedFiles = await renderFeedFiles(plan.feeds);
 await writeFeedFiles(plan.feeds);
 await writeSiteMapFiles(plan.siteMaps);
 ```
@@ -70,6 +72,7 @@ boolean の `ssg: false` は SSG を切ると同時に `markdownSource`、
 | `planSsgOutputs`          | ホストのページと `buildSsg()` と同じオプションから writer 入力を作る。                |
 | `writeResourceFiles`      | ページバンドル資産に指紋を付け、ホスト HTML の URL を書き換える。                     |
 | `writeMarkdownCompanions` | ホスト描画ページの横に元の Markdown を書く。copy-as-markdown の writer を再利用する。 |
+| `renderFeedFiles`         | filesystem に書かずに RSS / Atom / JSON フィードファイルを描画する。                  |
 | `writeFeedFiles`          | RSS / Atom / JSON フィードを書く。[名前付きフィード](./feeds.md) も含む。             |
 | `writeSiteMapFiles`       | `sitemap.xml`、`robots.txt`、`llms.txt` を書く。                                      |
 | `resolveGitLastmod`       | ファイルの最新 git コミット時刻（ミリ秒）を返す。無ければ `undefined`。               |

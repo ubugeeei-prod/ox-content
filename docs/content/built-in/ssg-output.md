@@ -19,6 +19,7 @@ objects used by `oxContent()` / `buildSsg()` configure the composable path.
 ```ts
 import {
   planSsgOutputs,
+  renderFeedFiles,
   writeResourceFiles,
   writeMarkdownCompanions,
   writeFeedFiles,
@@ -55,6 +56,7 @@ const plan = planSsgOutputs({
 
 await writeResourceFiles(plan.resources);
 await writeMarkdownCompanions(plan.markdownCompanions);
+const feedFiles = await renderFeedFiles(plan.feeds);
 await writeFeedFiles(plan.feeds);
 await writeSiteMapFiles(plan.siteMaps);
 ```
@@ -70,6 +72,7 @@ fields should still resolve.
 | `planSsgOutputs`          | Build writer inputs from host pages and the same option objects `buildSsg()` reads.     |
 | `writeResourceFiles`      | Fingerprint page-bundle assets and rewrite host HTML URLs.                              |
 | `writeMarkdownCompanions` | Write original Markdown beside host-rendered pages. Reuses the copy-as-markdown writer. |
+| `renderFeedFiles`         | Render RSS / Atom / JSON feed files without filesystem writes.                          |
 | `writeFeedFiles`          | Write RSS / Atom / JSON feeds, including [named feeds](./feeds.md).                     |
 | `writeSiteMapFiles`       | Write `sitemap.xml`, `robots.txt`, and `llms.txt`.                                      |
 | `resolveGitLastmod`       | Return a file's latest git commit time in milliseconds, or `undefined`.                 |

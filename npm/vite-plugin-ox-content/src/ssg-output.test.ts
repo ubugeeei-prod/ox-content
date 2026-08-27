@@ -5,6 +5,7 @@ import { fileURLToPath } from "node:url";
 import { afterEach, describe, expect, it } from "vite-plus/test";
 import {
   planSsgOutputs,
+  renderFeedFiles,
   resolveGitLastmod,
   writeFeedFiles,
   writeMarkdownCompanions,
@@ -181,6 +182,12 @@ describe("writeFeedFiles and writeSiteMapFiles", () => {
         },
       ],
     });
+
+    const renderedFeeds = await renderFeedFiles(plan.feeds);
+    expect(renderedFeeds.files.map((file) => [file.path, file.contentType])).toEqual([
+      ["blog/feed.xml", "application/rss+xml; charset=utf-8"],
+    ]);
+    expect(renderedFeeds.files[0]?.content).toContain("<title>Newer</title>");
 
     const feeds = await writeFeedFiles(plan.feeds);
     const siteMaps = await writeSiteMapFiles(plan.siteMaps);

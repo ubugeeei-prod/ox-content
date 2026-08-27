@@ -3,7 +3,13 @@
  */
 
 import * as path from "node:path";
-import type { FeedItemInput, WriteFeedFilesInput } from "./feeds";
+import type {
+  FeedItemInput,
+  RenderedFeedFile,
+  RenderFeedFilesInput,
+  RenderFeedFilesResult,
+  WriteFeedFilesInput,
+} from "./feeds";
 import { writeMarkdownSourceFiles, type WriteMarkdownSourceFilesInput } from "./markdown-source";
 import { importNapiModuleSync } from "./napi";
 import { PageResourceError, createResourceDedupeStore, processPageResources } from "./resources";
@@ -112,6 +118,9 @@ export function resolveGitLastmod(filePath: string, root?: string): number | und
 
 export type {
   FeedItemInput,
+  RenderedFeedFile,
+  RenderFeedFilesInput,
+  RenderFeedFilesResult,
   WriteFeedFilesInput,
   WriteMarkdownSourceFilesInput,
   WriteSiteMapFilesInput,

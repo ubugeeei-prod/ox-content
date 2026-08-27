@@ -22,6 +22,7 @@ describe("public export surface", () => {
       "extractDocsTests",
       "generateCollectionsVirtualModule",
       "generateFeeds",
+      "renderFeedFiles",
       "generateMarkdown",
       "enhanceMarkdownTables",
       "isMarkdownFilePath",
