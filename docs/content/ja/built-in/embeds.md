@@ -442,6 +442,12 @@ Twitch player URL は Twitch の embed 要件に合わせ、安全な `parent` d
 
 出力は遅延読み込み付きで `open.spotify.com/embed/...` を指す `<iframe>` です。上の静的カードと違い、本物の第三者プレーヤーなのでオプトインのままです。
 
+フレームには再生対象に応じた名前（`Spotify track`、`Spotify playlist` など）が付くので、スクリーンリーダーが「フレーム」より有用な読み上げをします。自分で名前を付けるには `title` を渡します。
+
+```mdx
+<Spotify url="https://open.spotify.com/album/..." title="下で取り上げるアルバム" />
+```
+
 ## Apple Music
 
 `embeds.appleMusic` はアルバム、プレイリスト、曲、アーティスト、ミュージックビデオ向けの公式 iframe プレーヤーを描画します。

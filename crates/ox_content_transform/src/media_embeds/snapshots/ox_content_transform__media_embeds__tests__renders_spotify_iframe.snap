@@ -2,4 +2,4 @@
 source: crates/ox_content_transform/src/media_embeds/tests.rs
 expression: html
 ---
-<iframe class="ox-spotify" src="https://open.spotify.com/embed/track/abc123" width="100%" height="352" loading="lazy" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" referrerpolicy="strict-origin-when-cross-origin"></iframe>
+<iframe class="ox-spotify" src="https://open.spotify.com/embed/track/abc123" title="Spotify track" width="100%" height="352" loading="lazy" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" referrerpolicy="strict-origin-when-cross-origin"></iframe>

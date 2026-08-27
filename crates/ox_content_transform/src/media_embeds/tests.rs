@@ -11,6 +11,48 @@ fn renders_spotify_iframe() {
 }
 
 #[test]
+fn spotify_iframes_carry_an_accessible_name() {
+    let options = MediaEmbedsOptions { spotify: Some(true), ..Default::default() };
+
+    // Every kind names itself, so a screen reader announces more than "frame".
+    for (kind, expected) in [
+        ("track", "Spotify track"),
+        ("album", "Spotify album"),
+        ("playlist", "Spotify playlist"),
+        ("episode", "Spotify episode"),
+        ("show", "Spotify show"),
+        ("artist", "Spotify artist"),
+    ] {
+        let html = transform_media_embeds(
+            &format!(r#"<Spotify url="https://open.spotify.com/{kind}/abc123"></Spotify>"#),
+            Some(&options),
+        );
+        assert!(html.contains(&format!(r#"title="{expected}""#)), "{kind}: {html}");
+    }
+
+    // A pre-built embed URL still names its kind.
+    let embed = transform_media_embeds(
+        r#"<Spotify url="https://open.spotify.com/embed/album/abc123"></Spotify>"#,
+        Some(&options),
+    );
+    assert!(embed.contains(r#"title="Spotify album""#), "{embed}");
+
+    // An author-supplied title wins.
+    let titled = transform_media_embeds(
+        r#"<Spotify url="https://open.spotify.com/track/abc123" title="Rick Astley set"></Spotify>"#,
+        Some(&options),
+    );
+    assert!(titled.contains(r#"title="Rick Astley set""#), "{titled}");
+
+    // And cannot break out of the attribute it is written into.
+    let hostile = transform_media_embeds(
+        r#"<Spotify url="https://open.spotify.com/track/abc123" title="a<b>c"></Spotify>"#,
+        Some(&options),
+    );
+    assert!(hostile.contains(r#"title="a&lt;b&gt;c""#), "{hostile}");
+}
+
+#[test]
 fn renders_stackblitz_iframe_and_consumes_empty_close_tag() {
     let html = transform_media_embeds(
         r#"<StackBlitz url="https://stackblitz.com/edit/vitejs-vite"></StackBlitz><p>after</p>"#,

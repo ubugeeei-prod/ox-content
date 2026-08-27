@@ -8,7 +8,14 @@ pub(super) fn render_spotify(element: &ComponentElement<'_>) -> Option<String> {
     let embed = spotify_embed_url(url)?;
     let mut html = String::new();
     html.push_str("<iframe class=\"ox-spotify\" src=\"");
-    escape_attr(&embed, &mut html);
+    escape_attr(&embed.url, &mut html);
+    html.push_str("\" title=\"");
+    if let Some(title) = attr(element, "title") {
+        escape_attr(title, &mut html);
+    } else {
+        html.push_str("Spotify ");
+        html.push_str(embed.kind);
+    }
     html.push_str("\" width=\"100%\" height=\"352\" loading=\"lazy\" allow=\"autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture\" referrerpolicy=\"strict-origin-when-cross-origin\"></iframe>");
     Some(html)
 }
@@ -48,20 +55,34 @@ pub(super) fn render_webcontainer(element: &ComponentElement<'_>) -> Option<Stri
     Some(html)
 }
 
-fn spotify_embed_url(input: &str) -> Option<String> {
-    if input.starts_with("https://open.spotify.com/embed/") {
-        return Some(input.to_string());
+/// A Spotify embed URL plus the kind of thing it plays.
+///
+/// The kind is kept because an iframe needs an accessible name and "Spotify"
+/// alone does not distinguish a track from a whole playlist.
+struct SpotifyEmbed {
+    url: String,
+    kind: &'static str,
+}
+
+const SPOTIFY_KINDS: [&str; 6] = ["track", "album", "playlist", "episode", "show", "artist"];
+
+fn spotify_kind(value: &str) -> Option<&'static str> {
+    SPOTIFY_KINDS.into_iter().find(|kind| *kind == value)
+}
+
+fn spotify_embed_url(input: &str) -> Option<SpotifyEmbed> {
+    if let Some(path) = input.strip_prefix("https://open.spotify.com/embed/") {
+        let kind = spotify_kind(path.split('/').next()?)?;
+        return Some(SpotifyEmbed { url: input.to_string(), kind });
     }
     let path = input.strip_prefix("https://open.spotify.com/")?;
     let (kind, rest) = path.split_once('/')?;
-    if !matches!(kind, "track" | "album" | "playlist" | "episode" | "show" | "artist") {
-        return None;
-    }
+    let kind = spotify_kind(kind)?;
     let id = rest.split(&['?', '#'][..]).next()?.trim();
     if id.is_empty() || !id.bytes().all(|b| b.is_ascii_alphanumeric()) {
         return None;
     }
-    Some(format!("https://open.spotify.com/embed/{kind}/{id}"))
+    Some(SpotifyEmbed { url: format!("https://open.spotify.com/embed/{kind}/{id}"), kind })
 }
 
 fn stackblitz_embed_url(input: &str) -> Option<String> {

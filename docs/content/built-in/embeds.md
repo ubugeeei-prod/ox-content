@@ -543,6 +543,14 @@ The output is an `<iframe>` pointing at `open.spotify.com/embed/...` with lazy
 loading. Unlike the static cards above it is a real third-party player, which
 is why it stays opt-in.
 
+The frame is named after what it plays — `Spotify track`, `Spotify playlist`,
+and so on — so a screen reader announces something more useful than "frame".
+Pass `title` to name it yourself:
+
+```mdx
+<Spotify url="https://open.spotify.com/album/..." title="The album we discuss below" />
+```
+
 ## Apple Music
 
 `embeds.appleMusic` renders Apple's official iframe player for albums,
