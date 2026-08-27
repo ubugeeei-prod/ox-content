@@ -27,13 +27,13 @@ Resolved player URL (no network request):
 
 ```html
 <SpeakerDeck
-  url="https://speakerdeck.com/player/abcdef1234567890"
+  url="https://speakerdeck.com/jane/my-talk"
   title="My Talk"
   author="Jane Doe"
 ></SpeakerDeck>
 ```
 
-<SpeakerDeck url="https://speakerdeck.com/player/abcdef1234567890" title="My Talk" author="Jane Doe"></SpeakerDeck>
+<SpeakerDeck url="https://speakerdeck.com/jane/my-talk" title="My Talk" author="Jane Doe"></SpeakerDeck>
 
 Share URLs (`https://speakerdeck.com/{user}/{slug}`) fetch oEmbed metadata at
 build time and inject the player id, title, and author. `javascript:` and

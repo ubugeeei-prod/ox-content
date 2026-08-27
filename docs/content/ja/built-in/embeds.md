@@ -39,6 +39,16 @@ description: Markdown 中の HTML 風タグで書く GitHub / OG カード、パ
 
 `<Tweet>` や `<OgCard>` のようなドキュメント上の PascalCase タグは `.md` と `.mdx` の両方で動きます。同じ名前のドキュメントローカル import（`import Tweet from "./Tweet"`）は組み込みより優先され、MDX island のまま残ります。
 
+### `.md` では 1 タグ 1 行
+
+以下の例は読みやすさのため属性を複数行に分けています。この形式には MDX が必要です。素の `.md` ファイルでは、タグの開始と `>` を同じ行に収める必要があります。
+
+```md
+<Bluesky url="https://bsky.app/profile/bsky.app/post/3l6oveex3ii2l" handle="bsky.app">…</Bluesky>
+```
+
+CommonMark が生の HTML ブロックを開始するのは、開始タグがその行の中で閉じている場合だけです。行末でタグが開いたままだと本文として扱われ、属性はテキストとして描画され、URL はリンクになり、`>` だけの行は引用ブロックになります。複数行で書きたい場合は `mdx` を有効にしてください。
+
 すべての組み込み埋め込みを切るときは `embeds: false`、個別に設定するときはオブジェクトです。
 
 ```ts
@@ -256,18 +266,7 @@ YouTube 埋め込みは SSG ビルドと dev preview で常に処理されます
 </XPost>
 ```
 
-<XPost
-url="https://x.com/jack/status/20"
-displayName="jack"
-handle="jack"
-dateLabel="Mar 21, 2006"
-likes="2.4M"
-views="10M"
-
->
-
-just setting up my twttr
-</XPost>
+<XPost url="https://x.com/jack/status/20" displayName="jack" handle="jack" dateLabel="Mar 21, 2006" likes="2.4M" views="10M">just setting up my twttr</XPost>
 
 オブジェクト形式を使うと、ビルド時に本文、著者、アバター、写真、動画ポスターを取り、自分のオリジンから配信します。取ってきたカードには、日時、元投稿リンク、利用可能な返信/リポスト/引用/いいね/表示数、引用投稿の入れ子カード、「Replying to @…」リンクも含まれます。`appearance: "full"` は sveltweet / react-tweet 形の静的カードです。
 
@@ -471,16 +470,14 @@ Twitch player URL は Twitch の embed 要件に合わせ、安全な `parent` d
 `embeds.speakerDeck` は、プレーヤー URL か oEmbed メタデータが解決できたとき遅延 iframe を描画し、取得や解析に失敗したときは安全なリンクカードに落とします。
 
 ```mdx
-<SpeakerDeck
-  url="https://speakerdeck.com/player/abcdef1234567890"
-  title="My Talk"
-  author="Jane Doe"
-/>
+<SpeakerDeck url="https://speakerdeck.com/jane/my-talk" title="My Talk" author="Jane Doe" />
 ```
 
-<SpeakerDeck url="https://speakerdeck.com/player/abcdef1234567890" title="My Talk" author="Jane Doe" />
+<SpeakerDeck url="https://speakerdeck.com/jane/my-talk" title="My Talk" author="Jane Doe" />
 
-`speakerdeck.com/{user}/{slug}` の共有 URL はビルド時に [oEmbed](https://oembed.com/) で `title` / `author_name` / プレーヤー ID / サムネイルを取ります。すでに埋め込み用の `speakerdeck.com/player/{id}` はネットワークなしで描画します。`javascript:` と `data:` URL は書いたまま残します。
+上のデッキは存在しないため、この例はプレーヤーではなくリンクカードのフォールバックを示しています。
+
+`speakerdeck.com/{user}/{slug}` の共有 URL はビルド時に [oEmbed](https://oembed.com/) で `title` / `author_name` / プレーヤー ID / サムネイルを取ります。存在しない ID でもプロバイダ自身のエラーページを埋め込んでしまうため、例では共有 URL を使ってください。すでに埋め込み用の `speakerdeck.com/player/{id}` はネットワークなしで描画します。`javascript:` と `data:` URL は書いたまま残します。
 
 oEmbed 取得やプレーヤー ID の解析に失敗したときは、元の HTTPS Speaker Deck URL を指すフォールバックリンクカードになります。iframe は遅延読み込みで、`sandbox` と `referrerpolicy="strict-origin-when-cross-origin"` を付けます。Content-Security-Policy を設定しているサイトでは `frame-src https://speakerdeck.com` が必要です。詳細は [Speaker Deck Embed](/examples/speaker-deck-embed.md) を見てください。
 

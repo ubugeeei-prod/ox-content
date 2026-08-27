@@ -45,6 +45,21 @@ Documented PascalCase tags such as `<Tweet>` and `<OgCard>` work in both `.md`
 and `.mdx`. A document-local import of the same name (`import Tweet from
 "./Tweet"`) overrides the built-in and stays an MDX island.
 
+### One tag, one line, in `.md`
+
+The examples below spread attributes over several lines for readability. That
+form needs MDX. In a plain `.md` file a tag has to open and close its `>` on the
+same line:
+
+```md
+<Bluesky url="https://bsky.app/profile/bsky.app/post/3l6oveex3ii2l" handle="bsky.app">…</Bluesky>
+```
+
+CommonMark only starts a raw HTML block when the opening tag finishes on the
+line it began on. A tag left open at the end of a line is prose, so its
+attributes render as text, its URLs turn into links, and the lone `>` line
+becomes a blockquote. Enable `mdx` to write the multi-line form.
+
 Disable every built-in embed with `embeds: false`, or configure embeds
 individually:
 
@@ -308,18 +323,7 @@ network request:
 </XPost>
 ```
 
-<XPost
-url="https://x.com/jack/status/20"
-displayName="jack"
-handle="jack"
-dateLabel="Mar 21, 2006"
-likes="2.4M"
-views="10M"
-
->
-
-just setting up my twttr
-</XPost>
+<XPost url="https://x.com/jack/status/20" displayName="jack" handle="jack" dateLabel="Mar 21, 2006" likes="2.4M" views="10M">just setting up my twttr</XPost>
 
 Use the object form to fetch the post body, author, avatar, photos, and video
 posters at build time and serve them from your own origin. Fetched cards include
@@ -434,21 +438,7 @@ request is needed at all:
 </Bluesky>
 ```
 
-<Bluesky
-url="https://bsky.app/profile/bsky.app/post/3l6oveex3ii2l"
-displayName="Bluesky"
-handle="bsky.app"
-avatar="https://bsky.app/static/apple-touch-icon.png"
-dateTime="2024-02-06T12:34:56Z"
-dateLabel="Feb 6, 2024"
-replies="1.2k"
-reposts="8.4k"
-likes="21k"
-
->
-
-👋 Bluesky is an open social network
-</Bluesky>
+<Bluesky url="https://bsky.app/profile/bsky.app/post/3l6oveex3ii2l" displayName="Bluesky" handle="bsky.app" avatar="https://bsky.app/static/apple-touch-icon.png" dateTime="2024-02-06T12:34:56Z" dateLabel="Feb 6, 2024" replies="1.2k" reposts="8.4k" likes="21k">👋 Bluesky is an open social network</Bluesky>
 
 ## Provider Cards
 
@@ -593,19 +583,20 @@ oEmbed metadata can be resolved, and a safe link card when fetch or parse
 fails:
 
 ```mdx
-<SpeakerDeck
-  url="https://speakerdeck.com/player/abcdef1234567890"
-  title="My Talk"
-  author="Jane Doe"
-/>
+<SpeakerDeck url="https://speakerdeck.com/jane/my-talk" title="My Talk" author="Jane Doe" />
 ```
 
-<SpeakerDeck url="https://speakerdeck.com/player/abcdef1234567890" title="My Talk" author="Jane Doe" />
+<SpeakerDeck url="https://speakerdeck.com/jane/my-talk" title="My Talk" author="Jane Doe" />
+
+The deck above does not exist, so the example shows the link-card fallback
+rather than a player.
 
 Share URLs on `speakerdeck.com/{user}/{slug}` fetch [oEmbed](https://oembed.com/)
 metadata at build time (`title`, `author_name`, player id, and thumbnail when
 present). Already-embedded `speakerdeck.com/player/{id}` URLs render without a
-network request. `javascript:` and `data:` URLs stay as authored markup.
+network request — including ids that do not exist, which embed the provider's
+own error page, so prefer a share URL in examples. `javascript:` and `data:`
+URLs stay as authored markup.
 
 When oEmbed fetch or player-id parse fails, the output is a fallback link card
 that still points at the original HTTPS Speaker Deck URL. The iframe is
