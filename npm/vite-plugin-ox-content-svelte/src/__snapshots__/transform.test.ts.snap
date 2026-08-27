@@ -3,7 +3,7 @@
 exports[`transformMarkdownWithSvelte > discovers nested, expression, and fragment islands from the MDX AST 1`] = `
 "import 'svelte/internal/disclose-version';
 import * as $ from 'svelte/internal/client';
-import { createRawSnippet, onMount, mount, unmount } from 'svelte';
+import { createRawSnippet, hydrate, mount, onMount, unmount } from 'svelte';
 import { initIslands, readIslandSlotHtml } from '@ox-content/islands';
 import Callout from '../src/components/Callout.svelte';
 import Badge from '../src/components/Badge.svelte';
@@ -34,7 +34,8 @@ export default function Nested_mdx($$anchor, $$props) {
 				componentProps.children = createRawSnippet(() => ({ render: () => \`<div>\${islandContent}</div>\` }));
 			}
 
-			const instance = mount(Component, { target: element, props: componentProps });
+			const attach = element.dataset.oxSsr === 'true' ? hydrate : mount;
+			const instance = attach(Component, { target: element, props: componentProps });
 
 			mounted.push(instance);
 
@@ -66,7 +67,7 @@ export const frontmatter = {};"
 exports[`transformMarkdownWithSvelte > discovers nested, expression, and fragment islands from the MDX AST 2`] = `
 "import 'svelte/internal/disclose-version';
 import * as $ from 'svelte/internal/client';
-import { createRawSnippet, onMount, mount, unmount } from 'svelte';
+import { createRawSnippet, hydrate, mount, onMount, unmount } from 'svelte';
 import { initIslands, readIslandSlotHtml } from '@ox-content/islands';
 import Alert from '../src/components/Alert.svelte';
 
@@ -96,7 +97,8 @@ export default function Expr_mdx($$anchor, $$props) {
 				componentProps.children = createRawSnippet(() => ({ render: () => \`<div>\${islandContent}</div>\` }));
 			}
 
-			const instance = mount(Component, { target: element, props: componentProps });
+			const attach = element.dataset.oxSsr === 'true' ? hydrate : mount;
+			const instance = attach(Component, { target: element, props: componentProps });
 
 			mounted.push(instance);
 
@@ -128,7 +130,7 @@ export const frontmatter = {};"
 exports[`transformMarkdownWithSvelte > discovers nested, expression, and fragment islands from the MDX AST 3`] = `
 "import 'svelte/internal/disclose-version';
 import * as $ from 'svelte/internal/client';
-import { createRawSnippet, onMount, mount, unmount } from 'svelte';
+import { createRawSnippet, hydrate, mount, onMount, unmount } from 'svelte';
 import { initIslands, readIslandSlotHtml } from '@ox-content/islands';
 import Alert from '../src/components/Alert.svelte';
 
@@ -158,7 +160,8 @@ export default function Fragment_mdx($$anchor, $$props) {
 				componentProps.children = createRawSnippet(() => ({ render: () => \`<div>\${islandContent}</div>\` }));
 			}
 
-			const instance = mount(Component, { target: element, props: componentProps });
+			const attach = element.dataset.oxSsr === 'true' ? hydrate : mount;
+			const instance = attach(Component, { target: element, props: componentProps });
 
 			mounted.push(instance);
 
@@ -213,7 +216,7 @@ export const frontmatter = {};"
 exports[`transformMarkdownWithSvelte > turns registered components into islands and leaves fenced tags literal 1`] = `
 "import 'svelte/internal/disclose-version';
 import * as $ from 'svelte/internal/client';
-import { createRawSnippet, onMount, mount, unmount } from 'svelte';
+import { createRawSnippet, hydrate, mount, onMount, unmount } from 'svelte';
 import { initIslands, readIslandSlotHtml } from '@ox-content/islands';
 import Alert from '../src/components/Alert.svelte';
 
@@ -243,7 +246,8 @@ export default function Svelte_md($$anchor, $$props) {
 				componentProps.children = createRawSnippet(() => ({ render: () => \`<div>\${islandContent}</div>\` }));
 			}
 
-			const instance = mount(Component, { target: element, props: componentProps });
+			const attach = element.dataset.oxSsr === 'true' ? hydrate : mount;
+			const instance = attach(Component, { target: element, props: componentProps });
 
 			mounted.push(instance);
 

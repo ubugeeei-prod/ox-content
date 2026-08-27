@@ -49,6 +49,7 @@ function parseIslandConfig(element: HTMLElement): IslandConfig {
     load,
     mediaQuery,
     props,
+    ssr: element.dataset.oxSsr === "true",
   };
 }
 

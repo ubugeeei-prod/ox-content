@@ -28,6 +28,8 @@ export interface IslandConfig {
   mediaQuery?: string;
   /** Component props (JSON serialized in data-ox-props) */
   props: Record<string, unknown>;
+  /** Whether the island wrapper already contains server-rendered component HTML. */
+  ssr?: boolean;
 }
 
 /**

@@ -2,14 +2,16 @@
  * Optional adapter-side island SSR.
  *
  * Framework plugins may supply `renderIsland` to replace island inner HTML at
- * transform time. This helper stays framework-neutral and does not import a
- * framework SSR runtime.
+ * transform time. The hook receives the original slot HTML so adapters can pass
+ * children into their SSR runtime. This helper stays framework-neutral and does
+ * not import a framework SSR runtime.
  */
 
 export type RenderIslandFn = (
   name: string,
   props: Record<string, unknown>,
   filePath: string,
+  slotHtml?: string,
 ) => string | Promise<string>;
 
 const RUST_PAYLOAD_KEYS = new Set(["props", "expressions", "spreads"]);
@@ -32,10 +34,19 @@ export async function applyIslandSsrHtml(
     const inner = output.slice(island.innerStart, island.closeStart);
     const scriptMatch = inner.match(PAYLOAD_SCRIPT);
     const script = scriptMatch?.[0] ?? "";
+    const slotHtml = inner.slice(script.length);
     const props = parseIslandProps(island.propsAttr, script);
-    const ssrHtml = await renderIsland(island.name, props, filePath);
+    const ssrHtml = await renderIsland(island.name, props, filePath, slotHtml);
+    const openTag = markIslandServerRendered(
+      output.slice(island.openStart, island.openEnd),
+      slotHtml,
+    );
     output =
-      output.slice(0, island.innerStart) + script + ssrHtml + output.slice(island.closeStart);
+      output.slice(0, island.openStart) +
+      openTag +
+      script +
+      ssrHtml +
+      output.slice(island.closeStart);
   }
 
   return output;
@@ -43,6 +54,8 @@ export async function applyIslandSsrHtml(
 
 interface IslandRange {
   name: string;
+  openStart: number;
+  openEnd: number;
   innerStart: number;
   closeStart: number;
   propsAttr?: string;
@@ -60,6 +73,8 @@ function findIslandRanges(html: string): IslandRange[] {
     const closeStart = findMatchingClose(html, innerStart, tag);
     ranges.push({
       name,
+      openStart: match.index,
+      openEnd: innerStart,
       innerStart,
       closeStart,
       propsAttr: matchAttr(match[2] ?? "", "data-ox-props"),
@@ -106,6 +121,27 @@ function indexOfTagOpen(html: string, openNeedle: string, from: number): number 
 function matchAttr(attrs: string, name: string): string | undefined {
   const match = new RegExp(`\\b${name}="([^"]*)"`, "i").exec(attrs);
   return match?.[1] === undefined ? undefined : decodeHtmlAttr(match[1]);
+}
+
+function markIslandServerRendered(openTag: string, slotHtml: string): string {
+  const attrs = hasAttr(openTag, "data-ox-ssr") ? [] : ['data-ox-ssr="true"'];
+  if (slotHtml.trim() && !hasAttr(openTag, "data-ox-content")) {
+    attrs.push(`data-ox-content='${escapeSingleQuotedAttr(slotHtml)}'`);
+  }
+  if (attrs.length === 0) return openTag;
+  return openTag.replace(/>$/, ` ${attrs.join(" ")}>`);
+}
+
+function hasAttr(openTag: string, name: string): boolean {
+  return new RegExp(`\\s${name}(?:\\s*=|\\s|>|$)`, "i").test(openTag);
+}
+
+function escapeSingleQuotedAttr(value: string): string {
+  return value
+    .replaceAll("&", "&amp;")
+    .replaceAll("'", "&#39;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;");
 }
 
 function parseIslandProps(propsAttr: string | undefined, script: string): Record<string, unknown> {

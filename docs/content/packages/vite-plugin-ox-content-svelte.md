@@ -95,8 +95,10 @@ import GtvChart from './gtv-chart/GtvChart.svelte'
 <GtvChart title="ok" />
 ```
 
-Optional `renderIsland(name, props, filePath)` can replace island inner HTML
-at transform time. The hook belongs on the Svelte adapter; `@ox-content/vite-plugin`
+Optional `renderIsland(name, props, filePath, slotHtml)` can replace island
+inner HTML at transform time. Server-rendered islands are marked and adopted
+with Svelte 5 `hydrate()` on the client, while islands without SSR markup keep
+using `mount()`. The hook belongs on the Svelte adapter; `@ox-content/vite-plugin`
 does not import `svelte/server`.
 
 ## Example Component (Svelte 5 Runes)

@@ -110,6 +110,7 @@ export interface SvelteIntegrationOptions extends OxContentOptions {
 
   /**
    * Optional adapter hook that replaces island inner HTML at transform time.
+   * The fourth argument receives the original slot HTML, when present.
    * The core renderer stays framework-neutral; do not import a framework SSR
    * runtime from `@ox-content/vite-plugin`.
    */

@@ -128,9 +128,11 @@ component file invalidates the Markdown module through Vite HMR.
 
 The global `components` map remains the backwards-compatible fallback for pages
 that do not declare a local import. Framework plugins may also pass an optional
-`renderIsland(name, props, filePath)` hook to replace island inner HTML at
-transform time. That hook lives on the adapter; the core renderer does not
-import `react-dom/server`, `svelte/server`, or `solid-js/web`.
+`renderIsland(name, props, filePath, slotHtml)` hook to replace island inner HTML
+at transform time. Adapter-rendered HTML is marked as server-rendered so the
+client runtime can hydrate it instead of mounting a duplicate subtree. That hook
+lives on the adapter; the core renderer does not import `react-dom/server`,
+`svelte/server`, or `solid-js/web`.
 
 ## Authoring components in Markdown
 
@@ -303,7 +305,9 @@ the payload.
 Each component becomes an island wrapper in the generated HTML — a block-level
 component renders as a `<div data-ox-island="Name" …>` and an inline one as a
 `<span data-ox-island="Name" …>`. The matching framework runtime mounts the real
-component into that element on the client.
+component into that element on the client. When an adapter has already rendered
+the component HTML on the server, the island wrapper carries `data-ox-ssr="true"`
+so compatible runtimes can hydrate the existing DOM instead.
 
 Hydration timing is controlled by a load strategy (see
 [`@ox-content/islands`](./packages/vite-plugin-ox-content.md)):

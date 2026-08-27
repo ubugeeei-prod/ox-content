@@ -129,10 +129,11 @@ specifier はそのファイルのディレクトリから解決されます。�
 
 グローバルな `components` マップは、ローカル import を書かないページ向けの
 後方互換フォールバックのままです。フレームワークプラグインは任意で
-`renderIsland(name, props, filePath)` フックを渡し、transform 時に island の
-内側 HTML を差し替えられます。そのフックはアダプタ側に置きます。コア
-レンダラーは `react-dom/server`、`svelte/server`、`solid-js/web` を
-import しません。
+`renderIsland(name, props, filePath, slotHtml)` フックを渡し、transform 時に
+island の内側 HTML を差し替えられます。アダプタがサーバーで描画した HTML は
+server-rendered として印が付き、クライアント runtime は重複した subtree を
+mount せず hydrate できます。そのフックはアダプタ側に置きます。コア
+レンダラーは `react-dom/server`、`svelte/server`、`solid-js/web` を import しません。
 
 ## Markdown でコンポーネントを書く
 
@@ -299,7 +300,9 @@ Props は JSX 風の構文です。次の形を認識します。
 各コンポーネントは生成 HTML の island ラッパーになります。ブロックレベルの
 コンポーネントは `<div data-ox-island="Name" …>`、インラインは
 `<span data-ox-island="Name" …>` です。対応するフレームワークランタイムが、
-クライアントで本物のコンポーネントをその要素へマウントします。
+クライアントで本物のコンポーネントをその要素へマウントします。アダプタが
+すでにサーバーでコンポーネント HTML を描画している場合、island wrapper には
+`data-ox-ssr="true"` が付き、対応 runtime は既存 DOM を hydrate できます。
 
 ハイドレーションのタイミングはロード戦略で制御します
 （[`@ox-content/islands`](./packages/vite-plugin-ox-content.md) を見てください）。

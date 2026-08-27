@@ -1040,7 +1040,7 @@ function generateSvelteModule(
 
   return `
 <script>
-  import { createRawSnippet, onMount, mount, unmount } from 'svelte';
+  import { createRawSnippet, hydrate, mount, onMount, unmount } from 'svelte';
   import { initIslands, readIslandSlotHtml } from '@ox-content/islands';
   ${imports}
 
@@ -1070,7 +1070,8 @@ ${componentMap}
         }));
       }
 
-      const instance = mount(Component, { target: element, props: componentProps });
+      const attach = element.dataset.oxSsr === 'true' ? hydrate : mount;
+      const instance = attach(Component, { target: element, props: componentProps });
       mounted.push(instance);
 
       return () => unmount(instance);
