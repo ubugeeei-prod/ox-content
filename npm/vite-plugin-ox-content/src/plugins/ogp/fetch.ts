@@ -1,7 +1,8 @@
 import { readDiskOgp, readMemoryOgp, writeDiskOgp, writeMemoryOgp } from "./cache";
 import type { OgpData, OgpOptions, ResolvedOgpOptions } from "./types";
 import { resolveOgpOptions } from "./types";
-import { extractDomain, getFaviconUrl, isSafeOgpUrl, normalizeOgpUrl, ogpCacheKey } from "./url";
+import { parseOgpFromHtml } from "./parse";
+import { isSafeOgpUrl, normalizeOgpUrl, ogpCacheKey } from "./url";
 
 const inflight = new Map<string, Promise<OgpData | null>>();
 
@@ -75,56 +76,4 @@ async function requestOgpData(url: string, options: ResolvedOgpOptions): Promise
     }
     return null;
   }
-}
-
-export function parseOgpFromHtml(html: string, url: string): OgpData {
-  const result: OgpData = {
-    url,
-    title: "",
-  };
-
-  const titleMatch = html.match(/<title[^>]*>([^<]+)<\/title>/i);
-  const ogTitleMatch =
-    html.match(/<meta[^>]*property=["']og:title["'][^>]*content=["']([^"']+)["']/i) ||
-    html.match(/<meta[^>]*content=["']([^"']+)["'][^>]*property=["']og:title["']/i);
-
-  result.title = ogTitleMatch?.[1] || titleMatch?.[1] || extractDomain(url);
-
-  const descMatch =
-    html.match(/<meta[^>]*property=["']og:description["'][^>]*content=["']([^"']+)["']/i) ||
-    html.match(/<meta[^>]*content=["']([^"']+)["'][^>]*property=["']og:description["']/i) ||
-    html.match(/<meta[^>]*name=["']description["'][^>]*content=["']([^"']+)["']/i) ||
-    html.match(/<meta[^>]*content=["']([^"']+)["'][^>]*name=["']description["']/i);
-
-  if (descMatch) {
-    result.description = descMatch[1];
-  }
-
-  const imageMatch =
-    html.match(/<meta[^>]*property=["']og:image["'][^>]*content=["']([^"']+)["']/i) ||
-    html.match(/<meta[^>]*content=["']([^"']+)["'][^>]*property=["']og:image["']/i);
-
-  if (imageMatch) {
-    let imageUrl = imageMatch[1];
-    if (imageUrl.startsWith("/")) {
-      try {
-        const urlObj = new URL(url);
-        imageUrl = `${urlObj.protocol}//${urlObj.host}${imageUrl}`;
-      } catch {
-        // Keep as is
-      }
-    }
-    result.image = imageUrl;
-  }
-
-  const siteNameMatch =
-    html.match(/<meta[^>]*property=["']og:site_name["'][^>]*content=["']([^"']+)["']/i) ||
-    html.match(/<meta[^>]*content=["']([^"']+)["'][^>]*property=["']og:site_name["']/i);
-
-  if (siteNameMatch) {
-    result.siteName = siteNameMatch[1];
-  }
-
-  result.favicon = getFaviconUrl(url);
-  return result;
 }

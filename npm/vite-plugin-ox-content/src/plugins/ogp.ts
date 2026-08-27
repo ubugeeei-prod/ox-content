@@ -7,6 +7,7 @@
 
 export { clearOgpCache } from "./ogp/cache";
 export { fetchOgpData } from "./ogp/fetch";
+export { decodeHtmlEntities, parseOgpFromHtml } from "./ogp/parse";
 export { collectOgpUrls, prefetchOgpData, transformOgp } from "./ogp/transform";
 export { resolveOgpOptions } from "./ogp/types";
 export type { OgpData, OgpOptions, ResolvedOgpOptions } from "./ogp/types";

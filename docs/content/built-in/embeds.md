@@ -167,6 +167,17 @@ Unreachable pages fall back to a plain link card. Requests to localhost,
 private IP ranges, and non-HTTP(S) schemes are rejected, so Markdown content
 cannot probe the network the build runs in.
 
+Card text is decoded from the page's own markup, so an `og:title` written as
+`Tips &amp; Tricks` renders as `Tips & Tricks`. An `og:image` is resolved
+against the page it was declared on — absolute, protocol-relative, and
+document-relative forms all work — and is dropped when it resolves somewhere
+the fetcher would refuse to go.
+
+The favicon comes from the target page's own `<link rel="icon">`, falling back
+to `/favicon.ico` on that origin. No third-party favicon service is contacted,
+so rendering a card never tells an outside host which links a documentation
+page carries.
+
 ## Package Manager Tabs
 
 `embeds.pm` expands one npm-style command into an accessible tab group for

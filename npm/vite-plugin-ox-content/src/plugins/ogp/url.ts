@@ -45,14 +45,6 @@ export function extractDomain(url: string): string {
   }
 }
 
-export function getFaviconUrl(url: string): string {
-  try {
-    return `https://www.google.com/s2/favicons?domain=${new URL(url).hostname}&sz=32`;
-  } catch {
-    return "";
-  }
-}
-
 /**
  * Normalize a URL for cache keys: lowercase host, drop default ports and
  * fragments, and strip a trailing slash that is not the root path.

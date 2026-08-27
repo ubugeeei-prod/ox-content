@@ -143,6 +143,10 @@ GitHub issue、pull request、commit、discussion、gist の URL も、同じ
 
 届かないページはプレーンなリンクカードに落ちます。localhost、プライベート IP 範囲、HTTP(S) 以外のスキームへのリクエストは拒否するので、Markdown 本文がビルド環境のネットワークを探れません。
 
+カードのテキストはページ自身のマークアップからデコードするので、`Tips &amp; Tricks` と書かれた `og:title` は `Tips & Tricks` として描画されます。`og:image` は宣言元のページを基準に解決し（絶対・プロトコル相対・文書相対のいずれの形式も動きます）、フェッチャーが拒否する先へ解決された場合は破棄します。
+
+favicon は対象ページ自身の `<link rel="icon">` から取り、無ければその origin の `/favicon.ico` へフォールバックします。サードパーティの favicon サービスへは接続しないので、カードを描画してもドキュメントページのリンク先が外部ホストへ伝わりません。
+
 ## パッケージマネージャタブ
 
 `embeds.pm` は 1 つの npm 風コマンドを、npm、pnpm、yarn、bun、vp（Vite+）向けのアクセシブルなタブグループへ展開します。
