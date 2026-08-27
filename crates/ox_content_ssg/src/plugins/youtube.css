@@ -75,3 +75,13 @@
     width: calc(100% + 1.5rem);
   }
 }
+
+@media (prefers-reduced-motion: reduce) {
+  .ox-youtube-placeholder::after {
+    transition: none;
+  }
+
+  .ox-youtube-placeholder:hover::after {
+    transform: none;
+  }
+}

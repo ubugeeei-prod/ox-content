@@ -277,3 +277,15 @@
   border-radius: 0 !important;
   background: transparent !important;
 }
+
+/* The spinner keeps its ring so the card still reads as loading; only the
+   rotation stops. */
+@media (prefers-reduced-motion: reduce) {
+  .ox-github-card.loading::after {
+    animation: none;
+  }
+
+  .ox-github-card {
+    transition: none;
+  }
+}

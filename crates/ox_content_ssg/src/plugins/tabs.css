@@ -200,3 +200,11 @@
 .ox-tabs-fallback .ox-tabs-fallback-content {
   padding: 1rem;
 }
+
+/* The disclosure marker still turns, it just turns instantly. */
+@media (prefers-reduced-motion: reduce) {
+  .ox-tabs label,
+  .ox-tabs-fallback summary::before {
+    transition: none;
+  }
+}

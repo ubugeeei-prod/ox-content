@@ -177,3 +177,16 @@
   height: 14px;
   color: var(--octc-color-text-muted);
 }
+
+/* The spinner keeps its ring so the card still reads as loading; only the
+   rotation stops. */
+@media (prefers-reduced-motion: reduce) {
+  .ox-ogp-card.loading::after {
+    animation: none;
+  }
+
+  .ox-ogp-card,
+  .ox-ogp-simple {
+    transition: none;
+  }
+}

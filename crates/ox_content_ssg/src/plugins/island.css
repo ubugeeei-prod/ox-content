@@ -117,3 +117,17 @@ noscript .ox-island-fallback {
 .ox-island-skeleton-lg {
   height: 8rem;
 }
+
+/* An island can sit unhydrated for a while, so its spinner and skeleton are
+   the longest-running motion on a page. Both stop; the skeleton keeps its
+   gradient and still reads as a placeholder. */
+@media (prefers-reduced-motion: reduce) {
+  [data-ox-island][data-ox-load="visible"]:not([data-ox-hydrated])::before {
+    animation: none;
+    transition: none;
+  }
+
+  .ox-island-skeleton {
+    animation: none;
+  }
+}
