@@ -8,6 +8,21 @@
 /**/docs/api/** linguist-generated=true
 /crates/ox_content_napi/index.d.ts linguist-generated=true
 
+# Test sources. `linguist-vendored` is the only marker that drops a path from
+# the language statistics without claiming it is documentation or generated;
+# these are neither, they are just not the implementation the stats are for.
+*.test.ts linguist-vendored=true
+*.test.tsx linguist-vendored=true
+*.spec.ts linguist-vendored=true
+/npm/**/test/** linguist-vendored=true
+
+# The Rust half of the same rule. Excluding only the TypeScript tests would
+# move the reported split by roughly eight points on its own, which is the
+# opposite of what a statistic is for.
+tests.rs linguist-vendored=true
+test.rs linguist-vendored=true
+/crates/**/tests/** linguist-vendored=true
+
 # Test snapshots and rendered VRT baselines.
 /npm/vite-plugin-ox-content/src/__snapshots__/** linguist-generated=true
 /npm/vite-plugin-ox-content/test/vrt/**/*-snapshots/** linguist-generated=true
