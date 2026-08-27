@@ -75,10 +75,16 @@ this tree-sitter line.
 | HCL        | `hcl`, `terraform`, `tf`, `tfvars`                                        |
 | Make       | `make`, `makefile`, `mk`                                                  |
 | Diff       | `diff`, `patch`, `udiff`                                                  |
+| PowerShell | `powershell`, `pwsh`, `ps1`, `psm1`                                       |
+| Zig        | `zig`, `zon`                                                              |
+| Haskell    | `haskell`, `hs`                                                           |
+| Elixir     | `elixir`, `ex`, `exs`                                                     |
+| Scala      | `scala`, `sc`, `sbt`                                                      |
+| R          | `r`, `rscript`                                                            |
 
-Unknown tags stay ordinary `<pre><code>` — for example `haskell`, `scala`,
-`elixir`, `perl`, `elm`, `assembly`, `asm`, `llvm`, `clojure`, and
-`brainfuck`. Do not alias those onto an unrelated grammar. Plain tags such as
+Unknown tags stay ordinary `<pre><code>` — for example `perl`, `elm`,
+`assembly`, `asm`, `llvm`, `clojure`, and `brainfuck`. Do not alias those onto
+an unrelated grammar. Plain tags such as
 `text`, `dotenv`, and `ini` are escaped but not tokenized.
 
 ```ts

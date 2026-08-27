@@ -51,5 +51,13 @@ pub(super) fn grammars() -> &'static [Grammar] {
             "",
             "",
         ),
+        grammar!(
+            "zig",
+            ["zig", "zon"],
+            tree_sitter_zig::LANGUAGE,
+            tree_sitter_zig::HIGHLIGHTS_QUERY,
+            tree_sitter_zig::INJECTIONS_QUERY,
+            "",
+        ),
     ]
 }

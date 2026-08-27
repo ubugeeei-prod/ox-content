@@ -57,6 +57,15 @@ fn aliases_resolve_to_the_same_grammar() {
     for alias in ["makefile", "make", "mk"] {
         assert!(supports(alias), "{alias} should be supported");
     }
+    for alias in ["powershell", "pwsh", "ps1"] {
+        assert!(supports(alias), "{alias} should be supported");
+    }
+    for alias in ["haskell", "hs", "elixir", "ex", "exs", "scala", "sbt"] {
+        assert!(supports(alias), "{alias} should be supported");
+    }
+    for alias in ["zig", "r", "rscript"] {
+        assert!(supports(alias), "{alias} should be supported");
+    }
     assert!(!supports("assembly"));
     assert!(!supports("asm"));
     assert_eq!(
@@ -309,6 +318,12 @@ fn added_grammars_tokenize_and_escape() {
         ("local s = \"a < b & c\"\n", "lua"),
         ("variable \"x\" {\n  default = \"a < b & c\"\n}\n", "terraform"),
         ("# a < b & c\nall:\n\techo hi\n", "makefile"),
+        ("Write-Host \"a < b & c\"\n", "powershell"),
+        ("-- a < b & c\nmain = putStrLn \"hi\"\n", "haskell"),
+        ("# a < b & c\ndefmodule M do\nend\n", "elixir"),
+        ("// a < b & c\nobject M { val s = \"hi\" }\n", "scala"),
+        ("// a < b & c\nconst x = 1;\n", "zig"),
+        ("# a < b & c\nx <- 1\n", "r"),
     ] {
         let html = highlight_to_html(code, lang).expect(lang);
         assert_eq!(visible_text(&html), code, "lang={lang}");

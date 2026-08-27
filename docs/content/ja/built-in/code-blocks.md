@@ -74,10 +74,16 @@ tree-sitter 系列と合うメンテされた専用文法がまだありませ�
 | HCL        | `hcl`, `terraform`, `tf`, `tfvars`                                        |
 | Make       | `make`, `makefile`, `mk`                                                  |
 | Diff       | `diff`, `patch`, `udiff`                                                  |
+| PowerShell | `powershell`, `pwsh`, `ps1`, `psm1`                                       |
+| Zig        | `zig`, `zon`                                                              |
+| Haskell    | `haskell`, `hs`                                                           |
+| Elixir     | `elixir`, `ex`, `exs`                                                     |
+| Scala      | `scala`, `sc`, `sbt`                                                      |
+| R          | `r`, `rscript`                                                            |
 
-未知のタグは普通の `<pre><code>` のままです。例: `haskell`、`scala`、
-`elixir`、`perl`、`elm`、`assembly`、`asm`、`llvm`、`clojure`、
-`brainfuck`。無関係な文法へ alias しません。`text`、`dotenv`、`ini` などの
+未知のタグは普通の `<pre><code>` のままです。例: `perl`、`elm`、
+`assembly`、`asm`、`llvm`、`clojure`、`brainfuck`。無関係な文法へ alias
+しません。`text`、`dotenv`、`ini` などの
 plain タグはエスケープのみで、トークン化しません。
 
 ```ts

@@ -100,5 +100,37 @@ pub(super) fn grammars() -> &'static [Grammar] {
             "",
             "",
         ),
+        grammar!(
+            "haskell",
+            ["haskell", "hs"],
+            tree_sitter_haskell::LANGUAGE,
+            tree_sitter_haskell::HIGHLIGHTS_QUERY,
+            tree_sitter_haskell::INJECTIONS_QUERY,
+            tree_sitter_haskell::LOCALS_QUERY,
+        ),
+        grammar!(
+            "elixir",
+            ["elixir", "ex", "exs"],
+            tree_sitter_elixir::LANGUAGE,
+            tree_sitter_elixir::HIGHLIGHTS_QUERY,
+            tree_sitter_elixir::INJECTIONS_QUERY,
+            "",
+        ),
+        grammar!(
+            "scala",
+            ["scala", "sc", "sbt"],
+            tree_sitter_scala::LANGUAGE,
+            tree_sitter_scala::HIGHLIGHTS_QUERY,
+            "",
+            tree_sitter_scala::LOCALS_QUERY,
+        ),
+        grammar!(
+            "r",
+            ["r", "rscript"],
+            tree_sitter_r::LANGUAGE,
+            tree_sitter_r::HIGHLIGHTS_QUERY,
+            "",
+            tree_sitter_r::LOCALS_QUERY,
+        ),
     ]
 }

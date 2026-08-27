@@ -57,6 +57,14 @@ pub(super) fn grammars() -> &'static [Grammar] {
             "",
         ),
         grammar!(
+            "powershell",
+            ["powershell", "pwsh", "ps1", "psm1"],
+            tree_sitter_powershell::LANGUAGE,
+            tree_sitter_powershell::HIGHLIGHTS_QUERY,
+            "",
+            "",
+        ),
+        grammar!(
             "toml",
             ["toml"],
             tree_sitter_toml_ng::LANGUAGE,
