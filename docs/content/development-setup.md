@@ -95,7 +95,8 @@ vp run bench:bundle
 ox-content/
 ├── Cargo.toml              # Workspace configuration
 ├── flake.nix               # Nix flake wiring (inputs, systems, module list)
-├── nix/                    # Nix modules: dev shell, vp wrapper, Blacksmith CLI
+├── nix/                    # Nix modules: dev shell, packages, vp wrapper, Blacksmith CLI
+├── package.nix             # Nix build of the workspace binaries, via crane
 ├── rust-toolchain.toml     # Rust channel, components, and targets for Nix and rustup alike
 ├── .node-version           # Node.js version for CI / setup-node compatibility
 ├── vite.config.ts          # Vite+ workspace task graph
