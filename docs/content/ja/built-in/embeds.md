@@ -404,6 +404,7 @@ iframe URL は `{ iframe: true }` のときだけ追加されます。Twitch ifr
 <DockerHub url="https://hub.docker.com/_/nginx" />
 
 <CodePen url="https://codepen.io/ubugeeei/pen/abc123" />
+<CodeSandbox url="https://codesandbox.io/p/sandbox/vite-react-demo" />
 
 <JSFiddle url="https://jsfiddle.net/ubugeeei/abc123/2/" />
 
@@ -436,6 +437,8 @@ iframe URL は `{ iframe: true }` のときだけ追加されます。Twitch ifr
 | `cacheTTL` | `3600000` | キャッシュの鮮度期間（ミリ秒）。                      |
 | `iframe`   | `false`   | playground/video の lazy iframe URL を追加する。      |
 | `parent`   | `[]`      | Twitch iframe の parent domain。                      |
+
+CodeSandbox はサンドボックスの 4 つの URL 形式すべてを受け付けます（`/s/{id}`、`/p/sandbox/{id}`、`/p/devbox/{id}`、`/embed/{id}`）。他のプレイグラウンドと違いフェッチは行いません。カードは URL と渡した属性だけから組み立てるので、削除済みのサンドボックスでもビルドを失敗させず、そこを指すカードを描画します。
 
 `<Fediverse>`、`<Mastodon>`、`<Misskey>`、`<Mixi2>` は
 `embeds.fediverse` を共有します。Google Maps は安全な Google Maps `embed`

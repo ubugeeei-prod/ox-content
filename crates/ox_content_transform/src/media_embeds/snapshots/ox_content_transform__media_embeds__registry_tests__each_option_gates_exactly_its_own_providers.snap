@@ -14,7 +14,7 @@ googleMaps -> googlemaps
 qiita -> qiita
 zenn -> zenn
 packageRegistry -> npmpackage, cratesio, pypi, dockerhub
-playgrounds -> codepen, jsfiddle, observable
+playgrounds -> codepen, jsfiddle, observable, codesandbox
 vimeo -> vimeo
 twitch -> twitch
 discord -> discord

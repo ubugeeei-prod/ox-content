@@ -128,6 +128,41 @@ fn renders_playground_cards() {
 }
 
 #[test]
+fn renders_code_sandbox_cards_from_every_url_form() {
+    let options = MediaEmbedsOptions { playgrounds: Some(true), ..Default::default() };
+
+    // A sandbox is named four ways and they all mean the same sandbox.
+    for url in [
+        "https://codesandbox.io/s/vite-react-demo",
+        "https://codesandbox.io/p/sandbox/vite-react-demo",
+        "https://codesandbox.io/p/devbox/vite-react-demo",
+        "https://codesandbox.io/embed/vite-react-demo",
+    ] {
+        let html = transform_media_embeds(
+            &format!(r#"<CodeSandbox url="{url}"></CodeSandbox>"#),
+            Some(&options),
+        );
+        assert!(html.contains("ox-provider-card--codesandbox"), "{url}: {html}");
+        assert!(html.contains("CodeSandbox"), "{url}: {html}");
+        // The slug becomes the title, with separators read as spaces.
+        assert!(html.contains("vite react demo"), "{url}: {html}");
+    }
+
+    // Only an /embed/ URL is accepted as an iframe source.
+    let framed = transform_media_embeds(
+        r#"<CodeSandbox url="https://codesandbox.io/s/demo" embed="https://codesandbox.io/embed/demo"></CodeSandbox>"#,
+        Some(&options),
+    );
+    assert!(framed.contains("<iframe"), "{framed}");
+
+    let unframed = transform_media_embeds(
+        r#"<CodeSandbox url="https://codesandbox.io/s/demo" embed="https://evil.example/embed/demo"></CodeSandbox>"#,
+        Some(&options),
+    );
+    assert!(!unframed.contains("<iframe"), "{unframed}");
+}
+
+#[test]
 fn renders_video_provider_cards() {
     let enabled =
         MediaEmbedsOptions { vimeo: Some(true), twitch: Some(true), ..Default::default() };

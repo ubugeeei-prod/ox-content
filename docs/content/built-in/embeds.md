@@ -507,6 +507,7 @@ default. Authors can pass stable metadata with attributes such as `title`,
 <DockerHub url="https://hub.docker.com/_/nginx" />
 
 <CodePen url="https://codepen.io/ubugeeei/pen/abc123" />
+<CodeSandbox url="https://codesandbox.io/p/sandbox/vite-react-demo" />
 
 <JSFiddle url="https://jsfiddle.net/ubugeeei/abc123/2/" />
 
@@ -539,6 +540,12 @@ default. Authors can pass stable metadata with attributes such as `title`,
 | `cacheTTL` | `3600000` | Freshness window in milliseconds.                |
 | `iframe`   | `false`   | Add lazy playground/video iframe URLs.           |
 | `parent`   | `[]`      | Twitch iframe parent domain or domains.          |
+
+CodeSandbox accepts all four ways a sandbox is named — `/s/{id}`,
+`/p/sandbox/{id}`, `/p/devbox/{id}`, and `/embed/{id}`. Unlike the other
+playgrounds it fetches nothing: the card is built from the URL and whatever
+attributes you pass, so a deleted sandbox still renders a card pointing at it
+rather than failing the build.
 
 `<Fediverse>`, `<Mastodon>`, `<Misskey>`, and `<Mixi2>` share the
 `embeds.fediverse` option. Google Maps accepts an optional safe Google Maps

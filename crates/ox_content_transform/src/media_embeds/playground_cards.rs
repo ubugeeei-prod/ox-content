@@ -16,10 +16,15 @@ pub(super) fn render_observable(element: &ComponentElement<'_>) -> Option<String
     render_playground_card(element, Provider::Observable)
 }
 
+pub(super) fn render_code_sandbox(element: &ComponentElement<'_>) -> Option<String> {
+    render_playground_card(element, Provider::CodeSandbox)
+}
+
 enum Provider {
     CodePen,
     JsFiddle,
     Observable,
+    CodeSandbox,
 }
 
 struct PlaygroundReference {
@@ -65,6 +70,7 @@ fn playground_reference(input: &str, provider: Provider) -> Option<PlaygroundRef
         Provider::CodePen => codepen_reference(&parsed.host, &segments),
         Provider::JsFiddle => jsfiddle_reference(&parsed.host, &segments),
         Provider::Observable => observable_reference(&parsed.host, &segments),
+        Provider::CodeSandbox => code_sandbox_reference(&parsed.host, &segments),
     }
 }
 
@@ -113,6 +119,26 @@ fn observable_reference(host: &str, segments: &[&str]) -> Option<PlaygroundRefer
     Some(PlaygroundReference { modifier: "observable", network: "Observable", title, author })
 }
 
+/// CodeSandbox names a sandbox four ways: the classic `/s/{id}`, the newer
+/// `/p/sandbox/{id}` and `/p/devbox/{id}`, and the already-embedded
+/// `/embed/{id}`. None of them carries an author, unlike CodePen.
+fn code_sandbox_reference(host: &str, segments: &[&str]) -> Option<PlaygroundReference> {
+    if !host_in(host, &["codesandbox.io", "www.codesandbox.io"]) {
+        return None;
+    }
+    let slug = match segments {
+        ["s", slug] | ["embed", slug] => slug,
+        ["p", "sandbox" | "devbox", slug] => slug,
+        _ => return None,
+    };
+    Some(PlaygroundReference {
+        modifier: "codesandbox",
+        network: "CodeSandbox",
+        title: titleize(safe_segment(slug)?),
+        author: None,
+    })
+}
+
 fn is_playground_embed(input: &str, network: &str) -> bool {
     let Some(parsed) = parse_https_url(input) else {
         return false;
@@ -125,6 +151,10 @@ fn is_playground_embed(input: &str, network: &str) -> bool {
         }
         "Observable" => {
             host_in(&parsed.host, &["observablehq.com"]) && parsed.path.starts_with("/embed/")
+        }
+        "CodeSandbox" => {
+            host_in(&parsed.host, &["codesandbox.io", "www.codesandbox.io"])
+                && parsed.path.starts_with("/embed/")
         }
         _ => false,
     }

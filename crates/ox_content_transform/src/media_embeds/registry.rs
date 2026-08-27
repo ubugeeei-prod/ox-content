@@ -11,7 +11,9 @@ use super::apple_music::render_apple_music;
 use super::html::ComponentElement;
 use super::native::{render_audio, render_video};
 use super::package_cards::{render_crates_io, render_docker_hub, render_npm_package, render_pypi};
-use super::playground_cards::{render_codepen, render_jsfiddle, render_observable};
+use super::playground_cards::{
+    render_code_sandbox, render_codepen, render_jsfiddle, render_observable,
+};
 use super::provider_cards::{
     render_discord, render_facebook, render_fediverse, render_google_maps, render_instagram,
     render_mastodon, render_misskey, render_mixi2, render_qiita, render_threads, render_zenn,
@@ -133,6 +135,12 @@ pub(super) const PROVIDERS: &[Provider] = &[
         tag: Tag::AnyCase,
         enabled: |o| on(o.playgrounds),
         render: render_observable,
+    },
+    Provider {
+        name: "codesandbox",
+        tag: Tag::AnyCase,
+        enabled: |o| on(o.playgrounds),
+        render: render_code_sandbox,
     },
     Provider { name: "vimeo", tag: Tag::AnyCase, enabled: |o| on(o.vimeo), render: render_vimeo },
     Provider {
