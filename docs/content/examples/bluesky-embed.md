@@ -24,16 +24,16 @@ export default {
 
 ```mdx
 <Bluesky
-  url="https://bsky.app/profile/example.com/post/abc123"
-  displayName="Example Author"
-  handle="example.com"
-  avatar="https://bsky.app/static/apple-touch-icon.png"
-  dateTime="2024-02-06T12:34:56Z"
-  dateLabel="Feb 6, 2024"
-  replies="12"
-  reposts="34"
-  likes="256"
+  url="https://bsky.app/profile/danabra.mov/post/3mqzxmtfnxk2b"
+  displayName="dan"
+  handle="danabra.mov"
+  avatar="https://cdn.bsky.app/img/avatar/plain/did:plc:fpruhuo22xkm5o7ttr2ktxdo/bafkreif43mhqajnbnl62u3ezf37g6x22nd762im54thxbil4ga46eugcga"
+  dateTime="2026-07-19T23:46:21.231Z"
+  dateLabel="Jul 19, 2026"
+  replies="2"
+  reposts="4"
+  likes="72"
 >
-  Post text shown in the static card.
+  the urge to fix everything incorrectly
 </Bluesky>
 ```

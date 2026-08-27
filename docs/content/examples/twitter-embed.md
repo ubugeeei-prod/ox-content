@@ -35,8 +35,8 @@ export default {
 ```
 
 ```html
-<XPost url="https://x.com/ox_content/status/1234567890" />
-<XPost url="https://x.com/ox_content/status/1234567890" appearance="full" />
+<XPost url="https://x.com/evanyou/status/1688035849638977536" />
+<XPost url="https://x.com/evanyou/status/1688035849638977536" appearance="full" />
 ```
 
 Fetched metadata is cached in memory and under `.cache/ox-content/twitter` by

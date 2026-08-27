@@ -353,7 +353,9 @@ export default {
   ],
 };
 </code></pre>
-<pre><code class="language-html">&#x3C;AppleMusic url="https://music.apple.com/gb/album/1989-taylors-version/1708308989">&#x3C;/AppleMusic>
+<pre><code class="language-html">&#x3C;AppleMusic
+  url="https://music.apple.com/us/album/ummg-feat-taylor-eigsti/1769360313?i=1769360314"
+>&#x3C;/AppleMusic>
 </code></pre>
 <p>Supported share hosts are <code>music.apple.com</code> and already-embedded
 <code>embed.music.apple.com</code> URLs. The transform rewrites the share origin to

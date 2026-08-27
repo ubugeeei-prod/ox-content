@@ -52,7 +52,7 @@ form needs MDX. In a plain `.md` file a tag has to open and close its `>` on the
 same line:
 
 ```md
-<Bluesky url="https://bsky.app/profile/bsky.app/post/3l6oveex3ii2l" handle="bsky.app">…</Bluesky>
+<Bluesky url="https://bsky.app/profile/danabra.mov/post/3mqzxmtfnxk2b" handle="danabra.mov">…</Bluesky>
 ```
 
 CommonMark only starts a raw HTML block when the opening tag finishes on the
@@ -313,10 +313,10 @@ uses privacy-enhanced mode (`youtube-nocookie.com`) and lazy loading by
 default:
 
 ```mdx
-<youtube id="aqz-KE-bpKQ" title="Big Buck Bunny" />
+<youtube id="Ny8pjacNIv8" title="An Evening with Ron Carter at Emmet’s Place" />
 ```
 
-<youtube id="aqz-KE-bpKQ" title="Big Buck Bunny" />
+<youtube id="Ny8pjacNIv8" title="An Evening with Ron Carter at Emmet’s Place" />
 
 `id`, `url`, and `href` attributes are accepted; `youtu.be`, `watch?v=`,
 `shorts`, and `embed` URL shapes are all recognized. `start` accepts a
@@ -325,7 +325,7 @@ URL. Invalid, negative, fractional, overflowing, or duplicated values are
 ignored. Omitting `start` leaves the previous URL unchanged.
 
 ```mdx
-<youtube id="aqz-KE-bpKQ" title="Big Buck Bunny" start="4190" />
+<youtube id="Ny8pjacNIv8" title="An Evening with Ron Carter at Emmet’s Place" start="4190" />
 ```
 
 ## Twitter/X
@@ -338,18 +338,18 @@ network request:
 
 ```mdx
 <XPost
-  url="https://x.com/jack/status/20"
-  displayName="jack"
-  handle="jack"
-  dateLabel="Mar 21, 2006"
-  likes="2.4M"
-  views="10M"
+  url="https://x.com/evanyou/status/1688035849638977536"
+  displayName="Evan You"
+  handle="evanyou"
+  dateLabel="Aug 6, 2023"
+  replies="134"
+  likes="6.2K"
 >
-  just setting up my twttr
+  Thank you JavaScript.
 </XPost>
 ```
 
-<XPost url="https://x.com/jack/status/20" displayName="jack" handle="jack" dateLabel="Mar 21, 2006" likes="2.4M" views="10M">just setting up my twttr</XPost>
+<XPost url="https://x.com/evanyou/status/1688035849638977536" displayName="Evan You" handle="evanyou" dateLabel="Aug 6, 2023" replies="134" likes="6.2K">Thank you JavaScript.</XPost>
 
 Use the object form to fetch the post body, author, avatar, photos, and video
 posters at build time and serve them from your own origin. Fetched cards include
@@ -450,21 +450,21 @@ request is needed at all:
 
 ```mdx
 <Bluesky
-  url="https://bsky.app/profile/bsky.app/post/3l6oveex3ii2l"
-  displayName="Bluesky"
-  handle="bsky.app"
-  avatar="https://bsky.app/static/apple-touch-icon.png"
-  dateTime="2024-02-06T12:34:56Z"
-  dateLabel="Feb 6, 2024"
-  replies="1.2k"
-  reposts="8.4k"
-  likes="21k"
+  url="https://bsky.app/profile/danabra.mov/post/3mqzxmtfnxk2b"
+  displayName="dan"
+  handle="danabra.mov"
+  avatar="https://cdn.bsky.app/img/avatar/plain/did:plc:fpruhuo22xkm5o7ttr2ktxdo/bafkreif43mhqajnbnl62u3ezf37g6x22nd762im54thxbil4ga46eugcga"
+  dateTime="2026-07-19T23:46:21.231Z"
+  dateLabel="Jul 19, 2026"
+  replies="2"
+  reposts="4"
+  likes="72"
 >
-  👋 Bluesky is an open social network
+  the urge to fix everything incorrectly
 </Bluesky>
 ```
 
-<Bluesky url="https://bsky.app/profile/bsky.app/post/3l6oveex3ii2l" displayName="Bluesky" handle="bsky.app" avatar="https://bsky.app/static/apple-touch-icon.png" dateTime="2024-02-06T12:34:56Z" dateLabel="Feb 6, 2024" replies="1.2k" reposts="8.4k" likes="21k">👋 Bluesky is an open social network</Bluesky>
+<Bluesky url="https://bsky.app/profile/danabra.mov/post/3mqzxmtfnxk2b" displayName="dan" handle="danabra.mov" avatar="https://cdn.bsky.app/img/avatar/plain/did:plc:fpruhuo22xkm5o7ttr2ktxdo/bafkreif43mhqajnbnl62u3ezf37g6x22nd762im54thxbil4ga46eugcga" dateTime="2026-07-19T23:46:21.231Z" dateLabel="Jul 19, 2026" replies="2" reposts="4" likes="72">the urge to fix everything incorrectly</Bluesky>
 
 ## Provider Cards
 
