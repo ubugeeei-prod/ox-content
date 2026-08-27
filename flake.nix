@@ -4,6 +4,7 @@
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
     flake-parts.url = "github:hercules-ci/flake-parts";
+    crane.url = "github:ipetkov/crane";
     rust-overlay = {
       url = "github:oxalica/rust-overlay";
       inputs.nixpkgs.follows = "nixpkgs";
@@ -18,6 +19,7 @@
       imports = [
         ./nix/blacksmith.nix
         ./nix/dev-shell.nix
+        ./nix/packages.nix
         ./nix/pkgs.nix
         ./nix/vp.nix
       ];
