@@ -94,6 +94,25 @@ crate CSS into the app.
 `renderMarkdown()` and `createMarkdownProcessor()` follow the same rule: they
 return markup, and you import the official sheets for the features you enabled.
 
+For responsive Markdown tables, `core.css` provides the scroll container and
+focus ring. Add the framework-neutral helper when your host owns the document
+or serves transformed Markdown through a custom dev server:
+
+```ts
+import { enhanceMarkdownTables } from "@ox-content/vite-plugin";
+
+enhanceMarkdownTables(document, {
+  label: "Scrollable table",
+});
+
+window.addEventListener("resize", () => enhanceMarkdownTables(document));
+```
+
+The helper measures `.content table` and adds `tabindex="0"` only when a table
+actually overflows. It preserves table semantics, captions, headers, direction,
+and existing accessible names. Pass a localized `label` from the same locale
+path as the rest of your host chrome.
+
 ## Related
 
 - [Site Generation](./site-generation.md)

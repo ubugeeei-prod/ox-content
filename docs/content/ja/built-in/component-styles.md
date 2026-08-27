@@ -95,6 +95,26 @@ crate の CSS をアプリにコピーしないでください。
 `renderMarkdown()` と `createMarkdownProcessor()` も同じです。返すのは
 マークアップで、有効にした機能の公式シートは自分で import します。
 
+レスポンシブな Markdown table では、`core.css` がスクロールコンテナと
+フォーカスリングを提供します。文書全体を独自ホストが持つ場合や、独自 dev
+server で変換済み Markdown を返す場合は、framework に依存しない helper を
+追加してください。
+
+```ts
+import { enhanceMarkdownTables } from "@ox-content/vite-plugin";
+
+enhanceMarkdownTables(document, {
+  label: "横スクロールできる表",
+});
+
+window.addEventListener("resize", () => enhanceMarkdownTables(document));
+```
+
+この helper は `.content table` を計測し、実際に overflow する table にだけ
+`tabindex="0"` を付けます。table semantics、caption、header、方向、既存の
+accessible name は維持します。`label` は他の host chrome と同じ locale
+経路から渡してください。
+
 ## 関連
 
 - [サイト生成](./site-generation.md)

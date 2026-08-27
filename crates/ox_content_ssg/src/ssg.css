@@ -1249,6 +1249,10 @@ a:hover {
   margin: 1.25rem 0;
   font-size: 0.875rem;
 }
+.content table[data-ox-table-scrollable="true"]:focus-visible {
+  outline: var(--octc-focus-ring);
+  outline-offset: var(--octc-focus-offset);
+}
 .content th,
 .content td {
   border: 0;

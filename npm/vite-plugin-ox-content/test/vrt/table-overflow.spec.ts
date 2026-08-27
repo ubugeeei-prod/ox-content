@@ -51,6 +51,7 @@ test("narrow mobile tables do not draw an empty trailing column", async ({ page 
 
   expect(metrics.tableWidth).toBeLessThan(metrics.contentWidth);
   expect(metrics.trailingGap).toBeLessThan(2);
+  await expect(page.locator(".content table")).not.toHaveAttribute("tabindex", "0");
 });
 
 test("wide mobile tables keep horizontal overflow inside the content gutter", async ({ page }) => {
@@ -83,4 +84,30 @@ test("wide mobile tables keep horizontal overflow inside the content gutter", as
 
   expect(metrics.tableWidth).toBeLessThanOrEqual(metrics.contentWidth + 1);
   expect(metrics.scrollWidth).toBeGreaterThan(metrics.clientWidth);
+});
+
+test("wide mobile tables are keyboard-scrollable when they overflow", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.setContent(
+    await render(
+      [
+        "# Tables",
+        "",
+        "| Option | Type | Default |",
+        "| --- | --- | --- |",
+        "| `veryLongOptionNameWithoutBreaks` | `ExtremelyLongTypeNameWithoutBreaks` | `false` |",
+      ].join("\n"),
+    ),
+    { waitUntil: "load" },
+  );
+
+  const table = page.locator(".content table");
+  await expect(table).toHaveAttribute("tabindex", "0");
+  await expect(table).toHaveAttribute("aria-label", "Scrollable table");
+  await table.focus();
+  await expect(table).toBeFocused();
+
+  const before = await table.evaluate((node) => node.scrollLeft);
+  await page.keyboard.press("ArrowRight");
+  await expect.poll(() => table.evaluate((node) => node.scrollLeft)).toBeGreaterThan(before);
 });

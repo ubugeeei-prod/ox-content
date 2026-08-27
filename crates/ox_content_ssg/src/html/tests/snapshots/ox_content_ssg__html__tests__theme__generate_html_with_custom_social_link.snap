@@ -1315,6 +1315,10 @@ a:hover {
   margin: 1.25rem 0;
   font-size: 0.875rem;
 }
+.content table[data-ox-table-scrollable="true"]:focus-visible {
+  outline: var(--octc-focus-ring);
+  outline-offset: var(--octc-focus-offset);
+}
 .content th,
 .content td {
   border: 0;
@@ -2482,6 +2486,50 @@ window.addEventListener("storage", (event) => {
 });
 
 themeToggle?.addEventListener("click", () => setTheme(getTheme() === "dark" ? "light" : "dark"));
+
+const markdownTableScrollLabel = () =>
+  (document.documentElement.lang || "").toLowerCase().startsWith("ja")
+    ? "横スクロールできる表"
+    : "Scrollable table";
+
+let tableScrollResizePending = false;
+const enhanceMarkdownTables = () => {
+  const label = markdownTableScrollLabel();
+  document.querySelectorAll(".content table").forEach((table) => {
+    if (!(table instanceof HTMLElement)) return;
+    const scrollable = table.scrollWidth > table.clientWidth + 1;
+    table.toggleAttribute("data-ox-table-scrollable", scrollable);
+    if (scrollable) {
+      if (!table.hasAttribute("tabindex")) {
+        table.tabIndex = 0;
+        table.dataset.oxTableScrollTabindex = "true";
+      }
+      if (!table.hasAttribute("aria-label") && !table.hasAttribute("aria-labelledby")) {
+        table.setAttribute("aria-label", label);
+        table.dataset.oxTableScrollLabel = "true";
+      }
+    } else {
+      if (table.dataset.oxTableScrollTabindex === "true") {
+        table.removeAttribute("tabindex");
+        delete table.dataset.oxTableScrollTabindex;
+      }
+      if (table.dataset.oxTableScrollLabel === "true") {
+        table.removeAttribute("aria-label");
+        delete table.dataset.oxTableScrollLabel;
+      }
+    }
+  });
+};
+
+enhanceMarkdownTables();
+window.addEventListener("resize", () => {
+  if (tableScrollResizePending) return;
+  tableScrollResizePending = true;
+  requestAnimationFrame(() => {
+    tableScrollResizePending = false;
+    enhanceMarkdownTables();
+  });
+});
 
 const searchBtn = document.querySelector(".search-button");
 let searchApiPromise = null;

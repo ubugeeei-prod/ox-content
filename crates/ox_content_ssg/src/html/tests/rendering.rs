@@ -218,6 +218,11 @@ fn test_table_css_draws_each_separator_once() {
             && SSG_CSS.contains(".content table > :last-child > tr:last-child > *"),
         "the table border must own the outer inline and block edges"
     );
+    assert!(
+        SSG_CSS.contains(".content table[data-ox-table-scrollable=\"true\"]:focus-visible")
+            && SSG_CSS.contains("outline: var(--octc-focus-ring);"),
+        "overflowing Markdown tables need a visible keyboard focus indicator"
+    );
     assert_eq!(
         SSG_CSS.matches("border-collapse: separate;").count(),
         1,
@@ -226,6 +231,15 @@ fn test_table_css_draws_each_separator_once() {
     assert!(
         !SSG_CSS.contains("border-collapse: collapse;"),
         "collapsed cell borders conflict with the scrollable mobile table"
+    );
+    assert!(
+        SSG_JS.contains("const enhanceMarkdownTables = () => {")
+            && SSG_JS.contains("table.scrollWidth > table.clientWidth + 1")
+            && SSG_JS.contains("table.tabIndex = 0")
+            && SSG_JS.contains("delete table.dataset.oxTableScrollTabindex")
+            && SSG_JS.contains("横スクロールできる表")
+            && SSG_JS.contains("Scrollable table"),
+        "table runtime must keep measured keyboard overflow and localized labels"
     );
 }
 

@@ -907,6 +907,8 @@ export { resolvePermalinksOptions, resolveCascadeOptions } from "./permalinks";
 export { resolveRedirectsOptions } from "./redirects";
 export { generateFeeds, resolveFeedsOptions } from "./feeds";
 export type { FeedsRenderInput, FeedsRenderResult, WriteFeedFilesInput } from "./feeds";
+export { enhanceMarkdownTables, markdownTableScrollLabel } from "./markdown-tables";
+export type { MarkdownTableEnhancementOptions } from "./markdown-tables";
 export {
   BlogFeedError,
   resolveBlogOptions,
