@@ -11,13 +11,14 @@ const ssgSrc = join(packageRoot, "../../crates/ox_content_ssg/src");
 
 describe("markdown table browser entry packaging", () => {
   it("declares a browser-only package subpath", () => {
-    const exported = (packageJson.exports as Record<string, Record<string, string>>)[
+    const exported = (packageJson.exports as Record<string, PackageConditionalExport>)[
       "./markdown-tables"
     ];
     expect(exported).toBeDefined();
-    expect(exported.import).toBe("./dist/markdown-tables.mjs");
-    expect(exported.require).toBe("./dist/markdown-tables.cjs");
-    expect(exported.types).toBe("./dist/markdown-tables.d.mts");
+    expect(exported.import.types).toBe("./dist/markdown-tables.d.mts");
+    expect(exported.import.default).toBe("./dist/markdown-tables.mjs");
+    expect(exported.require.types).toBe("./dist/markdown-tables.d.cts");
+    expect(exported.require.default).toBe("./dist/markdown-tables.cjs");
 
     const entries: string[] = require("../vite.config.ts").default.pack.entry;
     expect(entries).toContain("src/markdown-tables.ts");
@@ -31,7 +32,11 @@ describe("markdown table browser entry packaging", () => {
   });
 
   it("guards the built browser subpath against server graph imports", () => {
-    const distFiles = ["dist/markdown-tables.mjs", "dist/markdown-tables.cjs"];
+    const distFiles = [
+      "dist/markdown-tables.mjs",
+      "dist/markdown-tables.cjs",
+      "dist/markdown-tables.d.cts",
+    ];
     for (const distFile of distFiles) {
       const absolutePath = join(packageRoot, distFile);
       if (!existsSync(absolutePath)) {
@@ -56,3 +61,14 @@ describe("markdown table browser entry packaging", () => {
     );
   });
 });
+
+interface PackageConditionalExport {
+  import: {
+    types: string;
+    default: string;
+  };
+  require: {
+    types: string;
+    default: string;
+  };
+}

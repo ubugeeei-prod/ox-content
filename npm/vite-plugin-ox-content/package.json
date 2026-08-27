@@ -39,9 +39,14 @@
       "types": "./dist/incremental-dom.d.mts"
     },
     "./markdown-tables": {
-      "import": "./dist/markdown-tables.mjs",
-      "require": "./dist/markdown-tables.cjs",
-      "types": "./dist/markdown-tables.d.mts"
+      "import": {
+        "types": "./dist/markdown-tables.d.mts",
+        "default": "./dist/markdown-tables.mjs"
+      },
+      "require": {
+        "types": "./dist/markdown-tables.d.cts",
+        "default": "./dist/markdown-tables.cjs"
+      }
     },
     "./vitepress-migrate": {
       "import": "./dist/vitepress-cli.mjs",
