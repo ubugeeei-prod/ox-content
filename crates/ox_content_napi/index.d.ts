@@ -344,6 +344,9 @@ export interface IncrementalMarkdownRenderResult {
   errors: Array<string>
 }
 
+/** Same-origin path check: leading `/`, not `//`, and no scheme. */
+export declare function isSafeRedirectDest(value: string): boolean
+
 /** Opt-in skip link and print styles. Presence of the object enables the feature. */
 export interface JsA11y {
   /** Override for the skip-link label. Empty / omitted uses "Skip to content". */
@@ -1840,6 +1843,47 @@ export interface JsReaderChrome {
   backToTop?: boolean
 }
 
+/** One planned static HTML redirect. */
+export interface JsRedirectEntry {
+  from: string
+  to: string
+  html: string
+  relativePath: string
+}
+
+/** One entry of the config rewrite map, in author order. */
+export interface JsRedirectMapEntry {
+  from: string
+  to: string
+}
+
+/** One page that other paths can redirect to. */
+export interface JsRedirectPage {
+  dest: string
+  aliases?: Array<string>
+  redirect?: string
+}
+
+/** Switches and the config rewrite map. */
+export interface JsRedirectsOptions {
+  enabled: boolean
+  map: Array<JsRedirectMapEntry>
+  netlify: boolean
+  headers: boolean
+  json: boolean
+  allowExternal: boolean
+  html: boolean
+  base?: string
+}
+
+/** Planned redirect pages and optional host files. */
+export interface JsRedirectsOutput {
+  pages: Array<JsRedirectEntry>
+  netlify?: string
+  headers?: string
+  json?: string
+}
+
 /** Resolved source module. */
 export interface JsResolvedModule {
   path: string
@@ -2957,6 +3001,9 @@ export interface Mf2ValidateResult {
 /** Every language name and alias the native highlighter answers to. */
 export declare function nativeHighlightLanguages(): Array<string>
 
+/** Strips a trailing slash except for `/`. Unsafe values return `None`. */
+export declare function normalizeRedirectPath(value: string): string | null
+
 /** Normalizes VitePress-specific frontmatter into ox-content's entry-page shape. */
 export declare function normalizeVitePressFrontmatter(frontmatter: any): any
 
@@ -3002,6 +3049,9 @@ export declare function parseScopedSearchQuery(query: string): JsScopedSearchQue
  */
 export declare function parseTransferRaw(source: string, kind: string, options?: JsParserOptions | undefined | null): Uint8Array
 
+/** Plans redirect pages and host files without writing anything. */
+export declare function planRedirects(options: JsRedirectsOptions, pages: Array<JsRedirectPage>): JsRedirectsOutput
+
 /** Prepared Markdown source with parsed frontmatter. */
 export interface PreparedSourceResult {
   /** Markdown content after optional frontmatter removal. */
@@ -3036,6 +3086,9 @@ export declare function renderFrameworkComponentCode(html: string, target: strin
 
 /** Resolve Unhead-compatible page-head descriptors to HTML. */
 export declare function renderHead(inputJson: string): JsSsgHtmlResult
+
+/** Static HTML redirect body. `dest` is escaped; callers still validate it. */
+export declare function renderRedirectHtml(dest: string): string
 
 /** Render result containing the HTML output. */
 export interface RenderResult {

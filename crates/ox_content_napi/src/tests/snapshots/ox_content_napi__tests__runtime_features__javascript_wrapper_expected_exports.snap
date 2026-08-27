@@ -53,6 +53,7 @@ getSsgHref
 getSsgOutputPath
 getSsgPageLocale
 getSsgUrlPath
+isSafeRedirectDest
 lintCodeBlocks
 lintMarkdown
 lintMarkdownDocuments
@@ -60,6 +61,7 @@ loadDictionaries
 loadDictionariesFlat
 matchesSearchScopes
 mergeHighlightedCodeBlocks
+normalizeRedirectPath
 normalizeVitePressFrontmatter
 parse
 parseAndRender
@@ -68,11 +70,13 @@ parseFeedDate
 parseMdastRaw
 parseScopedSearchQuery
 parseTransferRaw
+planRedirects
 prepareSource
 prepareSourceRaw
 render
 renderFrameworkComponentCode
 renderHead
+renderRedirectHtml
 renderSsgSectionIndex
 resolveSsgNavigationGroups
 resolveSsgPageRoutes
