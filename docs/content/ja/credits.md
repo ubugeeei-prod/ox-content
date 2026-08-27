@@ -48,6 +48,8 @@ Markdown 属性とリッチなソーシャル埋め込みの見た目の同等�
   source を要望しました。
 - ryoppippi.com の移行中に、rich magic link の avatar と prose typography
   stylesheet の相互作用を報告しました。
+- ブラウザ専用の table helper entrypoint と独立した table stylesheet につながった、
+  独自ホストでの Markdown table 移行課題を報告しました。
 - Twitter / X full card style の class ベース dark mode 対応を要望しました。
 
 ## 第三者の帰属

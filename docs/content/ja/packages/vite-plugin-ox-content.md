@@ -165,10 +165,16 @@ import してください。crate の CSS をアプリにコピーしないで�
 
 ```css
 @import "@ox-content/vite-plugin/styles/core.css";
+@import "@ox-content/vite-plugin/styles/markdown-tables.css";
 @import "@ox-content/vite-plugin/styles/magic-links.css";
 @import "@ox-content/vite-plugin/styles/social.css";
 @import "@ox-content/vite-plugin/styles/twitter-full.css";
 ```
+
+既存の prose theme に、keyboard accessible なレスポンシブ Markdown table
+だけを足したい場合は、package root と `styles/core.css` ではなく
+`styles/markdown-tables.css` と
+`@ox-content/vite-plugin/markdown-tables` を使ってください。
 
 独自ホストは `buildSsg()` なしでも、リソース指紋、Markdown 併記、フィード、
 sitemap、git lastmod を再利用できます。

@@ -162,10 +162,16 @@ HTML — do not copy crate CSS into the app. See
 
 ```css
 @import "@ox-content/vite-plugin/styles/core.css";
+@import "@ox-content/vite-plugin/styles/markdown-tables.css";
 @import "@ox-content/vite-plugin/styles/magic-links.css";
 @import "@ox-content/vite-plugin/styles/social.css";
 @import "@ox-content/vite-plugin/styles/twitter-full.css";
 ```
+
+For an existing prose theme that only needs keyboard-accessible responsive
+Markdown tables, import `styles/markdown-tables.css` and
+`@ox-content/vite-plugin/markdown-tables` instead of the package root plus
+`styles/core.css`.
 
 Custom hosts can also reuse resource fingerprinting, Markdown companions,
 feeds, sitemaps, and git lastmod without `buildSsg()`. See

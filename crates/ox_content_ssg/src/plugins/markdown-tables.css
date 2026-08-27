@@ -1,0 +1,14 @@
+/* Responsive Markdown tables for custom hosts */
+.content table {
+  display: block;
+  width: max-content;
+  max-width: 100%;
+  box-sizing: border-box;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.content table[data-ox-table-scrollable="true"]:focus-visible {
+  outline: var(--octc-focus-ring, 2px solid Highlight);
+  outline-offset: var(--octc-focus-offset, 2px);
+}

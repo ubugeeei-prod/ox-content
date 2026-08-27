@@ -15,6 +15,7 @@ description: ssg: false と transformAllPlugins() 向けの、公式コンポー
 
 ```css
 @import "@ox-content/vite-plugin/styles/core.css";
+@import "@ox-content/vite-plugin/styles/markdown-tables.css";
 @import "@ox-content/vite-plugin/styles/magic-links.css";
 @import "@ox-content/vite-plugin/styles/social.css";
 @import "@ox-content/vite-plugin/styles/twitter-full.css";
@@ -31,21 +32,22 @@ import なので、コンパクトな Tweet だけ載せてフルカード用シ
 
 ## エントリポイント
 
-| import                    | 対象                                                                                                          |
-| ------------------------- | ------------------------------------------------------------------------------------------------------------- |
-| `styles/core.css`         | ベーストークン（`--octc-*`）と、SSG スタイルシートの既定 prose / chrome                                       |
-| `styles/magic-links.css`  | `{link:...}` チップ                                                                                           |
-| `styles/social.css`       | コンパクトな Tweet/X、Bluesky、プロバイダカード、Spotify、Apple Music、audio、video、StackBlitz、WebContainer |
-| `styles/twitter-full.css` | `appearance: "full"` の Tweet カード。react-tweet / sveltweet の MIT 告知を含む                               |
-| `styles/ogp.css`          | Open Graph カード                                                                                             |
-| `styles/github.css`       | GitHub リポジトリ / ソースカード                                                                              |
-| `styles/youtube.css`      | YouTube 埋め込み                                                                                              |
-| `styles/tabs.css`         | タブとパッケージマネージャタブ                                                                                |
-| `styles/mermaid.css`      | Mermaid 図                                                                                                    |
-| `styles/graphviz.css`     | Graphviz DOT 図                                                                                               |
-| `styles/citations.css`    | 引用リンクと生成 bibliography section                                                                         |
-| `styles/not-by-ai.css`    | `<NotByAI />` 執筆開示バッジ                                                                                  |
-| `styles/all.css`          | 上の機能シートをこの順で全部                                                                                  |
+| import                       | 対象                                                                                                          |
+| ---------------------------- | ------------------------------------------------------------------------------------------------------------- |
+| `styles/core.css`            | ベーストークン（`--octc-*`）と、SSG スタイルシートの既定 prose / chrome                                       |
+| `styles/markdown-tables.css` | Markdown table のレスポンシブなスクロールコンテナと focus ring。prose や theme の global は含めません         |
+| `styles/magic-links.css`     | `{link:...}` チップ                                                                                           |
+| `styles/social.css`          | コンパクトな Tweet/X、Bluesky、プロバイダカード、Spotify、Apple Music、audio、video、StackBlitz、WebContainer |
+| `styles/twitter-full.css`    | `appearance: "full"` の Tweet カード。react-tweet / sveltweet の MIT 告知を含む                               |
+| `styles/ogp.css`             | Open Graph カード                                                                                             |
+| `styles/github.css`          | GitHub リポジトリ / ソースカード                                                                              |
+| `styles/youtube.css`         | YouTube 埋め込み                                                                                              |
+| `styles/tabs.css`            | タブとパッケージマネージャタブ                                                                                |
+| `styles/mermaid.css`         | Mermaid 図                                                                                                    |
+| `styles/graphviz.css`        | Graphviz DOT 図                                                                                               |
+| `styles/citations.css`       | 引用リンクと生成 bibliography section                                                                         |
+| `styles/not-by-ai.css`       | `<NotByAI />` 執筆開示バッジ                                                                                  |
+| `styles/all.css`             | 上の機能シートをこの順で全部                                                                                  |
 
 `var(--octc-*)` を使う機能シートは、先に `core.css` を読むか、ホスト側で同じ
 トークンを定義してください。フル Tweet の chrome は独自の `--ox-tweet-*` を
@@ -95,13 +97,15 @@ crate の CSS をアプリにコピーしないでください。
 `renderMarkdown()` と `createMarkdownProcessor()` も同じです。返すのは
 マークアップで、有効にした機能の公式シートは自分で import します。
 
-レスポンシブな Markdown table では、`core.css` がスクロールコンテナと
-フォーカスリングを提供します。文書全体を独自ホストが持つ場合や、独自 dev
-server で変換済み Markdown を返す場合は、framework に依存しない helper を
-追加してください。
+独自ホストのレスポンシブな Markdown table では、body typography、prose 幅、
+リンク、blockquote、table cell style を host 側で持っているなら
+`styles/markdown-tables.css` だけを import してください。`core.css` は
+組み込み SSG の prose theme 全体が必要なときだけ使います。文書全体を独自
+ホストが持つ場合や、独自 dev server で変換済み Markdown を返す場合は、
+framework に依存しない helper を追加してください。
 
 ```ts
-import { enhanceMarkdownTables } from "@ox-content/vite-plugin";
+import { enhanceMarkdownTables } from "@ox-content/vite-plugin/markdown-tables";
 
 enhanceMarkdownTables(document, {
   label: "横スクロールできる表",

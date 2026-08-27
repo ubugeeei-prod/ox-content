@@ -35,6 +35,7 @@ export const STYLE_ENTRIES = /** @type {const} */ ([
   },
   { name: "ogp.css", sources: ["plugins/ogp.css"] },
   { name: "github.css", sources: ["plugins/github.css"] },
+  { name: "markdown-tables.css", sources: ["plugins/markdown-tables.css"] },
   { name: "youtube.css", sources: ["plugins/youtube.css"] },
   { name: "tabs.css", sources: ["plugins/tabs.css"] },
   { name: "mermaid.css", sources: ["plugins/mermaid.css"] },

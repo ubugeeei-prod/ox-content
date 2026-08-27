@@ -51,6 +51,8 @@ Contribution summary:
   media feed migration.
 - Reported prose typography stylesheet interactions with rich magic-link
   avatars during the ryoppippi.com migration.
+- Reported the custom-host Markdown table migration that led to the
+  browser-only table helper entrypoint and isolated table stylesheet.
 - Requested class-based dark-mode support for Twitter/X full-card styles.
 
 ## Third-party attribution

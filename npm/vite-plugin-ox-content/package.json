@@ -38,6 +38,11 @@
       "require": "./dist/incremental-dom.cjs",
       "types": "./dist/incremental-dom.d.mts"
     },
+    "./markdown-tables": {
+      "import": "./dist/markdown-tables.mjs",
+      "require": "./dist/markdown-tables.cjs",
+      "types": "./dist/markdown-tables.d.mts"
+    },
     "./vitepress-migrate": {
       "import": "./dist/vitepress-cli.mjs",
       "types": "./dist/vitepress-cli.d.mts"
@@ -59,6 +64,7 @@
     "./styles/twitter-full.css": "./dist/styles/twitter-full.css",
     "./styles/ogp.css": "./dist/styles/ogp.css",
     "./styles/github.css": "./dist/styles/github.css",
+    "./styles/markdown-tables.css": "./dist/styles/markdown-tables.css",
     "./styles/youtube.css": "./dist/styles/youtube.css",
     "./styles/tabs.css": "./dist/styles/tabs.css",
     "./styles/mermaid.css": "./dist/styles/mermaid.css",
@@ -71,7 +77,7 @@
     "provenance": true
   },
   "scripts": {
-    "build": "vp pack && node scripts/copy-component-styles.mjs",
+    "build": "vp pack && node scripts/build-standalone-markdown-tables.mjs && node scripts/copy-component-styles.mjs",
     "build:styles": "node scripts/copy-component-styles.mjs",
     "dev": "vp pack --watch",
     "typecheck": "tsgo --noEmit",
