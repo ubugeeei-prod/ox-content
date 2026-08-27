@@ -11,6 +11,7 @@
     )
 )]
 
+pub mod cross_references;
 pub mod features;
 pub mod highlight;
 pub(crate) mod html_scan;

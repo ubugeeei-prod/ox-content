@@ -248,5 +248,6 @@ module.exports.renderFrameworkComponentCode = binding.renderFrameworkComponentCo
 module.exports.renderSsgSectionIndex = binding.renderSsgSectionIndex;
 module.exports.parseFeedDate = binding.parseFeedDate;
 module.exports.generateFeedBodies = binding.generateFeedBodies;
+module.exports.transformCrossReferences = binding.transformCrossReferences;
 module.exports.generateSiteMapBodies = binding.generateSiteMapBodies;
 module.exports.escapeSvelteMarkup = binding.escapeSvelteMarkup;

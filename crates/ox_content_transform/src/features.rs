@@ -22,7 +22,7 @@ mod definition_lists;
 mod edit;
 mod emoji;
 mod emoji_shortcodes;
-mod escape;
+pub(crate) mod escape;
 mod file_tree;
 mod image_galleries;
 mod images;

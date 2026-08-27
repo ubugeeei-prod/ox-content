@@ -1,9 +1,15 @@
-import type { CrossReferenceKind } from "./cross-reference-types";
+/**
+ * The escaping and prose-scanning helpers the citation pass still needs.
+ *
+ * The cross-reference pass that used to share this file now runs in
+ * `ox_content_transform::cross_references`; what is left here is what
+ * `citations.ts` uses, and it goes the same way when that pass moves.
+ */
 
 const PROTECTED_TEXT_RE = /<!--[\s\S]*?-->|<(pre|code|script|style|textarea|a)\b[\s\S]*?<\/\1>/gi;
-const CITATION_LIKE_GROUP_RE = /\[([^\]\n]+)\]/g;
 const TAG_RE = /(<[^>]+>)/g;
 
+/** Runs `replacer` over every stretch of prose, skipping verbatim elements. */
 export function transformText(html: string, replacer: (text: string) => string): string {
   let output = "";
   let cursor = 0;
@@ -14,99 +20,6 @@ export function transformText(html: string, replacer: (text: string) => string):
     cursor = start + match[0].length;
   }
   return output + transformTextOutsideTags(html.slice(cursor), replacer);
-}
-
-export function transformTextOutsideCitationGroups(
-  text: string,
-  replacer: (text: string) => string,
-): string {
-  let output = "";
-  let cursor = 0;
-  for (const match of text.matchAll(CITATION_LIKE_GROUP_RE)) {
-    const start = match.index ?? 0;
-    const body = (match[1] ?? "").trim();
-    if (!body.startsWith("@") && !body.startsWith("-@")) continue;
-    output += replacer(text.slice(cursor, start));
-    output += match[0];
-    cursor = start + match[0].length;
-  }
-  return output + replacer(text.slice(cursor));
-}
-
-export function findFirstImageWithId(body: string): {
-  id: string;
-  attrs: string;
-  start: number;
-  end: number;
-  alt?: string;
-} | null {
-  const match = /<img\b([^>]*)>/i.exec(body);
-  if (!match) return null;
-  const attrs = match[1] ?? "";
-  const id = readAttr(attrs, "id");
-  if (!id) return null;
-  return {
-    id,
-    attrs,
-    start: match.index,
-    end: match.index + match[0].length,
-    alt: readAttr(attrs, "alt"),
-  };
-}
-
-export function figureCaption(body: string): string | undefined {
-  const match = /<figcaption\b[^>]*>([\s\S]*?)<\/figcaption>/i.exec(body);
-  return match ? textContent(match[1] ?? "") : undefined;
-}
-
-export function expectedKind(id: string): CrossReferenceKind | null {
-  const prefix = id.toLowerCase().split("-")[0];
-  if (prefix === "fig" || prefix === "figure") return "figure";
-  if (prefix === "tbl" || prefix === "table") return "table";
-  if (prefix === "sec" || prefix === "section") return "section";
-  return null;
-}
-
-export function shouldTrackTarget(id: string): boolean {
-  return expectedKind(id) !== null;
-}
-
-export function appendDataAttrs(
-  attrs: string,
-  kind: CrossReferenceKind,
-  number: string,
-  text: string,
-): string {
-  return appendAttr(
-    appendAttr(appendAttr(attrs, "data-ox-xref-kind", kind), "data-ox-xref-number", number),
-    "data-ox-xref-label",
-    text,
-  );
-}
-
-export function appendAttr(attrs: string, name: string, value: string): string {
-  if (readAttr(attrs, name) !== undefined) return attrs;
-  return `${attrs} ${name}="${escapeAttr(value)}"`;
-}
-
-export function readAttr(attrs: string, name: string): string | undefined {
-  const escapedName = escapeRegExp(name);
-  const quoted = new RegExp(`(?:^|\\s)${escapedName}\\s*=\\s*("([^"]*)"|'([^']*)')`, "i").exec(
-    attrs,
-  );
-  if (quoted) return decodeHtml(quoted[2] ?? quoted[3] ?? "");
-  const bare = new RegExp(`(?:^|\\s)${escapedName}(?:\\s|$)`, "i").exec(attrs);
-  return bare ? "" : undefined;
-}
-
-export function textContent(html: string): string {
-  return decodeHtml(
-    html
-      .replace(/<a\b[^>]*class=(["'])header-anchor\1[\s\S]*?<\/a>/gi, "")
-      .replace(/<[^>]+>/g, "")
-      .replace(/\s+/g, " ")
-      .trim(),
-  );
 }
 
 export function escapeHtml(value: string): string {
@@ -126,17 +39,4 @@ function transformTextOutsideTags(segment: string, replacer: (text: string) => s
     .split(TAG_RE)
     .map((part) => (part.startsWith("<") ? part : replacer(part)))
     .join("");
-}
-
-function decodeHtml(value: string): string {
-  return value
-    .replace(/&quot;/g, '"')
-    .replace(/&#39;/g, "'")
-    .replace(/&lt;/g, "<")
-    .replace(/&gt;/g, ">")
-    .replace(/&amp;/g, "&");
-}
-
-function escapeRegExp(value: string): string {
-  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
