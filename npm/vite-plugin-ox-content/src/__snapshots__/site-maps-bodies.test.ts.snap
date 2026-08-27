@@ -1,0 +1,44 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`crawl manifests > renders llms.txt 1`] = `
+"# Docs &amp; Co
+
+> Example &lt;docs&gt;
+
+## Pages
+
+- [Ay](https://example.com/a): first
+- [Ancient](https://example.com/ancient)
+- [Title &amp; &lt;tag&gt; &quot;quoted&quot; 'single'](https://example.com/q?a=1&b=2<3>4'5"6): desc &amp; &lt;more&gt;
+- [Zed](https://example.com/z)
+"
+`;
+
+exports[`crawl manifests > renders robots.txt 1`] = `
+"User-agent: *
+Allow: /
+
+Sitemap: https://example.com/sitemap.xml
+"
+`;
+
+exports[`crawl manifests > renders sitemap.xml 1`] = `
+"<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url>
+    <loc>https://example.com/a</loc>
+  </url>
+  <url>
+    <loc>https://example.com/ancient</loc>
+  </url>
+  <url>
+    <loc>https://example.com/q?a=1&amp;b=2&lt;3&gt;4&#39;5&quot;6</loc>
+    <lastmod>1970-01-01</lastmod>
+  </url>
+  <url>
+    <loc>https://example.com/z</loc>
+    <lastmod>2023-11-14</lastmod>
+  </url>
+</urlset>
+"
+`;

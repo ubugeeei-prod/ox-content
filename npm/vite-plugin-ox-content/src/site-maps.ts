@@ -1,13 +1,22 @@
 /**
  * Opt-in sitemap.xml / robots.txt / llms.txt helpers.
  *
- * String bodies follow `ox_content_ssg::generate_site_maps`. The Vite plugin
- * writes those files during SSG without adding a NAPI surface.
+ * Bodies come from `ox_content_ssg::generate_site_maps` through the NAPI
+ * binding. What stays here is what that binding does not model: validating
+ * `siteUrl`, deriving the sitemap location, and writing the files.
  */
 
 import * as fs from "node:fs/promises";
 import * as path from "node:path";
+import { importNapiModuleSync } from "./napi";
 import type { ResolvedSiteMapsOptions, SiteMapsOptions } from "./types";
+
+interface NativeSiteMapsModule {
+  generateSiteMapBodies(
+    options: Record<string, unknown>,
+    pages: readonly SiteMapPageInput[],
+  ): SiteMapsRenderResult;
+}
 
 const MISSING_SITE_URL =
   "[ox-content] siteMaps is enabled but ssg.siteUrl is not set; sitemap.xml, robots.txt, and llms.txt were not written";
@@ -86,21 +95,20 @@ export function generateSiteMaps(input: SiteMapsRenderInput): SiteMapsRenderResu
     return { warning };
   }
 
-  const published = input.pages
-    .filter((page) => !page.draft && !page.unlisted && page.loc.length > 0)
-    .slice()
-    .sort((left, right) => (left.loc < right.loc ? -1 : left.loc > right.loc ? 1 : 0));
-
-  const result: SiteMapsRenderResult = {
-    sitemapXml: generateSitemapXml(published),
-  };
-  if (input.options.robots) {
-    result.robotsTxt = generateRobotsTxt(input.sitemapLoc ?? "");
-  }
-  if (input.options.llms) {
-    result.llmsTxt = generateLlmsTxt(input, published);
-  }
-  return result;
+  // Selection, ordering, and escaping all live on the native side.
+  const napi = importNapiModuleSync() as unknown as NativeSiteMapsModule;
+  return napi.generateSiteMapBodies(
+    {
+      enabled: true,
+      siteUrl: input.siteUrl,
+      sitemapLoc: input.sitemapLoc ?? "",
+      siteName: input.siteName ?? "",
+      siteDescription: input.siteDescription,
+      robots: input.options.robots,
+      llms: input.options.llms,
+    },
+    input.pages,
+  );
 }
 
 /** Writes enabled crawl manifests into `outDir`. */
@@ -181,113 +189,4 @@ function isSafeHttpUrl(value: string): boolean {
   } catch {
     return false;
   }
-}
-
-function generateSitemapXml(pages: readonly SiteMapPageInput[]): string {
-  let xml =
-    '<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n';
-  for (const page of pages) {
-    xml += "  <url>\n    <loc>";
-    xml += escapeXml(page.loc);
-    xml += "</loc>\n";
-    const lastmod = formatLastmod(page.lastUpdated);
-    if (lastmod) {
-      xml += "    <lastmod>";
-      xml += lastmod;
-      xml += "</lastmod>\n";
-    }
-    xml += "  </url>\n";
-  }
-  xml += "</urlset>\n";
-  return xml;
-}
-
-function generateRobotsTxt(sitemapLoc: string): string {
-  let loc = "";
-  for (const ch of sitemapLoc) {
-    if (ch !== "\n" && ch !== "\r") {
-      loc += ch;
-    }
-  }
-  return `User-agent: *\nAllow: /\n\nSitemap: ${loc}\n`;
-}
-
-function generateLlmsTxt(input: SiteMapsRenderInput, pages: readonly SiteMapPageInput[]): string {
-  let text = `# ${escapeLlmsText(input.siteName ?? "")}\n\n`;
-  const siteDescription = input.siteDescription?.trim();
-  if (siteDescription) {
-    text += `> ${escapeLlmsText(siteDescription)}\n\n`;
-  }
-  text += "## Pages\n\n";
-  for (const page of pages) {
-    text += `- [${escapeLlmsText(page.title)}](${escapeLlmsUrl(page.loc)})`;
-    const description = page.description?.trim();
-    if (description) {
-      text += `: ${escapeLlmsText(description)}`;
-    }
-    text += "\n";
-  }
-  return text;
-}
-
-function escapeXml(value: string): string {
-  return value.replace(/[&<>"']/g, (ch) => {
-    switch (ch) {
-      case "&":
-        return "&amp;";
-      case "<":
-        return "&lt;";
-      case ">":
-        return "&gt;";
-      case '"':
-        return "&quot;";
-      default:
-        return "&#39;";
-    }
-  });
-}
-
-function flattenText(value: string): string {
-  return value.split(/\s+/u).filter(Boolean).join(" ");
-}
-
-function escapeLlmsText(value: string): string {
-  return flattenText(value).replace(/[\\[\]()<>&"]/g, (ch) => {
-    switch (ch) {
-      case "\\":
-        return "\\\\";
-      case "[":
-        return "\\[";
-      case "]":
-        return "\\]";
-      case "(":
-        return "\\(";
-      case ")":
-        return "\\)";
-      case "<":
-        return "&lt;";
-      case ">":
-        return "&gt;";
-      case "&":
-        return "&amp;";
-      default:
-        return "&quot;";
-    }
-  });
-}
-
-function escapeLlmsUrl(value: string): string {
-  let escaped = "";
-  for (const ch of value) {
-    if (ch === " ") {
-      escaped += "%20";
-    } else if (ch === "(") {
-      escaped += "%28";
-    } else if (ch === ")") {
-      escaped += "%29";
-    } else if (ch !== "\n" && ch !== "\r" && ch !== "\t") {
-      escaped += ch;
-    }
-  }
-  return escaped;
 }
