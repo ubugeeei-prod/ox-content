@@ -43,12 +43,12 @@ tree-sitter 系列と合うメンテされた専用文法がまだありませ�
 | ---------- | ------------------------------------------------------------------------- |
 | TypeScript | `typescript`, `ts`, `cts`, `mts`                                          |
 | TSX        | `tsx`, `typescriptreact`                                                  |
-| JavaScript | `javascript`, `js`, `cjs`, `mjs`, `jsx`, `javascriptreact`, `flow`, `mdx` |
+| JavaScript | `javascript`, `js`, `cjs`, `mjs`, `jsx`, `javascriptreact`, `flow`         |
 | Rust       | `rust`, `rs`                                                              |
 | JSON       | `json`, `jsonc`, `json5`, `webmanifest`                                   |
 | CSS        | `css`                                                                     |
 | Less       | `less`                                                                    |
-| HTML       | `html`, `vue`, `svelte`, `astro`, `angular`                               |
+| HTML       | `html`, `vue`, `svelte`, `astro`, `angular`, `mdx`                        |
 | XML        | `xml`, `svg`, `xsl`, `xslt`, `rss`, `atom`, `plist`, `xsd`                |
 | Python     | `python`, `py`                                                            |
 | Go         | `go`, `golang`                                                            |

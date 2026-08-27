@@ -57,7 +57,7 @@ pub(super) fn grammars() -> &'static [Grammar] {
         ),
         grammar!(
             "javascript",
-            ["javascript", "js", "cjs", "mjs", "jsx", "javascriptreact", "flow", "mdx"],
+            ["javascript", "js", "cjs", "mjs", "jsx", "javascriptreact", "flow"],
             tree_sitter_javascript::LANGUAGE,
             javascript_highlights(),
             tree_sitter_javascript::INJECTIONS_QUERY,
@@ -87,9 +87,19 @@ pub(super) fn grammars() -> &'static [Grammar] {
             "",
             "",
         ),
+        // `mdx` is here rather than with JavaScript because MDX is not
+        // JavaScript. A document may hold adjacent top-level elements —
+        // `<A />` on one line, `<B />` on the next — which MDX reads as two
+        // blocks and JavaScript reads as one expression: `(<A />) < B / …`,
+        // because automatic semicolon insertion will not break before `<`.
+        // The JavaScript grammar therefore mis-tokenised every second element
+        // as comparison and division operators. No native MDX grammar is
+        // published, and HTML tokenises component tags consistently, so MDX's
+        // `import` / `export` and `{expression}` parts stay plain rather than
+        // being coloured wrongly.
         grammar!(
             "html",
-            ["html", "vue", "svelte", "astro", "angular"],
+            ["html", "vue", "svelte", "astro", "angular", "mdx"],
             tree_sitter_html::LANGUAGE,
             tree_sitter_html::HIGHLIGHTS_QUERY,
             tree_sitter_html::INJECTIONS_QUERY,

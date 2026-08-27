@@ -22,6 +22,10 @@ mod render;
 mod theme;
 
 #[cfg(test)]
+mod element_tests;
+#[cfg(test)]
+mod test_support;
+#[cfg(test)]
 mod tests;
 
 pub use languages::supported_languages;
