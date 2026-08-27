@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vite-plus/test";
+import { applyAtomMeta, applyJsonMeta, applyRssMeta, channelMeta } from "./feed-channel-meta";
 import { generateAtom, generateJson, generateRss } from "./feed-format";
 import { parseDate } from "./feed-date";
 import { importNapiModuleSync } from "./napi";
@@ -114,5 +115,98 @@ describe("feed generation parity", () => {
     expect(atomXml).toContain("<uri>https://example.com/kim</uri>");
     expect(jsonFeed).toContain('"image": "https://example.com/img.png"');
     expect(jsonFeed).toContain('"duration_in_seconds": 60');
+  });
+});
+
+const CHANNEL = {
+  language: "en",
+  image: "https://example.com/logo.png",
+  favicon: "https://example.com/icon.png",
+  copyright: "© 2026 Docs & Co",
+};
+
+function nativeWithChannel(items: unknown[]) {
+  const napi = importNapiModuleSync() as unknown as {
+    generateFeedBodies(
+      options: Record<string, unknown>,
+      items: unknown[],
+    ): { rssXml?: string; atomXml?: string; jsonFeed?: string };
+  };
+  return napi.generateFeedBodies(
+    {
+      enabled: true,
+      siteUrl: "https://example.com",
+      siteName: DOC.siteName,
+      siteDescription: DOC.siteDescription,
+      homePageUrl: DOC.home,
+      rssUrl: "https://example.com/feed.xml",
+      atomUrl: DOC.atomUrl,
+      jsonUrl: DOC.jsonUrl,
+      formats: ["rss", "atom", "json"],
+      limit: 20,
+      ...CHANNEL,
+    },
+    items,
+  );
+}
+
+const PLAIN = [
+  { title: "A", loc: "https://example.com/a", description: "d", date: "2024-01-02T03:04:05Z" },
+];
+const LOCALISED = [
+  {
+    title: "B",
+    loc: "https://example.com/b",
+    description: "d",
+    language: "ja",
+    date: "2024-01-02T03:04:05Z",
+  },
+];
+
+function tsWithChannel(items: typeof PLAIN) {
+  const entries = items.map((item) => ({
+    ...item,
+    date: item.date ? parseDate(item.date) : undefined,
+  })) as FeedEntry[];
+  const meta = channelMeta(DOC, CHANNEL);
+  return {
+    rss: applyRssMeta(generateRss(DOC, entries), meta),
+    atom: applyAtomMeta(generateAtom(DOC, entries), meta),
+    json: applyJsonMeta(generateJson(DOC, entries), meta),
+  };
+}
+
+describe("feed channel metadata parity", () => {
+  it("matches the TypeScript layer on every format", () => {
+    const rust = nativeWithChannel(PLAIN);
+    const ts = tsWithChannel(PLAIN);
+    expect(rust.rssXml).toBe(ts.rss);
+    expect(rust.atomXml).toBe(ts.atom);
+    expect(rust.jsonFeed).toBe(ts.json);
+  });
+
+  it("still matches on RSS and JSON when an item carries its own language", () => {
+    const rust = nativeWithChannel(LOCALISED);
+    const ts = tsWithChannel(LOCALISED as typeof PLAIN);
+    expect(rust.rssXml).toBe(ts.rss);
+    expect(rust.jsonFeed).toBe(ts.json);
+  });
+
+  // A recorded difference. The TypeScript layer patches the generated string
+  // and anchors on the literal `  <entry>`, which a localised entry does not
+  // match — so its icon, logo, and rights land *after* every entry, but only
+  // when some item happens to carry an `xml:lang`. Generating the metadata in
+  // place puts it ahead of the entries either way.
+  it("keeps Atom channel metadata ahead of the entries regardless of item language", () => {
+    for (const items of [PLAIN, LOCALISED]) {
+      const atom = nativeWithChannel(items).atomXml ?? "";
+      expect(atom.indexOf("<icon>")).toBeGreaterThan(-1);
+      expect(atom.indexOf("<icon>")).toBeLessThan(atom.indexOf("<entry"));
+      expect(atom.indexOf("<rights>")).toBeLessThan(atom.indexOf("<entry"));
+    }
+
+    // The behaviour this replaces, so the change is visible if anyone reverts it.
+    const legacy = tsWithChannel(LOCALISED as typeof PLAIN).atom;
+    expect(legacy.indexOf("<icon>")).toBeGreaterThan(legacy.indexOf("<entry"));
   });
 });
