@@ -1,0 +1,29 @@
+/* ox-content media iframes - Spotify, Apple Music, Speaker Deck, StackBlitz,
+   and the native audio/video players. */
+
+.ox-spotify,
+.ox-apple-music,
+.ox-speaker-deck,
+.ox-stackblitz,
+.ox-audio,
+.ox-video {
+  display: block;
+  width: 100%;
+  margin: 1.5rem 0;
+  border: 0;
+  border-radius: 12px;
+}
+
+.ox-stackblitz {
+  border: 1px solid color-mix(in srgb, var(--octc-color-border) 74%, transparent);
+  border-radius: 8px;
+}
+
+/* Slide decks are 4:3. The iframe is emitted with a fixed `height`, which
+   letterboxes the deck on any column narrower than the width that height
+   assumes — most of them, on a phone. The class is on the figure as well as the
+   iframe, so this has to name the iframe. */
+iframe.ox-speaker-deck {
+  height: auto;
+  aspect-ratio: 4 / 3;
+}
