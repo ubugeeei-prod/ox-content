@@ -20,6 +20,7 @@ for (const file of [
   "benchmarks/bundle-size/parse-benchmark.mjs",
   "benchmarks/bundle-size/parse-benchmark-bun.mjs",
   "benchmarks/bundle-size/measure.mjs",
+  "benchmarks/bundle-size/measure-artifacts.mjs",
   "benchmarks/native-competitors/Cargo.toml",
   "benchmarks/native-competitors/Cargo.lock",
   "benchmarks/native-competitors/src/main.rs",
@@ -54,6 +55,13 @@ if (options.skipBundle) {
   ]);
 }
 
+// Artifact sizes come after `build:npm`, so the native binding and the
+// published JavaScript both exist to measure. Optional: a caller that does not
+// ask for it simply gets no artifact section in the report.
+if (options.artifactsJson) {
+  run("node", ["benchmarks/bundle-size/measure-artifacts.mjs", "--json", options.artifactsJson]);
+}
+
 /**
  * @param {string[]} args
  * @returns {{
@@ -70,6 +78,7 @@ function parseOptions(args) {
     source: null,
     runtimeJson: null,
     bundleJson: null,
+    artifactsJson: null,
     runs: process.env.OX_CONTENT_BENCHMARK_RUNS || "5",
     skipRuntime: false,
     skipBundle: false,
@@ -87,6 +96,10 @@ function parseOptions(args) {
     }
     if (arg === "--bundle-json") {
       parsed.bundleJson = readOptionValue(args, ++index, "--bundle-json");
+      continue;
+    }
+    if (arg === "--artifacts-json") {
+      parsed.artifactsJson = readOptionValue(args, ++index, "--artifacts-json");
       continue;
     }
     if (arg === "--runs") {

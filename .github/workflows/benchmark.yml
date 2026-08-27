@@ -109,7 +109,8 @@ jobs:
             --source "$GITHUB_WORKSPACE" \
             --runs "$OX_CONTENT_BENCHMARK_RUNS" \
             --runtime-json "$RUNNER_TEMP/benchmark-base.json" \
-            --bundle-json "$RUNNER_TEMP/bundle-base.json"
+            --bundle-json "$RUNNER_TEMP/bundle-base.json" \
+            --artifacts-json "$RUNNER_TEMP/artifacts-base.json"
 
       - name: Benchmark head
         working-directory: .benchmark/head
@@ -129,7 +130,8 @@ jobs:
             --source "$GITHUB_WORKSPACE" \
             --runs "$OX_CONTENT_BENCHMARK_RUNS" \
             --runtime-json "$RUNNER_TEMP/benchmark-head.json" \
-            --bundle-json "$RUNNER_TEMP/bundle-head.json"
+            --bundle-json "$RUNNER_TEMP/bundle-head.json" \
+            --artifacts-json "$RUNNER_TEMP/artifacts-head.json"
 
       - name: Compare benchmarks
         env:

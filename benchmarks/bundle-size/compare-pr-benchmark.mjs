@@ -53,6 +53,8 @@ function parseOptions(args) {
     headPath: null,
     baseBundlePath: null,
     headBundlePath: null,
+    baseArtifactsPath: null,
+    headArtifactsPath: null,
     outputPath: null,
     baseSha: null,
     headSha: null,
@@ -74,6 +76,14 @@ function parseOptions(args) {
     }
     if (arg === "--head-bundle") {
       parsed.headBundlePath = readOptionValue(args, ++index, "--head-bundle");
+      continue;
+    }
+    if (arg === "--base-artifacts") {
+      parsed.baseArtifactsPath = readOptionValue(args, ++index, "--base-artifacts");
+      continue;
+    }
+    if (arg === "--head-artifacts") {
+      parsed.headArtifactsPath = readOptionValue(args, ++index, "--head-artifacts");
       continue;
     }
     if (arg === "--output") {
@@ -102,6 +112,9 @@ function parseOptions(args) {
   if (Boolean(parsed.baseBundlePath) !== Boolean(parsed.headBundlePath)) {
     throw new Error("--base-bundle and --head-bundle must be used together");
   }
+  if (Boolean(parsed.baseArtifactsPath) !== Boolean(parsed.headArtifactsPath)) {
+    throw new Error("--base-artifacts and --head-artifacts must be used together");
+  }
 
   return parsed;
 }
@@ -123,19 +136,34 @@ Options:
   --head <path>      Head benchmark JSON
   --base-bundle <path> Base bundle size JSON
   --head-bundle <path> Head bundle size JSON
+  --base-artifacts <path>  Base native artifact size JSON
+  --head-artifacts <path>  Head native artifact size JSON
   --output <path>    Write the Markdown comment to a file
   --base-sha <sha>   Base commit SHA for the heading
   --head-sha <sha>   Head commit SHA for the heading
   -h, --help         Show this help message`);
 }
 
-function buildComment({ basePath, headPath, baseBundlePath, headBundlePath, baseSha, headSha }) {
+function buildComment({
+  basePath,
+  headPath,
+  baseBundlePath,
+  headBundlePath,
+  baseArtifactsPath,
+  headArtifactsPath,
+  baseSha,
+  headSha,
+}) {
   const base = readJson(basePath);
   const head = readJson(headPath);
   const runtimeRows = compareRuntimeReports(base, head);
   const bundleRows =
     baseBundlePath && headBundlePath
       ? compareBundleReports(readJson(baseBundlePath), readJson(headBundlePath))
+      : [];
+  const artifactRows =
+    baseArtifactsPath && headArtifactsPath
+      ? compareArtifactReports(readJson(baseArtifactsPath), readJson(headArtifactsPath))
       : [];
   const competitiveRows = collectCompetitiveRows(head);
   const environmentRows = collectEnvironmentRows(base, head);
@@ -237,6 +265,29 @@ function buildComment({ basePath, headPath, baseBundlePath, headBundlePath, base
     );
   }
 
+  if (baseArtifactsPath && headArtifactsPath) {
+    lines.push(
+      "### Native Artifacts",
+      "",
+      "| Artifact | Base raw | Head raw | Raw delta | Base gzip | Head gzip | Gzip delta |",
+      "| --- | ---: | ---: | ---: | ---: | ---: | ---: |",
+    );
+    if (artifactRows.length === 0) {
+      lines.push("| n/a | n/a | n/a | n/a | n/a | n/a | n/a |");
+    } else {
+      for (const row of artifactRows) {
+        lines.push(
+          `| ${row.name} | ${formatArtifactBytes(row.baseRaw, row.basePresent)} | ${formatArtifactBytes(row.headRaw, row.headPresent)} | ${formatDelta(row.rawDeltaPercent)} | ${formatArtifactBytes(row.baseGzipped, row.basePresent)} | ${formatArtifactBytes(row.headGzipped, row.headPresent)} | ${formatDelta(row.gzipDeltaPercent)} |`,
+        );
+      }
+    }
+    lines.push(
+      "",
+      "Moving a rule into Rust grows the native binding and shrinks the JavaScript beside it. Both rows are shown so a migration reports its cost, not only its win. An artifact that was not built reads `not built` rather than zero, so an unbuilt target cannot be mistaken for one that vanished. These rows are informational and gate nothing.",
+      "",
+    );
+  }
+
   lines.push(
     "### Regression Gate",
     "",
@@ -267,6 +318,42 @@ function buildComment({ basePath, headPath, baseBundlePath, headBundlePath, base
   }
 
   return lines.join("\n");
+}
+
+/**
+ * Pairs base and head artifact measurements by name.
+ *
+ * A target missing on one side yields no percentage: there is no honest delta
+ * between a built artifact and one that was never built.
+ */
+function compareArtifactReports(base, head) {
+  const baseByName = new Map((base?.targets ?? []).map((target) => [target.name, target]));
+  const rows = [];
+  for (const headTarget of head?.targets ?? []) {
+    const baseTarget = baseByName.get(headTarget.name);
+    const comparable = Boolean(baseTarget?.present) && Boolean(headTarget.present);
+    rows.push({
+      name: headTarget.name,
+      basePresent: Boolean(baseTarget?.present),
+      headPresent: Boolean(headTarget.present),
+      baseRaw: baseTarget?.raw ?? 0,
+      headRaw: headTarget.raw,
+      baseGzipped: baseTarget?.gzipped ?? 0,
+      headGzipped: headTarget.gzipped,
+      rawDeltaPercent: comparable ? percentDelta(baseTarget.raw, headTarget.raw) : null,
+      gzipDeltaPercent: comparable ? percentDelta(baseTarget.gzipped, headTarget.gzipped) : null,
+    });
+  }
+  return rows;
+}
+
+function percentDelta(base, head) {
+  if (!base) return null;
+  return ((head - base) / base) * 100;
+}
+
+function formatArtifactBytes(value, present) {
+  return present ? formatBytes(value) : "not built";
 }
 
 function readJson(path) {

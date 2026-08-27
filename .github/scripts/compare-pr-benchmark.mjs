@@ -1,11 +1,20 @@
 #!/usr/bin/env node
 
 import { spawnSync } from "node:child_process";
-import { appendFileSync, readFileSync } from "node:fs";
+import { appendFileSync, existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 
 const runnerTemp = requiredEnv("RUNNER_TEMP");
 const commentPath = join(runnerTemp, "benchmark-comment.md");
+
+// The artifact rows are optional: a run that skipped the native build has
+// nothing to compare, and a half-present pair would be worse than no section.
+const baseArtifacts = join(runnerTemp, "artifacts-base.json");
+const headArtifacts = join(runnerTemp, "artifacts-head.json");
+const artifactArgs =
+  existsSync(baseArtifacts) && existsSync(headArtifacts)
+    ? ["--base-artifacts", baseArtifacts, "--head-artifacts", headArtifacts]
+    : [];
 
 const status = run("node", [
   "benchmarks/bundle-size/compare-pr-benchmark.mjs",
@@ -17,6 +26,7 @@ const status = run("node", [
   join(runnerTemp, "bundle-base.json"),
   "--head-bundle",
   join(runnerTemp, "bundle-head.json"),
+  ...artifactArgs,
   "--output",
   commentPath,
   "--base-sha",
