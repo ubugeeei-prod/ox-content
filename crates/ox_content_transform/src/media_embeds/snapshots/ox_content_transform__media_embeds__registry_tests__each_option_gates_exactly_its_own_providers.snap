@@ -1,0 +1,25 @@
+---
+source: crates/ox_content_transform/src/media_embeds/registry_tests.rs
+expression: report
+---
+spotify -> spotify
+appleMusic -> applemusic
+speakerDeck -> speakerdeck
+audio -> Audio
+video -> Video
+stackBlitz -> stackblitz
+twitter -> tweet, xpost
+bluesky -> bluesky
+googleMaps -> googlemaps
+qiita -> qiita
+zenn -> zenn
+packageRegistry -> npmpackage, cratesio, pypi, dockerhub
+playgrounds -> codepen, jsfiddle, observable
+vimeo -> vimeo
+twitch -> twitch
+discord -> discord
+fediverse -> fediverse, mastodon, misskey, mixi2
+facebook -> facebook
+threads -> threads
+instagram -> instagram
+webContainer -> webcontainer
