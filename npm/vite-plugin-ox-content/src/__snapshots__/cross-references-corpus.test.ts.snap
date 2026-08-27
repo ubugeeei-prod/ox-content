@@ -1,0 +1,665 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`cross-reference corpus > renders: address is not an anchor 1`] = `
+{
+  "html": "<h1 id="sec-a" data-ox-xref-kind="section" data-ox-xref-number="1" data-ox-xref-label="Section 1">A</h1><address><a class="ox-xref ox-xref-section" href="#sec-a" data-ox-xref-id="sec-a" data-ox-xref-kind="section">Section 1</a></address>",
+  "references": [
+    {
+      "href": "#sec-a",
+      "id": "sec-a",
+      "kind": "section",
+      "label": "Section",
+      "number": "1",
+      "text": "Section 1",
+      "title": "A",
+    },
+  ],
+}
+`;
+
+exports[`cross-reference corpus > renders: adjacent references consume the prefix 1`] = `
+{
+  "html": "<h1 id="sec-a" data-ox-xref-kind="section" data-ox-xref-number="1" data-ox-xref-label="Section 1">A</h1><h2 id="sec-b" data-ox-xref-kind="section" data-ox-xref-number="1.1" data-ox-xref-label="Section 1.1">B</h2><p><a class="ox-xref ox-xref-section" href="#sec-a" data-ox-xref-id="sec-a" data-ox-xref-kind="section">Section 1</a>@sec-b</p>",
+  "references": [
+    {
+      "href": "#sec-a",
+      "id": "sec-a",
+      "kind": "section",
+      "label": "Section",
+      "number": "1",
+      "text": "Section 1",
+      "title": "A",
+    },
+    {
+      "href": "#sec-b",
+      "id": "sec-b",
+      "kind": "section",
+      "label": "Section",
+      "number": "1.1",
+      "text": "Section 1.1",
+      "title": "B",
+    },
+  ],
+}
+`;
+
+exports[`cross-reference corpus > renders: already annotated image is skipped 1`] = `
+{
+  "html": "<img id="fig-a" data-ox-xref-kind="figure" src="a.png"><img id="fig-b" src="b.png" data-ox-xref-kind="figure" data-ox-xref-number="1" data-ox-xref-label="Figure 1">",
+  "references": [
+    {
+      "href": "#fig-b",
+      "id": "fig-b",
+      "kind": "figure",
+      "label": "Figure",
+      "number": "1",
+      "text": "Figure 1",
+    },
+  ],
+}
+`;
+
+exports[`cross-reference corpus > renders: bracket that is not a citation 1`] = `
+{
+  "html": "<h1 id="sec-a" data-ox-xref-kind="section" data-ox-xref-number="1" data-ox-xref-label="Section 1">A</h1><p>[note] <a class="ox-xref ox-xref-section" href="#sec-a" data-ox-xref-id="sec-a" data-ox-xref-kind="section">Section 1</a></p>",
+  "references": [
+    {
+      "href": "#sec-a",
+      "id": "sec-a",
+      "kind": "section",
+      "label": "Section",
+      "number": "1",
+      "text": "Section 1",
+      "title": "A",
+    },
+  ],
+}
+`;
+
+exports[`cross-reference corpus > renders: citation group is left alone 1`] = `
+{
+  "html": "<h1 id="sec-a" data-ox-xref-kind="section" data-ox-xref-number="1" data-ox-xref-label="Section 1">A</h1><p>[@smith2020] and <a class="ox-xref ox-xref-section" href="#sec-a" data-ox-xref-id="sec-a" data-ox-xref-kind="section">Section 1</a> and [-@jones]</p>",
+  "references": [
+    {
+      "href": "#sec-a",
+      "id": "sec-a",
+      "kind": "section",
+      "label": "Section",
+      "number": "1",
+      "text": "Section 1",
+      "title": "A",
+    },
+  ],
+}
+`;
+
+exports[`cross-reference corpus > renders: duplicate ids 1`] = `
+{
+  "html": "<h1 id="sec-a" data-ox-xref-kind="section" data-ox-xref-number="1" data-ox-xref-label="Section 1">A</h1><h2 id="sec-a" data-ox-xref-kind="section" data-ox-xref-number="1.1" data-ox-xref-label="Section 1.1">B</h2>",
+  "references": [
+    {
+      "href": "#sec-a",
+      "id": "sec-a",
+      "kind": "section",
+      "label": "Section",
+      "number": "1",
+      "text": "Section 1",
+      "title": "A",
+    },
+  ],
+}
+`;
+
+exports[`cross-reference corpus > renders: empty document 1`] = `
+{
+  "html": "",
+  "references": [],
+}
+`;
+
+exports[`cross-reference corpus > renders: entities in a heading 1`] = `
+{
+  "html": "<h1 id="sec-a" data-ox-xref-kind="section" data-ox-xref-number="1" data-ox-xref-label="Section 1">A &amp; B &lt;C&gt;</h1><p><a class="ox-xref ox-xref-section" href="#sec-a" data-ox-xref-id="sec-a" data-ox-xref-kind="section">Section 1</a></p>",
+  "references": [
+    {
+      "href": "#sec-a",
+      "id": "sec-a",
+      "kind": "section",
+      "label": "Section",
+      "number": "1",
+      "text": "Section 1",
+      "title": "A & B <C>",
+    },
+  ],
+}
+`;
+
+exports[`cross-reference corpus > renders: figure and image share one sequence 1`] = `
+{
+  "html": "<figure id="fig-a" data-ox-xref-kind="figure" data-ox-xref-number="1" data-ox-xref-label="Figure 1"><img src="a.png"></figure><img id="fig-b" src="b.png" data-ox-xref-kind="figure" data-ox-xref-number="2" data-ox-xref-label="Figure 2"><figure><img id="fig-c" src="c.png" data-ox-xref-kind="figure" data-ox-xref-number="3" data-ox-xref-label="Figure 3"></figure>",
+  "references": [
+    {
+      "href": "#fig-a",
+      "id": "fig-a",
+      "kind": "figure",
+      "label": "Figure",
+      "number": "1",
+      "text": "Figure 1",
+    },
+    {
+      "href": "#fig-b",
+      "id": "fig-b",
+      "kind": "figure",
+      "label": "Figure",
+      "number": "2",
+      "text": "Figure 2",
+    },
+    {
+      "href": "#fig-c",
+      "id": "fig-c",
+      "kind": "figure",
+      "label": "Figure",
+      "number": "3",
+      "text": "Figure 3",
+    },
+  ],
+}
+`;
+
+exports[`cross-reference corpus > renders: figure borrowing the image id 1`] = `
+{
+  "html": "<figure><img id="fig-two" src="b.png" alt="Second" data-ox-xref-kind="figure" data-ox-xref-number="1" data-ox-xref-label="Figure 1"></figure>",
+  "references": [
+    {
+      "href": "#fig-two",
+      "id": "fig-two",
+      "kind": "figure",
+      "label": "Figure",
+      "number": "1",
+      "text": "Figure 1",
+      "title": "Second",
+    },
+  ],
+}
+`;
+
+exports[`cross-reference corpus > renders: figure with its own id 1`] = `
+{
+  "html": "<figure id="fig-one" data-ox-xref-kind="figure" data-ox-xref-number="1" data-ox-xref-label="Figure 1"><img src="a.png" alt="Alt"><figcaption>Cap</figcaption></figure>",
+  "references": [
+    {
+      "href": "#fig-one",
+      "id": "fig-one",
+      "kind": "figure",
+      "label": "Figure",
+      "number": "1",
+      "text": "Figure 1",
+      "title": "Cap",
+    },
+  ],
+}
+`;
+
+exports[`cross-reference corpus > renders: header anchor stripped from the title 1`] = `
+{
+  "html": "<h1 id="sec-a" data-ox-xref-kind="section" data-ox-xref-number="1" data-ox-xref-label="Section 1">Alpha<a class="header-anchor" href="#sec-a">#</a></h1>",
+  "references": [
+    {
+      "href": "#sec-a",
+      "id": "sec-a",
+      "kind": "section",
+      "label": "Section",
+      "number": "1",
+      "text": "Section 1",
+      "title": "Alpha",
+    },
+  ],
+}
+`;
+
+exports[`cross-reference corpus > renders: heading depth resets 1`] = `
+{
+  "html": "<h2 id="sec-a" data-ox-xref-kind="section" data-ox-xref-number="1" data-ox-xref-label="Section 1">A</h2><h1 id="sec-b" data-ox-xref-kind="section" data-ox-xref-number="1" data-ox-xref-label="Section 1">B</h1><h2 id="sec-c" data-ox-xref-kind="section" data-ox-xref-number="1.1" data-ox-xref-label="Section 1.1">C</h2>",
+  "references": [
+    {
+      "href": "#sec-a",
+      "id": "sec-a",
+      "kind": "section",
+      "label": "Section",
+      "number": "1",
+      "text": "Section 1",
+      "title": "A",
+    },
+    {
+      "href": "#sec-b",
+      "id": "sec-b",
+      "kind": "section",
+      "label": "Section",
+      "number": "1",
+      "text": "Section 1",
+      "title": "B",
+    },
+    {
+      "href": "#sec-c",
+      "id": "sec-c",
+      "kind": "section",
+      "label": "Section",
+      "number": "1.1",
+      "text": "Section 1.1",
+      "title": "C",
+    },
+  ],
+}
+`;
+
+exports[`cross-reference corpus > renders: html comment 1`] = `
+{
+  "html": "<h1 id="sec-a" data-ox-xref-kind="section" data-ox-xref-number="1" data-ox-xref-label="Section 1">A</h1><!-- @sec-a --><p><a class="ox-xref ox-xref-section" href="#sec-a" data-ox-xref-id="sec-a" data-ox-xref-kind="section">Section 1</a></p>",
+  "references": [
+    {
+      "href": "#sec-a",
+      "id": "sec-a",
+      "kind": "section",
+      "label": "Section",
+      "number": "1",
+      "text": "Section 1",
+      "title": "A",
+    },
+  ],
+}
+`;
+
+exports[`cross-reference corpus > renders: id needing url escaping 1`] = `
+{
+  "html": "<h1 id="sec-a b" data-ox-xref-kind="section" data-ox-xref-number="1" data-ox-xref-label="Section 1">A</h1><p>@sec-a</p>",
+  "references": [
+    {
+      "href": "#sec-a%20b",
+      "id": "sec-a b",
+      "kind": "section",
+      "label": "Section",
+      "number": "1",
+      "text": "Section 1",
+      "title": "A",
+    },
+  ],
+}
+`;
+
+exports[`cross-reference corpus > renders: identifier ending in a dash 1`] = `
+{
+  "html": "<h1 id="sec-a" data-ox-xref-kind="section" data-ox-xref-number="1" data-ox-xref-label="Section 1">A</h1><p>@sec- and <a class="ox-xref ox-xref-section" href="#sec-a" data-ox-xref-id="sec-a" data-ox-xref-kind="section">Section 1</a></p>",
+  "references": [
+    {
+      "href": "#sec-a",
+      "id": "sec-a",
+      "kind": "section",
+      "label": "Section",
+      "number": "1",
+      "text": "Section 1",
+      "title": "A",
+    },
+  ],
+}
+`;
+
+exports[`cross-reference corpus > renders: kind mismatch 1`] = `
+{
+  "html": "<h1 id="fig-a" data-ox-xref-kind="section" data-ox-xref-number="1" data-ox-xref-label="Section 1">A</h1><p>@fig-a</p>",
+  "references": [
+    {
+      "href": "#fig-a",
+      "id": "fig-a",
+      "kind": "section",
+      "label": "Section",
+      "number": "1",
+      "text": "Section 1",
+      "title": "A",
+    },
+  ],
+}
+`;
+
+exports[`cross-reference corpus > renders: missing target 1`] = `
+{
+  "html": "<p>@fig-nope</p>",
+  "references": [],
+}
+`;
+
+exports[`cross-reference corpus > renders: mixed sections and figures 1`] = `
+{
+  "html": "<h1 id="sec-a" data-ox-xref-kind="section" data-ox-xref-number="1" data-ox-xref-label="Section 1">A</h1><img id="fig-a" src="a.png" data-ox-xref-kind="figure" data-ox-xref-number="1" data-ox-xref-label="Figure 1"><h2 id="sec-b" data-ox-xref-kind="section" data-ox-xref-number="1.1" data-ox-xref-label="Section 1.1">B</h2>",
+  "references": [
+    {
+      "href": "#sec-a",
+      "id": "sec-a",
+      "kind": "section",
+      "label": "Section",
+      "number": "1",
+      "text": "Section 1",
+      "title": "A",
+    },
+    {
+      "href": "#sec-b",
+      "id": "sec-b",
+      "kind": "section",
+      "label": "Section",
+      "number": "1.1",
+      "text": "Section 1.1",
+      "title": "B",
+    },
+    {
+      "href": "#fig-a",
+      "id": "fig-a",
+      "kind": "figure",
+      "label": "Figure",
+      "number": "1",
+      "text": "Figure 1",
+    },
+  ],
+}
+`;
+
+exports[`cross-reference corpus > renders: nested section numbering 1`] = `
+{
+  "html": "<h1 id="sec-a" data-ox-xref-kind="section" data-ox-xref-number="1" data-ox-xref-label="Section 1">Alpha</h1><h2 id="sec-b" data-ox-xref-kind="section" data-ox-xref-number="1.1" data-ox-xref-label="Section 1.1">Beta</h2><h3 id="sec-c" data-ox-xref-kind="section" data-ox-xref-number="1.1.1" data-ox-xref-label="Section 1.1.1">Gamma</h3><h2 id="sec-d" data-ox-xref-kind="section" data-ox-xref-number="1.2" data-ox-xref-label="Section 1.2">Delta</h2><h1 id="sec-e" data-ox-xref-kind="section" data-ox-xref-number="2" data-ox-xref-label="Section 2">Epsilon</h1>",
+  "references": [
+    {
+      "href": "#sec-a",
+      "id": "sec-a",
+      "kind": "section",
+      "label": "Section",
+      "number": "1",
+      "text": "Section 1",
+      "title": "Alpha",
+    },
+    {
+      "href": "#sec-b",
+      "id": "sec-b",
+      "kind": "section",
+      "label": "Section",
+      "number": "1.1",
+      "text": "Section 1.1",
+      "title": "Beta",
+    },
+    {
+      "href": "#sec-c",
+      "id": "sec-c",
+      "kind": "section",
+      "label": "Section",
+      "number": "1.1.1",
+      "text": "Section 1.1.1",
+      "title": "Gamma",
+    },
+    {
+      "href": "#sec-d",
+      "id": "sec-d",
+      "kind": "section",
+      "label": "Section",
+      "number": "1.2",
+      "text": "Section 1.2",
+      "title": "Delta",
+    },
+    {
+      "href": "#sec-e",
+      "id": "sec-e",
+      "kind": "section",
+      "label": "Section",
+      "number": "2",
+      "text": "Section 2",
+      "title": "Epsilon",
+    },
+  ],
+}
+`;
+
+exports[`cross-reference corpus > renders: no references at all 1`] = `
+{
+  "html": "<p>Plain text with no markers.</p>",
+  "references": [],
+}
+`;
+
+exports[`cross-reference corpus > renders: protected anchor 1`] = `
+{
+  "html": "<h1 id="sec-a" data-ox-xref-kind="section" data-ox-xref-number="1" data-ox-xref-label="Section 1">A</h1><p><a href="#x">@sec-a</a> <a class="ox-xref ox-xref-section" href="#sec-a" data-ox-xref-id="sec-a" data-ox-xref-kind="section">Section 1</a></p>",
+  "references": [
+    {
+      "href": "#sec-a",
+      "id": "sec-a",
+      "kind": "section",
+      "label": "Section",
+      "number": "1",
+      "text": "Section 1",
+      "title": "A",
+    },
+  ],
+}
+`;
+
+exports[`cross-reference corpus > renders: protected code span 1`] = `
+{
+  "html": "<h1 id="sec-a" data-ox-xref-kind="section" data-ox-xref-number="1" data-ox-xref-label="Section 1">A</h1><p><code>@sec-a</code> and <a class="ox-xref ox-xref-section" href="#sec-a" data-ox-xref-id="sec-a" data-ox-xref-kind="section">Section 1</a></p>",
+  "references": [
+    {
+      "href": "#sec-a",
+      "id": "sec-a",
+      "kind": "section",
+      "label": "Section",
+      "number": "1",
+      "text": "Section 1",
+      "title": "A",
+    },
+  ],
+}
+`;
+
+exports[`cross-reference corpus > renders: protected pre block 1`] = `
+{
+  "html": "<h1 id="sec-a" data-ox-xref-kind="section" data-ox-xref-number="1" data-ox-xref-label="Section 1">A</h1><pre>@sec-a</pre><p><a class="ox-xref ox-xref-section" href="#sec-a" data-ox-xref-id="sec-a" data-ox-xref-kind="section">Section 1</a></p>",
+  "references": [
+    {
+      "href": "#sec-a",
+      "id": "sec-a",
+      "kind": "section",
+      "label": "Section",
+      "number": "1",
+      "text": "Section 1",
+      "title": "A",
+    },
+  ],
+}
+`;
+
+exports[`cross-reference corpus > renders: quoted attribute wins over a bare one 1`] = `
+{
+  "html": "<h1 id id="sec-a" data-ox-xref-kind="section" data-ox-xref-number="1" data-ox-xref-label="Section 1">A</h1><p><a class="ox-xref ox-xref-section" href="#sec-a" data-ox-xref-id="sec-a" data-ox-xref-kind="section">Section 1</a></p>",
+  "references": [
+    {
+      "href": "#sec-a",
+      "id": "sec-a",
+      "kind": "section",
+      "label": "Section",
+      "number": "1",
+      "text": "Section 1",
+      "title": "A",
+    },
+  ],
+}
+`;
+
+exports[`cross-reference corpus > renders: reference after a bracket 1`] = `
+{
+  "html": "<h1 id="sec-a" data-ox-xref-kind="section" data-ox-xref-number="1" data-ox-xref-label="Section 1">A</h1><p>[@sec-a]</p>",
+  "references": [
+    {
+      "href": "#sec-a",
+      "id": "sec-a",
+      "kind": "section",
+      "label": "Section",
+      "number": "1",
+      "text": "Section 1",
+      "title": "A",
+    },
+  ],
+}
+`;
+
+exports[`cross-reference corpus > renders: reference after a slash 1`] = `
+{
+  "html": "<h1 id="sec-a" data-ox-xref-kind="section" data-ox-xref-number="1" data-ox-xref-label="Section 1">A</h1><p>path/@sec-a</p>",
+  "references": [
+    {
+      "href": "#sec-a",
+      "id": "sec-a",
+      "kind": "section",
+      "label": "Section",
+      "number": "1",
+      "text": "Section 1",
+      "title": "A",
+    },
+  ],
+}
+`;
+
+exports[`cross-reference corpus > renders: reference at segment start 1`] = `
+{
+  "html": "<h1 id="sec-a" data-ox-xref-kind="section" data-ox-xref-number="1" data-ox-xref-label="Section 1">A</h1><p><a class="ox-xref ox-xref-section" href="#sec-a" data-ox-xref-id="sec-a" data-ox-xref-kind="section">Section 1</a> leads.</p>",
+  "references": [
+    {
+      "href": "#sec-a",
+      "id": "sec-a",
+      "kind": "section",
+      "label": "Section",
+      "number": "1",
+      "text": "Section 1",
+      "title": "A",
+    },
+  ],
+}
+`;
+
+exports[`cross-reference corpus > renders: reference resolves 1`] = `
+{
+  "html": "<h1 id="sec-a" data-ox-xref-kind="section" data-ox-xref-number="1" data-ox-xref-label="Section 1">A</h1><p>See <a class="ox-xref ox-xref-section" href="#sec-a" data-ox-xref-id="sec-a" data-ox-xref-kind="section">Section 1</a> for details.</p>",
+  "references": [
+    {
+      "href": "#sec-a",
+      "id": "sec-a",
+      "kind": "section",
+      "label": "Section",
+      "number": "1",
+      "text": "Section 1",
+      "title": "A",
+    },
+  ],
+}
+`;
+
+exports[`cross-reference corpus > renders: single-quoted attribute 1`] = `
+{
+  "html": "<h1 id='sec-a' data-ox-xref-kind="section" data-ox-xref-number="1" data-ox-xref-label="Section 1">A</h1><p><a class="ox-xref ox-xref-section" href="#sec-a" data-ox-xref-id="sec-a" data-ox-xref-kind="section">Section 1</a></p>",
+  "references": [
+    {
+      "href": "#sec-a",
+      "id": "sec-a",
+      "kind": "section",
+      "label": "Section",
+      "number": "1",
+      "text": "Section 1",
+      "title": "A",
+    },
+  ],
+}
+`;
+
+exports[`cross-reference corpus > renders: standalone image 1`] = `
+{
+  "html": "<img id="fig-three" src="c.png" alt="Third" data-ox-xref-kind="figure" data-ox-xref-number="1" data-ox-xref-label="Figure 1">",
+  "references": [
+    {
+      "href": "#fig-three",
+      "id": "fig-three",
+      "kind": "figure",
+      "label": "Figure",
+      "number": "1",
+      "text": "Figure 1",
+      "title": "Third",
+    },
+  ],
+}
+`;
+
+exports[`cross-reference corpus > renders: table with id 1`] = `
+{
+  "html": "<table id="tbl-one" data-ox-xref-kind="table" data-ox-xref-number="1" data-ox-xref-label="Table 1"><tbody><tr><td>x</td></tr></tbody></table>",
+  "references": [
+    {
+      "href": "#tbl-one",
+      "id": "tbl-one",
+      "kind": "table",
+      "label": "Table",
+      "number": "1",
+      "text": "Table 1",
+    },
+  ],
+}
+`;
+
+exports[`cross-reference corpus > renders: trailing empty-cell label 1`] = `
+{
+  "html": "<table id="tbl-cell" data-ox-xref-kind="table" data-ox-xref-number="1" data-ox-xref-label="Table 1"><tbody><tr><td>x</td></tr></tbody></table>",
+  "references": [
+    {
+      "href": "#tbl-cell",
+      "id": "tbl-cell",
+      "kind": "table",
+      "label": "Table",
+      "number": "1",
+      "text": "Table 1",
+    },
+  ],
+}
+`;
+
+exports[`cross-reference corpus > renders: trailing paragraph label 1`] = `
+{
+  "html": "<table id="tbl-lifted" data-ox-xref-kind="table" data-ox-xref-number="1" data-ox-xref-label="Table 1"><tbody><tr><td>x</td></tr></tbody></table>",
+  "references": [
+    {
+      "href": "#tbl-lifted",
+      "id": "tbl-lifted",
+      "kind": "table",
+      "label": "Table",
+      "number": "1",
+      "text": "Table 1",
+    },
+  ],
+}
+`;
+
+exports[`cross-reference corpus > renders: untracked id is ignored 1`] = `
+{
+  "html": "<h1 id="intro">A</h1><p>@intro</p>",
+  "references": [],
+}
+`;
+
+exports[`cross-reference corpus > renders: whitespace collapsing in a title 1`] = `
+{
+  "html": "<h1 id="sec-a" data-ox-xref-kind="section" data-ox-xref-number="1" data-ox-xref-label="Section 1">  A   
+  B  </h1>",
+  "references": [
+    {
+      "href": "#sec-a",
+      "id": "sec-a",
+      "kind": "section",
+      "label": "Section",
+      "number": "1",
+      "text": "Section 1",
+      "title": "A B",
+    },
+  ],
+}
+`;

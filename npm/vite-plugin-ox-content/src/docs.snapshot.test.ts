@@ -42,7 +42,11 @@ describe("docs generation snapshots", () => {
     expect(result.html).toMatchSnapshot();
   });
 
-  it("snapshots rendered authoring examples from docs content", async () => {
+  // Renders the whole docs corpus, which takes ~700ms alone but several times
+  // that when the suite's workers are contended — it was already finishing at
+  // 5.0s against a 5.0s budget, so any added test file tipped it over. The work
+  // is not the problem; the default budget is too tight for it.
+  it("snapshots rendered authoring examples from docs content", { timeout: 30_000 }, async () => {
     const base = createDocsResolvedOptions({ highlight: false });
     const withStackBlitz = {
       ...base,

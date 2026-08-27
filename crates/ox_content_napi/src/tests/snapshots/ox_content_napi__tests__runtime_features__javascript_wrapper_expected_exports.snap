@@ -85,6 +85,7 @@ sanitizeHtml
 searchIndex
 transform
 transformAsync
+transformCrossReferences
 transformMediaEmbeds
 transformMediaEmbedsWithDiagnostics
 transformMdastRaw

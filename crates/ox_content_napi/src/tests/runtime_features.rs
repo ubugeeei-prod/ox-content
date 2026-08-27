@@ -103,6 +103,7 @@ fn javascript_wrapper_and_declarations_cover_expected_exports() {
         "searchIndex",
         "transform",
         "transformAsync",
+        "transformCrossReferences",
         "transformMediaEmbeds",
         "transformMediaEmbedsWithDiagnostics",
         "transformMdastRaw",

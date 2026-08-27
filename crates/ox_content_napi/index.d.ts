@@ -538,6 +538,49 @@ export interface JsContainerTypeOptions {
   tag?: string
 }
 
+/** One rule the document broke. */
+export interface JsCrossReferenceDiagnostic {
+  /** `"error"` or `"warn"`, as the options asked. */
+  policy: string
+  message: string
+}
+
+/** One numbered target the document defines. */
+export interface JsCrossReferenceEntry {
+  id: string
+  /** `"figure"`, `"table"`, or `"section"`. */
+  kind: string
+  number: string
+  label: string
+  text: string
+  href: string
+  title?: string
+}
+
+/** The word placed before each number, per kind. */
+export interface JsCrossReferenceLabels {
+  figure?: string
+  table?: string
+  section?: string
+}
+
+/** The annotated HTML, what it defined, and what it got wrong. */
+export interface JsCrossReferenceOutput {
+  html: string
+  references: Array<JsCrossReferenceEntry>
+  diagnostics: Array<JsCrossReferenceDiagnostic>
+}
+
+/** Switches and labels for the cross-reference pass. */
+export interface JsCrossReferencesOptions {
+  enabled: boolean
+  /** `"warn"` reports and carries on; anything else fails the build. */
+  missing?: string
+  duplicates?: string
+  mismatches?: string
+  labels?: JsCrossReferenceLabels
+}
+
 /** Opt-in static `csv-table` / `json-table` fences. */
 export interface JsDataTableOptions {
   /**
@@ -3145,6 +3188,9 @@ export declare function transform(source: string, options?: JsTransformOptions |
 
 /** Transforms Markdown source asynchronously (runs on worker thread). */
 export declare function transformAsync(source: string, options?: JsTransformOptions | undefined | null): Promise<unknown>
+
+/** Numbers headings, figures, and tables, and links `@id` references to them. */
+export declare function transformCrossReferences(html: string, options: JsCrossReferencesOptions): JsCrossReferenceOutput
 
 /**
  * Transforms Markdown into a raw mdast transfer buffer.
