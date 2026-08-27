@@ -40,47 +40,47 @@ the same grammar. Vue, Svelte, Astro, and Angular still use the HTML grammar
 — crates.io does not currently ship maintained dedicated grammars that match
 this tree-sitter line.
 
-| Language   | Fence tags                                                                |
-| ---------- | ------------------------------------------------------------------------- |
-| TypeScript | `typescript`, `ts`, `cts`, `mts`                                          |
-| TSX        | `tsx`, `typescriptreact`                                                  |
-| JavaScript | `javascript`, `js`, `cjs`, `mjs`, `jsx`, `javascriptreact`, `flow`         |
-| Rust       | `rust`, `rs`                                                              |
-| JSON       | `json`, `jsonc`, `json5`, `webmanifest`                                   |
-| CSS        | `css`                                                                     |
-| Less       | `less`                                                                    |
-| HTML       | `html`, `vue`, `svelte`, `astro`, `angular`, `mdx`                        |
-| XML        | `xml`, `svg`, `xsl`, `xslt`, `rss`, `atom`, `plist`, `xsd`                |
-| Python     | `python`, `py`                                                            |
-| Go         | `go`, `golang`                                                            |
-| Java       | `java`                                                                    |
-| C          | `c`, `h`                                                                  |
-| C++        | `cpp`, `c++`, `cc`, `hpp`, `cxx`                                          |
-| YAML       | `yaml`, `yml`                                                             |
-| Markdown   | `markdown`, `md`                                                          |
-| Bash       | `bash`, `sh`, `shell`, `zsh`, `shellscript`                               |
-| TOML       | `toml`                                                                    |
-| WGSL       | `wgsl`                                                                    |
-| SQL        | `sql`                                                                     |
-| GraphQL    | `graphql`, `gql`                                                          |
-| Dockerfile | `dockerfile`, `docker`, `containerfile`                                   |
-| Ruby       | `ruby`, `rb`                                                              |
-| PHP        | `php`                                                                     |
-| Nix        | `nix`                                                                     |
-| C#         | `csharp`, `cs`                                                            |
-| Swift      | `swift`                                                                   |
-| Kotlin     | `kotlin`, `kt`                                                            |
-| GLSL       | `glsl`                                                                    |
-| Lua        | `lua`                                                                     |
-| HCL        | `hcl`, `terraform`, `tf`, `tfvars`                                        |
-| Make       | `make`, `makefile`, `mk`                                                  |
-| Diff       | `diff`, `patch`, `udiff`                                                  |
-| PowerShell | `powershell`, `pwsh`, `ps1`, `psm1`                                       |
-| Zig        | `zig`, `zon`                                                              |
-| Haskell    | `haskell`, `hs`                                                           |
-| Elixir     | `elixir`, `ex`, `exs`                                                     |
-| Scala      | `scala`, `sc`, `sbt`                                                      |
-| R          | `r`, `rscript`                                                            |
+| Language   | Fence tags                                                         |
+| ---------- | ------------------------------------------------------------------ |
+| TypeScript | `typescript`, `ts`, `cts`, `mts`                                   |
+| TSX        | `tsx`, `typescriptreact`                                           |
+| JavaScript | `javascript`, `js`, `cjs`, `mjs`, `jsx`, `javascriptreact`, `flow` |
+| Rust       | `rust`, `rs`                                                       |
+| JSON       | `json`, `jsonc`, `json5`, `webmanifest`                            |
+| CSS        | `css`                                                              |
+| Less       | `less`                                                             |
+| HTML       | `html`, `vue`, `svelte`, `astro`, `angular`, `mdx`                 |
+| XML        | `xml`, `svg`, `xsl`, `xslt`, `rss`, `atom`, `plist`, `xsd`         |
+| Python     | `python`, `py`                                                     |
+| Go         | `go`, `golang`                                                     |
+| Java       | `java`                                                             |
+| C          | `c`, `h`                                                           |
+| C++        | `cpp`, `c++`, `cc`, `hpp`, `cxx`                                   |
+| YAML       | `yaml`, `yml`                                                      |
+| Markdown   | `markdown`, `md`                                                   |
+| Bash       | `bash`, `sh`, `shell`, `zsh`, `shellscript`                        |
+| TOML       | `toml`                                                             |
+| WGSL       | `wgsl`                                                             |
+| SQL        | `sql`                                                              |
+| GraphQL    | `graphql`, `gql`                                                   |
+| Dockerfile | `dockerfile`, `docker`, `containerfile`                            |
+| Ruby       | `ruby`, `rb`                                                       |
+| PHP        | `php`                                                              |
+| Nix        | `nix`                                                              |
+| C#         | `csharp`, `cs`                                                     |
+| Swift      | `swift`                                                            |
+| Kotlin     | `kotlin`, `kt`                                                     |
+| GLSL       | `glsl`                                                             |
+| Lua        | `lua`                                                              |
+| HCL        | `hcl`, `terraform`, `tf`, `tfvars`                                 |
+| Make       | `make`, `makefile`, `mk`                                           |
+| Diff       | `diff`, `patch`, `udiff`                                           |
+| PowerShell | `powershell`, `pwsh`, `ps1`, `psm1`                                |
+| Zig        | `zig`, `zon`                                                       |
+| Haskell    | `haskell`, `hs`                                                    |
+| Elixir     | `elixir`, `ex`, `exs`                                              |
+| Scala      | `scala`, `sc`, `sbt`                                               |
+| R          | `r`, `rscript`                                                     |
 
 Unknown tags stay ordinary `<pre><code>` — for example `perl`, `elm`,
 `assembly`, `asm`, `llvm`, `clojure`, and `brainfuck`. Do not alias those onto
