@@ -1213,6 +1213,18 @@ a:hover {
 .content pre.ox-code-block code {
   display: block;
 }
+/* Each `.line` is a block, so the newline the highlighter writes between two of
+   them renders as a second break inside a `pre` and every code line comes out
+   double-spaced. Collapsing whitespace on the `code` drops those newlines;
+   each line restores its own. The `:has` guard leaves a block whose code was
+   never split into lines — an unhighlighted one — reading its indentation from
+   the `pre` as before. */
+.content pre.ox-code-block code:has(> .line) {
+  white-space: normal;
+}
+.content pre.ox-code-block code:has(> .line) > .line {
+  white-space: pre;
+}
 .content pre.ox-code-block--wrap {
   overflow-x: hidden;
   white-space: pre-wrap;
@@ -1221,6 +1233,9 @@ a:hover {
 .content pre.ox-code-block--wrap .line {
   white-space: inherit;
   overflow-wrap: anywhere;
+}
+.content pre.ox-code-block--wrap code:has(> .line) > .line {
+  white-space: pre-wrap;
 }
 .content pre.ox-code-block--nowrap {
   overflow-x: auto;
