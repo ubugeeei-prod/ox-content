@@ -365,21 +365,21 @@ oxContent({
 
 ## プロバイダカード
 
-`embeds.googleMaps`、`embeds.qiita`、`embeds.zenn`、
-`embeds.packageRegistry`、`embeds.playgrounds`、`embeds.vimeo`、
-`embeds.twitch`、`embeds.discord`、`embeds.fediverse`、`embeds.facebook`、
-`embeds.threads`、`embeds.instagram` は静的なプロバイダカードを描画します。
-`qiita: true`、`zenn: true`、`packageRegistry: true`、Vimeo card、CodePen
-playground card はビルド時に public metadata を取得します。ネットワークなしの
-リンクカードにしたいときは `{ fetch: false }` を渡します。playground/video
-iframe URL は `{ iframe: true }` のときだけ追加されます。Twitch iframe には
-`twitch: { iframe: true, parent: "docs.example.com" }` のような `parent` domain も
-必要です。それ以外のプロバイダカードは既定で metadata fetch も
-第三者スクリプトも使いません。
-`title`、`author`、`avatar`、`date`、`dateLabel`、`tags`、`likes`、
-`reposts`、`replies`、`server`、`channel`、`address`、`image`、`version`、
-`license`、`repository`、`downloads`、`stars`、`language`、`runtime`、`duration`、
-`status`、`views` などの属性で安定した metadata を渡せます。
+プロバイダカードは、地図、記事、package、playground、動画、デザインリンク、
+スライド、コミュニティ、social post を静的な preview として描画します。既定で
+第三者スクリプトは読み込まず、安定した metadata は属性から直接渡せます。
+
+次のカードはビルド時のネットワークリクエストなしで描画されます。
+
+<CratesIo url="https://crates.io/crates/serde" name="serde" description="Rust のシリアライズフレームワーク" version="1.0.219" downloads="512M"></CratesIo>
+
+<PyPI url="https://pypi.org/project/requests" name="requests" description="HTTP for Humans" version="2.32.3"></PyPI>
+
+<DockerHub url="https://hub.docker.com/_/nginx" name="nginx" description="Nginx の公式ビルド"></DockerHub>
+
+<JSFiddle url="https://jsfiddle.net/ubugeeei/abc123/2/" title="レイアウト検証" author="ubugeeei"></JSFiddle>
+
+<Observable url="https://observablehq.com/@d3/bar-chart" title="棒グラフ" author="d3"></Observable>
 
 ```mdx
 <GoogleMaps
@@ -428,18 +428,6 @@ iframe URL は `{ iframe: true }` のときだけ追加されます。Twitch ifr
   Fediverse release note.
 </Mastodon>
 ```
-
-これらが描画するカードです。ビルド時のネットワークリクエストはありません。
-
-<CratesIo url="https://crates.io/crates/serde" name="serde" description="Rust のシリアライズフレームワーク" version="1.0.219" downloads="512M" />
-
-<PyPI url="https://pypi.org/project/requests" name="requests" description="HTTP for Humans" version="2.32.3" />
-
-<DockerHub url="https://hub.docker.com/_/nginx" name="nginx" description="Nginx の公式ビルド" />
-
-<JSFiddle url="https://jsfiddle.net/ubugeeei/abc123/2/" title="レイアウト検証" author="ubugeeei" />
-
-<Observable url="https://observablehq.com/@d3/bar-chart" title="棒グラフ" author="d3" />
 
 | オプション | 既定      | 目的                                                  |
 | ---------- | --------- | ----------------------------------------------------- |
@@ -551,7 +539,7 @@ oxContent({ embeds: { audio: true, video: true } });
 `embeds.stackBlitz` は StackBlitz プロジェクト URL を、`embed=1` を付けたサンドボックス iframe にします。
 
 ```mdx
-<StackBlitz url="https://stackblitz.com/edit/vitejs-vite" />
+<StackBlitz url="https://stackblitz.com/edit/vitejs-vite"></StackBlitz>
 ```
 
 <StackBlitz url="https://stackblitz.com/edit/vitejs-vite" />

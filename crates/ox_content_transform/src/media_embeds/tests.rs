@@ -55,6 +55,26 @@ fn renders_stackblitz_iframe_and_consumes_empty_close_tag() {
 }
 
 #[test]
+fn renders_webcontainer_preview_metadata() {
+    let html = transform_media_embeds(
+        r#"<WebContainer entry="src/main.ts" title="Demo & Tools">
+npm install
+npm run dev
+</WebContainer>"#,
+        Some(&MediaEmbedsOptions { web_container: Some(true), ..Default::default() }),
+    );
+
+    assert!(html.contains(r#"class="ox-webcontainer""#), "{html}");
+    assert!(html.contains(r#"data-entry="src/main.ts""#), "{html}");
+    assert!(html.contains(r#"<strong>Demo &amp; Tools</strong>"#), "{html}");
+    assert!(html.contains(r#"<code>src/main.ts</code>"#), "{html}");
+    assert!(html.contains("Boots on interaction"), "{html}");
+    assert!(html.contains("<span>2 commands</span>"), "{html}");
+    assert!(html.contains("<span>Static source bundle</span>"), "{html}");
+    assert!(html.contains("npm install\nnpm run dev"), "{html}");
+}
+
+#[test]
 fn renders_static_tweet_card() {
     let html = transform_media_embeds(
         r#"<Tweet url="https://x.com/jack/status/20" displayName="jack" handle="jack" avatar="https://pbs.twimg.com/profile_images/avatar.jpg" datetime="2006-03-21T20:50:14Z" dateLabel="Mar 21, 2006" replies="120" retweets="520" quotes="8" likes="2.4M" views="10M">just setting up my twttr</Tweet>"#,

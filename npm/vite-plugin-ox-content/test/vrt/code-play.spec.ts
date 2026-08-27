@@ -50,6 +50,29 @@ test("hydrates written SSG HTML and runs JavaScript in the browser sandbox", asy
     await expect(page.locator(".ox-code-play__stdio-line--stdout")).toBeVisible();
     await expect(page.locator('[data-ox-action="typecheck"]')).toHaveCount(0);
     await expect(page.locator('[data-ox-action="cancel"]')).toBeHidden();
+    const metrics = await page.locator(".ox-code-play").evaluate((widget) => {
+      if (!(widget instanceof HTMLElement)) {
+        throw new Error("Missing Code Play widget");
+      }
+      const toolbar = widget.querySelector(".ox-code-play__toolbar");
+      const runButton = widget.querySelector('[data-ox-action="run"]');
+      const chips = [...widget.querySelectorAll(".ox-code-play__runtime-chip")];
+      if (
+        !(toolbar instanceof HTMLElement) ||
+        !(runButton instanceof HTMLElement) ||
+        chips.length === 0
+      ) {
+        throw new Error("Missing compact Code Play chrome");
+      }
+      return {
+        buttonHeight: runButton.getBoundingClientRect().height,
+        maxChipWidth: Math.max(...chips.map((chip) => chip.getBoundingClientRect().width)),
+        toolbarHeight: toolbar.getBoundingClientRect().height,
+      };
+    });
+    expect(metrics.buttonHeight).toBeLessThanOrEqual(34);
+    expect(metrics.maxChipWidth).toBeLessThan(170);
+    expect(metrics.toolbarHeight).toBeLessThanOrEqual(54);
   } finally {
     await rm(outDir, { recursive: true, force: true });
   }

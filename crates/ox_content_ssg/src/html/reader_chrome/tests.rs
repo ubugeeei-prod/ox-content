@@ -156,13 +156,13 @@ fn copy_control_uses_inline_clearance_without_wasting_vertical_space() {
     );
     assert!(
         READER_CHROME_CSS.contains(
-            ".content .ox-code > pre,\n.content .ox-code:has(ox-code-play) pre {\n  margin: 0;\n  padding-inline-end: calc(var(--ox-copy-reserved-inline-size) + 0.5rem);"
+            ".content .ox-code > pre,\n.content .ox-code:has(ox-code-play) pre {\n  margin: 0;\n  padding-inline-end: calc(var(--ox-copy-reserved-inline-size) + 0.45rem);"
         ),
         "code only needs enough inline clearance for the icon: {READER_CHROME_CSS}"
     );
     assert!(
         READER_CHROME_CSS.contains(
-            ".ox-code:has(> ox-code-play) .ox-code-play__toolbar {\n  padding-inline-end: calc(var(--ox-copy-reserved-inline-size) + 0.8rem);"
+            ".ox-code:has(> ox-code-play) .ox-code-play__toolbar {\n  padding-inline-end: calc(var(--ox-copy-reserved-inline-size) + 0.65rem);"
         ),
         "Code Play Run must sit left of the copy icon: {READER_CHROME_CSS}"
     );
@@ -172,9 +172,9 @@ fn copy_control_uses_inline_clearance_without_wasting_vertical_space() {
     );
     assert!(
         READER_CHROME_CSS.contains(
-            ".content .ox-code > pre[data-code-title]::before {\n  padding-inline-end: var(--ox-copy-reserved-inline-size);"
+            ".content .ox-code > pre[data-code-title]::before {\n  margin-inline-end: calc(-1 * (var(--ox-copy-reserved-inline-size) + 0.45rem));\n  padding-inline-end: calc(var(--ox-copy-reserved-inline-size) + 0.45rem);"
         ),
-        "a code title must reserve inline space for the fixed-size icon: {READER_CHROME_CSS}"
+        "a code title must keep its header fill aligned behind the fixed-size icon: {READER_CHROME_CSS}"
     );
 }
 

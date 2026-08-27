@@ -44,14 +44,27 @@ pub(super) fn render_bluesky(element: &ComponentElement<'_>) -> Option<String> {
 pub(super) fn render_webcontainer(element: &ComponentElement<'_>) -> Option<String> {
     let entry = attr(element, "entry").unwrap_or("index.html");
     let title = attr(element, "title").unwrap_or("WebContainer");
+    let source = element.body.trim();
+    let command_count = source.lines().filter(|line| !line.trim().is_empty()).count();
     let mut html = String::new();
     html.push_str("<div class=\"ox-webcontainer\" data-entry=\"");
     escape_attr(entry, &mut html);
-    html.push_str("\" data-cross-origin-isolation=\"required\"><div class=\"ox-webcontainer__header\"><strong>");
+    html.push_str("\" data-cross-origin-isolation=\"required\"><div class=\"ox-webcontainer__header\"><span class=\"ox-webcontainer__title\"><strong>");
     escape_text(title, &mut html);
-    html.push_str("</strong><span>Requires cross-origin isolation</span></div><pre><code>");
-    escape_text(element.body.trim(), &mut html);
-    html.push_str("</code></pre></div>");
+    html.push_str("</strong><code>");
+    escape_text(entry, &mut html);
+    html.push_str("</code></span><span class=\"ox-webcontainer__status\">Boots on interaction</span></div><div class=\"ox-webcontainer__preview\"><pre><code>");
+    escape_text(source, &mut html);
+    html.push_str("</code></pre></div><div class=\"ox-webcontainer__meta\"><span>Entry <code>");
+    escape_text(entry, &mut html);
+    html.push_str("</code></span><span>");
+    if command_count == 0 {
+        html.push_str("No commands");
+    } else {
+        html.push_str(&command_count.to_string());
+        html.push_str(if command_count == 1 { " command" } else { " commands" });
+    }
+    html.push_str("</span><span>Static source bundle</span><span>Requires cross-origin isolation</span></div></div>");
     Some(html)
 }
 

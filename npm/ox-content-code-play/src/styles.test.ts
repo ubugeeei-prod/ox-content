@@ -8,9 +8,8 @@ describe("CODE_PLAY_STYLES", () => {
     expect(CODE_PLAY_STYLES).toContain("--octc-color-bg-alt");
     expect(CODE_PLAY_STYLES).not.toContain("--octc-surface");
     expect(CODE_PLAY_STYLES).toContain("color: var(--octc-color-text, CanvasText)");
-    expect(CODE_PLAY_STYLES).toContain(
-      "background: var(--octc-color-bg-alt, var(--octc-color-bg, Canvas))",
-    );
+    expect(CODE_PLAY_STYLES).toContain("background: var(--octc-color-bg, Canvas)");
+    expect(CODE_PLAY_STYLES).toContain("--octc-color-bg-alt");
   });
 
   it("does not let docs .content pre styles paint the empty output panel", () => {
@@ -22,6 +21,12 @@ describe("CODE_PLAY_STYLES", () => {
     expect(CODE_PLAY_STYLES).toContain(".ox-code-play__status");
     expect(CODE_PLAY_STYLES).toContain('[data-ox-run-state="offline"]');
     expect(CODE_PLAY_STYLES).toContain(":focus-visible");
-    expect(CODE_PLAY_STYLES).toContain("border-radius: 8px");
+    expect(CODE_PLAY_STYLES).toContain("border-radius: 6px");
+  });
+
+  it("keeps chrome density compact for docs examples", () => {
+    expect(CODE_PLAY_STYLES).toContain("min-height: 1.9rem");
+    expect(CODE_PLAY_STYLES).toContain("grid-template-columns: 5.4rem 1fr");
+    expect(CODE_PLAY_STYLES).toContain(".ox-code-play__runtime-chip {\n  display: inline-flex");
   });
 });

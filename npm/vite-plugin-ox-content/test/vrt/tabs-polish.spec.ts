@@ -67,10 +67,12 @@ test("package-manager tabs render code as an integrated panel on mobile", async 
       const panel = tabs.querySelector(".ox-tab-panel[data-tab='0']");
       const pre = panel?.querySelector("pre");
       const header = tabs.querySelector(".ox-tabs-header");
+      const firstLabel = header?.querySelector("label");
       if (
         !(tabs instanceof HTMLElement) ||
         !(panel instanceof HTMLElement) ||
-        !(pre instanceof HTMLElement)
+        !(pre instanceof HTMLElement) ||
+        !(firstLabel instanceof HTMLElement)
       ) {
         throw new Error("Missing tabs geometry targets");
       }
@@ -78,9 +80,11 @@ test("package-manager tabs render code as an integrated panel on mobile", async 
       const panelRect = panel.getBoundingClientRect();
       const preRect = pre.getBoundingClientRect();
       const headerRect = header?.getBoundingClientRect();
+      const firstLabelRect = firstLabel.getBoundingClientRect();
       const panelStyle = getComputedStyle(panel);
       const preStyle = getComputedStyle(pre);
       return {
+        firstLabelWidth: firstLabelRect.width,
         headerBottom: headerRect?.bottom ?? 0,
         panelPaddingTop: Number.parseFloat(panelStyle.paddingTop),
         preBorderRadius: Number.parseFloat(preStyle.borderTopLeftRadius),
@@ -91,6 +95,7 @@ test("package-manager tabs render code as an integrated panel on mobile", async 
     });
 
   expect(metrics.tabsWidth).toBeLessThanOrEqual(390);
+  expect(metrics.firstLabelWidth).toBeLessThan(96);
   expect(metrics.panelPaddingTop).toBe(0);
   expect(metrics.preBorderRadius).toBe(0);
   expect(metrics.preLeftGap).toBeLessThan(2);
