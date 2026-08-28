@@ -34,6 +34,17 @@ import pixel from "@ox-content/theme-pixel";
 theme: [pixel, dracula, { colors: { primary: "#ff5f56" } }];
 ```
 
+## Variants
+
+The default export stays `dracula` (Dracula with the Alucard light counterpart). Named variants
+are exported from the same package:
+
+```ts
+import { draculaSoft } from "@ox-content/theme-color-dracula";
+```
+
+- `draculaSoft` — Dracula Alucard light companion and Dracula Soft
+
 ## License
 
 MIT

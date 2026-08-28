@@ -34,6 +34,17 @@ import pixel from "@ox-content/theme-pixel";
 theme: [pixel, rosePine, { colors: { primary: "#ff5f56" } }];
 ```
 
+## Variants
+
+The default export stays `rosePine` (Rosé Pine Dawn and Rosé Pine). Named variants
+are exported from the same package:
+
+```ts
+import { rosePineMoon } from "@ox-content/theme-color-rose-pine";
+```
+
+- `rosePineMoon` — Rosé Pine Dawn and Rosé Pine Moon
+
 ## License
 
 MIT

@@ -34,6 +34,17 @@ import pixel from "@ox-content/theme-pixel";
 theme: [pixel, horizon, { colors: { primary: "#ff5f56" } }];
 ```
 
+## Variants
+
+The default export stays `horizon` (Warm coral and plum at dusk). Named variants
+are exported from the same package:
+
+```ts
+import { horizonBright } from "@ox-content/theme-color-horizon";
+```
+
+- `horizonBright` — Horizon Bright and Horizon
+
 ## License
 
 MIT

@@ -34,6 +34,17 @@ import pixel from "@ox-content/theme-pixel";
 theme: [pixel, oneDark, { colors: { primary: "#ff5f56" } }];
 ```
 
+## Variants
+
+The default export stays `oneDark` (Atom One Light and One Dark). Named variants
+are exported from the same package:
+
+```ts
+import { oneDarkPro } from "@ox-content/theme-color-one-dark";
+```
+
+- `oneDarkPro` — One Light and One Dark Pro
+
 ## License
 
 MIT

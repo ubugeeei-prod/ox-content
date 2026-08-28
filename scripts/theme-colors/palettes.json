@@ -38,6 +38,336 @@
         "blue": "#4493f8",
         "magenta": "#bc8cff",
         "cyan": "#39c5cf"
+      },
+      "variants": [
+        {
+          "id": "classic",
+          "exportName": "githubClassic",
+          "name": "github-classic",
+          "description": "GitHub Light and Dark from @shikijs/themes",
+          "shikiThemeIds": ["github-light", "github-dark"],
+          "light": {
+            "bg": "#ffffff",
+            "bgAlt": "#f6f8fa",
+            "text": "#24292e",
+            "muted": "#6a737d",
+            "border": "#e1e4e8",
+            "primary": "#0366d6",
+            "primaryHover": "#005cc5",
+            "codeBg": "#ffffff",
+            "codeText": "#24292e",
+            "red": "#d73a49",
+            "green": "#28a745",
+            "yellow": "#dbab09",
+            "blue": "#0366d6",
+            "magenta": "#5a32a3",
+            "cyan": "#1b7c83",
+            "syntax": {
+              "foreground": "#24292e",
+              "background": "#ffffff",
+              "comment": "#6a737d",
+              "punctuation": "#6a737d",
+              "keyword": "#d73a49",
+              "string": "#032f62",
+              "stringExpression": "#032f62",
+              "constant": "#005cc5",
+              "function": "#0366d6",
+              "parameter": "#24292e",
+              "link": "#032f62"
+            }
+          },
+          "dark": {
+            "bg": "#24292e",
+            "bgAlt": "#1f2428",
+            "text": "#e1e4e8",
+            "muted": "#6a737d",
+            "border": "#1b1f23",
+            "primary": "#79b8ff",
+            "primaryHover": "#c8e1ff",
+            "codeBg": "#24292e",
+            "codeText": "#e1e4e8",
+            "red": "#ea4a5a",
+            "green": "#34d058",
+            "yellow": "#ffea7f",
+            "blue": "#2188ff",
+            "magenta": "#b392f0",
+            "cyan": "#39c5cf",
+            "syntax": {
+              "foreground": "#e1e4e8",
+              "background": "#24292e",
+              "comment": "#6a737d",
+              "punctuation": "#6a737d",
+              "keyword": "#f97583",
+              "string": "#9ecbff",
+              "stringExpression": "#9ecbff",
+              "constant": "#79b8ff",
+              "function": "#2188ff",
+              "parameter": "#e1e4e8",
+              "link": "#dbedff"
+            }
+          }
+        },
+        {
+          "id": "default",
+          "exportName": "githubDefault",
+          "name": "github-default",
+          "description": "GitHub Light Default and Dark Default",
+          "shikiThemeIds": ["github-light-default", "github-dark-default"],
+          "light": {
+            "bg": "#ffffff",
+            "bgAlt": "#f6f8fa",
+            "text": "#1f2328",
+            "muted": "#6e7781",
+            "border": "#d0d7de",
+            "primary": "#0969da",
+            "primaryHover": "#0969da",
+            "codeBg": "#ffffff",
+            "codeText": "#1f2328",
+            "red": "#cf222e",
+            "green": "#116329",
+            "yellow": "#4d2d00",
+            "blue": "#0969da",
+            "magenta": "#8250df",
+            "cyan": "#1b7c83",
+            "syntax": {
+              "foreground": "#1f2328",
+              "background": "#ffffff",
+              "comment": "#6e7781",
+              "punctuation": "#6e7781",
+              "keyword": "#cf222e",
+              "string": "#0a3069",
+              "stringExpression": "#0a3069",
+              "constant": "#0550ae",
+              "function": "#8250df",
+              "parameter": "#1f2328",
+              "link": "#0a3069"
+            }
+          },
+          "dark": {
+            "bg": "#0d1117",
+            "bgAlt": "#010409",
+            "text": "#e6edf3",
+            "muted": "#8b949e",
+            "border": "#30363d",
+            "primary": "#2f81f7",
+            "primaryHover": "#2f81f7",
+            "codeBg": "#0d1117",
+            "codeText": "#e6edf3",
+            "red": "#ff7b72",
+            "green": "#3fb950",
+            "yellow": "#d29922",
+            "blue": "#58a6ff",
+            "magenta": "#bc8cff",
+            "cyan": "#39c5cf",
+            "syntax": {
+              "foreground": "#e6edf3",
+              "background": "#0d1117",
+              "comment": "#8b949e",
+              "punctuation": "#8b949e",
+              "keyword": "#ff7b72",
+              "string": "#a5d6ff",
+              "stringExpression": "#a5d6ff",
+              "constant": "#79c0ff",
+              "function": "#d2a8ff",
+              "parameter": "#e6edf3",
+              "link": "#a5d6ff"
+            }
+          }
+        },
+        {
+          "id": "dimmed",
+          "exportName": "githubDimmed",
+          "name": "github-dimmed",
+          "description": "GitHub Light Default and Dark Dimmed",
+          "shikiThemeIds": ["github-light-default", "github-dark-dimmed"],
+          "light": {
+            "bg": "#ffffff",
+            "bgAlt": "#f6f8fa",
+            "text": "#1f2328",
+            "muted": "#6e7781",
+            "border": "#d0d7de",
+            "primary": "#0969da",
+            "primaryHover": "#0969da",
+            "codeBg": "#ffffff",
+            "codeText": "#1f2328",
+            "red": "#cf222e",
+            "green": "#116329",
+            "yellow": "#4d2d00",
+            "blue": "#0969da",
+            "magenta": "#8250df",
+            "cyan": "#1b7c83",
+            "syntax": {
+              "foreground": "#1f2328",
+              "background": "#ffffff",
+              "comment": "#6e7781",
+              "punctuation": "#6e7781",
+              "keyword": "#cf222e",
+              "string": "#0a3069",
+              "stringExpression": "#0a3069",
+              "constant": "#0550ae",
+              "function": "#8250df",
+              "parameter": "#1f2328",
+              "link": "#0a3069"
+            }
+          },
+          "dark": {
+            "bg": "#22272e",
+            "bgAlt": "#1c2128",
+            "text": "#adbac7",
+            "muted": "#768390",
+            "border": "#444c56",
+            "primary": "#539bf5",
+            "primaryHover": "#539bf5",
+            "codeBg": "#22272e",
+            "codeText": "#adbac7",
+            "red": "#f47067",
+            "green": "#57ab5a",
+            "yellow": "#c69026",
+            "blue": "#539bf5",
+            "magenta": "#b083f0",
+            "cyan": "#39c5cf",
+            "syntax": {
+              "foreground": "#adbac7",
+              "background": "#22272e",
+              "comment": "#768390",
+              "punctuation": "#768390",
+              "keyword": "#f47067",
+              "string": "#96d0ff",
+              "stringExpression": "#96d0ff",
+              "constant": "#6cb6ff",
+              "function": "#dcbdfb",
+              "parameter": "#adbac7",
+              "link": "#96d0ff"
+            }
+          }
+        },
+        {
+          "id": "high-contrast",
+          "exportName": "githubHighContrast",
+          "name": "github-high-contrast",
+          "description": "GitHub Light High Contrast and Dark High Contrast",
+          "shikiThemeIds": ["github-light-high-contrast", "github-dark-high-contrast"],
+          "light": {
+            "bg": "#ffffff",
+            "bgAlt": "#ffffff",
+            "text": "#0e1116",
+            "muted": "#66707b",
+            "border": "#20252c",
+            "primary": "#0349b4",
+            "primaryHover": "#0349b4",
+            "codeBg": "#ffffff",
+            "codeText": "#0e1116",
+            "red": "#a0111f",
+            "green": "#024c1a",
+            "yellow": "#3f2200",
+            "blue": "#0349b4",
+            "magenta": "#622cbc",
+            "cyan": "#1b7c83",
+            "syntax": {
+              "foreground": "#0e1116",
+              "background": "#ffffff",
+              "comment": "#66707b",
+              "punctuation": "#66707b",
+              "keyword": "#a0111f",
+              "string": "#032563",
+              "stringExpression": "#032563",
+              "constant": "#023b95",
+              "function": "#622cbc",
+              "parameter": "#0e1116",
+              "link": "#032563"
+            }
+          },
+          "dark": {
+            "bg": "#0a0c10",
+            "bgAlt": "#010409",
+            "text": "#f0f3f6",
+            "muted": "#bdc4cc",
+            "border": "#7a828e",
+            "primary": "#71b7ff",
+            "primaryHover": "#71b7ff",
+            "codeBg": "#0a0c10",
+            "codeText": "#f0f3f6",
+            "red": "#ff9492",
+            "green": "#26cd4d",
+            "yellow": "#f0b72f",
+            "blue": "#71b7ff",
+            "magenta": "#cb9eff",
+            "cyan": "#39c5cf",
+            "syntax": {
+              "foreground": "#f0f3f6",
+              "background": "#0a0c10",
+              "comment": "#bdc4cc",
+              "punctuation": "#bdc4cc",
+              "keyword": "#ff9492",
+              "string": "#addcff",
+              "stringExpression": "#addcff",
+              "constant": "#91cbff",
+              "function": "#dbb7ff",
+              "parameter": "#f0f3f6",
+              "link": "#addcff"
+            }
+          }
+        }
+      ],
+      "shiki": {
+        "source": {
+          "package": "@shikijs/themes",
+          "version": "4.4.3",
+          "license": "MIT",
+          "themeIds": [
+            "github-light",
+            "github-dark",
+            "github-light-default",
+            "github-dark-default",
+            "github-dark-dimmed",
+            "github-light-high-contrast",
+            "github-dark-high-contrast"
+          ]
+        },
+        "migrations": [
+          {
+            "id": "github-light",
+            "exportName": "githubClassic",
+            "mode": "light",
+            "pairing": "GitHub Light + GitHub Dark"
+          },
+          {
+            "id": "github-dark",
+            "exportName": "githubClassic",
+            "mode": "dark",
+            "pairing": "GitHub Light + GitHub Dark"
+          },
+          {
+            "id": "github-light-default",
+            "exportName": "githubDefault",
+            "mode": "light",
+            "pairing": "GitHub Light Default + GitHub Dark Default"
+          },
+          {
+            "id": "github-dark-default",
+            "exportName": "githubDefault",
+            "mode": "dark",
+            "pairing": "GitHub Light Default + GitHub Dark Default"
+          },
+          {
+            "id": "github-dark-dimmed",
+            "exportName": "githubDimmed",
+            "mode": "dark",
+            "pairing": "GitHub Light Default + GitHub Dark Dimmed"
+          },
+          {
+            "id": "github-light-high-contrast",
+            "exportName": "githubHighContrast",
+            "mode": "light",
+            "pairing": "GitHub Light High Contrast + GitHub Dark High Contrast"
+          },
+          {
+            "id": "github-dark-high-contrast",
+            "exportName": "githubHighContrast",
+            "mode": "dark",
+            "pairing": "GitHub Light High Contrast + GitHub Dark High Contrast"
+          }
+        ]
       }
     },
     {
@@ -155,6 +485,68 @@
         "blue": "#8be9fd",
         "magenta": "#ff79c6",
         "cyan": "#8be9fd"
+      },
+      "variants": [
+        {
+          "id": "soft",
+          "exportName": "draculaSoft",
+          "name": "dracula-soft",
+          "description": "Dracula Alucard light companion and Dracula Soft",
+          "shikiThemeIds": ["dracula-soft"],
+          "dark": {
+            "bg": "#282a36",
+            "bgAlt": "#262626",
+            "text": "#f6f6f4",
+            "muted": "#7b7f8b",
+            "border": "#bf9eee",
+            "primary": "#97e1f1",
+            "primaryHover": "#97e1f1",
+            "codeBg": "#282a36",
+            "codeText": "#f6f6f4",
+            "red": "#ee6666",
+            "green": "#62e884",
+            "yellow": "#e7ee98",
+            "blue": "#bf9eee",
+            "magenta": "#f286c4",
+            "cyan": "#97e1f1",
+            "syntax": {
+              "foreground": "#f6f6f4",
+              "background": "#282a36",
+              "comment": "#7b7f8b",
+              "punctuation": "#97e1f1",
+              "keyword": "#f286c4",
+              "string": "#e7ee98",
+              "stringExpression": "#e7ee98",
+              "constant": "#bf9eee",
+              "function": "#62e884",
+              "parameter": "#ffb86c",
+              "link": "#f286c4"
+            }
+          }
+        }
+      ],
+      "shiki": {
+        "source": {
+          "package": "@shikijs/themes",
+          "version": "4.4.3",
+          "license": "MIT",
+          "themeIds": ["dracula", "dracula-soft"]
+        },
+        "migrations": [
+          {
+            "id": "dracula",
+            "exportName": "dracula",
+            "mode": "dark",
+            "pairing": "Dracula Alucard light companion + Dracula"
+          },
+          {
+            "id": "dracula-soft",
+            "exportName": "draculaSoft",
+            "mode": "dark",
+            "pairing": "Dracula Alucard light companion + Dracula Soft",
+            "notes": "The light side keeps Ox Content's existing Alucard companion because @shikijs/themes only ships dark Dracula variants."
+          }
+        ]
       }
     },
     {
@@ -194,6 +586,97 @@
         "blue": "#61afef",
         "magenta": "#c678dd",
         "cyan": "#56b6c2"
+      },
+      "variants": [
+        {
+          "id": "pro",
+          "exportName": "oneDarkPro",
+          "name": "one-dark-pro",
+          "description": "One Light and One Dark Pro",
+          "shikiThemeIds": ["one-light", "one-dark-pro"],
+          "light": {
+            "bg": "#fafafa",
+            "bgAlt": "#eaeaeb",
+            "text": "#383a42",
+            "muted": "#a0a1a7",
+            "border": "#dbdbdc",
+            "primary": "#121417",
+            "primaryHover": "#6b83ed",
+            "codeBg": "#fafafa",
+            "codeText": "#383a42",
+            "red": "#000000",
+            "green": "#50a14f",
+            "yellow": "#986801",
+            "blue": "#526fff",
+            "magenta": "#4078f2",
+            "cyan": "#526fff",
+            "syntax": {
+              "foreground": "#383a42",
+              "background": "#fafafa",
+              "comment": "#a0a1a7",
+              "punctuation": "#a0a1a7",
+              "keyword": "#a626a4",
+              "string": "#50a14f",
+              "stringExpression": "#50a14f",
+              "constant": "#986801",
+              "function": "#0184bc",
+              "parameter": "#383a42",
+              "link": "#e45649"
+            }
+          },
+          "dark": {
+            "bg": "#282c34",
+            "bgAlt": "#21252b",
+            "text": "#abb2bf",
+            "muted": "#5c6370",
+            "border": "#181a1f",
+            "primary": "#61afef",
+            "primaryHover": "#528bff",
+            "codeBg": "#282c34",
+            "codeText": "#abb2bf",
+            "red": "#e05561",
+            "green": "#8cc265",
+            "yellow": "#d18f52",
+            "blue": "#4aa5f0",
+            "magenta": "#c162de",
+            "cyan": "#42b3c2",
+            "syntax": {
+              "foreground": "#abb2bf",
+              "background": "#282c34",
+              "comment": "#5c6370",
+              "punctuation": "#e06c75",
+              "keyword": "#c678dd",
+              "string": "#98c379",
+              "stringExpression": "#98c379",
+              "constant": "#d19a66",
+              "function": "#61afef",
+              "parameter": "#e5c07b",
+              "link": "#61afef"
+            }
+          }
+        }
+      ],
+      "shiki": {
+        "source": {
+          "package": "@shikijs/themes",
+          "version": "4.4.3",
+          "license": "MIT",
+          "themeIds": ["one-light", "one-dark-pro"]
+        },
+        "migrations": [
+          {
+            "id": "one-light",
+            "exportName": "oneDarkPro",
+            "mode": "light",
+            "pairing": "One Light + One Dark Pro"
+          },
+          {
+            "id": "one-dark-pro",
+            "exportName": "oneDarkPro",
+            "mode": "dark",
+            "pairing": "One Light + One Dark Pro"
+          }
+        ]
       }
     },
     {
@@ -311,6 +794,121 @@
         "blue": "#89b4fa",
         "magenta": "#cba6f7",
         "cyan": "#94e2d5"
+      },
+      "variants": [
+        {
+          "id": "frappe",
+          "exportName": "catppuccinFrappe",
+          "name": "catppuccin-frappe",
+          "description": "Catppuccin Latte and Frappé",
+          "shikiThemeIds": ["catppuccin-latte", "catppuccin-frappe"],
+          "dark": {
+            "bg": "#303446",
+            "bgAlt": "#292c3c",
+            "text": "#c6d0f5",
+            "muted": "#949cbb",
+            "border": "#626880",
+            "primary": "#8caaee",
+            "primaryHover": "#99d1db",
+            "codeBg": "#303446",
+            "codeText": "#c6d0f5",
+            "red": "#e78284",
+            "green": "#a6d189",
+            "yellow": "#e5c890",
+            "blue": "#8caaee",
+            "magenta": "#f4b8e4",
+            "cyan": "#81c8be",
+            "syntax": {
+              "foreground": "#c6d0f5",
+              "background": "#303446",
+              "comment": "#949cbb",
+              "punctuation": "#949cbb",
+              "keyword": "#ca9ee6",
+              "string": "#a6d189",
+              "stringExpression": "#a6d189",
+              "constant": "#ef9f76",
+              "function": "#8caaee",
+              "parameter": "#ea999c",
+              "link": "#babbf1"
+            }
+          }
+        },
+        {
+          "id": "macchiato",
+          "exportName": "catppuccinMacchiato",
+          "name": "catppuccin-macchiato",
+          "description": "Catppuccin Latte and Macchiato",
+          "shikiThemeIds": ["catppuccin-latte", "catppuccin-macchiato"],
+          "dark": {
+            "bg": "#24273a",
+            "bgAlt": "#1e2030",
+            "text": "#cad3f5",
+            "muted": "#939ab7",
+            "border": "#5b6078",
+            "primary": "#8aadf4",
+            "primaryHover": "#91d7e3",
+            "codeBg": "#24273a",
+            "codeText": "#cad3f5",
+            "red": "#ed8796",
+            "green": "#a6da95",
+            "yellow": "#eed49f",
+            "blue": "#8aadf4",
+            "magenta": "#f5bde6",
+            "cyan": "#8bd5ca",
+            "syntax": {
+              "foreground": "#cad3f5",
+              "background": "#24273a",
+              "comment": "#939ab7",
+              "punctuation": "#939ab7",
+              "keyword": "#c6a0f6",
+              "string": "#a6da95",
+              "stringExpression": "#a6da95",
+              "constant": "#f5a97f",
+              "function": "#8aadf4",
+              "parameter": "#ee99a0",
+              "link": "#b7bdf8"
+            }
+          }
+        }
+      ],
+      "shiki": {
+        "source": {
+          "package": "@shikijs/themes",
+          "version": "4.4.3",
+          "license": "MIT",
+          "themeIds": [
+            "catppuccin-latte",
+            "catppuccin-mocha",
+            "catppuccin-frappe",
+            "catppuccin-macchiato"
+          ]
+        },
+        "migrations": [
+          {
+            "id": "catppuccin-latte",
+            "exportName": "catppuccin",
+            "mode": "light",
+            "pairing": "Catppuccin Latte + Catppuccin Mocha"
+          },
+          {
+            "id": "catppuccin-mocha",
+            "exportName": "catppuccin",
+            "mode": "dark",
+            "pairing": "Catppuccin Latte + Catppuccin Mocha"
+          },
+          {
+            "id": "catppuccin-frappe",
+            "exportName": "catppuccinFrappe",
+            "mode": "dark",
+            "pairing": "Catppuccin Latte + Catppuccin Frappé"
+          },
+          {
+            "id": "catppuccin-macchiato",
+            "exportName": "catppuccinMacchiato",
+            "mode": "dark",
+            "pairing": "Catppuccin Latte + Catppuccin Macchiato"
+          }
+        ]
       }
     },
     {
@@ -389,6 +987,195 @@
         "blue": "#83a598",
         "magenta": "#d3869b",
         "cyan": "#8ec07c"
+      },
+      "variants": [
+        {
+          "id": "hard",
+          "exportName": "gruvboxHard",
+          "name": "gruvbox-hard",
+          "description": "Gruvbox light and dark, hard contrast",
+          "shikiThemeIds": ["gruvbox-light-hard", "gruvbox-dark-hard"],
+          "light": {
+            "bg": "#f9f5d7",
+            "bgAlt": "#f9f5d7",
+            "text": "#3c3836",
+            "muted": "#928374",
+            "border": "#ebdbb2",
+            "primary": "#076678",
+            "primaryHover": "#458588",
+            "codeBg": "#f9f5d7",
+            "codeText": "#3c3836",
+            "red": "#cc241d",
+            "green": "#98971a",
+            "yellow": "#d79921",
+            "blue": "#458588",
+            "magenta": "#b16286",
+            "cyan": "#689d6a",
+            "syntax": {
+              "foreground": "#3c3836",
+              "background": "#f9f5d7",
+              "comment": "#928374",
+              "punctuation": "#7c6f64",
+              "keyword": "#9d0006",
+              "string": "#79740e",
+              "stringExpression": "#79740e",
+              "constant": "#8f3f71",
+              "function": "#b57614",
+              "parameter": "#076678",
+              "link": "#928374"
+            }
+          },
+          "dark": {
+            "bg": "#1d2021",
+            "bgAlt": "#1d2021",
+            "text": "#ebdbb2",
+            "muted": "#928374",
+            "border": "#3c3836",
+            "primary": "#83a598",
+            "primaryHover": "#458588",
+            "codeBg": "#1d2021",
+            "codeText": "#ebdbb2",
+            "red": "#cc241d",
+            "green": "#98971a",
+            "yellow": "#d79921",
+            "blue": "#458588",
+            "magenta": "#b16286",
+            "cyan": "#689d6a",
+            "syntax": {
+              "foreground": "#ebdbb2",
+              "background": "#1d2021",
+              "comment": "#928374",
+              "punctuation": "#a89984",
+              "keyword": "#fb4934",
+              "string": "#b8bb26",
+              "stringExpression": "#b8bb26",
+              "constant": "#d3869b",
+              "function": "#fabd2f",
+              "parameter": "#83a598",
+              "link": "#928374"
+            }
+          }
+        },
+        {
+          "id": "soft",
+          "exportName": "gruvboxSoft",
+          "name": "gruvbox-soft",
+          "description": "Gruvbox light and dark, soft contrast",
+          "shikiThemeIds": ["gruvbox-light-soft", "gruvbox-dark-soft"],
+          "light": {
+            "bg": "#f2e5bc",
+            "bgAlt": "#f2e5bc",
+            "text": "#3c3836",
+            "muted": "#928374",
+            "border": "#ebdbb2",
+            "primary": "#076678",
+            "primaryHover": "#458588",
+            "codeBg": "#f2e5bc",
+            "codeText": "#3c3836",
+            "red": "#cc241d",
+            "green": "#98971a",
+            "yellow": "#d79921",
+            "blue": "#458588",
+            "magenta": "#b16286",
+            "cyan": "#689d6a",
+            "syntax": {
+              "foreground": "#3c3836",
+              "background": "#f2e5bc",
+              "comment": "#928374",
+              "punctuation": "#7c6f64",
+              "keyword": "#9d0006",
+              "string": "#79740e",
+              "stringExpression": "#79740e",
+              "constant": "#8f3f71",
+              "function": "#b57614",
+              "parameter": "#076678",
+              "link": "#928374"
+            }
+          },
+          "dark": {
+            "bg": "#32302f",
+            "bgAlt": "#32302f",
+            "text": "#ebdbb2",
+            "muted": "#928374",
+            "border": "#3c3836",
+            "primary": "#83a598",
+            "primaryHover": "#458588",
+            "codeBg": "#32302f",
+            "codeText": "#ebdbb2",
+            "red": "#cc241d",
+            "green": "#98971a",
+            "yellow": "#d79921",
+            "blue": "#458588",
+            "magenta": "#b16286",
+            "cyan": "#689d6a",
+            "syntax": {
+              "foreground": "#ebdbb2",
+              "background": "#32302f",
+              "comment": "#928374",
+              "punctuation": "#a89984",
+              "keyword": "#fb4934",
+              "string": "#b8bb26",
+              "stringExpression": "#b8bb26",
+              "constant": "#d3869b",
+              "function": "#fabd2f",
+              "parameter": "#83a598",
+              "link": "#928374"
+            }
+          }
+        }
+      ],
+      "shiki": {
+        "source": {
+          "package": "@shikijs/themes",
+          "version": "4.4.3",
+          "license": "MIT",
+          "themeIds": [
+            "gruvbox-light-medium",
+            "gruvbox-dark-medium",
+            "gruvbox-light-hard",
+            "gruvbox-dark-hard",
+            "gruvbox-light-soft",
+            "gruvbox-dark-soft"
+          ]
+        },
+        "migrations": [
+          {
+            "id": "gruvbox-light-medium",
+            "exportName": "gruvbox",
+            "mode": "light",
+            "pairing": "Gruvbox Light Medium + Gruvbox Dark Medium"
+          },
+          {
+            "id": "gruvbox-dark-medium",
+            "exportName": "gruvbox",
+            "mode": "dark",
+            "pairing": "Gruvbox Light Medium + Gruvbox Dark Medium"
+          },
+          {
+            "id": "gruvbox-light-hard",
+            "exportName": "gruvboxHard",
+            "mode": "light",
+            "pairing": "Gruvbox Light Hard + Gruvbox Dark Hard"
+          },
+          {
+            "id": "gruvbox-dark-hard",
+            "exportName": "gruvboxHard",
+            "mode": "dark",
+            "pairing": "Gruvbox Light Hard + Gruvbox Dark Hard"
+          },
+          {
+            "id": "gruvbox-light-soft",
+            "exportName": "gruvboxSoft",
+            "mode": "light",
+            "pairing": "Gruvbox Light Soft + Gruvbox Dark Soft"
+          },
+          {
+            "id": "gruvbox-dark-soft",
+            "exportName": "gruvboxSoft",
+            "mode": "dark",
+            "pairing": "Gruvbox Light Soft + Gruvbox Dark Soft"
+          }
+        ]
       }
     },
     {
@@ -428,6 +1215,73 @@
         "blue": "#9ccfd8",
         "magenta": "#c4a7e7",
         "cyan": "#9ccfd8"
+      },
+      "variants": [
+        {
+          "id": "moon",
+          "exportName": "rosePineMoon",
+          "name": "rose-pine-moon",
+          "description": "Rosé Pine Dawn and Rosé Pine Moon",
+          "shikiThemeIds": ["rose-pine-dawn", "rose-pine-moon"],
+          "dark": {
+            "bg": "#232136",
+            "bgAlt": "#232136",
+            "text": "#e0def4",
+            "muted": "#6e6a86",
+            "border": "#00000000",
+            "primary": "#c4a7e7",
+            "primaryHover": "#c4a7e7e6",
+            "codeBg": "#232136",
+            "codeText": "#e0def4",
+            "red": "#eb6f92",
+            "green": "#3e8fb0",
+            "yellow": "#f6c177",
+            "blue": "#9ccfd8",
+            "magenta": "#c4a7e7",
+            "cyan": "#ea9a97",
+            "syntax": {
+              "foreground": "#e0def4",
+              "background": "#232136",
+              "comment": "#6e6a86",
+              "punctuation": "#908caa",
+              "keyword": "#3e8fb0",
+              "string": "#f6c177",
+              "stringExpression": "#f6c177",
+              "constant": "#3e8fb0",
+              "function": "#eb6f92",
+              "parameter": "#c4a7e7",
+              "link": "#c4a7e7"
+            }
+          }
+        }
+      ],
+      "shiki": {
+        "source": {
+          "package": "@shikijs/themes",
+          "version": "4.4.3",
+          "license": "MIT",
+          "themeIds": ["rose-pine-dawn", "rose-pine", "rose-pine-moon"]
+        },
+        "migrations": [
+          {
+            "id": "rose-pine-dawn",
+            "exportName": "rosePine",
+            "mode": "light",
+            "pairing": "Rosé Pine Dawn + Rosé Pine"
+          },
+          {
+            "id": "rose-pine",
+            "exportName": "rosePine",
+            "mode": "dark",
+            "pairing": "Rosé Pine Dawn + Rosé Pine"
+          },
+          {
+            "id": "rose-pine-moon",
+            "exportName": "rosePineMoon",
+            "mode": "dark",
+            "pairing": "Rosé Pine Dawn + Rosé Pine Moon"
+          }
+        ]
       }
     },
     {
@@ -467,6 +1321,28 @@
         "blue": "#268bd2",
         "magenta": "#d33682",
         "cyan": "#2aa198"
+      },
+      "shiki": {
+        "source": {
+          "package": "@shikijs/themes",
+          "version": "4.4.3",
+          "license": "MIT",
+          "themeIds": ["solarized-light", "solarized-dark"]
+        },
+        "migrations": [
+          {
+            "id": "solarized-light",
+            "exportName": "solarized",
+            "mode": "light",
+            "pairing": "Solarized Light + Solarized Dark"
+          },
+          {
+            "id": "solarized-dark",
+            "exportName": "solarized",
+            "mode": "dark",
+            "pairing": "Solarized Light + Solarized Dark"
+          }
+        ]
       }
     },
     {
@@ -545,6 +1421,73 @@
         "blue": "#73d0ff",
         "magenta": "#dfbfff",
         "cyan": "#95e6cb"
+      },
+      "variants": [
+        {
+          "id": "dark",
+          "exportName": "ayuDark",
+          "name": "ayu-dark",
+          "description": "Ayu Light and Ayu Dark",
+          "shikiThemeIds": ["ayu-light", "ayu-dark"],
+          "dark": {
+            "bg": "#10141c",
+            "bgAlt": "#0d1017",
+            "text": "#bfbdb6",
+            "muted": "#5a6673",
+            "border": "#1b1f29",
+            "primary": "#e6b450",
+            "primaryHover": "#e6b450",
+            "codeBg": "#10141c",
+            "codeText": "#bfbdb6",
+            "red": "#f06b73",
+            "green": "#70bf56",
+            "yellow": "#fdb04c",
+            "blue": "#4fbfff",
+            "magenta": "#d0a1ff",
+            "cyan": "#93e2c8",
+            "syntax": {
+              "foreground": "#bfbdb6",
+              "background": "#10141c",
+              "comment": "#5a6673",
+              "punctuation": "#bfbdb6b3",
+              "keyword": "#ff8f40",
+              "string": "#aad94c",
+              "stringExpression": "#aad94c",
+              "constant": "#d2a6ff",
+              "function": "#ffb454",
+              "parameter": "#d2a6ff",
+              "link": "#39bae6"
+            }
+          }
+        }
+      ],
+      "shiki": {
+        "source": {
+          "package": "@shikijs/themes",
+          "version": "4.4.3",
+          "license": "MIT",
+          "themeIds": ["ayu-light", "ayu-mirage", "ayu-dark"]
+        },
+        "migrations": [
+          {
+            "id": "ayu-light",
+            "exportName": "ayu",
+            "mode": "light",
+            "pairing": "Ayu Light + Ayu Mirage"
+          },
+          {
+            "id": "ayu-mirage",
+            "exportName": "ayu",
+            "mode": "dark",
+            "pairing": "Ayu Light + Ayu Mirage"
+          },
+          {
+            "id": "ayu-dark",
+            "exportName": "ayuDark",
+            "mode": "dark",
+            "pairing": "Ayu Light + Ayu Dark"
+          }
+        ]
       }
     },
     {
@@ -584,6 +1527,73 @@
         "blue": "#6394bf",
         "magenta": "#a08cd0",
         "cyan": "#5eaab5"
+      },
+      "variants": [
+        {
+          "id": "black",
+          "exportName": "vitesseBlack",
+          "name": "vitesse-black",
+          "description": "Vitesse Light and Black",
+          "shikiThemeIds": ["vitesse-light", "vitesse-black"],
+          "dark": {
+            "bg": "#000000",
+            "bgAlt": "#000000",
+            "text": "#dbd7cacc",
+            "muted": "#758575dd",
+            "border": "#191919",
+            "primary": "#4d9375",
+            "primaryHover": "#4d9375",
+            "codeBg": "#000000",
+            "codeText": "#dbd7cacc",
+            "red": "#cb7676",
+            "green": "#4d9375",
+            "yellow": "#e6cc77",
+            "blue": "#6394bf",
+            "magenta": "#d9739f",
+            "cyan": "#5eaab5",
+            "syntax": {
+              "foreground": "#dbd7cacc",
+              "background": "#000000",
+              "comment": "#758575dd",
+              "punctuation": "#444444",
+              "keyword": "#4d9375",
+              "string": "#c98a7d",
+              "stringExpression": "#c98a7d",
+              "constant": "#c99076",
+              "function": "#80a665",
+              "parameter": "#dbd7cacc",
+              "link": "#c98a7d"
+            }
+          }
+        }
+      ],
+      "shiki": {
+        "source": {
+          "package": "@shikijs/themes",
+          "version": "4.4.3",
+          "license": "MIT",
+          "themeIds": ["vitesse-light", "vitesse-dark", "vitesse-black"]
+        },
+        "migrations": [
+          {
+            "id": "vitesse-light",
+            "exportName": "vitesse",
+            "mode": "light",
+            "pairing": "Vitesse Light + Vitesse Dark"
+          },
+          {
+            "id": "vitesse-dark",
+            "exportName": "vitesse",
+            "mode": "dark",
+            "pairing": "Vitesse Light + Vitesse Dark"
+          },
+          {
+            "id": "vitesse-black",
+            "exportName": "vitesseBlack",
+            "mode": "dark",
+            "pairing": "Vitesse Light + Vitesse Black"
+          }
+        ]
       }
     },
     {
@@ -623,6 +1633,28 @@
         "blue": "#82aaff",
         "magenta": "#c792ea",
         "cyan": "#7fdbca"
+      },
+      "shiki": {
+        "source": {
+          "package": "@shikijs/themes",
+          "version": "4.4.3",
+          "license": "MIT",
+          "themeIds": ["night-owl-light", "night-owl"]
+        },
+        "migrations": [
+          {
+            "id": "night-owl-light",
+            "exportName": "nightOwl",
+            "mode": "light",
+            "pairing": "Light Owl + Night Owl"
+          },
+          {
+            "id": "night-owl",
+            "exportName": "nightOwl",
+            "mode": "dark",
+            "pairing": "Light Owl + Night Owl"
+          }
+        ]
       }
     },
     {
@@ -738,7 +1770,35 @@
             }
           }
         }
-      ]
+      ],
+      "shiki": {
+        "source": {
+          "package": "@shikijs/themes",
+          "version": "4.4.3",
+          "license": "MIT",
+          "themeIds": ["kanagawa-lotus", "kanagawa-wave", "kanagawa-dragon"]
+        },
+        "migrations": [
+          {
+            "id": "kanagawa-lotus",
+            "exportName": "kanagawa",
+            "mode": "light",
+            "pairing": "Kanagawa Lotus + Kanagawa Wave"
+          },
+          {
+            "id": "kanagawa-wave",
+            "exportName": "kanagawa",
+            "mode": "dark",
+            "pairing": "Kanagawa Lotus + Kanagawa Wave"
+          },
+          {
+            "id": "kanagawa-dragon",
+            "exportName": "kanagawaDragon",
+            "mode": "dark",
+            "pairing": "Kanagawa Lotus + Kanagawa Dragon"
+          }
+        ]
+      }
     },
     {
       "id": "poimandres",
@@ -1131,6 +2191,230 @@
       }
     },
     {
+      "id": "material",
+      "title": "Material",
+      "description": "Material Theme Lighter and Material Theme",
+      "light": {
+        "bg": "#fafafa",
+        "bgAlt": "#fafafa",
+        "text": "#90a4ae",
+        "muted": "#90a4ae",
+        "border": "#00000020",
+        "primary": "#80cbc4",
+        "primaryHover": "#90a4ae",
+        "codeBg": "#fafafa",
+        "codeText": "#90a4ae",
+        "red": "#e53935",
+        "green": "#91b859",
+        "yellow": "#e2931d",
+        "blue": "#6182b8",
+        "magenta": "#9c3eda",
+        "cyan": "#39adb5",
+        "syntax": {
+          "foreground": "#90a4ae",
+          "background": "#fafafa",
+          "comment": "#90a4ae",
+          "punctuation": "#39adb5",
+          "keyword": "#f76d47",
+          "string": "#91b859",
+          "stringExpression": "#91b859",
+          "constant": "#f76d47",
+          "function": "#6182b8",
+          "parameter": "#e53935",
+          "link": "#80cbc4"
+        }
+      },
+      "dark": {
+        "bg": "#263238",
+        "bgAlt": "#263238",
+        "text": "#eeffff",
+        "muted": "#546e7a",
+        "border": "#00000030",
+        "primary": "#80cbc4",
+        "primaryHover": "#eeffff",
+        "codeBg": "#263238",
+        "codeText": "#eeffff",
+        "red": "#f07178",
+        "green": "#c3e88d",
+        "yellow": "#ffcb6b",
+        "blue": "#82aaff",
+        "magenta": "#c792ea",
+        "cyan": "#89ddff",
+        "syntax": {
+          "foreground": "#eeffff",
+          "background": "#263238",
+          "comment": "#546e7a",
+          "punctuation": "#89ddff",
+          "keyword": "#f78c6c",
+          "string": "#c3e88d",
+          "stringExpression": "#c3e88d",
+          "constant": "#f78c6c",
+          "function": "#82aaff",
+          "parameter": "#f07178",
+          "link": "#80cbc4"
+        }
+      },
+      "variants": [
+        {
+          "id": "darker",
+          "exportName": "materialDarker",
+          "name": "material-darker",
+          "description": "Material Theme Lighter and Material Theme Darker",
+          "shikiThemeIds": ["material-theme-lighter", "material-theme-darker"],
+          "dark": {
+            "bg": "#212121",
+            "bgAlt": "#212121",
+            "text": "#eeffff",
+            "muted": "#545454",
+            "border": "#00000030",
+            "primary": "#80cbc4",
+            "primaryHover": "#eeffff",
+            "codeBg": "#212121",
+            "codeText": "#eeffff",
+            "red": "#f07178",
+            "green": "#c3e88d",
+            "yellow": "#ffcb6b",
+            "blue": "#82aaff",
+            "magenta": "#c792ea",
+            "cyan": "#89ddff",
+            "syntax": {
+              "foreground": "#eeffff",
+              "background": "#212121",
+              "comment": "#545454",
+              "punctuation": "#89ddff",
+              "keyword": "#f78c6c",
+              "string": "#c3e88d",
+              "stringExpression": "#c3e88d",
+              "constant": "#f78c6c",
+              "function": "#82aaff",
+              "parameter": "#f07178",
+              "link": "#80cbc4"
+            }
+          }
+        },
+        {
+          "id": "ocean",
+          "exportName": "materialOcean",
+          "name": "material-ocean",
+          "description": "Material Theme Lighter and Material Theme Ocean",
+          "shikiThemeIds": ["material-theme-lighter", "material-theme-ocean"],
+          "dark": {
+            "bg": "#0f111a",
+            "bgAlt": "#0f111a",
+            "text": "#babed8",
+            "muted": "#464b5d",
+            "border": "#00000030",
+            "primary": "#80cbc4",
+            "primaryHover": "#babed8",
+            "codeBg": "#0f111a",
+            "codeText": "#babed8",
+            "red": "#f07178",
+            "green": "#c3e88d",
+            "yellow": "#ffcb6b",
+            "blue": "#82aaff",
+            "magenta": "#c792ea",
+            "cyan": "#89ddff",
+            "syntax": {
+              "foreground": "#babed8",
+              "background": "#0f111a",
+              "comment": "#464b5d",
+              "punctuation": "#89ddff",
+              "keyword": "#f78c6c",
+              "string": "#c3e88d",
+              "stringExpression": "#c3e88d",
+              "constant": "#f78c6c",
+              "function": "#82aaff",
+              "parameter": "#f07178",
+              "link": "#80cbc4"
+            }
+          }
+        },
+        {
+          "id": "palenight",
+          "exportName": "materialPalenight",
+          "name": "material-palenight",
+          "description": "Material Theme Lighter and Material Theme Palenight",
+          "shikiThemeIds": ["material-theme-lighter", "material-theme-palenight"],
+          "dark": {
+            "bg": "#292d3e",
+            "bgAlt": "#292d3e",
+            "text": "#babed8",
+            "muted": "#676e95",
+            "border": "#00000030",
+            "primary": "#80cbc4",
+            "primaryHover": "#babed8",
+            "codeBg": "#292d3e",
+            "codeText": "#babed8",
+            "red": "#f07178",
+            "green": "#c3e88d",
+            "yellow": "#ffcb6b",
+            "blue": "#82aaff",
+            "magenta": "#c792ea",
+            "cyan": "#89ddff",
+            "syntax": {
+              "foreground": "#babed8",
+              "background": "#292d3e",
+              "comment": "#676e95",
+              "punctuation": "#89ddff",
+              "keyword": "#f78c6c",
+              "string": "#c3e88d",
+              "stringExpression": "#c3e88d",
+              "constant": "#f78c6c",
+              "function": "#82aaff",
+              "parameter": "#f07178",
+              "link": "#80cbc4"
+            }
+          }
+        }
+      ],
+      "shiki": {
+        "source": {
+          "package": "@shikijs/themes",
+          "version": "4.4.3",
+          "license": "MIT",
+          "themeIds": [
+            "material-theme-lighter",
+            "material-theme",
+            "material-theme-darker",
+            "material-theme-ocean",
+            "material-theme-palenight"
+          ]
+        },
+        "migrations": [
+          {
+            "id": "material-theme-lighter",
+            "exportName": "material",
+            "mode": "light",
+            "pairing": "Material Theme Lighter + Material Theme"
+          },
+          {
+            "id": "material-theme",
+            "exportName": "material",
+            "mode": "dark",
+            "pairing": "Material Theme Lighter + Material Theme"
+          },
+          {
+            "id": "material-theme-darker",
+            "exportName": "materialDarker",
+            "mode": "dark",
+            "pairing": "Material Theme Lighter + Material Theme Darker"
+          },
+          {
+            "id": "material-theme-ocean",
+            "exportName": "materialOcean",
+            "mode": "dark",
+            "pairing": "Material Theme Lighter + Material Theme Ocean"
+          },
+          {
+            "id": "material-theme-palenight",
+            "exportName": "materialPalenight",
+            "mode": "dark",
+            "pairing": "Material Theme Lighter + Material Theme Palenight"
+          }
+        ]
+      }
+    },
+    {
       "id": "horizon",
       "title": "Horizon",
       "description": "Warm coral and plum at dusk",
@@ -1167,6 +2451,67 @@
         "blue": "#26bbd9",
         "magenta": "#b877db",
         "cyan": "#59e1e3"
+      },
+      "variants": [
+        {
+          "id": "bright",
+          "exportName": "horizonBright",
+          "name": "horizon-bright",
+          "description": "Horizon Bright and Horizon",
+          "shikiThemeIds": ["horizon-bright", "horizon"],
+          "light": {
+            "bg": "#fdf0ed",
+            "bgAlt": "#fdf0ed",
+            "text": "#06060c",
+            "muted": "#33333380",
+            "border": "#1a1c231a",
+            "primary": "#e84a72",
+            "primaryHover": "#e73665",
+            "codeBg": "#fdf0ed",
+            "codeText": "#06060c",
+            "red": "#e95678",
+            "green": "#29d398",
+            "yellow": "#fab795",
+            "blue": "#26bbd9",
+            "magenta": "#ee64ac",
+            "cyan": "#59e1e3",
+            "syntax": {
+              "foreground": "#06060c",
+              "background": "#fdf0ed",
+              "comment": "#33333380",
+              "punctuation": "#da103fb3",
+              "keyword": "#8a31b9",
+              "string": "#f6661e",
+              "stringExpression": "#f6661e",
+              "constant": "#dc3318",
+              "function": "#1d8991",
+              "parameter": "#e95678",
+              "link": "#dc3318"
+            }
+          }
+        }
+      ],
+      "shiki": {
+        "source": {
+          "package": "@shikijs/themes",
+          "version": "4.4.3",
+          "license": "MIT",
+          "themeIds": ["horizon", "horizon-bright"]
+        },
+        "migrations": [
+          {
+            "id": "horizon",
+            "exportName": "horizon",
+            "mode": "dark",
+            "pairing": "Ox Content light companion + Horizon"
+          },
+          {
+            "id": "horizon-bright",
+            "exportName": "horizonBright",
+            "mode": "light",
+            "pairing": "Horizon Bright + Horizon"
+          }
+        ]
       }
     },
     {

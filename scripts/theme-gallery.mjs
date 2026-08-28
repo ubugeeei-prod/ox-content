@@ -238,8 +238,8 @@ const schemeData = palettes.flatMap((p) => {
       id: variant.name ?? `${p.id}-${variant.id}`,
       title: `${p.title} ${pascal(variant.id)}`,
       description: variant.description,
-      light: p.light,
-      dark: variant.dark,
+      light: variant.light ?? p.light,
+      dark: variant.dark ?? p.dark,
       exportName: variant.exportName,
     })),
   ];

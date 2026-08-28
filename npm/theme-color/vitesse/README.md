@@ -34,6 +34,17 @@ import pixel from "@ox-content/theme-pixel";
 theme: [pixel, vitesse, { colors: { primary: "#ff5f56" } }];
 ```
 
+## Variants
+
+The default export stays `vitesse` (Anthony Fu's Vitesse light and dark). Named variants
+are exported from the same package:
+
+```ts
+import { vitesseBlack } from "@ox-content/theme-color-vitesse";
+```
+
+- `vitesseBlack` — Vitesse Light and Black
+
 ## License
 
 MIT

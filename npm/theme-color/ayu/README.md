@@ -34,6 +34,17 @@ import pixel from "@ox-content/theme-pixel";
 theme: [pixel, ayu, { colors: { primary: "#ff5f56" } }];
 ```
 
+## Variants
+
+The default export stays `ayu` (Ayu Light and Ayu Mirage). Named variants
+are exported from the same package:
+
+```ts
+import { ayuDark } from "@ox-content/theme-color-ayu";
+```
+
+- `ayuDark` — Ayu Light and Ayu Dark
+
 ## License
 
 MIT

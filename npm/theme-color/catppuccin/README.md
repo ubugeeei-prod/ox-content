@@ -34,6 +34,18 @@ import pixel from "@ox-content/theme-pixel";
 theme: [pixel, catppuccin, { colors: { primary: "#ff5f56" } }];
 ```
 
+## Variants
+
+The default export stays `catppuccin` (Catppuccin Latte and Mocha). Named variants
+are exported from the same package:
+
+```ts
+import { catppuccinFrappe, catppuccinMacchiato } from "@ox-content/theme-color-catppuccin";
+```
+
+- `catppuccinFrappe` — Catppuccin Latte and Frappé
+- `catppuccinMacchiato` — Catppuccin Latte and Macchiato
+
 ## License
 
 MIT

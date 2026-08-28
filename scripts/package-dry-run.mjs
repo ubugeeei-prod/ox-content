@@ -15,6 +15,19 @@ const packages = [
   "npm/vite-plugin-ox-content-react",
   "npm/vite-plugin-ox-content-solid",
   "npm/vite-plugin-ox-content-svelte",
+  "npm/theme-color/ayu",
+  "npm/theme-color/catppuccin",
+  "npm/theme-color/dracula",
+  "npm/theme-color/github",
+  "npm/theme-color/gruvbox",
+  "npm/theme-color/horizon",
+  "npm/theme-color/kanagawa",
+  "npm/theme-color/material",
+  "npm/theme-color/night-owl",
+  "npm/theme-color/one-dark",
+  "npm/theme-color/rose-pine",
+  "npm/theme-color/solarized",
+  "npm/theme-color/vitesse",
 ];
 const packDir = mkdtempSync(join(tmpdir(), "ox-content-pack-"));
 const failures = [];

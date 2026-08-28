@@ -248,8 +248,13 @@ const camel = (id) => id.replace(/-([a-z0-9])/g, (_, c) => c.toUpperCase());
 // Link text and muted body copy must clear WCAG AA against their own page, so
 // the authored accents are tightened here rather than in 23 hand-edited files.
 for (const p of palettes) {
-  for (const mode of ["light", "dark"]) {
-    const c = p[mode];
+  const modes = [
+    p.light,
+    p.dark,
+    ...(p.variants ?? []).flatMap((variant) => [variant.light, variant.dark]),
+  ].filter(Boolean);
+
+  for (const c of modes) {
     // Body text first: everything else is decoration if this fails.
     c.text = ensureContrast(c.text, c.bg, 4.5);
     c.codeText = ensureContrast(c.codeText, c.codeBg, 4.5);

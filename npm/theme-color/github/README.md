@@ -34,6 +34,25 @@ import pixel from "@ox-content/theme-pixel";
 theme: [pixel, github, { colors: { primary: "#ff5f56" } }];
 ```
 
+## Variants
+
+The default export stays `github` (GitHub Light and GitHub Dark). Named variants
+are exported from the same package:
+
+```ts
+import {
+  githubClassic,
+  githubDefault,
+  githubDimmed,
+  githubHighContrast,
+} from "@ox-content/theme-color-github";
+```
+
+- `githubClassic` — GitHub Light and Dark from @shikijs/themes
+- `githubDefault` — GitHub Light Default and Dark Default
+- `githubDimmed` — GitHub Light Default and Dark Dimmed
+- `githubHighContrast` — GitHub Light High Contrast and Dark High Contrast
+
 ## License
 
 MIT

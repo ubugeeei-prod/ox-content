@@ -1,0 +1,60 @@
+{
+  "name": "@ox-content/theme-color-material",
+  "version": "3.0.0-alpha.16",
+  "description": "Material Theme Lighter and Material Theme — an Ox Content color scheme that composes with any @ox-content/theme-* skin",
+  "keywords": [
+    "color-scheme",
+    "documentation",
+    "markdown",
+    "material",
+    "ox-content",
+    "palette",
+    "ssg",
+    "theme"
+  ],
+  "license": "MIT",
+  "author": "ubugeeei",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ubugeeei-prod/ox-content.git",
+    "directory": "npm/theme-color/material"
+  },
+  "files": [
+    "dist"
+  ],
+  "type": "module",
+  "sideEffects": false,
+  "main": "./dist/index.cjs",
+  "types": "./dist/index.d.mts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.cjs",
+      "types": "./dist/index.d.mts"
+    }
+  },
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
+  },
+  "scripts": {
+    "build": "vp pack",
+    "dev": "vp pack --watch",
+    "typecheck": "tsgo --noEmit"
+  },
+  "devDependencies": {
+    "@ox-content/vite-plugin": "workspace:*",
+    "@types/node": "catalog:",
+    "@typescript/native-preview": "catalog:",
+    "typescript": "catalog:",
+    "vite-plus": "catalog:"
+  },
+  "peerDependencies": {
+    "@ox-content/vite-plugin": ">=3.0.0-alpha.1"
+  },
+  "peerDependenciesMeta": {
+    "@ox-content/vite-plugin": {
+      "optional": true
+    }
+  }
+}
