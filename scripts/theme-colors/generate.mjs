@@ -7,7 +7,7 @@
 //
 // Usage: node scripts/theme-colors/generate.mjs
 
-import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { execFileSync } from "node:child_process";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -69,25 +69,40 @@ ${record(tokensFor(dark, light, "dark"), "    ")}
 }
 
 function indexTs(p, exportName) {
-  const configs = [
-    configTs(p, exportName, p.light, p.dark, p.id, p.description),
-    ...(p.variants ?? []).map((variant) =>
-      configTs(
-        p,
-        variant.exportName ?? camel(`${p.id}-${variant.id}`),
-        variant.light ?? p.light,
-        variant.dark ?? p.dark,
-        variant.name ?? `${p.id}-${variant.id}`,
-        variant.description ?? p.description,
-      ),
+  const variants = configEntries(p, exportName);
+  const [defaultEntry, ...namedEntries] = variants;
+  return [
+    `export { ${defaultEntry.exportName} as default, ${defaultEntry.exportName} } from "./${defaultEntry.exportName}.js";`,
+    ...namedEntries.map(
+      (entry) => `export { ${entry.exportName} } from "./${entry.exportName}.js";`,
     ),
-  ];
+    "",
+  ].join("\n");
+}
 
+function configEntries(p, exportName) {
+  return [
+    {
+      exportName,
+      light: p.light,
+      dark: p.dark,
+      name: p.id,
+      description: p.description,
+    },
+    ...(p.variants ?? []).map((variant) => ({
+      exportName: variant.exportName ?? camel(`${p.id}-${variant.id}`),
+      light: variant.light ?? p.light,
+      dark: variant.dark ?? p.dark,
+      name: variant.name ?? `${p.id}-${variant.id}`,
+      description: variant.description ?? p.description,
+    })),
+  ];
+}
+
+function configFileTs(p, entry) {
   return `import type { ThemeConfig } from "@ox-content/vite-plugin";
 
-${configs.join("\n")}
-export default ${exportName};
-`;
+${configTs(p, entry.exportName, entry.light, entry.dark, entry.name, entry.description)}`;
 }
 
 function packageJson(p) {
@@ -267,8 +282,13 @@ for (const p of palettes) {
 for (const p of palettes) {
   const dir = join(ROOT, "npm", "theme-color", p.id);
   const exportName = camel(p.id);
+  const srcDir = join(dir, "src");
+  rmSync(srcDir, { recursive: true, force: true });
   mkdirSync(join(dir, "src"), { recursive: true });
   writeFileSync(join(dir, "src", "index.ts"), indexTs(p, exportName));
+  for (const entry of configEntries(p, exportName)) {
+    writeFileSync(join(srcDir, `${entry.exportName}.ts`), configFileTs(p, entry));
+  }
   writeFileSync(join(dir, "package.json"), JSON.stringify(packageJson(p), null, 2) + "\n");
   writeFileSync(join(dir, "tsconfig.json"), JSON.stringify(TSCONFIG, null, 2) + "\n");
   writeFileSync(join(dir, "vite.config.ts"), VITE_CONFIG);
