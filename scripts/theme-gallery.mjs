@@ -109,10 +109,27 @@ function skinVars(skin) {
   };\n}`;
 }
 
-function readExportedTheme(src, exportName) {
+function readExportedTheme(srcDir, src, exportName) {
   const marker = `export const ${exportName}`;
   const start = src.indexOf(marker);
-  if (start < 0) throw new Error(`Missing theme export: ${exportName}`);
+  if (start < 0) {
+    const exportFrom = /export\s*\{([^}]+)\}\s*from\s*["'](.+?)["'];/g;
+    let match;
+
+    while ((match = exportFrom.exec(src)) !== null) {
+      const [, specifiers, specifier] = match;
+      for (const part of specifiers.split(",")) {
+        const [localName, exportedName = localName] = part.trim().split(/\s+as\s+/);
+        if (exportedName !== exportName && localName !== exportName) continue;
+
+        const target = specifier.replace(/\.js$/, ".ts");
+        const targetSrc = readFileSync(join(srcDir, target), "utf-8");
+        return readExportedTheme(srcDir, targetSrc, localName);
+      }
+    }
+
+    throw new Error(`Missing theme export: ${exportName}`);
+  }
 
   const objectStart = src.indexOf("{", start);
   if (objectStart < 0) throw new Error(`Missing object literal for theme export: ${exportName}`);
@@ -224,7 +241,8 @@ const skins = skinsManifest.skins.map((s) => ({
 // rather than pulling a TS loader into this script. A package can expose named
 // variants from the same module; each variant deserves its own gallery row.
 const schemeData = palettes.flatMap((p) => {
-  const src = readFileSync(join(ROOT, "npm", "theme-color", p.id, "src", "index.ts"), "utf-8");
+  const srcDir = join(ROOT, "npm", "theme-color", p.id, "src");
+  const src = readFileSync(join(srcDir, "index.ts"), "utf-8");
   const entries = [
     {
       id: p.id,
@@ -245,7 +263,7 @@ const schemeData = palettes.flatMap((p) => {
   ];
 
   return entries.map((entry) => {
-    const theme = readExportedTheme(src, entry.exportName);
+    const theme = readExportedTheme(srcDir, src, entry.exportName);
     return {
       id: entry.id,
       title: entry.title,
