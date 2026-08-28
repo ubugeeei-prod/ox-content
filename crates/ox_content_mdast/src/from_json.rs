@@ -11,12 +11,14 @@ use ox_content_allocator::{Allocator, Vec as ArenaVec};
 use ox_content_ast::{
     AlignKind, BlockQuote, Break, CodeBlock, Definition, Delete, Document, Emphasis,
     FootnoteDefinition, FootnoteReference, Heading, Html, Image, InlineCode, Link, List, ListItem,
-    MdxFlowExpression, MdxJsxAttribute, MdxJsxAttributeEntry, MdxJsxAttributeValue,
-    MdxJsxAttributeValueExpression, MdxJsxExpressionAttribute, MdxJsxFlowElement,
-    MdxJsxTextElement, MdxTextExpression, MdxjsEsm, Node, Paragraph, Span, Strong, Table,
-    TableCell, TableRow, Text, ThematicBreak,
+    MdxFlowExpression, MdxJsxFlowElement, MdxJsxTextElement, MdxTextExpression, MdxjsEsm, Node,
+    Paragraph, Span, Strong, Table, TableCell, TableRow, Text, ThematicBreak,
 };
 use serde_json::Value;
+
+mod mdx;
+
+use mdx::mdx_attributes;
 
 /// Why an mdast payload could not be turned back into a document.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -254,60 +256,6 @@ fn align<'a>(allocator: &'a Allocator, value: Option<&Value>) -> ArenaVec<'a, Al
         });
     }
     out
-}
-
-fn mdx_attributes<'a>(
-    allocator: &'a Allocator,
-    value: Option<&Value>,
-) -> Result<ArenaVec<'a, MdxJsxAttributeEntry<'a>>, MdastJsonError> {
-    let items = children_array(value)?;
-    let mut out = allocator.new_vec_with_capacity(items.len());
-    for item in items {
-        out.push(mdx_attribute(allocator, item)?);
-    }
-    Ok(out)
-}
-
-fn mdx_attribute<'a>(
-    allocator: &'a Allocator,
-    value: &Value,
-) -> Result<MdxJsxAttributeEntry<'a>, MdastJsonError> {
-    let span = Span::new(0, 0);
-    match value.get("type").and_then(Value::as_str) {
-        Some("mdxJsxExpressionAttribute") => {
-            Ok(MdxJsxAttributeEntry::Expression(MdxJsxExpressionAttribute {
-                value: required_str(allocator, value, "value")?,
-                span,
-            }))
-        }
-        Some("mdxJsxAttribute") => Ok(MdxJsxAttributeEntry::Attribute(MdxJsxAttribute {
-            name: required_str(allocator, value, "name")?,
-            value: mdx_attribute_value(allocator, value.get("value"))?,
-            span,
-        })),
-        Some(other) => {
-            Err(MdastJsonError::new(format!("unknown mdast JSX attribute type {other:?}")))
-        }
-        None => Err(MdastJsonError::new("mdast JSX attribute has no \"type\"")),
-    }
-}
-
-fn mdx_attribute_value<'a>(
-    allocator: &'a Allocator,
-    value: Option<&Value>,
-) -> Result<Option<MdxJsxAttributeValue<'a>>, MdastJsonError> {
-    match value {
-        None | Some(Value::Null) => Ok(None),
-        Some(Value::String(literal)) => {
-            Ok(Some(MdxJsxAttributeValue::Literal(allocator.alloc_str(literal))))
-        }
-        Some(object) => {
-            Ok(Some(MdxJsxAttributeValue::Expression(MdxJsxAttributeValueExpression {
-                value: required_str(allocator, object, "value")?,
-                span: Span::new(0, 0),
-            })))
-        }
-    }
 }
 
 fn children_array(value: Option<&Value>) -> Result<&[Value], MdastJsonError> {
