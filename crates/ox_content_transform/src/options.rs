@@ -262,6 +262,13 @@ pub struct EditThisPageOptions {
     /// by the user, so [`Self::root_dir`] can be joined with the page's
     /// path inside that root.
     pub src_dir: Option<String>,
+    /// Forge whose edit-URL shape to use: `github`, `gitlab`, `bitbucket`,
+    /// or `gitea`. Inferred from the [`Self::repo_url`] host when omitted,
+    /// and an unrecognized value is inferred the same way.
+    pub provider: Option<String>,
+    /// Edit-URL template, which wins over [`Self::provider`]. Understands
+    /// `{repoUrl}`, `{branch}`, and `{path}`; anything else is literal.
+    pub url_pattern: Option<String>,
     pub label: Option<String>,
 }
 

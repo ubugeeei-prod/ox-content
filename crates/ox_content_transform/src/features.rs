@@ -110,6 +110,8 @@ struct ResolvedEditThisPageOptions {
     src_dir: Option<PathBuf>,
     /// The build's working directory, resolved once per page.
     working_dir: PathBuf,
+    /// Edit-URL template for the forge the repository is hosted on.
+    url_pattern: String,
     source_path: String,
     label: String,
 }

@@ -900,6 +900,21 @@ export interface JsEditThisPageOptions {
    */
   srcDir?: string
   /**
+   * Forge whose edit-URL shape to use: `github`, `gitlab`, `bitbucket`,
+   * or `gitea`.
+   *
+   * Default: inferred from the `repo_url` host, falling back to
+   * `github`. An unrecognized value is inferred the same way.
+   */
+  provider?: string
+  /**
+   * Edit-URL template, which wins over `provider`. Understands
+   * `{repoUrl}`, `{branch}`, and `{path}`; other braces stay literal.
+   *
+   * Default: the pattern for the resolved provider.
+   */
+  urlPattern?: string
+  /**
    * Link label.
    *
    * Default: `"Edit this page"`.

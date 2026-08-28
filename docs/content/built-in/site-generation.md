@@ -301,6 +301,44 @@ oxContent({
 <a href="https://gitlab.example.com/owner/repo/edit/main/packages/site/docs/guide/nested.md"></a>
 ```
 
+### Other forges
+
+Every forge puts its web editor at a different path, so a link built for the
+wrong one 404s:
+
+| Provider    | Shape                                     |
+| ----------- | ----------------------------------------- |
+| `github`    | `<repoUrl>/edit/<branch>/<path>`          |
+| `gitlab`    | `<repoUrl>/-/edit/<branch>/<path>`        |
+| `bitbucket` | `<repoUrl>/src/<branch>/<path>?mode=edit` |
+| `gitea`     | `<repoUrl>/_edit/<branch>/<path>`         |
+
+`gitlab.com`, `bitbucket.org`, `codeberg.org`, and `gitea.com` are recognized
+from `repoUrl` and need no configuration. A self-hosted instance needs
+`provider`, because its hostname says nothing about the software behind it:
+
+```ts
+oxContent({
+  editThisPage: {
+    repoUrl: "https://git.example.com/owner/repo",
+    provider: "gitlab",
+  },
+});
+```
+
+`gitea` covers Forgejo, which kept the same path. For anything these miss,
+`urlPattern` replaces the shape outright — `{repoUrl}`, `{branch}`, and
+`{path}` are filled in and other braces are left alone:
+
+```ts
+oxContent({
+  editThisPage: {
+    repoUrl: "https://git.example.com/owner/repo",
+    urlPattern: "{repoUrl}/ui/edit?ref={branch}&file={path}",
+  },
+});
+```
+
 ## Collections
 
 Collections expose Markdown files as a lazily-loaded, queryable manifest —
