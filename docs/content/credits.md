@@ -56,6 +56,8 @@ Contribution summary:
 - Requested class-based dark-mode support for Twitter/X full-card styles.
 - Reported Twitter/X full-card action control and replies-placement geometry
   mismatches against sveltweet production cards.
+- Requested the official Twitter/X Copy link client API and verified the
+  downstream migration without a site-specific listener.
 
 ## Third-party attribution
 

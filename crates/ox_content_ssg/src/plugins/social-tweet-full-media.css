@@ -193,6 +193,18 @@
   display: none;
 }
 
+.ox-tweet--full .ox-tweet__copy-status {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
 .ox-tweet--full .ox-tweet__action--copy[data-ox-tweet-copied] .ox-tweet__copy-text {
   display: none;
 }

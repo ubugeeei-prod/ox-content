@@ -53,6 +53,8 @@ Markdown 属性とリッチなソーシャル埋め込みの見た目の同等�
 - Twitter / X full card style の class ベース dark mode 対応を要望しました。
 - Twitter / X full card の action control と replies 配置の geometry が sveltweet の
   本番 card と合っていないことを報告しました。
+- 独自ホストでの Twitter / X Copy link 用公式 client API を要望し、
+  site-specific listener を外せる downstream migration を検証しました。
 
 ## 第三者の帰属
 

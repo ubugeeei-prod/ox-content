@@ -5,6 +5,7 @@ import { mkdtempSync, rmSync, readFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join, relative } from "node:path";
 import { checkReaderChromeDeclarations } from "./package-dry-run-reader-chrome.mjs";
+import { checkTwitterClientDeclarations } from "./package-dry-run-twitter-client.mjs";
 
 const packages = [
   "crates/ox_content_napi",
@@ -73,6 +74,13 @@ function checkPackage(packageDir) {
   }
   if (pkg.name === "@ox-content/vite-plugin") {
     checkReaderChromeDeclarations({
+      pkg,
+      tarball: packed.filename,
+      packDir,
+      failures,
+      readPackedFile,
+    });
+    checkTwitterClientDeclarations({
       pkg,
       tarball: packed.filename,
       packDir,

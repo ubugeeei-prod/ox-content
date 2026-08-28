@@ -247,6 +247,10 @@ const SOCIAL_TWEET_FULL_CSS: &str = concat!(
     include_str!("plugins/social-tweet-full-media.css"),
 );
 
+/// JS for progressively-enhanced full-fidelity Tweet cards.
+const SOCIAL_TWEET_FULL_JS: &str =
+    concat!(include_str!("html/plugins/twitter.js"), "\ninitTweetCards(document);\n");
+
 /// CSS styles for Mermaid plugin.
 const MERMAID_CSS: &str = include_str!("plugins/mermaid.css");
 

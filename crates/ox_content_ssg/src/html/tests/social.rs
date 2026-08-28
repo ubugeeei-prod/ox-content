@@ -79,13 +79,17 @@ fn reddit_pages_ship_social_css() {
 #[test]
 fn full_tweet_pages_ship_gated_full_card_css() {
     let html = generate_html(
-        &page(r#"<figure class="ox-tweet ox-tweet--fetched ox-tweet--full"></figure>"#),
+        &page(
+            r#"<figure class="ox-tweet ox-tweet--fetched ox-tweet--full"><a data-ox-tweet-copy></a></figure>"#,
+        ),
         &[],
         &config(),
     );
     assert!(html.contains("ox-content:css:plugin-social:start"));
     assert!(html.contains("ox-content:css:plugin-social-tweet-full:start"));
     assert!(html.contains("--ox-tweet-color-blue"));
+    assert!(html.contains("ox-content:js:plugin-social-tweet-full:start"));
+    assert!(html.contains("initTweetCards(document);"));
 }
 
 #[test]

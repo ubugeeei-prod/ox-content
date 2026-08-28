@@ -78,6 +78,16 @@
         "default": "./dist/reader-chrome-client.cjs"
       }
     },
+    "./twitter/client": {
+      "import": {
+        "types": "./dist/twitter-client.d.mts",
+        "default": "./dist/twitter-client.mjs"
+      },
+      "require": {
+        "types": "./dist/twitter-client.d.cts",
+        "default": "./dist/twitter-client.cjs"
+      }
+    },
     "./vitepress-migrate": {
       "import": "./dist/vitepress-cli.mjs",
       "types": "./dist/vitepress-cli.d.mts"
@@ -113,7 +123,7 @@
     "provenance": true
   },
   "scripts": {
-    "build": "vp pack && node scripts/build-reader-chrome-types.mjs && node scripts/build-standalone-entries.mjs && node scripts/build-reader-chrome-client.mjs && node scripts/copy-component-styles.mjs",
+    "build": "vp pack && node scripts/build-reader-chrome-types.mjs && node scripts/build-standalone-entries.mjs && node scripts/build-reader-chrome-client.mjs && node scripts/build-twitter-client.mjs && node scripts/copy-component-styles.mjs",
     "build:styles": "node scripts/copy-component-styles.mjs",
     "dev": "vp pack --watch",
     "typecheck": "tsgo --noEmit",

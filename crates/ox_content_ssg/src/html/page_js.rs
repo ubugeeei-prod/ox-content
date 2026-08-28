@@ -1,7 +1,7 @@
 use super::header_chrome::{HEADER_CHROME_JS, header_chrome_needs_js};
 use super::reader_chrome::READER_CHROME_JS;
 use super::utils::{page_content_contains_any, wrap_js_section};
-use super::{SSG_JS, TABS_JS};
+use super::{SOCIAL_TWEET_FULL_JS, SSG_JS, TABS_JS};
 
 pub(super) struct PageJsInput<'a> {
     pub content: &'a str,
@@ -29,6 +29,9 @@ pub(super) fn assemble_page_js(input: &PageJsInput<'_>) -> String {
     }
     if input.reader_needs_js {
         sections.push(wrap_js_section("reader-chrome", READER_CHROME_JS));
+    }
+    if page_content_contains_any(input.content, &["data-ox-tweet-copy"]) {
+        sections.push(wrap_js_section("plugin-social-tweet-full", SOCIAL_TWEET_FULL_JS));
     }
     if header_chrome_needs_js(
         input.header_nav_html,
@@ -83,6 +86,26 @@ mod tests {
             assemble_page_js(&input(r#"<div class="ox-tabs" data-ox-tab-group="pkg"></div>"#, ""));
         assert!(synced.contains("// ox-content:js:tabs:start"), "{synced}");
         assert!(synced.contains("STORAGE_PREFIX"), "{synced}");
+    }
+
+    #[test]
+    fn full_tweet_copy_is_the_only_reason_to_emit_tweet_js() {
+        let static_tweet = assemble_page_js(&input(r#"<figure class="ox-tweet"></figure>"#, ""));
+        assert!(
+            !static_tweet.contains("// ox-content:js:plugin-social-tweet-full:"),
+            "{static_tweet}"
+        );
+
+        let full_tweet = assemble_page_js(&input(
+            r#"<a class="ox-tweet__action--copy" data-ox-tweet-copy></a>"#,
+            "",
+        ));
+        assert!(
+            full_tweet.contains("// ox-content:js:plugin-social-tweet-full:start"),
+            "{full_tweet}"
+        );
+        assert!(full_tweet.contains("function initTweetCards(rootInput, options)"), "{full_tweet}");
+        assert!(full_tweet.contains("initTweetCards(document);"), "{full_tweet}");
     }
 
     #[test]

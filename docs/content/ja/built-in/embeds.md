@@ -318,6 +318,15 @@ oxContent({
 | `timeZone`        | `"UTC"`                     | フルカード日時の IANA タイムゾーン。                |
 
 ダウンロードしたメディアは自分のサイトから出すので、厳しい `img-src 'self'` CSP も動き続けます。動画とアニメーション GIF は、`downloadVideo` をオンにしない限り自前のポスターと Watch on X パーマリンクを使い、生成 HTML に `video.twimg.com` は出しません。削除済みや非公開の投稿は、ビルドを落とさずリンクのみのカードに落ちます。引用投稿が欠けていても、元の投稿カードは残します。フルカード用 CSS は `.ox-tweet--full` を描画するページにだけ載ります。フルカードのクロムは MIT ライセンスの [react-tweet](https://github.com/vercel/react-tweet) と [sveltweet](https://github.com/ryoppippi/sveltweet) の見た目の契約に従います。帰属は [クレジット](../credits.md) にあります。詳細は [Twitter/X Embed](/examples/twitter-embed.md) を見てください。
+
+組み込み SSG のページでは、フル Tweet カードがあると Copy link 用の progressive enhancement が自動で入ります。独自ホストで Ox Content の HTML を描画する場合は、同じ初期化関数を import できます。
+
+```ts
+import { initTweetCards } from "@ox-content/vite-plugin/twitter/client";
+
+initTweetCards(document);
+```
+
 独自ホストは `@ox-content/vite-plugin/styles/social.css` を、`appearance: "full"`
 なら `styles/twitter-full.css` も import します。記事の中に置く場合もこの2つで足ります。フルカードの CSS は、`@tailwindcss/typography` のような本文用スタイルシートが、カードの置き換えた要素に当てる規則を打ち消します。アバターやメディアへの画像マージン、引用投稿への引用符とその typography、カード自体への figure の余白などです。`.prose .ox-tweet--full …` のような上書きを下流で書く必要はありません。[コンポーネント CSS](./component-styles.md) を見てください。
 

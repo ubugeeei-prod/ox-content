@@ -2,7 +2,7 @@ import { mkdtemp, readFile, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { afterEach, describe, expect, it } from "vite-plus/test";
-import { enhanceTweetCopyActions } from "./copy";
+import { enhanceTweetCopyActions, initTweetCards } from "./copy";
 import { formatFullDate } from "./date-utils";
 import { clearTweetCache } from "./fetch";
 import { transformFetchedTweets } from "./transform";
@@ -47,6 +47,39 @@ describe("full-card react-tweet parity", () => {
     expect(css).toContain(".ox-tweet--full .ox-tweet__replies-link:hover");
   });
 
+  it("uses the sveltweet copied checkmark state for Copy link", async () => {
+    const [baseCss, mediaCss, html] = await Promise.all([
+      readFile(
+        path.join(
+          import.meta.dirname,
+          "../../../../../crates/ox_content_ssg/src/plugins/social-tweet-full.css",
+        ),
+        "utf8",
+      ),
+      readFile(FULL_MEDIA_CSS, "utf8"),
+      renderCard(
+        {
+          text: "Hello",
+          id_str: FIXTURE_ID,
+          conversation_count: 12,
+          user: user(),
+        },
+        { appearance: "full" },
+        { html: `<XPost id="${FIXTURE_ID}" />` },
+      ),
+    ]);
+
+    expect(html).toContain('data-ox-tweet-copy-status role="status" aria-live="polite"');
+    expect(baseCss).toContain("--ox-tweet-icon-check");
+    expect(baseCss).toContain(
+      ".ox-tweet--full .ox-tweet__action--copy[data-ox-tweet-copied] .ox-tweet__icon--copy",
+    );
+    expect(mediaCss).toContain(".ox-tweet--full .ox-tweet__copy-status");
+    expect(mediaCss).toContain(
+      ".ox-tweet--full .ox-tweet__action--copy[data-ox-tweet-copied] .ox-tweet__copied-text",
+    );
+  });
+
   it("formats full-card timestamps in UTC by default and honors timeZone", async () => {
     expect(formatFullDate(FIXTURE_CREATED_AT)).toEqual({
       iso: FIXTURE_CREATED_AT,
@@ -79,37 +112,78 @@ describe("full-card react-tweet parity", () => {
     expect(london).toContain("10:52 AM · Jul 4, 2025");
   });
 
-  it("enhances Copy link to Copied! without requiring card JavaScript", async () => {
+  it("enhances Copy link to Copied! with delegated, repeat-safe listeners", async () => {
     const written: string[] = [];
     const action = fakeCopyAction("https://x.com/i/web/status/1941072675872641440");
-    const stop = enhanceTweetCopyActions(
-      { querySelectorAll: () => [action] },
-      {
-        clipboard: {
-          writeText: async (value: string) => {
-            written.push(value);
-          },
+    const root = fakeCopyRoot();
+    const stop = enhanceTweetCopyActions(root, {
+      clipboard: {
+        writeText: async (value: string) => {
+          written.push(value);
         },
-        copiedMs: 5,
       },
-    );
+      copiedMs: 5,
+    });
+    initTweetCards(root, { clipboard: { writeText: async (value) => written.push(value) } });
 
-    const event = {
-      defaultPrevented: false,
-      preventDefault() {
-        this.defaultPrevented = true;
-      },
-    };
-    await action.dispatch("click", event);
+    const event = await root.dispatch(action);
     expect(event.defaultPrevented).toBe(true);
     expect(written).toEqual(["https://x.com/i/web/status/1941072675872641440"]);
     expect(action.getAttribute("data-ox-tweet-copied")).toBe("");
     expect(action.getAttribute("aria-label")).toBe("Copied!");
+    expect(action.status.textContent).toBe("Copied!");
 
     await new Promise((resolve) => setTimeout(resolve, 10));
     expect(action.getAttribute("data-ox-tweet-copied")).toBeNull();
     expect(action.getAttribute("aria-label")).toBe("Copy link to post");
+    expect(action.status.textContent).toBe("");
     stop();
+  });
+
+  it("keeps permalink fallback when Clipboard API is unavailable", async () => {
+    const root = fakeCopyRoot();
+    const action = fakeCopyAction("https://x.com/i/web/status/1941072675872641440");
+    enhanceTweetCopyActions(root, { clipboard: undefined, copiedMs: 5 });
+
+    const event = await root.dispatch(action);
+
+    expect(event.defaultPrevented).toBe(false);
+    expect(action.getAttribute("data-ox-tweet-copied")).toBeNull();
+    expect(action.getAttribute("aria-label")).toBe("Copy link to post");
+  });
+
+  it("announces clipboard rejection without showing copied state", async () => {
+    const root = fakeCopyRoot();
+    const action = fakeCopyAction("https://x.com/i/web/status/1941072675872641440");
+    enhanceTweetCopyActions(root, {
+      clipboard: {
+        writeText: async () => {
+          throw new Error("denied");
+        },
+      },
+      copiedMs: 5,
+    });
+
+    const event = await root.dispatch(action);
+
+    expect(event.defaultPrevented).toBe(true);
+    expect(action.getAttribute("data-ox-tweet-copied")).toBeNull();
+    expect(action.getAttribute("aria-label")).toBe("Copy failed");
+    expect(action.status.textContent).toBe("Copy failed");
+  });
+
+  it("delegates to dynamically inserted cards", async () => {
+    const written: string[] = [];
+    const root = fakeCopyRoot();
+    enhanceTweetCopyActions(root, {
+      clipboard: { writeText: async (value) => written.push(value) },
+      copiedMs: 5,
+    });
+
+    const action = fakeCopyAction("https://x.com/i/web/status/1941072675872641440");
+    await root.dispatch(action);
+
+    expect(written).toEqual(["https://x.com/i/web/status/1941072675872641440"]);
   });
 });
 
@@ -117,15 +191,42 @@ function user() {
   return { name: "Ox Content", screen_name: "ox_content" };
 }
 
-function fakeCopyAction(url: string) {
+function fakeCopyRoot() {
+  const listeners = new Map<string, Array<(event: FakeClickEvent) => unknown>>();
+  return {
+    addEventListener(type: string, listener: (event: FakeClickEvent) => unknown) {
+      listeners.set(type, [...(listeners.get(type) ?? []), listener]);
+    },
+    removeEventListener(type: string, listener: (event: FakeClickEvent) => unknown) {
+      listeners.set(
+        type,
+        (listeners.get(type) ?? []).filter((candidate) => candidate !== listener),
+      );
+    },
+    async dispatch(target: FakeCopyAction): Promise<FakeClickEvent> {
+      const event: FakeClickEvent = {
+        defaultPrevented: false,
+        target,
+        preventDefault() {
+          this.defaultPrevented = true;
+        },
+      };
+      await Promise.all((listeners.get("click") ?? []).map((listener) => listener(event)));
+      return event;
+    },
+  };
+}
+
+function fakeCopyAction(url: string): FakeCopyAction {
   const attributes = new Map<string, string>([
     ["data-ox-tweet-copy", ""],
     ["data-ox-tweet-copy-url", url],
     ["href", url],
     ["aria-label", "Copy link to post"],
   ]);
-  const listeners = new Map<string, Array<(event: { preventDefault(): void }) => unknown>>();
+  const status = { textContent: "" };
   return {
+    status,
     getAttribute(name: string) {
       return attributes.has(name) ? (attributes.get(name) ?? "") : null;
     },
@@ -135,19 +236,28 @@ function fakeCopyAction(url: string) {
     removeAttribute(name: string) {
       attributes.delete(name);
     },
-    addEventListener(type: string, listener: (event: { preventDefault(): void }) => unknown) {
-      listeners.set(type, [...(listeners.get(type) ?? []), listener]);
+    querySelector(selector: string) {
+      return selector === "[data-ox-tweet-copy-status]" ? status : null;
     },
-    removeEventListener(type: string, listener: (event: { preventDefault(): void }) => unknown) {
-      listeners.set(
-        type,
-        (listeners.get(type) ?? []).filter((candidate) => candidate !== listener),
-      );
-    },
-    async dispatch(type: string, event: { preventDefault(): void }) {
-      await Promise.all((listeners.get(type) ?? []).map((listener) => listener(event)));
+    closest(selector: string) {
+      return selector === "[data-ox-tweet-copy]" ? this : null;
     },
   };
+}
+
+interface FakeClickEvent {
+  defaultPrevented: boolean;
+  target: FakeCopyAction;
+  preventDefault(): void;
+}
+
+interface FakeCopyAction {
+  status: { textContent: string };
+  getAttribute(name: string): string | null;
+  setAttribute(name: string, value: string): void;
+  removeAttribute(name: string): void;
+  querySelector(selector: string): { textContent: string } | null;
+  closest(selector: string): FakeCopyAction | null;
 }
 
 async function renderCard(

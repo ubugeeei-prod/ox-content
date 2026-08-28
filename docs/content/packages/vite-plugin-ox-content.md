@@ -169,6 +169,15 @@ HTML — do not copy crate CSS into the app. See
 @import "@ox-content/vite-plugin/styles/reader-chrome.css";
 ```
 
+Tweet cards that use `appearance: "full"` also ship an official progressive
+Copy link client for custom hosts:
+
+```ts
+import { initTweetCards } from "@ox-content/vite-plugin/twitter/client";
+
+initTweetCards(document);
+```
+
 For an existing prose theme that only needs keyboard-accessible responsive
 Markdown tables, import `styles/markdown-tables.css` and
 `@ox-content/vite-plugin/markdown-tables` instead of the package root plus

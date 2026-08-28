@@ -398,6 +398,17 @@ render `.ox-tweet--full`. The full-card chrome follows the MIT-licensed
 [sveltweet](https://github.com/ryoppippi/sveltweet) visual contract; notices
 are in [Credits](../credits.md). See
 [Twitter/X Embed](../examples/twitter-embed.md) for details.
+
+Built-in SSG pages that contain full Tweet cards automatically include the
+progressive Copy link client. Custom hosts that render Ox Content HTML outside
+the built-in shell can import the same initializer:
+
+```ts
+import { initTweetCards } from "@ox-content/vite-plugin/twitter/client";
+
+initTweetCards(document);
+```
+
 Custom hosts import `@ox-content/vite-plugin/styles/social.css` and, for
 `appearance: "full"`, `styles/twitter-full.css`. Those two are enough inside
 an article: the full-card stylesheet neutralizes the element rules a prose
