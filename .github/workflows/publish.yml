@@ -451,22 +451,52 @@ jobs:
           npm publish "$TARBALL" --provenance --access public --tag "$NPM_TAG"
 
       # Theme presets are many small, uniform packages, so they publish from a
-      # loop rather than ~40 near-identical steps. Same skip-if-published guard
-      # as every step above; a single failure still fails the job.
+      # loop rather than ~70 near-identical steps. Same skip-if-published guard
+      # as every step above.
+      #
+      # They fan out because each one spends nearly all of its time on three
+      # network round-trips (`npm view`, then pack, then publish) and none of
+      # them depend on each other — a preset's only link to the plugin is an
+      # optional peer, which imposes no publish order. Concurrency is kept
+      # modest so the registry is not hit with 70 publishes at once.
+      #
+      # Unlike the serial loop, one failure no longer stops the presets behind
+      # it: the rest still publish and the step fails at the end. Every publish
+      # is guarded by the same skip-if-published check, so re-running the
+      # release picks up exactly what is missing.
       - name: Publish theme presets
+        env:
+          PRESET_PUBLISH_CONCURRENCY: "8"
         run: |
+          cat > "$RUNNER_TEMP/publish-preset.sh" <<'SCRIPT'
+          #!/usr/bin/env bash
+          set -euo pipefail
+          dir="$1"
+          PKG_NAME=$(node -p "require('$PWD/$dir/package.json').name")
+          PKG_VERSION=$(node -p "require('$PWD/$dir/package.json').version")
+          if npm view "${PKG_NAME}@${PKG_VERSION}" version >/dev/null 2>&1; then
+            echo "[${PKG_NAME}] skipping ${PKG_VERSION} (already published)"
+            exit 0
+          fi
+          TARBALL=$(cd "$dir" && vp exec -- pnpm pack --pack-destination "$RUNNER_TEMP" | tail -1)
+          npm publish "$TARBALL" --provenance --access public --tag "$NPM_TAG" 2>&1 |
+            sed "s|^|[${PKG_NAME}] |"
+          SCRIPT
+          chmod +x "$RUNNER_TEMP/publish-preset.sh"
+
           shopt -s nullglob
+          presets=()
           for dir in npm/theme/* npm/theme-color/*; do
-            [ -f "$dir/package.json" ] || continue
-            PKG_NAME=$(node -p "require('./$dir/package.json').name")
-            PKG_VERSION=$(node -p "require('./$dir/package.json').version")
-            if npm view "${PKG_NAME}@${PKG_VERSION}" version >/dev/null 2>&1; then
-              echo "Skipping ${PKG_NAME}@${PKG_VERSION} (already published)"
-              continue
-            fi
-            TARBALL=$(cd "$dir" && vp exec -- pnpm pack --pack-destination /tmp | tail -1)
-            npm publish "$TARBALL" --provenance --access public --tag "$NPM_TAG"
+            [ -f "$dir/package.json" ] && presets+=("$dir")
           done
+          if [ ${#presets[@]} -eq 0 ]; then
+            echo "::error::No theme presets found to publish"
+            exit 1
+          fi
+          echo "Publishing ${#presets[@]} theme presets, ${PRESET_PUBLISH_CONCURRENCY} at a time"
+
+          printf '%s\n' "${presets[@]}" |
+            xargs -r -P "$PRESET_PUBLISH_CONCURRENCY" -n 1 "$RUNNER_TEMP/publish-preset.sh"
 
       - name: Publish @ox-content/wasm
         working-directory: crates/ox_content_wasm/pkg
