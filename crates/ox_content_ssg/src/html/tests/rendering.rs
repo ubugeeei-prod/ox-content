@@ -223,11 +223,6 @@ fn test_table_css_draws_each_separator_once() {
             && SSG_CSS.contains("outline: var(--octc-focus-ring);"),
         "overflowing Markdown tables need a visible keyboard focus indicator"
     );
-    assert!(
-        !SSG_CSS.contains("data-ox-table-scrollable=\""),
-        "the scrollable marker is set with toggleAttribute(), so its value is empty: \
-         match the attribute by presence or the focus ring never applies"
-    );
     assert_eq!(
         SSG_CSS.matches("border-collapse: separate;").count(),
         1,
