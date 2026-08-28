@@ -135,7 +135,7 @@ describe("full-card react-tweet parity", () => {
 
     await new Promise((resolve) => setTimeout(resolve, 10));
     expect(action.getAttribute("data-ox-tweet-copied")).toBeNull();
-    expect(action.getAttribute("aria-label")).toBe("Copy link to post");
+    expect(action.getAttribute("aria-label")).toBe("Copy link");
     expect(action.status.textContent).toBe("");
     stop();
   });
@@ -149,7 +149,7 @@ describe("full-card react-tweet parity", () => {
 
     expect(event.defaultPrevented).toBe(false);
     expect(action.getAttribute("data-ox-tweet-copied")).toBeNull();
-    expect(action.getAttribute("aria-label")).toBe("Copy link to post");
+    expect(action.getAttribute("aria-label")).toBe("Copy link");
   });
 
   it("announces clipboard rejection without showing copied state", async () => {
@@ -222,7 +222,7 @@ function fakeCopyAction(url: string): FakeCopyAction {
     ["data-ox-tweet-copy", ""],
     ["data-ox-tweet-copy-url", url],
     ["href", url],
-    ["aria-label", "Copy link to post"],
+    ["aria-label", "Copy link"],
   ]);
   const status = { textContent: "" };
   return {

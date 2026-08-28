@@ -55,6 +55,8 @@ Markdown 属性とリッチなソーシャル埋め込みの見た目の同等�
   本番 card と合っていないことを報告しました。
 - 独自ホストでの Twitter / X Copy link 用公式 client API を要望し、
   site-specific listener を外せる downstream migration を検証しました。
+- Twitter / X full card action icon と accessible name を sveltweet の
+  reference contract に合わせました。
 
 ## 第三者の帰属
 

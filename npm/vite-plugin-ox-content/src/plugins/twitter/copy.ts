@@ -103,8 +103,7 @@ function setTweetCopyState(
     globalThis.clearTimeout(previousTimer);
   }
 
-  const label =
-    state === "copied" ? "Copied!" : state === "failed" ? "Copy failed" : "Copy link to post";
+  const label = state === "copied" ? "Copied!" : state === "failed" ? "Copy failed" : "Copy link";
   const status = action.querySelector?.("[data-ox-tweet-copy-status]");
   if (state === "copied") {
     action.setAttribute("data-ox-tweet-copied", "");

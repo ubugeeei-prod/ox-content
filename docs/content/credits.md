@@ -58,6 +58,8 @@ Contribution summary:
   mismatches against sveltweet production cards.
 - Requested the official Twitter/X Copy link client API and verified the
   downstream migration without a site-specific listener.
+- Matched the Twitter/X full-card action icons and accessible names to the
+  sveltweet reference contract.
 
 ## Third-party attribution
 

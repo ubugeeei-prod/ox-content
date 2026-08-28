@@ -113,5 +113,5 @@ function pageHtml() {
 }
 
 function tweetCardHtml() {
-  return `<a class="ox-tweet__action ox-tweet__action--copy" href="${permalink}" target="_blank" rel="noopener noreferrer" data-ox-tweet-copy data-ox-tweet-copy-url="${permalink}" aria-label="Copy link to post"><span class="ox-tweet__action-text ox-tweet__copy-text">Copy link</span><span class="ox-tweet__action-text ox-tweet__copied-text">Copied!</span><span class="ox-tweet__copy-status" data-ox-tweet-copy-status role="status" aria-live="polite"></span></a>`;
+  return `<a class="ox-tweet__action ox-tweet__action--copy" href="${permalink}" target="_blank" rel="noopener noreferrer" data-ox-tweet-copy data-ox-tweet-copy-url="${permalink}" aria-label="Copy link"><span class="ox-tweet__action-text ox-tweet__copy-text">Copy link</span><span class="ox-tweet__action-text ox-tweet__copied-text">Copied!</span><span class="ox-tweet__copy-status" data-ox-tweet-copy-status role="status" aria-live="polite"></span></a>`;
 }

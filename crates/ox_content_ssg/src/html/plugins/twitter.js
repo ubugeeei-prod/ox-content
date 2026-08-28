@@ -55,8 +55,7 @@ function setTweetCopyState(action, state, copiedMs) {
   const previousTimer = oxTweetCopyResetTimers.get(action);
   if (previousTimer) clearTimeout(previousTimer);
 
-  const label =
-    state === "copied" ? "Copied!" : state === "failed" ? "Copy failed" : "Copy link to post";
+  const label = state === "copied" ? "Copied!" : state === "failed" ? "Copy failed" : "Copy link";
   const status =
     typeof action.querySelector === "function"
       ? action.querySelector("[data-ox-tweet-copy-status]")

@@ -171,10 +171,12 @@ describe("full-fidelity Tweet cards", () => {
     expect(blue).toContain("ox-tweet__action--copy");
     expect(blue.match(/ox-tweet__action-icon/g)).toHaveLength(3);
     expect(blue.match(/ox-tweet__action-text/g)).toHaveLength(4);
+    expect(blue).toContain('aria-label="Like. This Tweet has 1.5K likes"');
+    expect(blue).toContain('aria-label="Reply to this Tweet on Twitter"');
     expect(blue).toContain("data-ox-tweet-copy");
     expect(blue).toContain('href="https://x.com/i/web/status/555"');
     expect(blue).toContain('data-ox-tweet-copy-url="https://x.com/i/web/status/555"');
-    expect(blue).toContain('aria-label="Copy link to post"');
+    expect(blue).toContain('aria-label="Copy link"');
     expect(blue).toContain("ox-tweet__copy-text");
     expect(blue).toContain("Copy link");
     expect(blue).toContain("ox-tweet__copied-text");
