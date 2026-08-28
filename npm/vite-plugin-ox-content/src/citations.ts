@@ -192,11 +192,27 @@ function citationKeysFromMarkdown(
   for (const match of visibleMarkdown.matchAll(BRACKET_RE)) {
     const body = (match[1] ?? "").trim();
     if (!body.startsWith("@") && !body.startsWith("-@")) continue;
+    if (isLinkLabel(visibleMarkdown, match)) continue;
     const parsed = parseCitationGroup(body, options, diagnostics);
     if (!parsed) continue;
     keys.push(...parsed.map((citation) => citation.key));
   }
   return keys;
+}
+
+/**
+ * A bracketed span that a destination or reference immediately follows is a
+ * Markdown link label, not a citation group.
+ *
+ * The HTML pass never sees these — by then the label is inside an `<a>` and has
+ * no brackets left — but the search-index pass reads the Markdown source, where
+ * a linked scoped package name is indistinguishable from a citation by its
+ * opening `@` alone. `[@ox-content/vite-plugin](./packages/vite-plugin.md)`
+ * reported a malformed citation and failed the whole index.
+ */
+function isLinkLabel(markdown: string, match: RegExpMatchArray): boolean {
+  const end = (match.index ?? 0) + match[0].length;
+  return markdown[end] === "(" || markdown[end] === "[";
 }
 
 function stripMarkdownCitationProtectedText(markdown: string): string {
