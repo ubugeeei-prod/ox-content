@@ -9,6 +9,26 @@ fn wiki_links_become_markdown_links() {
 }
 
 #[test]
+fn wiki_links_leave_the_inline_toc_directive_alone() {
+    // `[[toc]]` is the renderer's in-body outline directive. Rewriting it
+    // put a link to a page named "toc" where the outline belonged, so the
+    // two features could not be enabled together.
+    let options = ResolvedWikiLinkOptions { base_url: "/docs/".to_string() };
+
+    for source in ["[[toc]]", "[[TOC]]", "[[ Toc ]]"] {
+        let mut out = String::new();
+        replace_wiki_links(source, &options, &mut out);
+        assert_eq!(out, source);
+    }
+
+    // A page really named `toc` is still linkable, and the embed form is
+    // not the directive.
+    let mut out = String::new();
+    replace_wiki_links("[[toc|Contents]] ![[toc]]", &options, &mut out);
+    assert_eq!(out, "[Contents](/docs/toc) ![toc](/docs/toc)");
+}
+
+#[test]
 fn emoji_shortcodes_use_defaults_and_custom_values() {
     let options = ResolvedEmojiShortcodeOptions {
         custom: std::iter::once(("shipit".to_string(), "ship".to_string())).collect(),

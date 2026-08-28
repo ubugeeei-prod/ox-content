@@ -24,6 +24,17 @@ pub(super) fn replace_wiki_links(
             continue;
         }
 
+        // `[[toc]]` is the renderer's in-body outline directive, not a page
+        // reference. Rewriting it to a link put a link to a page named "toc"
+        // where the outline belonged, so the two features could not be on at
+        // the same time. Link a page actually named `toc` with `[[toc|toc]]`
+        // or an ordinary Markdown link.
+        if !embed && inner.eq_ignore_ascii_case("toc") {
+            out.push_str(&segment[literal_start..close + 2]);
+            cursor = close + 2;
+            continue;
+        }
+
         let (target, label) = inner
             .split_once('|')
             .map_or((inner, None), |(target, label)| (target.trim(), Some(label.trim())));

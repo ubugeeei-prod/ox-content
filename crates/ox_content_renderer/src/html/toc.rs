@@ -111,6 +111,10 @@ pub(super) fn is_toc_marker_paragraph(paragraph: &Paragraph<'_>) -> bool {
     // that the inline parser emits the literal "[[toc]]" as three Text
     // nodes (`[`, `[`, `toc]]`) because the bracket-as-link path fails
     // open — so a "single Text child only" shortcut would miss it.
+    //
+    // The match is case-insensitive: the directive names itself, and a page
+    // written `[[TOC]]` meant the same thing as one written `[[toc]]`. The
+    // marker is ASCII, so lowercasing a byte at a time is sound.
     const MARKER: &[u8] = b"[[toc]]";
     let mut matched = 0usize;
     let mut after_marker_ws = false;
@@ -127,7 +131,10 @@ pub(super) fn is_toc_marker_paragraph(paragraph: &Paragraph<'_>) -> bool {
                 }
                 continue;
             }
-            if after_marker_ws || matched == MARKER.len() || byte != MARKER[matched] {
+            if after_marker_ws
+                || matched == MARKER.len()
+                || byte.to_ascii_lowercase() != MARKER[matched]
+            {
                 return false;
             }
             matched += 1;

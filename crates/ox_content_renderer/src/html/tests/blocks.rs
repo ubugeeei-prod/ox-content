@@ -126,6 +126,21 @@ fn test_render_inline_toc_uses_unique_and_unicode_ids() {
 }
 
 #[test]
+fn test_render_inline_toc_directive_is_case_insensitive() {
+    // The directive names itself; a page written `[[TOC]]` meant the same
+    // thing and used to ship the literal text instead of the outline.
+    for marker in ["[[toc]]", "[[Toc]]", "[[TOC]]", "[[tOc]]"] {
+        let allocator = Allocator::new();
+        let source = format!("# Title\n\n{marker}\n\n## Intro");
+        let doc = Parser::new(&allocator, &source).parse().unwrap();
+        let html = HtmlRenderer::new().render(&doc);
+
+        assert!(html.contains(r#"<nav class="ox-toc""#), "{marker}: {html}");
+        assert!(!html.contains(marker), "{marker}: {html}");
+    }
+}
+
+#[test]
 fn test_render_inline_toc_requires_standalone_text() {
     let allocator = Allocator::new();
     let doc = Parser::new(&allocator, "See [[toc]] here\n\n`[[toc]]`\n\n## Intro").parse().unwrap();

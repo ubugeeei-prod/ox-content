@@ -211,6 +211,29 @@ Visible `#` permalink controls next to the heading are opt-in. See
 [Heading Permalinks](./heading-permalinks.md). Off by default so existing HTML
 stays unchanged.
 
+### `[[toc]]` in the body
+
+A paragraph holding nothing but `[[toc]]` becomes the page outline, in place.
+Useful on a long page a reader arrives at from a deep link, and on narrow
+viewports where the right-hand outline (`ssg.theme.aside`) is hidden:
+
+```md
+# Glossary
+
+[[toc]]
+
+## Contents
+```
+
+The casing does not matter — `[[TOC]]` and `[[Toc]]` work the same way — and
+`tocMaxDepth` decides how deep the list goes. Anything else on the line leaves
+the text literal, so a page documenting the directive can still show it, and so
+can a fenced code block.
+
+The outline is part of the generated HTML, so it is in the static page and in
+the search payload. With [wiki links](./syntax-extensions.md) enabled, `[[toc]]` stays
+the directive; link a page actually named `toc` with `[[toc|toc]]`.
+
 ## Related
 
 - [Heading Permalinks](./heading-permalinks.md) — opt-in visible `#` links on
