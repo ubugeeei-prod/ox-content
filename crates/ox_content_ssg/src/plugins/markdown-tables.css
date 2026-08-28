@@ -8,7 +8,9 @@
   -webkit-overflow-scrolling: touch;
 }
 
-.content table[data-ox-table-scrollable="true"]:focus-visible {
+/* `enhanceMarkdownTables()` marks overflow with `toggleAttribute()`, so the
+   attribute is present with an empty value. Match on presence, never a value. */
+.content table[data-ox-table-scrollable]:focus-visible {
   outline: var(--octc-focus-ring, 2px solid Highlight);
   outline-offset: var(--octc-focus-offset, 2px);
 }

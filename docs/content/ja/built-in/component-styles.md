@@ -119,6 +119,13 @@ window.addEventListener("resize", () => enhanceMarkdownTables(document));
 accessible name は維持します。`label` は他の host chrome と同じ locale
 経路から渡してください。
 
+overflow する table には値なしの `data-ox-table-scrollable` 属性が付きます。
+スクロール状態を styling する host CSS は値ではなく存在
+（`[data-ox-table-scrollable]`）で match してください。focus rule 自体は
+`styles/markdown-tables.css` に入っているので、fallback の
+`2px solid Highlight` を差し替えたいときは host 側で `--octc-focus-ring` と
+`--octc-focus-offset` を定義します。
+
 ## 関連
 
 - [サイト生成](./site-generation.md)

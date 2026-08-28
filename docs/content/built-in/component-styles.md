@@ -118,6 +118,13 @@ actually overflows. It preserves table semantics, captions, headers, direction,
 and existing accessible names. Pass a localized `label` from the same locale
 path as the rest of your host chrome.
 
+Overflowing tables are marked with a valueless `data-ox-table-scrollable`
+attribute, so host CSS that styles the scroll state matches it by presence
+(`[data-ox-table-scrollable]`), never by value. `styles/markdown-tables.css`
+already carries the focus rule; define `--octc-focus-ring` and
+`--octc-focus-offset` on your host to replace its `2px solid Highlight`
+fallback.
+
 ## Related
 
 - [Site Generation](./site-generation.md)

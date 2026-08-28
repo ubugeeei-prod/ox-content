@@ -8,6 +8,8 @@ import packageJson from "../package.json" with { type: "json" };
 const require = createRequire(import.meta.url);
 const packageRoot = dirname(fileURLToPath(new URL("../package.json", import.meta.url)));
 const ssgSrc = join(packageRoot, "../../crates/ox_content_ssg/src");
+const SCROLLABLE_ATTR = "data-ox-table-scrollable";
+const SCROLLABLE_FOCUS_SELECTOR = `.content table[${SCROLLABLE_ATTR}]:focus-visible`;
 
 describe("markdown table browser entry packaging", () => {
   it("declares a browser-only package subpath", () => {
@@ -55,10 +57,30 @@ describe("markdown table browser entry packaging", () => {
 
     const css = readFileSync(join(ssgSrc, "plugins/markdown-tables.css"), "utf8");
     expect(css).toContain(".content table");
-    expect(css).toContain('data-ox-table-scrollable="true"');
+    expect(css).toContain(SCROLLABLE_FOCUS_SELECTOR);
+    expect(css).toContain("outline: var(--octc-focus-ring");
+    expect(css).toContain("outline-offset: var(--octc-focus-offset");
     expect(css).not.toMatch(
       /\bbody\b|\*\s*\{|font-family|background:|color:|border-collapse|padding:/,
     );
+  });
+
+  it("marks scrollable tables with one contract across every published artifact", () => {
+    // `toggleAttribute()` writes the empty string, never "true", so a stylesheet
+    // that compares the value can never match a table these writers marked.
+    const helper = readFileSync(join(packageRoot, "src/markdown-tables.ts"), "utf8");
+    expect(helper).toContain(`const SCROLLABLE_ATTR = "${SCROLLABLE_ATTR}";`);
+    expect(helper).toContain("table.toggleAttribute(SCROLLABLE_ATTR, scrollable);");
+    expect(helper).not.toMatch(/setAttribute\(\s*SCROLLABLE_ATTR/);
+
+    const runtime = readFileSync(join(ssgSrc, "ssg.js"), "utf8");
+    expect(runtime).toContain(`table.toggleAttribute("${SCROLLABLE_ATTR}", scrollable);`);
+
+    for (const stylesheet of ["plugins/markdown-tables.css", "ssg.css"]) {
+      const css = readFileSync(join(ssgSrc, stylesheet), "utf8");
+      expect(css, stylesheet).toContain(SCROLLABLE_FOCUS_SELECTOR);
+      expect(css, stylesheet).not.toMatch(new RegExp(`${SCROLLABLE_ATTR}\\s*[~|^$*]?=`));
+    }
   });
 });
 

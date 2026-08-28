@@ -51,6 +51,10 @@ async function renderCustomHost(markdown: string) {
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <style>
+      :root {
+        --octc-focus-ring: 3px solid rgb(11, 99, 200);
+        --octc-focus-offset: 4px;
+      }
       body {
         margin: 0;
         background: rgb(250, 251, 252);
@@ -192,6 +196,80 @@ test("wide mobile tables are keyboard-scrollable when they overflow", async ({ p
   await expect(table).toHaveAttribute("aria-label", "Scrollable table");
   await table.focus();
   await expect(table).toBeFocused();
+
+  const focus = await table.evaluate((node) => {
+    const style = getComputedStyle(node);
+    const root = getComputedStyle(document.documentElement);
+    return {
+      focusRing: root.getPropertyValue("--octc-focus-ring").trim(),
+      focusOffset: root.getPropertyValue("--octc-focus-offset").trim(),
+      outlineOffset: style.outlineOffset,
+      outlineStyle: style.outlineStyle,
+      outlineWidth: style.outlineWidth,
+    };
+  });
+
+  // `--octc-focus-ring` is `<width> <style> <color>`; a table the focus rule
+  // missed would fall back to the browser default `auto` ring at offset `0px`.
+  const [ringWidth, ringStyle] = focus.focusRing.split(" ");
+  expect(ringWidth).toBeTruthy();
+  expect(focus.outlineWidth).toBe(ringWidth);
+  expect(focus.outlineStyle).toBe(ringStyle);
+  expect(focus.outlineOffset).toBe(focus.focusOffset);
+
+  const before = await table.evaluate((node) => node.scrollLeft);
+  await page.keyboard.press("ArrowRight");
+  await expect.poll(() => table.evaluate((node) => node.scrollLeft)).toBeGreaterThan(before);
+});
+
+test("the isolated stylesheet draws the host focus ring on tables the helper marked", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.setContent(
+    await renderCustomHost(
+      [
+        "# Tables",
+        "",
+        "| Option | Type | Default |",
+        "| --- | --- | --- |",
+        "| `veryLongOptionNameWithoutBreaks` | `ExtremelyLongTypeNameWithoutBreaks` | `false` |",
+      ].join("\n"),
+    ),
+    { waitUntil: "load" },
+  );
+
+  const table = page.locator(".content table");
+  await expect(table).toHaveAttribute("data-ox-table-scrollable", "");
+  await expect(table).toHaveAttribute("aria-label", "Scrollable table");
+
+  // Tab through the host link so the table is reached the way a keyboard user
+  // reaches it, which is also what makes `:focus-visible` match.
+  await page.keyboard.press("Tab");
+  await page.keyboard.press("Tab");
+  await expect(table).toBeFocused();
+
+  const focus = await table.evaluate((node) => {
+    const style = getComputedStyle(node);
+    return {
+      outlineColor: style.outlineColor,
+      outlineOffset: style.outlineOffset,
+      outlineStyle: style.outlineStyle,
+      outlineWidth: style.outlineWidth,
+      clientWidth: node.clientWidth,
+      scrollWidth: node.scrollWidth,
+      pageOverflow: document.documentElement.scrollWidth - document.documentElement.clientWidth,
+    };
+  });
+
+  // The browser default focus ring is `auto` at offset `0px`; the configured
+  // `--octc-focus-ring` only lands when the selector matches the marker.
+  expect(focus.outlineStyle).toBe("solid");
+  expect(focus.outlineWidth).toBe("3px");
+  expect(focus.outlineColor).toBe("rgb(11, 99, 200)");
+  expect(focus.outlineOffset).toBe("4px");
+  expect(focus.scrollWidth).toBeGreaterThan(focus.clientWidth);
+  expect(focus.pageOverflow).toBeLessThanOrEqual(0);
 
   const before = await table.evaluate((node) => node.scrollLeft);
   await page.keyboard.press("ArrowRight");
