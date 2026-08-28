@@ -1,6 +1,6 @@
 /* ox-content OGP Card Plugin - Link card styles */
 
-.ox-ogp-card {
+.ox-ogp-card.ox-ogp-card {
   display: flex;
   margin: 1.5rem 0;
   border: 0;
@@ -11,10 +11,11 @@
   background: transparent;
   text-decoration: none;
   color: var(--octc-color-text);
+  font-weight: 400;
   transition: color 0.2s ease;
 }
 
-.ox-ogp-card:hover {
+.ox-ogp-card.ox-ogp-card:hover {
   text-decoration: none;
 }
 
@@ -61,10 +62,14 @@
   color: var(--octc-color-text-muted);
 }
 
-.ox-ogp-favicon {
+.ox-ogp-card .ox-ogp-favicon {
+  display: block;
+  flex: 0 0 auto;
   width: 16px;
   height: 16px;
+  margin: 0;
   border-radius: 2px;
+  object-fit: contain;
 }
 
 .ox-ogp-domain {
@@ -73,11 +78,13 @@
   white-space: nowrap;
 }
 
-.ox-ogp-image {
+.ox-ogp-card .ox-ogp-image {
+  display: block;
   width: 200px;
   min-width: 200px;
   height: auto;
-  object-fit: cover;
+  margin: 0;
+  object-fit: contain;
   background: var(--octc-color-bg-alt);
 }
 
@@ -109,7 +116,7 @@
     flex-direction: column;
   }
 
-  .ox-ogp-image {
+  .ox-ogp-card .ox-ogp-image {
     width: 100%;
     min-width: 100%;
     height: 160px;
