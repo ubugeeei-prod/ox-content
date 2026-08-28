@@ -304,3 +304,32 @@ fn accepts_https_and_relative_media_sources() {
         assert!(!is_safe_media_url(input), "{input}");
     }
 }
+
+#[test]
+fn webcontainer_commands_keep_their_relative_indentation() {
+    // The docs nest the block under the tag. Trimming the body alone unindents
+    // the first command and leaves every later one pushed right.
+    let html = transform_media_embeds(
+        r#"<WebContainer entry="index.html" title="Demo">
+  npm install
+  npm run dev
+</WebContainer>"#,
+        Some(&MediaEmbedsOptions { web_container: Some(true), ..Default::default() }),
+    );
+
+    assert!(html.contains("<code>npm install\nnpm run dev</code>"), "{html}");
+    assert!(html.contains("<span>2 commands</span>"), "{html}");
+}
+
+#[test]
+fn webcontainer_keeps_indentation_that_is_part_of_the_script() {
+    let html = transform_media_embeds(
+        r#"<WebContainer entry="index.html">
+  npm install
+    npm run build -- --watch
+</WebContainer>"#,
+        Some(&MediaEmbedsOptions { web_container: Some(true), ..Default::default() }),
+    );
+
+    assert!(html.contains("<code>npm install\n  npm run build -- --watch</code>"), "{html}");
+}

@@ -122,3 +122,17 @@ fn full_tweet_css_keeps_rich_copy_and_replies_affordances() {
     assert!(SOCIAL_TWEET_FULL_CSS.contains(".ox-tweet--full .ox-tweet__replies-link:hover"));
     assert!(!SOCIAL_TWEET_FULL_CSS.contains("text-align: center"), "{SOCIAL_TWEET_FULL_CSS}");
 }
+
+#[test]
+fn fetched_tweet_cards_sit_level_with_bluesky_cards() {
+    let html = generate_html(
+        &page(r#"<figure class="ox-tweet ox-tweet--fetched"></figure>"#),
+        &[],
+        &config(),
+    );
+
+    // A fetched tweet is `<figure><header>…`, so the shared `.ox-tweet > a`
+    // padding never applies and the card would start flush at its top border.
+    assert!(html.contains(".ox-tweet--fetched {\n  padding: 1rem 0;\n}"), "{html}");
+    assert!(html.contains(".ox-tweet > a,\n.ox-bluesky > a {"), "{html}");
+}

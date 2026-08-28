@@ -44,7 +44,7 @@ pub(super) fn render_bluesky(element: &ComponentElement<'_>) -> Option<String> {
 pub(super) fn render_webcontainer(element: &ComponentElement<'_>) -> Option<String> {
     let entry = attr(element, "entry").unwrap_or("index.html");
     let title = attr(element, "title").unwrap_or("WebContainer");
-    let source = element.body.trim();
+    let source = dedent_block(element.body);
     let command_count = source.lines().filter(|line| !line.trim().is_empty()).count();
     let mut html = String::new();
     html.push_str("<div class=\"ox-webcontainer\" data-entry=\"");
@@ -54,7 +54,7 @@ pub(super) fn render_webcontainer(element: &ComponentElement<'_>) -> Option<Stri
     html.push_str("</strong><code>");
     escape_text(entry, &mut html);
     html.push_str("</code></span><span class=\"ox-webcontainer__status\">Boots on interaction</span></div><div class=\"ox-webcontainer__preview\"><pre><code>");
-    escape_text(source, &mut html);
+    escape_text(&source, &mut html);
     html.push_str("</code></pre></div><div class=\"ox-webcontainer__meta\"><span>Entry <code>");
     escape_text(entry, &mut html);
     html.push_str("</code></span><span>");
@@ -66,6 +66,30 @@ pub(super) fn render_webcontainer(element: &ComponentElement<'_>) -> Option<Stri
     }
     html.push_str("</span><span>Static source bundle</span><span>Requires cross-origin isolation</span></div></div>");
     Some(html)
+}
+
+/// Removes the indentation the author used to nest the block under its tag.
+///
+/// `trim()` alone drops the leading whitespace of the first line only, so
+/// `<WebContainer>` bodies rendered with the first command flush left and every
+/// later one still indented. The common prefix is measured across the
+/// non-blank lines and removed from all of them.
+fn dedent_block(body: &str) -> String {
+    let lines: Vec<&str> = body.trim_matches(['\n', '\r']).lines().collect();
+    let indent = lines
+        .iter()
+        .filter(|line| !line.trim().is_empty())
+        .map(|line| line.len() - line.trim_start().len())
+        .min()
+        .unwrap_or(0);
+
+    lines
+        .iter()
+        .map(|line| if line.len() >= indent { &line[indent..] } else { line.trim_start() })
+        .collect::<Vec<_>>()
+        .join("\n")
+        .trim_end()
+        .to_string()
 }
 
 /// A Spotify embed URL plus the kind of thing it plays.

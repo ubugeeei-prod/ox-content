@@ -339,3 +339,12 @@ fn entry_page_skips_back_to_top_when_enabled() {
     assert!(!html.contains(r#"<button type="button" class="ox-back-to-top""#), "{html}");
     assert!(!html_open_tag(&html).contains("data-ox-back-to-top"), "{}", html_open_tag(&html));
 }
+
+#[test]
+fn card_wrapping_anchors_skip_the_external_marker() {
+    let card = r#"<a href="https://a.test/p"><header>h</header><div>d</div></a>"#;
+    let inline = r#"<a href="https://a.test/d">docs</a>"#;
+    let html = apply_reader_chrome(&format!("{card}{inline}"), ReaderChrome::enabled());
+    assert_eq!(html.matches("ox-external-icon").count(), 1, "{html}");
+    assert!(html.contains("<div>d</div></a>"), "{html}");
+}

@@ -17,6 +17,13 @@
   color: var(--octc-color-text);
 }
 
+/* A fetched tweet renders `<figure><header>…` rather than wrapping its body in
+   one anchor, so the rule above never matches it. Pad the card itself to keep
+   it level with the Bluesky card. */
+.ox-tweet--fetched {
+  padding: 1rem 0;
+}
+
 .ox-tweet > a:hover,
 .ox-bluesky > a:hover {
   text-decoration: none;

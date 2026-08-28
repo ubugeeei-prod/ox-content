@@ -149,11 +149,51 @@ fn rewrite_anchor(html: &str) -> Option<(String, usize)> {
             }
             markup.push('>');
             markup.push_str(inner);
-            markup.push_str(EXTERNAL_ICON);
+            if !wraps_block_content(inner) {
+                markup.push_str(EXTERNAL_ICON);
+            }
             markup.push_str("</a>");
             Some((markup, tag_end + 1 + inner.len() + close_len))
         }
     }
+}
+
+/// Block-level tags an inline text link never contains.
+///
+/// Embed cards wrap their whole body in one anchor, so the marker would land
+/// as a stray last child: a full-width row under a `display: grid` provider
+/// card, and a lone glyph after the footer of a repository or link-preview
+/// card. Anchors around an avatar plus a name stay inline and keep theirs.
+const BLOCK_CONTENT_TAGS: [&str; 14] = [
+    "address",
+    "article",
+    "blockquote",
+    "div",
+    "footer",
+    "h1",
+    "h2",
+    "h3",
+    "h4",
+    "h5",
+    "h6",
+    "header",
+    "section",
+    "table",
+];
+
+fn wraps_block_content(inner: &str) -> bool {
+    let mut rest = inner;
+    while let Some(offset) = rest.find('<') {
+        let tag = &rest[offset..];
+        let name = tag_name(tag);
+        if !name.is_empty()
+            && BLOCK_CONTENT_TAGS.iter().any(|block| name.eq_ignore_ascii_case(block))
+        {
+            return true;
+        }
+        rest = &tag[1..];
+    }
+    false
 }
 
 fn split_anchor_inner(html: &str, tag_end: usize) -> Option<(&str, usize)> {
