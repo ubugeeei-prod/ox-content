@@ -97,6 +97,12 @@ crate の CSS をアプリにコピーしないでください。
 `renderMarkdown()` と `createMarkdownProcessor()` も同じです。返すのは
 マークアップで、有効にした機能の公式シートは自分で import します。
 
+`core.css` は既定の `--octc-*` パレットを持っています。代わりに
+`@ox-content/theme-color-*` のスキームを使いたいホストや、ページのパレットと
+レイアウトは自前のまま `--octc-syntax-*` のコードカラーだけ欲しいホストは、
+`renderThemeTokenCss()` でトークンを自分で描画します。
+[テーマ](../theming.md)を参照してください。
+
 独自ホストのレスポンシブな Markdown table では、body typography、prose 幅、
 リンク、blockquote、table cell style を host 側で持っているなら
 `styles/markdown-tables.css` だけを import してください。`core.css` は

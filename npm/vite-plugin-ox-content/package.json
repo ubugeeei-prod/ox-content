@@ -48,6 +48,16 @@
         "default": "./dist/markdown-tables.cjs"
       }
     },
+    "./theme-tokens": {
+      "import": {
+        "types": "./dist/theme-tokens.d.mts",
+        "default": "./dist/theme-tokens.mjs"
+      },
+      "require": {
+        "types": "./dist/theme-tokens.d.cts",
+        "default": "./dist/theme-tokens.cjs"
+      }
+    },
     "./vitepress-migrate": {
       "import": "./dist/vitepress-cli.mjs",
       "types": "./dist/vitepress-cli.d.mts"
@@ -82,7 +92,7 @@
     "provenance": true
   },
   "scripts": {
-    "build": "vp pack && node scripts/build-standalone-markdown-tables.mjs && node scripts/copy-component-styles.mjs",
+    "build": "vp pack && node scripts/build-standalone-entries.mjs && node scripts/copy-component-styles.mjs",
     "build:styles": "node scripts/copy-component-styles.mjs",
     "dev": "vp pack --watch",
     "typecheck": "tsgo --noEmit",

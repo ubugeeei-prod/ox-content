@@ -944,6 +944,8 @@ export {
   stripMarkdownExtension,
 } from "./markdown";
 export { defineTheme, defaultTheme, mergeThemes, resolveTheme } from "./theme";
+export { renderThemeTokenCss, tokensToCss } from "./theme-tokens";
+export type { RenderThemeTokenCssOptions, ThemeTokenSource } from "./theme-tokens";
 export {
   fromVitePressConfig,
   generateVitePressMigrationConfig,

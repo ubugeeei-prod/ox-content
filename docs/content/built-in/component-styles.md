@@ -96,6 +96,11 @@ crate CSS into the app.
 `renderMarkdown()` and `createMarkdownProcessor()` follow the same rule: they
 return markup, and you import the official sheets for the features you enabled.
 
+`core.css` carries the default `--octc-*` palette. A host that wants a
+`@ox-content/theme-color-*` scheme instead — or only its `--octc-syntax-*` code
+colors, without the page palette and layout — renders the tokens itself with
+`renderThemeTokenCss()`. See [Theming](../theming.md).
+
 For responsive Markdown tables in a custom host, import only
 `styles/markdown-tables.css` when you already own body typography, prose width,
 links, blockquotes, and table cell styling. Use `core.css` only when you want

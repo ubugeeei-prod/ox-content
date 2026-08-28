@@ -17,13 +17,13 @@ import {
   withSelfHostedFontHead,
   type ThemeFontValue,
 } from "./theme-fonts";
-import { tokensToCss, type ThemeTokens } from "./theme-tokens";
+import { renderThemeTokenCss, type ThemeTokens } from "./theme-tokens";
 import { withSelfHostedIconHead } from "./icons";
 
 export type { HeaderNavItem, LocaleLabel, ThemeAnnouncement } from "./header-chrome";
 
 export type { ThemeFontValue, ThemeWebFont } from "./theme-fonts";
-export type { ThemeTokens } from "./theme-tokens";
+export type { ThemeTokens, ThemeTokenSource } from "./theme-tokens";
 
 /**
  * Theme color configuration.
@@ -633,7 +633,7 @@ export function themeToNapi(
  * land after the typed color variables the Rust renderer emits.
  */
 function themeCss(theme: ResolvedThemeConfig): string {
-  const tokenCss = tokensToCss(theme.tokens, theme.darkTokens);
+  const tokenCss = renderThemeTokenCss(theme);
   const namedCss = namedFontVarsCss(theme.fonts);
   const prefix = [tokenCss, namedCss].filter(Boolean).join("\n");
   if (!prefix) {

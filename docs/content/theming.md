@@ -263,6 +263,51 @@ defineTheme({
 `darkColors` follows the same key-by-key fallback as `colors`: any key you leave
 out inherits the default dark palette.
 
+## Theme Tokens in a Bare or Custom Host
+
+`ssg.bare: true` and custom hosts render their own document, so Ox Content emits
+no theme stylesheet for them. `renderThemeTokenCss()` returns the same `--octc-*`
+declarations the built-in SSG would have written, from a subpath that pulls in
+neither the Vite plugin, the SSG, the native binding, nor a filesystem API:
+
+```ts
+import { renderThemeTokenCss } from "@ox-content/vite-plugin/theme-tokens";
+import { kanagawa } from "@ox-content/theme-color-kanagawa";
+
+const css = renderThemeTokenCss(kanagawa);
+```
+
+The built-in highlighter emits `var(--octc-syntax-*)` references, so a host that
+wants a scheme's code colors while keeping its own page palette, typography, and
+layout can select tokens by name. Names arrive without the `--octc-` prefix:
+
+```ts
+const syntaxOnly = renderThemeTokenCss(kanagawa, {
+  include: (name) => name.startsWith("syntax-"),
+});
+```
+
+The output uses the three selectors described under Dark Mode above — `:root`,
+`[data-theme="dark"]`, and the `prefers-color-scheme` fallback that an explicit
+light choice still overrides — because this is the renderer the built-in SSG
+itself calls.
+
+Layers compose exactly as `resolveTheme()` composes them: pass an array to stack
+a skin and a color scheme, and each layer's `extends` chain is flattened
+base-first.
+
+```ts
+import { pixel } from "@ox-content/theme-pixel";
+
+const css = renderThemeTokenCss([pixel, kanagawa]);
+```
+
+Token names are lowercase kebab-case. An empty or malformed name throws instead
+of emitting a broken custom property, and a token with an empty value is
+skipped. The function is also re-exported from the package root, next to the
+lower-level `tokensToCss(light, dark)`, when you are already importing the
+plugin.
+
 ## Entry Page Modes
 
 The default theme supports two landing page modes:

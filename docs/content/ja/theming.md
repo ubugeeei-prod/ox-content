@@ -230,6 +230,37 @@ defineTheme({
 
 `darkColors` も `colors` と同じキー単位のフォールバックです。省略したキーは既定のダークパレットを継承します。
 
+## bare / 独自ホストでのテーマトークン
+
+`ssg.bare: true` と独自ホストは自分で document を組み立てるので、Ox Content はテーマのスタイルシートを出しません。`renderThemeTokenCss()` は組み込み SSG が書くはずだった `--octc-*` 宣言をそのまま返します。Vite プラグインも SSG も、ネイティブバインディングもファイルシステム API も引き込まないサブパスから import できます。
+
+```ts
+import { renderThemeTokenCss } from "@ox-content/vite-plugin/theme-tokens";
+import { kanagawa } from "@ox-content/theme-color-kanagawa";
+
+const css = renderThemeTokenCss(kanagawa);
+```
+
+組み込みハイライタは `var(--octc-syntax-*)` を参照するので、ページのパレット・タイポグラフィ・レイアウトは自前のまま、配色のコードカラーだけ borrow したいホストはトークン名で絞り込めます。名前は `--octc-` プレフィックスなしで渡ってきます。
+
+```ts
+const syntaxOnly = renderThemeTokenCss(kanagawa, {
+  include: (name) => name.startsWith("syntax-"),
+});
+```
+
+出力は上の「ダークモード」で説明した 3 つのセレクタ（`:root`、`[data-theme="dark"]`、明示的なライト選択が勝つ `prefers-color-scheme` フォールバック）を使います。組み込み SSG が呼ぶのと同じレンダラだからです。
+
+レイヤの合成は `resolveTheme()` と同じです。配列を渡せばスキンとカラースキームを重ねられ、各レイヤの `extends` チェーンはベースから順に平坦化されます。
+
+```ts
+import { pixel } from "@ox-content/theme-pixel";
+
+const css = renderThemeTokenCss([pixel, kanagawa]);
+```
+
+トークン名は小文字のケバブケースです。空や不正な名前は壊れたカスタムプロパティを出す代わりに throw し、値が空のトークンはスキップされます。プラグイン本体を既に import しているなら、この関数は低レベルの `tokensToCss(light, dark)` と並んでパッケージルートからも export されています。
+
 ## エントリページのモード
 
 既定テーマはランディングページのモードを 2 つ持っています。

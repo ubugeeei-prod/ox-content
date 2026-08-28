@@ -36,6 +36,8 @@ describe("public export surface", () => {
       "renderHtmlToReactCreateElement",
       "renderHtmlToVueH",
       "renderMarkdownStream",
+      "renderThemeTokenCss",
+      "tokensToCss",
       "resolveBudouxOptions",
       "resolveDocsOptions",
       "resolveI18nOptions",
