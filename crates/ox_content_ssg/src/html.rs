@@ -40,7 +40,10 @@ pub use head::{
 pub use header_chrome::{HeaderNavItem, PageChromeFlags, ThemeAnnouncement};
 pub use json_ld::{JsonLd, JsonLdPublisher};
 use pagination::PagerView;
-pub use reader_chrome::ReaderChrome;
+pub use reader_chrome::{
+    READER_CHROME_CSS, READER_CHROME_JS, READER_CHROME_RUNTIME_JS, ReaderChrome,
+    apply_reader_chrome,
+};
 pub use section_index::{
     SectionIndexItem, SectionIndexStyle, is_safe_section_href, render_section_index,
 };

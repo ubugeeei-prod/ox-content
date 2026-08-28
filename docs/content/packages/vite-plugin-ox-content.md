@@ -166,6 +166,7 @@ HTML — do not copy crate CSS into the app. See
 @import "@ox-content/vite-plugin/styles/magic-links.css";
 @import "@ox-content/vite-plugin/styles/social.css";
 @import "@ox-content/vite-plugin/styles/twitter-full.css";
+@import "@ox-content/vite-plugin/styles/reader-chrome.css";
 ```
 
 For an existing prose theme that only needs keyboard-accessible responsive

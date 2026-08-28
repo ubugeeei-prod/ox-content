@@ -58,6 +58,26 @@
         "default": "./dist/theme-tokens.cjs"
       }
     },
+    "./reader-chrome": {
+      "import": {
+        "types": "./dist/reader-chrome.d.mts",
+        "default": "./dist/reader-chrome.mjs"
+      },
+      "require": {
+        "types": "./dist/reader-chrome.d.cts",
+        "default": "./dist/reader-chrome.cjs"
+      }
+    },
+    "./reader-chrome/client": {
+      "import": {
+        "types": "./dist/reader-chrome-client.d.mts",
+        "default": "./dist/reader-chrome-client.mjs"
+      },
+      "require": {
+        "types": "./dist/reader-chrome-client.d.cts",
+        "default": "./dist/reader-chrome-client.cjs"
+      }
+    },
     "./vitepress-migrate": {
       "import": "./dist/vitepress-cli.mjs",
       "types": "./dist/vitepress-cli.d.mts"
@@ -85,14 +105,15 @@
     "./styles/mermaid.css": "./dist/styles/mermaid.css",
     "./styles/graphviz.css": "./dist/styles/graphviz.css",
     "./styles/citations.css": "./dist/styles/citations.css",
-    "./styles/not-by-ai.css": "./dist/styles/not-by-ai.css"
+    "./styles/not-by-ai.css": "./dist/styles/not-by-ai.css",
+    "./styles/reader-chrome.css": "./dist/styles/reader-chrome.css"
   },
   "publishConfig": {
     "access": "public",
     "provenance": true
   },
   "scripts": {
-    "build": "vp pack && node scripts/build-standalone-entries.mjs && node scripts/copy-component-styles.mjs",
+    "build": "vp pack && node scripts/build-standalone-entries.mjs && node scripts/build-reader-chrome-client.mjs && node scripts/copy-component-styles.mjs",
     "build:styles": "node scripts/copy-component-styles.mjs",
     "dev": "vp pack --watch",
     "typecheck": "tsgo --noEmit",

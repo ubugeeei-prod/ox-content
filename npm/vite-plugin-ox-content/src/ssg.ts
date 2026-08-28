@@ -56,6 +56,11 @@ import type { ResolvedThemeConfig, SidebarItem } from "./theme";
 import { normalizeVitePressFrontmatter } from "./vitepress";
 import { renderPage } from "./theme-renderer";
 import type { PageData as ThemePageData } from "./theme-renderer";
+import {
+  applyReaderChromeHtml,
+  renderReaderChromeScriptTag,
+  renderReaderChromeStyleTag,
+} from "./reader-chrome";
 import { writeSiteMapFiles } from "./site-maps";
 import {
   injectMarkdownSourceAlternate,
@@ -1605,25 +1610,32 @@ async function renderSsgPage(
       : context.navItems;
     return applyMarkdownSourceAlternate(
       context,
-      renderPage(toThemePageData(pageResult, markdownSource), {
-        theme: context.ssgOptions.render,
-        siteName: context.siteName,
-        base: context.base,
-        nav,
-        pages: allPageResults.map((page) =>
-          toThemePageData(page, pageMarkdownSourceHref(context, page)),
-        ),
-      }),
+      applyReaderChromeDocument(
+        renderPage(toThemePageData(pageResult, markdownSource), {
+          theme: context.ssgOptions.render,
+          siteName: context.siteName,
+          base: context.base,
+          nav,
+          pages: allPageResults.map((page) =>
+            toThemePageData(page, pageMarkdownSourceHref(context, page)),
+          ),
+        }),
+        context.ssgOptions.readerChrome,
+      ),
       markdownSource,
     );
   }
 
   if (context.ssgOptions.bare) {
+    const content = applyReaderChromeHtml(
+      pageResult.transformedHtml,
+      context.ssgOptions.readerChrome,
+    );
     return applyMarkdownSourceAlternate(
       context,
       generateBarePage({
         title: pageResult.title,
-        content: pageResult.transformedHtml,
+        content,
         lang:
           context.ssgOptions.lang ??
           getPageLocale(
@@ -1634,9 +1646,15 @@ async function renderSsgPage(
         canonicalUrl: canonicalPageUrl(context, pageResult.routePaths.urlPath),
         siteName: context.ssgOptions.siteName,
         ogImage: pageOgImage,
-        head: context.ssgOptions.head,
+        head: appendHtml(
+          context.ssgOptions.head,
+          renderReaderChromeStyleTag(context.ssgOptions.readerChrome),
+        ),
         bodyStart: context.ssgOptions.bodyStart,
-        bodyEnd: context.ssgOptions.bodyEnd,
+        bodyEnd: appendHtml(
+          context.ssgOptions.bodyEnd,
+          renderReaderChromeScriptTag(context.ssgOptions.readerChrome),
+        ),
       }),
       markdownSource,
     );
@@ -1769,6 +1787,38 @@ function applyMarkdownSourceAlternate(
     return html;
   }
   return injectMarkdownSourceAlternate(html, href);
+}
+
+function applyReaderChromeDocument(html: string, readerChrome: ResolvedReaderChrome): string {
+  if (!readerChrome) {
+    return html;
+  }
+
+  const transformed = applyReaderChromeHtml(html, readerChrome);
+  return injectBeforeClosingTag(
+    injectBeforeClosingTag(transformed, "</head>", renderReaderChromeStyleTag(readerChrome)),
+    "</body>",
+    renderReaderChromeScriptTag(readerChrome),
+  );
+}
+
+function appendHtml(first: string | undefined, second: string): string | undefined {
+  if (!second) {
+    return first;
+  }
+  return first ? `${first}\n${second}` : second;
+}
+
+function injectBeforeClosingTag(html: string, closingTag: string, snippet: string): string {
+  if (!snippet) {
+    return html;
+  }
+
+  const index = html.toLowerCase().lastIndexOf(closingTag);
+  if (index === -1) {
+    return `${html}\n${snippet}`;
+  }
+  return `${html.slice(0, index)}${snippet}\n${html.slice(index)}`;
 }
 
 function rewritePagerOverride(

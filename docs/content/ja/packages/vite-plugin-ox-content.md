@@ -169,6 +169,7 @@ import してください。crate の CSS をアプリにコピーしないで�
 @import "@ox-content/vite-plugin/styles/magic-links.css";
 @import "@ox-content/vite-plugin/styles/social.css";
 @import "@ox-content/vite-plugin/styles/twitter-full.css";
+@import "@ox-content/vite-plugin/styles/reader-chrome.css";
 ```
 
 既存の prose theme に、keyboard accessible なレスポンシブ Markdown table

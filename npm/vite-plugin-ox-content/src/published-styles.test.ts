@@ -23,6 +23,7 @@ const DOCUMENTED_STYLE_IMPORTS = [
   "graphviz.css",
   "citations.css",
   "not-by-ai.css",
+  "reader-chrome.css",
   "all.css",
 ] as const;
 
@@ -53,6 +54,7 @@ const CRATE_SOURCES: Record<
   "graphviz.css": ["plugins/graphviz.css"],
   "citations.css": ["plugins/citations.css"],
   "not-by-ai.css": ["plugins/not-by-ai.css"],
+  "reader-chrome.css": ["html/reader_chrome.css"],
 };
 
 function crateCss(relativePath: string): string {

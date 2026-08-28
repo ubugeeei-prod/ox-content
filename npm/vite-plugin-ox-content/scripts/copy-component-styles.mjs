@@ -47,6 +47,7 @@ export const STYLE_ENTRIES = /** @type {const} */ ([
   { name: "graphviz.css", sources: ["plugins/graphviz.css"] },
   { name: "citations.css", sources: ["plugins/citations.css"] },
   { name: "not-by-ai.css", sources: ["plugins/not-by-ai.css"] },
+  { name: "reader-chrome.css", sources: ["html/reader_chrome.css"] },
 ]);
 
 export const ALL_STYLESHEET = "all.css";

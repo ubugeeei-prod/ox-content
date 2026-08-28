@@ -47,12 +47,44 @@ oxContent({
 | `backToTop`     | `true`  | Back-to-top button after scroll      |
 
 Copy uses the browser clipboard when the reader clicks the button. Fence text
-is not copied at build time. Page-level Copy as Markdown is a separate opt-in
-on [`ssg.markdownSource.copy`](./markdown-source.md).
+is not copied at build time, and annotated fences prefer `data-ox-code-source`
+so the copied value matches the authored block. Page-level Copy as Markdown is
+a separate opt-in on [`ssg.markdownSource.copy`](./markdown-source.md).
 
 Outbound icons skip relative, hash, `mailto:`, and `tel:` links. Links inside
 fenced blocks or inline code spans are left alone. `javascript:`, `data:`, and
 `vbscript:` hrefs are not given a live action.
 
-The back-to-top control respects `prefers-reduced-motion`. Entry pages skip
-it. Bare mode never emits reader chrome.
+The back-to-top control respects `prefers-reduced-motion`. Entry pages skip it.
+
+Bare mode and `ssg.render` can use the same code-copy and outbound-link chrome
+without switching to the built-in theme:
+
+```ts
+oxContent({
+  ssg: {
+    bare: true,
+    readerChrome: { copy: true, externalLinks: false, backToTop: false },
+  },
+});
+```
+
+For a host that renders Markdown outside `buildSsg`, compose the public helper,
+stylesheet, and browser initializer:
+
+```ts
+import {
+  applyReaderChromeHtml,
+  renderReaderChromeAttributes,
+} from "@ox-content/vite-plugin/reader-chrome";
+import { initReaderChrome } from "@ox-content/vite-plugin/reader-chrome/client";
+import "@ox-content/vite-plugin/styles/reader-chrome.css";
+
+const chrome = { copy: true, externalLinks: false, backToTop: false };
+const html = `<article class="content"${renderReaderChromeAttributes(chrome)}>${applyReaderChromeHtml(
+  rendered.html,
+  chrome,
+)}</article>`;
+
+initReaderChrome(document);
+```

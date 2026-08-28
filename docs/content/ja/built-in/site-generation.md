@@ -123,7 +123,7 @@ oxContent({ base: "/team/docs/" });
 
 ## 独自テーマコンポーネント
 
-`ssg.render` は文書全体を JSX コンポーネントに渡します。コンポーネントは `<html>` から下を所有するので、`theme`、`bare`、head メタデータのオプションは効きません。書いていないものは注入されません。
+`ssg.render` は文書全体を JSX コンポーネントに渡します。コンポーネントは `<html>` から下を所有するので、`theme`、`bare`、head メタデータのオプションは効きません。`readerChrome` を有効にしたときだけ、組み込み renderer と同じコードコピーと外部リンク変換を、描画済み文書へ後処理として適用します。
 
 ```tsx
 import { createTheme, usePageProps, useSiteConfig } from "@ox-content/vite-plugin";
@@ -173,6 +173,17 @@ oxContent({
 ```
 
 `siteUrl` があると `<link rel="canonical">` と絶対 `og:url` がオンになります。なければ推測せず、それらのタグを省きます。
+
+bare モードでも `readerChrome` は使えます。有効にすると、描画済み本文に共有 reader-chrome 変換をかけ、対応する stylesheet と runtime を bare 文書へ注入します。
+
+```ts
+oxContent({
+  ssg: {
+    bare: true,
+    readerChrome: { copy: true, externalLinks: false, backToTop: false },
+  },
+});
+```
 
 ## OG 画像
 

@@ -1,9 +1,9 @@
 use napi_derive::napi;
 
 use crate::{
-    JsHeadDiagnostic, JsReaderChrome, JsSsgBarePage, JsSsgConfig, JsSsgExternalizedAssets,
-    JsSsgGeneratedHtmlPage, JsSsgHtmlResult, JsSsgNavGroup, JsSsgNavigationGroup, JsSsgPageData,
-    JsSsgRoutePaths, JsSsgSidebarItem, JsTeamOptions,
+    JsHeadDiagnostic, JsSsgBarePage, JsSsgConfig, JsSsgExternalizedAssets, JsSsgGeneratedHtmlPage,
+    JsSsgHtmlResult, JsSsgNavGroup, JsSsgNavigationGroup, JsSsgPageData, JsSsgRoutePaths,
+    JsSsgSidebarItem, JsTeamOptions,
 };
 
 mod converters;
@@ -15,6 +15,8 @@ mod head;
 pub use head::render_head;
 mod page_routes;
 pub use page_routes::*;
+mod reader_chrome;
+pub use reader_chrome::*;
 mod section_index;
 pub use section_index::*;
 
@@ -25,6 +27,7 @@ use converters::{
     map_route_paths, map_shared_asset,
 };
 use head::convert_head_validation;
+use reader_chrome::convert_reader_chrome;
 
 /// Resolves all output and public route paths for an SSG page.
 #[napi(js_name = "resolveSsgRoutePaths")]
@@ -293,17 +296,6 @@ fn convert_page_chrome_flags(
             edit_link: flags.edit_link,
         }
     })
-}
-
-fn convert_reader_chrome(chrome: Option<JsReaderChrome>) -> ox_content_ssg::ReaderChrome {
-    match chrome {
-        None => ox_content_ssg::ReaderChrome::disabled(),
-        Some(chrome) => ox_content_ssg::ReaderChrome {
-            copy: chrome.copy.unwrap_or(true),
-            external_links: chrome.external_links.unwrap_or(true),
-            back_to_top: chrome.back_to_top.unwrap_or(true),
-        },
-    }
 }
 
 /// Generates a bare SSG HTML page without navigation or styles.

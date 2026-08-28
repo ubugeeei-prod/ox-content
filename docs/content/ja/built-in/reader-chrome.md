@@ -43,8 +43,38 @@ oxContent({
 | `externalLinks` | `true` | 外部リンクにアイコンと `rel`        |
 | `backToTop`     | `true` | スクロール後に先頭へ戻るボタン      |
 
-コピーは読者がボタンを押したときにブラウザのクリップボードを使います。フェンス本文はビルド時にはコピーしません。ページ全体の Copy as Markdown は別のオプトイン [`ssg.markdownSource.copy`](./markdown-source.md) です。
+コピーは読者がボタンを押したときにブラウザのクリップボードを使います。フェンス本文はビルド時にはコピーしません。注釈付きフェンスでは `data-ox-code-source` を優先するので、コピーされる値は書いたコードに一致します。ページ全体の Copy as Markdown は別のオプトイン [`ssg.markdownSource.copy`](./markdown-source.md) です。
 
 外部リンクアイコンは相対、ハッシュ、`mailto:`、`tel:` を飛ばします。フェンス内やインラインコード内のリンクはそのままです。`javascript:`、`data:`、`vbscript:` の href には生きた操作を付けません。
 
-先頭へ戻る操作は `prefers-reduced-motion` を尊重します。エントリページでは出しません。bare モードはリーダー chrome を一切出しません。
+先頭へ戻る操作は `prefers-reduced-motion` を尊重します。エントリページでは出しません。
+
+bare モードと `ssg.render` でも、組み込みテーマに切り替えず同じコードコピーと外部リンク chrome を使えます。
+
+```ts
+oxContent({
+  ssg: {
+    bare: true,
+    readerChrome: { copy: true, externalLinks: false, backToTop: false },
+  },
+});
+```
+
+`buildSsg` の外で Markdown を描画するホストでは、公開 helper、stylesheet、ブラウザ初期化を組み合わせます。
+
+```ts
+import {
+  applyReaderChromeHtml,
+  renderReaderChromeAttributes,
+} from "@ox-content/vite-plugin/reader-chrome";
+import { initReaderChrome } from "@ox-content/vite-plugin/reader-chrome/client";
+import "@ox-content/vite-plugin/styles/reader-chrome.css";
+
+const chrome = { copy: true, externalLinks: false, backToTop: false };
+const html = `<article class="content"${renderReaderChromeAttributes(chrome)}>${applyReaderChromeHtml(
+  rendered.html,
+  chrome,
+)}</article>`;
+
+initReaderChrome(document);
+```

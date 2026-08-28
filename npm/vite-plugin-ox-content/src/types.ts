@@ -275,8 +275,10 @@ export interface SsgOptions {
    *
    * The component owns the whole document, so `theme`, `bare` and the head
    * metadata options do not apply — everything from `<html>` down is yours.
-   * Compose one per layout with `createTheme()`, and read the current page
-   * through `usePageProps()` / `useSiteConfig()`.
+   * `ssg.readerChrome`, when enabled, still post-processes the rendered
+   * document so custom themes share the built-in code-copy and outbound-link
+   * implementation. Compose one per layout with `createTheme()`, and read the
+   * current page through `usePageProps()` / `useSiteConfig()`.
    *
    * ```ts
    * ssg: { render: createTheme({ layouts: { default: DefaultLayout } }) }
@@ -404,7 +406,8 @@ export interface SsgOptions {
    *
    * Disabled when omitted or `false`. `true` enables all three with defaults.
    * An object enables the feature and can turn one control off, for example
-   * `{ copy: false }`.
+   * `{ copy: false }`. Bare pages and `ssg.render` custom themes can use the
+   * same copy and outbound-link transform without adopting the built-in theme.
    *
    * @default false
    */

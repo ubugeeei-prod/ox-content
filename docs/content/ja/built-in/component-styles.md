@@ -19,6 +19,7 @@ description: ssg: false と transformAllPlugins() 向けの、公式コンポー
 @import "@ox-content/vite-plugin/styles/magic-links.css";
 @import "@ox-content/vite-plugin/styles/social.css";
 @import "@ox-content/vite-plugin/styles/twitter-full.css";
+@import "@ox-content/vite-plugin/styles/reader-chrome.css";
 ```
 
 全部まとめて取るとき:
@@ -39,6 +40,7 @@ import なので、コンパクトな Tweet だけ載せてフルカード用シ
 | `styles/magic-links.css`     | `{link:...}` チップ                                                                                           |
 | `styles/social.css`          | コンパクトな Tweet/X、Bluesky、プロバイダカード、Spotify、Apple Music、audio、video、StackBlitz、WebContainer |
 | `styles/twitter-full.css`    | `appearance: "full"` の Tweet カード。react-tweet / sveltweet の MIT 告知を含む                               |
+| `styles/reader-chrome.css`   | 独自ホスト向けの copy button、外部リンク icon、back-to-top controls                                           |
 | `styles/ogp.css`             | Open Graph カード                                                                                             |
 | `styles/github.css`          | GitHub リポジトリ / ソースカード                                                                              |
 | `styles/youtube.css`         | YouTube 埋め込み                                                                                              |

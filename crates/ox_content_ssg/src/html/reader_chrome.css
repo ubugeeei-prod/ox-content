@@ -37,6 +37,16 @@
     border-color 0.15s ease,
     background-color 0.15s ease;
 }
+.ox-code > .ox-copy {
+  z-index: 2;
+  min-width: 0;
+  min-height: 0;
+  width: 1.75rem;
+  height: 1.75rem;
+  padding: 0;
+  font: inherit;
+  line-height: 1;
+}
 .ox-copy::before {
   content: "";
   width: 0.8125rem;

@@ -144,7 +144,9 @@ server root, outside the site, needs a full URL.
 
 `ssg.render` hands the whole document to a JSX component. The component owns
 everything from `<html>` down, so `theme`, `bare` and the head metadata options
-do not apply — nothing is injected that you did not write.
+do not apply. When `readerChrome` is enabled, Ox Content post-processes the
+rendered document with the same code-copy and outbound-link transform used by
+the built-in renderer.
 
 ```tsx
 import { createTheme, usePageProps, useSiteConfig } from "@ox-content/vite-plugin";
@@ -205,6 +207,19 @@ oxContent({
 
 `siteUrl` is what turns on `<link rel="canonical">` and the absolute `og:url`;
 without it those tags are omitted rather than guessed.
+
+`readerChrome` remains available in bare mode. When enabled, Ox Content applies
+the shared reader-chrome transform to the rendered body and injects the matching
+stylesheet and runtime into the bare document:
+
+```ts
+oxContent({
+  ssg: {
+    bare: true,
+    readerChrome: { copy: true, externalLinks: false, backToTop: false },
+  },
+});
+```
 
 ## OG Images
 

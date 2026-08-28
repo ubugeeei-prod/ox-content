@@ -31,6 +31,7 @@ try {
   for (const entry of STANDALONE_ENTRIES) {
     await compileStandalone(entry, "ES2022", "esm", "mjs");
     await compileStandalone(entry, "CommonJS", "cjs", "cjs");
+    await compileStandaloneDeclarations(entry);
   }
 } finally {
   await rm(tempRoot, { recursive: true, force: true });
@@ -80,6 +81,51 @@ async function compileStandalone(entry, module, directoryName, extension) {
 
   await writeFile(outputJs, js);
   await writeFile(outputMap, `${JSON.stringify(map)}\n`);
+}
+
+async function compileStandaloneDeclarations(entry) {
+  const sourceFile = join(packageRoot, `src/${entry}.ts`);
+  const outDir = join(tempRoot, entry, "types");
+  await runTsc([
+    sourceFile,
+    "--ignoreConfig",
+    "--target",
+    "ES2022",
+    "--module",
+    "ES2022",
+    "--lib",
+    "ES2022,DOM",
+    "--strict",
+    "--skipLibCheck",
+    "--declaration",
+    "--declarationMap",
+    "--emitDeclarationOnly",
+    "--outDir",
+    outDir,
+    "--pretty",
+    "false",
+  ]);
+
+  const compiledDts = join(outDir, `${entry}.d.ts`);
+  const compiledMap = join(outDir, `${entry}.d.ts.map`);
+  const declaration = await readFile(compiledDts, "utf8");
+  if (forbiddenIdentifiers.test(declaration) || forbiddenStatements.test(declaration)) {
+    throw new Error(`Refusing to publish ${entry}.d.ts: server/runtime import found`);
+  }
+
+  for (const extension of ["mts", "cts"]) {
+    const declarationFile = `${entry}.d.${extension}`;
+    const mapFile = `${declarationFile}.map`;
+    const declarationOutput = declaration.replace(
+      `sourceMappingURL=${entry}.d.ts.map`,
+      `sourceMappingURL=${mapFile}`,
+    );
+    const map = JSON.parse(await readFile(compiledMap, "utf8"));
+    map.file = declarationFile;
+
+    await writeFile(join(distDir, declarationFile), declarationOutput);
+    await writeFile(join(distDir, mapFile), `${JSON.stringify(map)}\n`);
+  }
 }
 
 async function runTsc(args) {

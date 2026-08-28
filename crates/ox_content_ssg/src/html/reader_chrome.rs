@@ -2,6 +2,7 @@
 
 use serde::{Deserialize, Serialize};
 
+use self::entities::decode_basic_entities;
 use super::utils::escape_html;
 
 /// Copy, outbound-link, and back-to-top flags. All off unless enabled.
@@ -29,17 +30,19 @@ impl ReaderChrome {
         Self { copy: true, external_links: true, back_to_top: true }
     }
 
-    pub(super) fn is_enabled(self) -> bool {
+    pub fn is_enabled(self) -> bool {
         self.copy || self.external_links || self.back_to_top
     }
 
-    pub(super) fn needs_js(self) -> bool {
+    pub fn needs_js(self) -> bool {
         self.copy || self.back_to_top
     }
 }
 
-pub(super) const READER_CHROME_CSS: &str = include_str!("reader_chrome.css");
-pub(super) const READER_CHROME_JS: &str = include_str!("reader_chrome.js");
+pub const READER_CHROME_CSS: &str = include_str!("reader_chrome.css");
+pub const READER_CHROME_RUNTIME_JS: &str = include_str!("reader_chrome_runtime.js");
+pub const READER_CHROME_JS: &str =
+    concat!(include_str!("reader_chrome_runtime.js"), "\ninitReaderChrome(document);\n");
 const COPY_BUTTON: &str = concat!(
     "<button type=\"button\" class=\"ox-copy\" data-ox-copy ",
     "aria-label=\"Copy code\" title=\"Copy code\"></button>",
@@ -48,7 +51,7 @@ const COPY_BUTTON: &str = concat!(
 );
 
 /// Rewrites article HTML. Fenced code is never treated as a link target.
-pub(super) fn apply_reader_chrome(html: &str, chrome: ReaderChrome) -> String {
+pub fn apply_reader_chrome(html: &str, chrome: ReaderChrome) -> String {
     if !chrome.copy && !chrome.external_links {
         return html.to_string();
     }
@@ -306,45 +309,9 @@ fn merge_class(existing: Option<&str>, extra: &str) -> String {
     }
 }
 
-fn decode_basic_entities(value: &str) -> String {
-    let mut out = String::with_capacity(value.len());
-    let mut rest = value;
-    while let Some(amp) = rest.find('&') {
-        out.push_str(&rest[..amp]);
-        let ent = &rest[amp..];
-        if let Some((ch, skip)) = decode_one_entity(ent) {
-            out.push(ch);
-            rest = &ent[skip..];
-        } else {
-            out.push('&');
-            rest = &ent[1..];
-        }
-    }
-    out.push_str(rest);
-    out
-}
-
-fn decode_one_entity(ent: &str) -> Option<(char, usize)> {
-    const NAMED: &[(&str, char)] =
-        &[("&amp;", '&'), ("&lt;", '<'), ("&gt;", '>'), ("&quot;", '"'), ("&apos;", '\'')];
-    for (token, ch) in NAMED {
-        if ent.starts_with(token) {
-            return Some((*ch, token.len()));
-        }
-    }
-    if let Some(rest) = ent.strip_prefix("&#x").or_else(|| ent.strip_prefix("&#X")) {
-        let end = rest.find(';')?;
-        let ch = char::from_u32(u32::from_str_radix(&rest[..end], 16).ok()?)?;
-        return Some((ch, 3 + end + 1));
-    }
-    if let Some(rest) = ent.strip_prefix("&#") {
-        let end = rest.find(';')?;
-        let ch = char::from_u32(rest[..end].parse().ok()?)?;
-        return Some((ch, 2 + end + 1));
-    }
-    None
-}
-
+mod entities;
 mod external_marker;
+#[cfg(test)]
+mod style_tests;
 #[cfg(test)]
 mod tests;

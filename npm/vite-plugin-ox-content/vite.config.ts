@@ -11,6 +11,7 @@ export default defineConfig({
       "src/vitepress-cli.ts",
       "src/incremental-dom.ts",
       "src/markdown-tables.ts",
+      "src/reader-chrome.ts",
       "src/theme-tokens.ts",
       // `jsxImportSource: "@ox-content/vite-plugin"` makes the JSX transform
       // emit imports of ./jsx-runtime and ./jsx-dev-runtime, so both need to

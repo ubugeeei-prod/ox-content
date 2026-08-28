@@ -1030,6 +1030,19 @@ export {
   createTheme,
 } from "./theme-renderer";
 export type { ThemeComponent, ThemeProps, PageData, ThemeRenderOptions } from "./theme-renderer";
+export {
+  applyReaderChromeHtml,
+  readerChromeAttributes,
+  readerChromeCss,
+  readerChromeIsEnabled,
+  readerChromeNeedsJs,
+  readerChromeScript,
+  renderReaderChromeAttributes,
+  renderReaderChromeScriptTag,
+  renderReaderChromeStyleTag,
+  resolveReaderChromeInput,
+} from "./reader-chrome";
+export type { ReaderChromeInput } from "./reader-chrome";
 
 // Built-in Plugins (No-JS First)
 export {

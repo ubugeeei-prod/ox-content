@@ -45,6 +45,9 @@ export declare class IncrementalMarkdownRenderer {
  */
 export declare function applyPendingHighlights(html: string, replacements: Array<string>): string
 
+/** Rewrites rendered article HTML with reader-chrome controls. */
+export declare function applySsgReaderChromeHtml(html: string, chrome?: JsReaderChrome | undefined | null): string
+
 /**
  * Builds a Markdown collection manifest directly from files on the Rust side.
  *
@@ -230,6 +233,12 @@ export declare function getSsgOutputPath(inputPath: string, srcDir: string, outD
 
 /** Resolves a page locale from an SSG URL path and configured locale codes. */
 export declare function getSsgPageLocale(urlPath: string, defaultLocale: string, localeCodes: Array<string>): string | null
+
+/** CSS used by the built-in reader chrome and custom hosts. */
+export declare function getSsgReaderChromeCss(): string
+
+/** Auto-initializing browser script used by the built-in reader chrome. */
+export declare function getSsgReaderChromeScript(): string
 
 /** Converts a markdown file path to a relative SSG URL path. */
 export declare function getSsgUrlPath(inputPath: string, srcDir: string): string

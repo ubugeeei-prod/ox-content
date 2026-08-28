@@ -49,7 +49,12 @@ describe("theme token entry packaging", () => {
   });
 
   it("guards the built subpath against server graph imports", () => {
-    const distFiles = ["dist/theme-tokens.mjs", "dist/theme-tokens.cjs", "dist/theme-tokens.d.cts"];
+    const distFiles = [
+      "dist/theme-tokens.mjs",
+      "dist/theme-tokens.cjs",
+      "dist/theme-tokens.d.mts",
+      "dist/theme-tokens.d.cts",
+    ];
     for (const distFile of distFiles) {
       const absolutePath = join(packageRoot, distFile);
       if (!existsSync(absolutePath)) {

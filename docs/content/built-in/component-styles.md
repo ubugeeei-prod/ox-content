@@ -18,6 +18,7 @@ Import what you render. Site-specific theming stays in your app.
 @import "@ox-content/vite-plugin/styles/magic-links.css";
 @import "@ox-content/vite-plugin/styles/social.css";
 @import "@ox-content/vite-plugin/styles/twitter-full.css";
+@import "@ox-content/vite-plugin/styles/reader-chrome.css";
 ```
 
 Or pull every feature sheet:
@@ -38,6 +39,7 @@ you can load compact Tweet chrome without the full-card sheet.
 | `styles/magic-links.css`     | `{link:...}` chips                                                                                             |
 | `styles/social.css`          | Compact Tweet/X, Reddit, Bluesky, provider cards, Spotify, Apple Music, audio, video, StackBlitz, WebContainer |
 | `styles/twitter-full.css`    | `appearance: "full"` Tweet cards, including the react-tweet / sveltweet MIT notice                             |
+| `styles/reader-chrome.css`   | Copy buttons, outbound-link icons, and back-to-top controls for custom hosts                                   |
 | `styles/ogp.css`             | Open Graph cards                                                                                               |
 | `styles/github.css`          | GitHub repository and source cards                                                                             |
 | `styles/youtube.css`         | YouTube embeds                                                                                                 |
