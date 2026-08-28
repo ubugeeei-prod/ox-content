@@ -4,8 +4,8 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "node ../scripts/theme-gallery.mjs && vp dev",
-    "build": "node ../scripts/theme-gallery.mjs && vp build",
+    "dev": "vp dev",
+    "build": "vp build",
     "preview": "vp preview",
     "gallery": "node ../scripts/theme-gallery.mjs"
   },
