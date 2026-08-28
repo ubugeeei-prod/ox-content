@@ -3,8 +3,8 @@ use super::{READER_CHROME_CSS, READER_CHROME_JS};
 #[test]
 fn copy_control_uses_inline_clearance_without_wasting_vertical_space() {
     assert!(
-        READER_CHROME_CSS.contains("inset-block-start: 0.5rem;")
-            && READER_CHROME_CSS.contains("inset-inline-end: 0.5rem;"),
+        READER_CHROME_CSS.contains("inset-block-start: var(--ox-copy-inset, 0.5rem);")
+            && READER_CHROME_CSS.contains("inset-inline-end: var(--ox-copy-inset, 0.5rem);"),
         "copy positioning must follow the document writing direction: {READER_CHROME_CSS}"
     );
     assert!(
@@ -48,9 +48,9 @@ fn copy_control_uses_capability_media_queries_and_stable_status_ui() {
     );
     assert!(
         READER_CHROME_CSS.contains(
-            ".ox-code > .ox-copy {\n  z-index: 2;\n  min-width: 0;\n  min-height: 0;\n  width: 1.75rem;\n  height: 1.75rem;\n  padding: 0;"
+            ".ox-code > .ox-copy {\n  z-index: 2;\n  min-width: 0;\n  min-height: 0;\n  width: var(--ox-copy-control-size, 1.75rem);\n  height: var(--ox-copy-control-size, 1.75rem);\n  padding: 0;"
         ),
-        "custom prose button styles must not resize the fixed copy control: {READER_CHROME_CSS}"
+        "custom prose button styles must not resize the token-controlled copy control: {READER_CHROME_CSS}"
     );
     assert!(
         READER_CHROME_CSS.contains("border: 1px solid transparent;")

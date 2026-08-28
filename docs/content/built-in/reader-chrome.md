@@ -51,6 +51,28 @@ is not copied at build time, and annotated fences prefer `data-ox-code-source`
 so the copied value matches the authored block. Page-level Copy as Markdown is
 a separate opt-in on [`ssg.markdownSource.copy`](./markdown-source.md).
 
+The built-in SSG stylesheet and
+`@ox-content/vite-plugin/styles/reader-chrome.css` expose stable copy-control
+sizing tokens:
+
+| Token                    | Default     | Effect                                   |
+| ------------------------ | ----------- | ---------------------------------------- |
+| `--ox-copy-control-size` | `1.75rem`   | Square button size                       |
+| `--ox-copy-icon-size`    | `0.8125rem` | Copy and copied-state glyph size         |
+| `--ox-copy-inset`        | `0.5rem`    | Block-start and inline-end button offset |
+
+Set them on `.content` or another reader root instead of overriding internal
+`.ox-copy` selectors:
+
+```css
+.content {
+  --ox-copy-icon-size: 1rem;
+}
+```
+
+The code title and inline-end gutter reservation follow customized control and
+inset sizes.
+
 Outbound icons skip relative, hash, `mailto:`, and `tel:` links. Links inside
 fenced blocks or inline code spans are left alone. `javascript:`, `data:`, and
 `vbscript:` hrefs are not given a live action.

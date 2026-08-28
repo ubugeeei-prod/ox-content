@@ -60,6 +60,8 @@ Contribution summary:
   downstream migration without a site-specific listener.
 - Matched the Twitter/X full-card action icons and accessible names to the
   sveltweet reference contract.
+- Reported the custom-host reader-chrome copy sizing requirement from the
+  ryoppippi.com integration.
 
 ## Third-party attribution
 

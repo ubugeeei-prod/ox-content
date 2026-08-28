@@ -230,6 +230,25 @@ fn reduced_motion_class_and_css_are_present() {
 }
 
 #[test]
+fn code_copy_sizing_tokens_drive_the_control_and_gutter() {
+    assert!(READER_CHROME_CSS.contains("--ox-copy-control-size, 1.75rem"), "{READER_CHROME_CSS}");
+    assert!(READER_CHROME_CSS.contains("--ox-copy-icon-size, 0.8125rem"), "{READER_CHROME_CSS}");
+    assert!(READER_CHROME_CSS.contains("--ox-copy-inset, 0.5rem"), "{READER_CHROME_CSS}");
+    assert!(
+        READER_CHROME_CSS.contains("var(--ox-copy-control-size, 1.75rem)")
+            && READER_CHROME_CSS.contains("var(--ox-copy-icon-size, 0.8125rem)")
+            && READER_CHROME_CSS.contains("var(--ox-copy-inset, 0.5rem)"),
+        "{READER_CHROME_CSS}"
+    );
+    assert!(
+        READER_CHROME_CSS.contains(
+            "calc(var(--ox-copy-control-size, 1.75rem) + var(--ox-copy-inset, 0.5rem) - 0.25rem)"
+        ),
+        "{READER_CHROME_CSS}"
+    );
+}
+
+#[test]
 fn unclosed_or_hostile_input_is_left_intact() {
     let unclosed_pre = "<pre><code>no end";
     let unclosed_link = r#"<a href="https://example.com/docs">no end"#;

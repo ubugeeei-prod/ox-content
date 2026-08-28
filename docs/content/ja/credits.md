@@ -57,6 +57,8 @@ Markdown 属性とリッチなソーシャル埋め込みの見た目の同等�
   site-specific listener を外せる downstream migration を検証しました。
 - Twitter / X full card action icon と accessible name を sveltweet の
   reference contract に合わせました。
+- ryoppippi.com integration で、独自ホストの reader-chrome copy sizing 要件を
+  報告しました。
 
 ## 第三者の帰属
 

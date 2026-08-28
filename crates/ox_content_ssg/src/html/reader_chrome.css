@@ -1,5 +1,8 @@
 .ox-code {
-  --ox-copy-reserved-inline-size: 2rem;
+  --ox-copy-reserved-inline-size: max(
+    2rem,
+    calc(var(--ox-copy-control-size, 1.75rem) + var(--ox-copy-inset, 0.5rem) - 0.25rem)
+  );
   position: relative;
   margin: 1.25rem 0;
 }
@@ -17,12 +20,12 @@
 }
 .ox-copy {
   position: absolute;
-  inset-block-start: 0.5rem;
-  inset-inline-end: 0.5rem;
+  inset-block-start: var(--ox-copy-inset, 0.5rem);
+  inset-inline-end: var(--ox-copy-inset, 0.5rem);
   z-index: 1;
   display: grid;
-  width: 1.75rem;
-  height: 1.75rem;
+  width: var(--ox-copy-control-size, 1.75rem);
+  height: var(--ox-copy-control-size, 1.75rem);
   padding: 0;
   place-items: center;
   border: 1px solid transparent;
@@ -41,16 +44,16 @@
   z-index: 2;
   min-width: 0;
   min-height: 0;
-  width: 1.75rem;
-  height: 1.75rem;
+  width: var(--ox-copy-control-size, 1.75rem);
+  height: var(--ox-copy-control-size, 1.75rem);
   padding: 0;
   font: inherit;
   line-height: 1;
 }
 .ox-copy::before {
   content: "";
-  width: 0.8125rem;
-  height: 0.8125rem;
+  width: var(--ox-copy-icon-size, 0.8125rem);
+  height: var(--ox-copy-icon-size, 0.8125rem);
   background-color: currentColor;
   -webkit-mask: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><rect x='9' y='9' width='11' height='11' rx='2'/><path d='M15 9V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v7a2 2 0 0 0 2 2h3'/></svg>")
     center / contain no-repeat;

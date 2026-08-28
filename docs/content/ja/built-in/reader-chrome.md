@@ -45,6 +45,27 @@ oxContent({
 
 コピーは読者がボタンを押したときにブラウザのクリップボードを使います。フェンス本文はビルド時にはコピーしません。注釈付きフェンスでは `data-ox-code-source` を優先するので、コピーされる値は書いたコードに一致します。ページ全体の Copy as Markdown は別のオプトイン [`ssg.markdownSource.copy`](./markdown-source.md) です。
 
+組み込み SSG の stylesheet と
+`@ox-content/vite-plugin/styles/reader-chrome.css` は、コピー操作のサイズを
+調整できる安定 token を公開しています。
+
+| Token                    | 既定値      | 効果                                        |
+| ------------------------ | ----------- | ------------------------------------------- |
+| `--ox-copy-control-size` | `1.75rem`   | 正方形のボタンサイズ                        |
+| `--ox-copy-icon-size`    | `0.8125rem` | copy と copied 状態の glyph サイズ          |
+| `--ox-copy-inset`        | `0.5rem`    | block-start / inline-end のボタンオフセット |
+
+内部の `.ox-copy` selector を上書きせず、`.content` など reader root に token
+を置いて調整します。
+
+```css
+.content {
+  --ox-copy-icon-size: 1rem;
+}
+```
+
+コードタイトルと inline-end の余白予約は、カスタマイズした control / inset サイズに追従します。
+
 外部リンクアイコンは相対、ハッシュ、`mailto:`、`tel:` を飛ばします。フェンス内やインラインコード内のリンクはそのままです。`javascript:`、`data:`、`vbscript:` の href には生きた操作を付けません。
 
 先頭へ戻る操作は `prefers-reduced-motion` を尊重します。エントリページでは出しません。
