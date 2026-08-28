@@ -2,6 +2,8 @@ use ox_content_allocator::Allocator;
 use ox_content_ast::Node;
 use ox_content_parser::{Parser, ParserOptions};
 
+#[path = "edge_cases/autolinks.rs"]
+mod autolinks;
 #[path = "edge_cases/blocks.rs"]
 mod blocks;
 #[path = "edge_cases/html.rs"]
