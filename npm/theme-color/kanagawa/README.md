@@ -34,6 +34,17 @@ import pixel from "@ox-content/theme-pixel";
 theme: [pixel, kanagawa, { colors: { primary: "#ff5f56" } }];
 ```
 
+## Variants
+
+The default export stays `kanagawa` (Kanagawa Lotus and Wave). Named variants
+are exported from the same package:
+
+```ts
+import { kanagawaDragon } from "@ox-content/theme-color-kanagawa";
+```
+
+- `kanagawaDragon` — Kanagawa Lotus and Dragon
+
 ## License
 
 MIT

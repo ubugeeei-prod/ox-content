@@ -394,6 +394,16 @@ theme: [
 | [`@ox-content/theme-color-emerald`](https://npmjs.com/package/@ox-content/theme-color-emerald)             | Emerald       | 深いスレートの上の鮮やかな緑 — カンファレンスバッジのパレット     |
 | [`@ox-content/theme-color-commander`](https://npmjs.com/package/@ox-content/theme-color-commander)         | Commander     | 昼は CGA シアンパネル、夜は素のコンソールプロンプト               |
 
+### Kanagawa の variant
+
+`@ox-content/theme-color-kanagawa` の既定 `kanagawa` は Lotus light + Wave dark
+の組み合わせのままです。Lotus light に canonical な Dragon dark syntax palette
+を合わせたいときは、named export の `kanagawaDragon` を使います。
+
+```ts
+import { kanagawaDragon } from "@ox-content/theme-color-kanagawa";
+```
+
 ## シンタックスハイライト
 
 ハイライトは両モードで配色に従い、追加設定は不要です。ネイティブ tree-sitter ハイライターはトークン色を `--octc-syntax-*` カスタムプロパティとして出します。各配色がモードごとに定義するので、1 ビルドで 2 パレットです。

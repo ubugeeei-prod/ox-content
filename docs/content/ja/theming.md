@@ -241,6 +241,16 @@ import { kanagawa } from "@ox-content/theme-color-kanagawa";
 const css = renderThemeTokenCss(kanagawa);
 ```
 
+Kanagawa の既定 export は Lotus light + Wave dark のままです。独自ホストで
+Lotus light と canonical な Dragon dark syntax palette を使いたい場合は、同じ
+パッケージから `kanagawaDragon` を import します。
+
+```ts
+import { kanagawaDragon } from "@ox-content/theme-color-kanagawa";
+
+const css = renderThemeTokenCss(kanagawaDragon);
+```
+
 組み込みハイライタは `var(--octc-syntax-*)` を参照するので、ページのパレット・タイポグラフィ・レイアウトは自前のまま、配色のコードカラーだけ borrow したいホストはトークン名で絞り込めます。名前は `--octc-` プレフィックスなしで渡ってきます。
 
 ```ts

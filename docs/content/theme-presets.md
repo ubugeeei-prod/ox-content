@@ -409,6 +409,16 @@ Preview every color package as paired light and dark surfaces. Each card samples
 | [`@ox-content/theme-color-emerald`](https://npmjs.com/package/@ox-content/theme-color-emerald)             | Emerald       | Vivid green over deep slate — the conference-badge palette   |
 | [`@ox-content/theme-color-commander`](https://npmjs.com/package/@ox-content/theme-color-commander)         | Commander     | CGA cyan panels by day, the bare console prompt by night     |
 
+### Kanagawa Variants
+
+`@ox-content/theme-color-kanagawa` keeps `kanagawa` as the default Lotus light +
+Wave dark pairing. Use the named `kanagawaDragon` export when you want Lotus
+light with the canonical Dragon dark syntax palette:
+
+```ts
+import { kanagawaDragon } from "@ox-content/theme-color-kanagawa";
+```
+
 ## Syntax highlighting
 
 Highlighting follows the color scheme in both modes, with no extra

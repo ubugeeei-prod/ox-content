@@ -40,11 +40,9 @@ const colors = (c) => ({
   codeText: c.codeText,
 });
 
-function indexTs(p, exportName) {
-  return `import type { ThemeConfig } from "@ox-content/vite-plugin";
-
-/**
- * ${p.title} — ${p.description}.
+function configTs(p, exportName, light, dark, name, description) {
+  return `/**
+ * ${p.title} — ${description}.
  *
  * Color only: no layout, no texture, no typography. Compose it under any
  * \`@ox-content/theme-*\` skin, or use it on its own over the default theme.
@@ -53,21 +51,41 @@ function indexTs(p, exportName) {
  * \`node scripts/theme-colors/generate.mjs\` rather than editing this by hand.
  */
 export const ${exportName}: ThemeConfig = {
-  name: "${p.id}",
+  name: "${name}",
   colors: {
-${record(colors(p.light), "    ")}
+${record(colors(light), "    ")}
   },
   darkColors: {
-${record(colors(p.dark), "    ")}
+${record(colors(dark), "    ")}
   },
   tokens: {
-${record(tokensFor(p.light, p.dark, "light"), "    ")}
+${record(tokensFor(light, dark, "light"), "    ")}
   },
   darkTokens: {
-${record(tokensFor(p.dark, p.light, "dark"), "    ")}
+${record(tokensFor(dark, light, "dark"), "    ")}
   },
 };
+`;
+}
 
+function indexTs(p, exportName) {
+  const configs = [
+    configTs(p, exportName, p.light, p.dark, p.id, p.description),
+    ...(p.variants ?? []).map((variant) =>
+      configTs(
+        p,
+        variant.exportName ?? camel(`${p.id}-${variant.id}`),
+        variant.light ?? p.light,
+        variant.dark ?? p.dark,
+        variant.name ?? `${p.id}-${variant.id}`,
+        variant.description ?? p.description,
+      ),
+    ),
+  ];
+
+  return `import type { ThemeConfig } from "@ox-content/vite-plugin";
+
+${configs.join("\n")}
 export default ${exportName};
 `;
 }
@@ -115,7 +133,7 @@ function packageJson(p) {
       typescript: "catalog:",
       "vite-plus": "catalog:",
     },
-    peerDependencies: { "@ox-content/vite-plugin": ">=2.84.0" },
+    peerDependencies: { "@ox-content/vite-plugin": ">=3.0.0-alpha.1" },
     peerDependenciesMeta: { "@ox-content/vite-plugin": { optional: true } },
   };
 }
@@ -159,6 +177,29 @@ export default defineConfig({
 `;
 
 function readme(p, exportName) {
+  const variantNames = (p.variants ?? []).map(
+    (variant) => variant.exportName ?? camel(`${p.id}-${variant.id}`),
+  );
+  const variantList = (p.variants ?? [])
+    .map(
+      (variant, index) => `- \`${variantNames[index]}\` — ${variant.description ?? p.description}`,
+    )
+    .join("\n");
+  const variantsSection = variantList
+    ? `
+## Variants
+
+The default export stays \`${exportName}\` (${p.description}). Named variants
+are exported from the same package:
+
+\`\`\`ts
+import { ${variantNames.join(", ")} } from "@ox-content/theme-color-${p.id}";
+\`\`\`
+
+${variantList}
+`
+    : "";
+
   return `# @ox-content/theme-color-${p.id}
 
 ${p.title} — ${p.description} — for [Ox Content](https://github.com/ubugeeei-prod/ox-content).
@@ -194,6 +235,7 @@ import pixel from "@ox-content/theme-pixel";
 
 theme: [pixel, ${exportName}, { colors: { primary: "#ff5f56" } }];
 \`\`\`
+${variantsSection}
 
 ## License
 

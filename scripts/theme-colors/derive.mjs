@@ -81,6 +81,7 @@ function tokensFor(c, other, mode) {
       0,
     );
   const code = legibility(c) >= legibility(other) ? c : other;
+  const syntax = c.syntax ?? {};
   return {
     "color-code-line-highlight": mix(c.blue, 16),
     "color-code-line-warning": mix(c.yellow, 18),
@@ -128,17 +129,17 @@ function tokensFor(c, other, mode) {
     "accent-coral-ink": ensureContrast(c.red, c.bg, 4.5),
     // Syntax colors are custom properties so they follow the scheme with no
     // extra highlighter config.
-    "syntax-foreground": c.codeText,
-    "syntax-background": c.codeBg,
-    "syntax-token-comment": mix(c.codeText, 55, c.codeBg),
-    "syntax-token-punctuation": mix(c.codeText, 72, c.codeBg),
-    "syntax-token-keyword": code.magenta,
-    "syntax-token-string": code.green,
-    "syntax-token-string-expression": code.green,
-    "syntax-token-constant": code.yellow,
-    "syntax-token-function": code.blue,
-    "syntax-token-parameter": code.red,
-    "syntax-token-link": code.cyan,
+    "syntax-foreground": syntax.foreground ?? c.codeText,
+    "syntax-background": syntax.background ?? c.codeBg,
+    "syntax-token-comment": syntax.comment ?? mix(c.codeText, 55, c.codeBg),
+    "syntax-token-punctuation": syntax.punctuation ?? mix(c.codeText, 72, c.codeBg),
+    "syntax-token-keyword": syntax.keyword ?? code.magenta,
+    "syntax-token-string": syntax.string ?? code.green,
+    "syntax-token-string-expression": syntax.stringExpression ?? syntax.string ?? code.green,
+    "syntax-token-constant": syntax.constant ?? code.yellow,
+    "syntax-token-function": syntax.function ?? code.blue,
+    "syntax-token-parameter": syntax.parameter ?? code.red,
+    "syntax-token-link": syntax.link ?? code.cyan,
   };
 }
 

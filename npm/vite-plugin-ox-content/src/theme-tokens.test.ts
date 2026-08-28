@@ -121,21 +121,28 @@ describe("renderThemeTokenCss", () => {
 });
 
 describe("bare host consuming @ox-content/theme-color-kanagawa", () => {
+  type KanagawaConfig = ThemeTokenSource & {
+    name?: string;
+    colors?: Record<string, string>;
+    darkColors?: Record<string, string>;
+  };
+  type KanagawaModule = {
+    kanagawa: KanagawaConfig;
+    kanagawaDragon: KanagawaConfig;
+  };
+
   // Loaded through a runtime URL rather than a static import: the theme package
   // is a sibling workspace package, so importing its source by name would need
   // its `dist/`, and importing it by path would pull a file outside this
   // package's `rootDir` into the TypeScript program. The point of the fixture
   // is that a published `ThemeConfig` flows through the public API unchanged.
-  async function loadKanagawa(): Promise<ThemeTokenSource> {
+  async function loadKanagawa(): Promise<KanagawaModule> {
     const source = join(packageRoot, "../theme-color/kanagawa/src/index.ts");
-    const module = (await import(pathToFileURL(source).href)) as {
-      kanagawa: ThemeTokenSource;
-    };
-    return module.kanagawa;
+    return (await import(pathToFileURL(source).href)) as KanagawaModule;
   }
 
   it("renders the official syntax palette without page colors or layout", async () => {
-    const kanagawa = await loadKanagawa();
+    const { kanagawa } = await loadKanagawa();
 
     const css = renderThemeTokenCss(kanagawa, {
       include: (name) => name.startsWith("syntax-"),
@@ -153,7 +160,7 @@ describe("bare host consuming @ox-content/theme-color-kanagawa", () => {
   });
 
   it("covers explicit light, explicit dark, and the operating-system fallback", async () => {
-    const kanagawa = await loadKanagawa();
+    const { kanagawa } = await loadKanagawa();
 
     const css = renderThemeTokenCss(kanagawa, {
       include: (name) => name === "syntax-foreground",
@@ -177,11 +184,65 @@ describe("bare host consuming @ox-content/theme-color-kanagawa", () => {
   });
 
   it("renders every token when no filter is passed", async () => {
-    const kanagawa = await loadKanagawa();
+    const { kanagawa } = await loadKanagawa();
 
     const css = renderThemeTokenCss(kanagawa);
 
     expect(css).toContain("--octc-surface-glass:");
     expect(css).toContain("--octc-syntax-token-keyword:");
+  });
+
+  it("exports a Dragon dark variant while keeping the default Wave preset stable", async () => {
+    const { kanagawa, kanagawaDragon } = await loadKanagawa();
+
+    expect(kanagawa.name).toBe("kanagawa");
+    expect(kanagawa.darkColors?.background).toBe("#1f1f28");
+    expect(kanagawa.darkColors?.codeBackground).toBe("#16161d");
+    expect(kanagawa.darkTokens?.["syntax-background"]).toBe("#16161d");
+    expect(kanagawa.darkTokens?.["syntax-token-keyword"]).toBe("#957fb8");
+
+    expect(kanagawaDragon.name).toBe("kanagawa-dragon");
+    expect(kanagawaDragon.colors).toEqual(kanagawa.colors);
+    expect(kanagawaDragon.tokens).toEqual(kanagawa.tokens);
+    expect(kanagawaDragon.darkColors).toMatchObject({
+      background: "#181616",
+      backgroundAlt: "#282727",
+      codeBackground: "#181616",
+      codeText: "#c5c9c5",
+    });
+    expect(kanagawaDragon.darkTokens).toMatchObject({
+      "syntax-background": "#181616",
+      "syntax-foreground": "#c5c9c5",
+      "syntax-token-comment": "#737c73",
+      "syntax-token-keyword": "#8992a7",
+      "syntax-token-string": "#8a9a7b",
+      "syntax-token-constant": "#b6927b",
+      "syntax-token-function": "#8ba4b0",
+      "syntax-token-parameter": "#a6a69c",
+    });
+  });
+
+  it("renders Dragon tokens through the public bare-host CSS renderer and SSG path", async () => {
+    const { kanagawaDragon } = await loadKanagawa();
+
+    const syntaxCss = renderThemeTokenCss(kanagawaDragon, {
+      include: (name) => name.startsWith("syntax-"),
+    });
+    expect(syntaxCss).toContain("--octc-syntax-background: #181616;");
+    expect(syntaxCss).toContain("--octc-syntax-token-comment: #737c73;");
+    expect(syntaxCss).toContain("--octc-syntax-token-keyword: #8992a7;");
+    expect(syntaxCss).toContain("--octc-syntax-token-string: #8a9a7b;");
+    expect(syntaxCss).toContain("--octc-syntax-token-constant: #b6927b;");
+    expect(syntaxCss).toContain("--octc-syntax-token-function: #8ba4b0;");
+    expect(syntaxCss).toContain("--octc-syntax-token-parameter: #a6a69c;");
+
+    const ssgTheme = themeToNapi(resolveTheme(kanagawaDragon));
+    expect(ssgTheme.colors?.background).toBe("#f2ecbc");
+    expect(ssgTheme.darkColors?.background).toBe("#181616");
+
+    const ssgCss = ssgTheme.css ?? "";
+    expect(ssgCss).toContain("--octc-syntax-background: #181616;");
+    expect(ssgCss).toContain("--octc-syntax-token-comment: #737c73;");
+    expect(ssgCss).toContain("--octc-syntax-token-parameter: #a6a69c;");
   });
 });

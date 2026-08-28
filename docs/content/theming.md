@@ -277,6 +277,16 @@ import { kanagawa } from "@ox-content/theme-color-kanagawa";
 const css = renderThemeTokenCss(kanagawa);
 ```
 
+Kanagawa's default export keeps Lotus light + Wave dark. Import
+`kanagawaDragon` from the same package when a custom host needs Lotus light +
+the canonical Dragon dark syntax palette:
+
+```ts
+import { kanagawaDragon } from "@ox-content/theme-color-kanagawa";
+
+const css = renderThemeTokenCss(kanagawaDragon);
+```
+
 The built-in highlighter emits `var(--octc-syntax-*)` references, so a host that
 wants a scheme's code colors while keeping its own page palette, typography, and
 layout can select tokens by name. Names arrive without the `--octc-` prefix:

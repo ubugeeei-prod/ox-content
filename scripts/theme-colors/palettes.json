@@ -701,7 +701,44 @@
         "blue": "#7e9cd8",
         "magenta": "#957fb8",
         "cyan": "#7aa89f"
-      }
+      },
+      "variants": [
+        {
+          "id": "dragon",
+          "exportName": "kanagawaDragon",
+          "name": "kanagawa-dragon",
+          "description": "Kanagawa Lotus and Dragon",
+          "dark": {
+            "bg": "#181616",
+            "bgAlt": "#282727",
+            "text": "#c5c9c5",
+            "muted": "#a6a69c",
+            "border": "#393836",
+            "primary": "#8ba4b0",
+            "primaryHover": "#a6a69c",
+            "codeBg": "#181616",
+            "codeText": "#c5c9c5",
+            "red": "#c4746e",
+            "green": "#8a9a7b",
+            "yellow": "#c4b28a",
+            "blue": "#8ba4b0",
+            "magenta": "#a292a3",
+            "cyan": "#8ea4a2",
+            "syntax": {
+              "foreground": "#c5c9c5",
+              "background": "#181616",
+              "comment": "#737c73",
+              "punctuation": "#9e9b93",
+              "keyword": "#8992a7",
+              "string": "#8a9a7b",
+              "constant": "#b6927b",
+              "function": "#8ba4b0",
+              "parameter": "#a6a69c",
+              "link": "#949fb5"
+            }
+          }
+        }
+      ]
     },
     {
       "id": "poimandres",
