@@ -32,7 +32,11 @@ export const STYLE_ENTRIES = /** @type {const} */ ([
   },
   {
     name: "twitter-full.css",
-    sources: ["plugins/social-tweet-full.css", "plugins/social-tweet-full-media.css"],
+    sources: [
+      "plugins/social-tweet-full-isolation.css",
+      "plugins/social-tweet-full.css",
+      "plugins/social-tweet-full-media.css",
+    ],
   },
   { name: "ogp.css", sources: ["plugins/ogp.css"] },
   { name: "github.css", sources: ["plugins/github.css"] },

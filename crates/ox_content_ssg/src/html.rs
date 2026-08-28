@@ -237,6 +237,9 @@ const SOCIAL_CSS: &str = concat!(
 
 /// CSS for opt-in full-fidelity Tweet cards (`.ox-tweet--full`).
 const SOCIAL_TWEET_FULL_CSS: &str = concat!(
+    // Isolation first: the component rules that follow win wherever they set
+    // a property, and this only covers the ones they leave to the host.
+    include_str!("plugins/social-tweet-full-isolation.css"),
     include_str!("plugins/social-tweet-full.css"),
     include_str!("plugins/social-tweet-full-media.css"),
 );

@@ -39,7 +39,11 @@ const CRATE_SOURCES: Record<
     "plugins/social-twitter-rich.css",
     "plugins/reddit.css",
   ],
-  "twitter-full.css": ["plugins/social-tweet-full.css", "plugins/social-tweet-full-media.css"],
+  "twitter-full.css": [
+    "plugins/social-tweet-full-isolation.css",
+    "plugins/social-tweet-full.css",
+    "plugins/social-tweet-full-media.css",
+  ],
   "ogp.css": ["plugins/ogp.css"],
   "github.css": ["plugins/github.css"],
   "markdown-tables.css": ["plugins/markdown-tables.css"],

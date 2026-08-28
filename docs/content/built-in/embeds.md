@@ -399,7 +399,12 @@ render `.ox-tweet--full`. The full-card chrome follows the MIT-licensed
 are in [Credits](../credits.md). See
 [Twitter/X Embed](../examples/twitter-embed.md) for details.
 Custom hosts import `@ox-content/vite-plugin/styles/social.css` and, for
-`appearance: "full"`, `styles/twitter-full.css`. See
+`appearance: "full"`, `styles/twitter-full.css`. Those two are enough inside
+an article: the full-card stylesheet neutralizes the element rules a prose
+stylesheet such as `@tailwindcss/typography` applies to what the card
+replaces — image margins on avatars and media, quotation typography and
+generated quote marks on the quoted post, figure spacing on the card itself
+— so no downstream `.prose .ox-tweet--full …` overrides are needed. See
 [Component styles](./component-styles.md).
 
 ## Reddit

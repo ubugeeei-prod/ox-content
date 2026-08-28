@@ -1,0 +1,71 @@
+/*
+ * Host-prose isolation for full-fidelity Tweet cards.
+ *
+ * The full card replaces native elements — a `<figure>` root, `<img>`
+ * avatars and media, a `<blockquote>` for the quoted post — and an article
+ * stylesheet such as `@tailwindcss/typography` styles those by element. The
+ * component rules below the isolation block win wherever they set a
+ * property; this file covers the properties they never set, which is how a
+ * `.prose` article was adding image margins to avatars and quotation
+ * typography to the quoted post.
+ *
+ * Every selector doubles the root class (`.ox-tweet.ox-tweet--full`) so it
+ * outranks `.prose <element>` regardless of which stylesheet the host
+ * imports last. Generated quotes need a longer chain still: Tailwind writes
+ * them at `.prose blockquote p:first-of-type::before`.
+ */
+
+/*
+ * The card root is a `<figure>`, and the component sets its margin at one
+ * class of specificity — which `.prose figure` outranks. Restate it here
+ * through the same custom property, so a host that overrides the property
+ * still gets what it asked for.
+ */
+.ox-tweet.ox-tweet--full {
+  margin: var(--ox-tweet-container-margin);
+}
+
+.ox-tweet.ox-tweet--full :where(img, video, figure, picture, svg) {
+  margin: 0;
+}
+
+.ox-tweet.ox-tweet--full :where(p, ul, ol, li, dl, dd, dt, hr, h1, h2, h3, h4, h5, h6) {
+  margin: 0;
+  padding: 0;
+}
+
+.ox-tweet.ox-tweet--full :where(ul, ol) {
+  list-style: none;
+}
+
+.ox-tweet.ox-tweet--full :where(a) {
+  font-weight: inherit;
+  text-decoration: none;
+}
+
+.ox-tweet.ox-tweet--full :where(code, pre, kbd, samp) {
+  padding: 0;
+  font-size: inherit;
+  font-family: inherit;
+  background: none;
+}
+
+.ox-tweet.ox-tweet--full :where(code)::before,
+.ox-tweet.ox-tweet--full :where(code)::after {
+  content: none;
+}
+
+/* The quoted post is a `<blockquote>`, which prose styles the hardest. */
+.ox-tweet.ox-tweet--full .ox-tweet__quote {
+  font-style: normal;
+  font-weight: 400;
+  color: inherit;
+  quotes: none;
+}
+
+.ox-tweet.ox-tweet--full .ox-tweet__quote :where(p)::before,
+.ox-tweet.ox-tweet--full .ox-tweet__quote :where(p)::after,
+.ox-tweet.ox-tweet--full .ox-tweet__quote :where(p):first-of-type::before,
+.ox-tweet.ox-tweet--full .ox-tweet__quote :where(p):last-of-type::after {
+  content: none;
+}
