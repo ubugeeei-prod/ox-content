@@ -61,6 +61,7 @@ export type {
   ResolvedWikiLinkOptions,
   EmojiShortcodeOptions,
   ResolvedEmojiShortcodeOptions,
+  MathErrorPolicy,
   MathOptions,
   ResolvedMathOptions,
   AttrsOptions,

@@ -70,6 +70,30 @@ $$
 $$
 ```
 
+## When TeX Does Not Parse
+
+The `$…$` scan is a heuristic. It leaves `${score}` in prose, `$vuetify`, and
+`$10 から $20` alone, but a page _about_ math syntax — one that quotes `$…$` to
+explain it — is exactly the page it picks up by mistake. KaTeX then refuses
+what it was handed, and `onError` decides what the reader sees:
+
+```ts
+oxContent({
+  math: { onError: "literal" },
+});
+```
+
+| `onError`   | Result                                                                |
+| ----------- | --------------------------------------------------------------------- |
+| `'literal'` | The source goes back as written, delimiters included, plus a warning. |
+| `'error'`   | The build fails on the first run KaTeX refuses.                       |
+| `'render'`  | KaTeX's own red error text is written into the page.                  |
+
+`'literal'` is the default: a sentence that merely mentions `$` keeps reading
+like a sentence, and the warning names the file and the TeX so a real mistake
+in a formula is still visible. Use `'error'` on a site where every `$…$` is
+meant to be math, and `'render'` to see KaTeX's message in place.
+
 ## Requirements
 
 Typesetting uses KaTeX at build time, so add it only on sites that enable

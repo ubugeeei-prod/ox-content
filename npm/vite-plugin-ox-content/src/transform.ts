@@ -43,6 +43,7 @@ import { importNapiModule } from "./napi";
 import { transformMermaidStatic } from "./plugins/mermaid";
 import { prepareGraphvizFences, restoreGraphvizPlaceholders } from "./plugins/graphviz";
 import { renderKatexMath } from "./plugins/math";
+import type { MathRenderFailure } from "./plugins/math";
 import { transformCrossReferences, type CrossReferenceEntry } from "./cross-references";
 import { transformCitations, type BibliographyEntry, type CitationReference } from "./citations";
 import { transformBudouxHtml } from "./budoux";
@@ -827,7 +828,9 @@ export async function transformMarkdown(
   }
 
   if (isMathEnabled(options.math)) {
-    html = await renderKatexMath(html);
+    const failures: MathRenderFailure[] = [];
+    html = await renderKatexMath(html, options.math?.onError ?? "literal", failures);
+    warnMathFailures(failures, filePath);
   }
 
   html = await transformBudouxHtml(html, options.budoux);
@@ -1113,6 +1116,23 @@ export async function generateOgImageSvg(
     : undefined;
 
   return napi.generateOgImageSvg(data, napiConfig);
+}
+
+/**
+ * Reports every `$…$` run KaTeX refused.
+ *
+ * Under the default policy the page keeps its prose, which is the readable
+ * outcome but also a silent one — a genuine mistake in a formula would
+ * otherwise leave no trace at all.
+ */
+function warnMathFailures(failures: MathRenderFailure[], filePath: string): void {
+  for (const failure of failures) {
+    const delimiter = failure.block ? "$$" : "$";
+    console.warn(
+      `[ox-content] ${filePath}: math left as written — ${failure.message} ` +
+        `(in ${delimiter}${failure.tex}${delimiter})`,
+    );
+  }
 }
 
 function isMathEnabled(math: boolean | { enabled?: boolean } | undefined): boolean {

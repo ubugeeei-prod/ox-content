@@ -3133,13 +3133,36 @@ export interface MathOptions {
    * @default true
    */
   enabled?: boolean;
+
+  /**
+   * What to do with a `$…$` run KaTeX cannot parse.
+   *
+   * The `$…$` heuristics are good but not perfect, and a page *about* math
+   * syntax is exactly the page that trips them. This decides whether such a
+   * page ships readable prose, red error text, or no build at all.
+   *
+   * - `'literal'` puts the source back the way it was written, delimiters
+   *   included, and warns.
+   * - `'error'` fails the build.
+   * - `'render'` emits KaTeX's own red error markup, which is what the
+   *   feature did before this option existed.
+   *
+   * @default 'literal'
+   */
+  onError?: MathErrorPolicy;
 }
+
+/**
+ * What to do with a `$…$` run KaTeX cannot parse.
+ */
+export type MathErrorPolicy = "literal" | "error" | "render";
 
 /**
  * Resolved math transform options.
  */
 export interface ResolvedMathOptions {
   enabled: boolean;
+  onError: MathErrorPolicy;
 }
 
 /**

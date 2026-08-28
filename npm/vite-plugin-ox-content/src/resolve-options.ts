@@ -142,9 +142,9 @@ function resolveEmojiShortcodeOptions(
 }
 
 export function resolveMathOptions(options: OxContentOptions["math"]): ResolvedOptions["math"] {
-  if (!options) return { enabled: false };
-  if (options === true) return { enabled: true };
-  return { enabled: options.enabled ?? true };
+  if (!options) return { enabled: false, onError: "literal" };
+  if (options === true) return { enabled: true, onError: "literal" };
+  return { enabled: options.enabled ?? true, onError: options.onError ?? "literal" };
 }
 function resolveAttrsOptions(options: OxContentOptions["attrs"]): ResolvedOptions["attrs"] {
   if (!options) return { enabled: false };
