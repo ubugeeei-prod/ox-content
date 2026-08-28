@@ -1,0 +1,7 @@
+---
+source: crates/ox_content_renderer/src/html/tests/autolink.rs
+expression: html
+---
+<p>句点直後: <a href="https://example.com/foo" target="_blank" rel="noopener noreferrer">https://example.com/foo</a>。次の文。</p>
+<p>読点: <a href="https://example.com/qux" target="_blank" rel="noopener noreferrer">https://example.com/qux</a>、続き。</p>
+<p>全角括弧: 全角（<a href="https://example.com/baz" target="_blank" rel="noopener noreferrer">https://example.com/baz</a>）です。</p>

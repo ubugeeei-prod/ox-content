@@ -215,3 +215,34 @@ fn default_gate_requires_colon_slash_slash() {
     assert!(index.may_match(b"see http://example.com"));
     assert!(index.may_match(b"://bare"));
 }
+
+#[test]
+fn test_autolink_stops_at_cjk_sentence_punctuation() {
+    let allocator = Allocator::new();
+    let doc = Parser::new(
+        &allocator,
+        "句点直後: https://example.com/foo。次の文。\n\n読点: https://example.com/qux、続き。\n\n全角括弧: 全角（https://example.com/baz）です。",
+    )
+    .parse()
+    .unwrap();
+    let mut renderer = HtmlRenderer::with_options(HtmlRendererOptions {
+        autolink_urls: true,
+        ..Default::default()
+    });
+    let html = renderer.render(&doc);
+    insta::assert_snapshot!(html);
+}
+
+#[test]
+fn test_autolink_keeps_non_ascii_iri_paths() {
+    let allocator = Allocator::new();
+    let doc = Parser::new(&allocator, "IRI: https://ja.wikipedia.org/wiki/日本語 です。")
+        .parse()
+        .unwrap();
+    let mut renderer = HtmlRenderer::with_options(HtmlRendererOptions {
+        autolink_urls: true,
+        ..Default::default()
+    });
+    let html = renderer.render(&doc);
+    insta::assert_snapshot!(html);
+}

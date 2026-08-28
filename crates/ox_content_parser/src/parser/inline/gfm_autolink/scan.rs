@@ -183,18 +183,67 @@ fn validate_url(value: &str, start: usize, prefix_len: usize) -> Option<Candidat
         return None;
     }
 
-    // The link runs to whitespace or `<`, then trailing punctuation is
-    // trimmed (unbalanced `)` and entity-like `&x;` suffixes included).
-    let mut end = domain_end;
-    while end < bytes.len() && !bytes[end].is_ascii_whitespace() && bytes[end] != b'<' {
-        end += 1;
-    }
-    let end = trim_trailing_punctuation(value, start, end);
+    // The link runs to whitespace, `<`, or CJK sentence punctuation, then
+    // trailing punctuation is trimmed (unbalanced `)` and entity-like `&x;`
+    // suffixes included).
+    let end = trim_trailing_punctuation(value, start, scan_url_end(value, domain_end));
     (end > domain_start).then_some(Candidate {
         start,
         end,
         href_prefix: if prefix_len == 4 { "http://" } else { "" },
     })
+}
+
+/// Extends a URL from `from` to the offset where it stops.
+///
+/// Non-ASCII characters normally belong to the URL — an IRI carries them
+/// verbatim (`/wiki/日本語`) — with CJK sentence punctuation the exception.
+fn scan_url_end(value: &str, from: usize) -> usize {
+    let bytes = value.as_bytes();
+    let mut end = from;
+    while end < bytes.len() {
+        let byte = bytes[end];
+        if byte.is_ascii() {
+            if byte.is_ascii_whitespace() || byte == b'<' {
+                break;
+            }
+            end += 1;
+            continue;
+        }
+        let Some(ch) = value.get(end..).and_then(|rest| rest.chars().next()) else {
+            break;
+        };
+        if ends_url(ch) {
+            break;
+        }
+        end += ch.len_utf8();
+    }
+    end
+}
+
+/// Punctuation that ends a bare URL the way ASCII whitespace does.
+///
+/// The GFM autolink extension defines trailing-punctuation trimming for
+/// ASCII only, and CJK prose puts no space between a URL and the `。` that
+/// closes the sentence — so without this the rest of the sentence is
+/// swallowed into the link.
+///
+/// Mirrored by the bare-URL scanner in `ox_content_renderer`.
+const fn ends_url(ch: char) -> bool {
+    matches!(
+        ch,
+        // CJK symbols and punctuation: the ideographic space, 、。〈〉《》
+        // 「」『』【】 and friends.
+        '\u{3000}'..='\u{303F}'
+        // Fullwidth ！＂＃＄％＆＇（）＊＋，－．／
+        | '\u{FF01}'..='\u{FF0F}'
+        // Fullwidth ：；＜＝＞？＠
+        | '\u{FF1A}'..='\u{FF20}'
+        // Fullwidth ［＼］＾＿｀
+        | '\u{FF3B}'..='\u{FF40}'
+        // Fullwidth ｛｜｝～｟｠ and halfwidth ｡｢｣､･
+        | '\u{FF5B}'..='\u{FF65}'
+    )
 }
 
 fn trim_trailing_punctuation(value: &str, start: usize, mut end: usize) -> usize {

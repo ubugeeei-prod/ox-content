@@ -282,17 +282,13 @@ fn find_autolink_match_in<P: AsRef<str>>(
                     && bytes[i..i + pat_bytes.len()].eq_ignore_ascii_case(pat_bytes)
                 {
                     let url_start = i;
-                    let mut url_end = i + pat_bytes.len();
-                    while url_end < bytes.len() && is_url_byte(bytes[url_end]) {
-                        url_end += 1;
-                    }
+                    let url_end = scan_url_end(s, i + pat_bytes.len());
                     // Require at least one byte beyond the scheme/prefix
                     // so `"http://"` on its own isn't auto-linked.
                     if url_end == i + pat_bytes.len() {
                         continue;
                     }
-                    url_end = trim_trailing_punct(bytes, url_start, url_end);
-                    return Some((url_start, url_end));
+                    return Some((url_start, trim_trailing_punct(bytes, url_start, url_end)));
                 }
             }
         }
@@ -301,9 +297,60 @@ fn find_autolink_match_in<P: AsRef<str>>(
     None
 }
 
+/// Extends a URL from `from` to the offset where it stops.
+///
+/// Non-ASCII characters normally belong to the URL — an IRI carries them
+/// verbatim (`/wiki/日本語`) — with CJK sentence punctuation the exception.
+fn scan_url_end(s: &str, from: usize) -> usize {
+    let bytes = s.as_bytes();
+    let mut end = from;
+    while end < bytes.len() {
+        let byte = bytes[end];
+        if byte.is_ascii() {
+            if !is_url_byte(byte) {
+                break;
+            }
+            end += 1;
+            continue;
+        }
+        let Some(ch) = s.get(end..).and_then(|rest| rest.chars().next()) else {
+            break;
+        };
+        if ends_url(ch) {
+            break;
+        }
+        end += ch.len_utf8();
+    }
+    end
+}
+
 #[inline]
 fn is_url_byte(byte: u8) -> bool {
     !matches!(byte, b' ' | b'\t' | b'\n' | b'\r' | b'<' | b'>' | b'"' | b'\'' | b'`')
+}
+
+/// Punctuation that ends a bare URL the way ASCII whitespace does.
+///
+/// Trailing-punctuation handling is defined for ASCII only, and CJK prose
+/// puts no space between a URL and the `。` that closes the sentence — so
+/// without this the rest of the sentence is swallowed into the link.
+///
+/// Mirrored by the GFM autolink scan in `ox_content_parser`.
+const fn ends_url(ch: char) -> bool {
+    matches!(
+        ch,
+        // CJK symbols and punctuation: the ideographic space, 、。〈〉《》
+        // 「」『』【】 and friends.
+        '\u{3000}'..='\u{303F}'
+        // Fullwidth ！＂＃＄％＆＇（）＊＋，－．／
+        | '\u{FF01}'..='\u{FF0F}'
+        // Fullwidth ：；＜＝＞？＠
+        | '\u{FF1A}'..='\u{FF20}'
+        // Fullwidth ［＼］＾＿｀
+        | '\u{FF3B}'..='\u{FF40}'
+        // Fullwidth ｛｜｝～｟｠ and halfwidth ｡｢｣､･
+        | '\u{FF5B}'..='\u{FF65}'
+    )
 }
 
 fn trim_trailing_punct(bytes: &[u8], start: usize, mut end: usize) -> usize {

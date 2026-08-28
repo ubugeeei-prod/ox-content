@@ -224,6 +224,55 @@ fn gfm_autolink_url_query_ampersand_still_links() {
 }
 
 #[test]
+fn gfm_autolink_stops_at_cjk_sentence_punctuation() {
+    // Japanese prose puts no space between a URL and the `。` that closes
+    // the sentence, so scanning to whitespace swallowed the rest of it.
+    for (source, expected) in [
+        ("句点直後: https://example.com/foo。次の文。", "https://example.com/foo"),
+        ("読点: https://example.com/qux、続き。", "https://example.com/qux"),
+        ("全角: https://example.com/baz）です。", "https://example.com/baz"),
+        ("感嘆: https://example.com/a！", "https://example.com/a"),
+        ("鉤括弧: https://example.com/b」", "https://example.com/b"),
+    ] {
+        let allocator = Allocator::new();
+        let doc = parse_with_options(&allocator, source, ParserOptions::gfm());
+
+        match &doc.children[0] {
+            Node::Paragraph(paragraph) => {
+                let link = paragraph
+                    .children
+                    .iter()
+                    .find_map(|child| match child {
+                        Node::Link(link) => Some(link),
+                        _ => None,
+                    })
+                    .expect("expected autolink");
+                assert_eq!(link.url, expected, "source: {source}");
+            }
+            other => panic!("expected paragraph, got {other:?}"),
+        }
+    }
+}
+
+#[test]
+fn gfm_autolink_keeps_non_ascii_iri_paths() {
+    let allocator = Allocator::new();
+    let doc = parse_with_options(
+        &allocator,
+        "https://ja.wikipedia.org/wiki/日本語 です。",
+        ParserOptions::gfm(),
+    );
+
+    match &doc.children[0] {
+        Node::Paragraph(paragraph) => match &paragraph.children[0] {
+            Node::Link(link) => assert_eq!(link.url, "https://ja.wikipedia.org/wiki/日本語"),
+            other => panic!("expected link, got {other:?}"),
+        },
+        other => panic!("expected paragraph, got {other:?}"),
+    }
+}
+
+#[test]
 fn unmatched_strikethrough_remains_text() {
     let allocator = Allocator::new();
     let doc = parse_with_options(&allocator, "~~open", ParserOptions::gfm());

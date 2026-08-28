@@ -91,6 +91,20 @@ Docs live at https://ubugeeei-prod.github.io/ox-content/
 
 自動リンクされた URL は新しいタブで開き、`rel="noopener noreferrer"` が付きます。
 
+URL は空白で終わり、末尾の句読点は取り除かれます。日本語や中国語の文章では URL と
+直後の記号のあいだに空白が入らないため、全角の句読点でも URL は終わります。
+
+```md
+詳細は https://example.com/foo。次の文。
+```
+
+描画:
+
+詳細は https://example.com/foo。次の文。
+
+URL の中の非 ASCII 文字はそのまま残るので、`https://ja.wikipedia.org/wiki/日本語`
+のような IRI も全体がリンクになります。
+
 ## 脚注
 
 ```md

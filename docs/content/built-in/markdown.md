@@ -102,6 +102,21 @@ Docs live at https://ubugeeei-prod.github.io/ox-content/
 
 Auto-linked URLs open in a new tab with `rel="noopener noreferrer"`.
 
+A URL ends at whitespace, and trailing punctuation is trimmed. CJK sentence
+punctuation ends it as well, because Japanese and Chinese prose leave no space
+between a URL and the mark that follows it:
+
+```md
+詳細は https://example.com/foo。次の文。
+```
+
+Rendered:
+
+詳細は https://example.com/foo。次の文。
+
+Non-ASCII characters inside the URL itself are kept, so an IRI such as
+`https://ja.wikipedia.org/wiki/日本語` still links in full.
+
 ## Footnotes
 
 ```md
