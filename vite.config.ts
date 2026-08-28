@@ -241,10 +241,13 @@ export default defineConfig({
         dependsOn: ["build:npm"],
       }),
 
-      "doc:cargo": task("cargo doc --workspace --no-deps", {
+      // Wrapped rather than bare `cargo doc`: the script drops the previous
+      // run's `target/doc` first, which is what keeps rustdoc's shared index
+      // merge from re-reading a sticky disk's worth of stale documentation.
+      "doc:cargo": task("node scripts/cargo-doc.mjs", {
         dependsOn: ["build:napi"],
       }),
-      "doc:cargo-open": uncachedTask("cargo doc --workspace --no-deps --open"),
+      "doc:cargo-open": uncachedTask("node scripts/cargo-doc.mjs --open"),
       clean: uncachedTask("cargo clean"),
       "napi-prepublish": uncachedTask("napi prepublish", {
         cwd: "crates/ox_content_napi",
