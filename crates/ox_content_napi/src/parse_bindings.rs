@@ -212,19 +212,29 @@ pub fn parse_and_render(source: String, options: Option<JsParserOptions>) -> Ren
     )
 }
 
-/// Renders an AST (provided as JSON) to HTML.
+/// Renders an mdast (provided as JSON) to HTML.
+///
+/// The counterpart to [`parse`]: a tree rewritten in JavaScript comes back
+/// through here and is rendered by the same renderer the original would
+/// have used.
 #[napi]
-pub fn render(_ast_json: String) -> RenderResult {
-    // In a production implementation, we would:
-    // 1. Parse the JSON AST
-    // 2. Convert to our internal AST format
-    // 3. Render to HTML
-    //
-    // For now, return an error indicating this is not yet implemented
-    RenderResult {
-        html: String::new(),
-        errors: vec!["render from JSON not yet implemented".to_string()],
-    }
+pub fn render(ast_json: String) -> RenderResult {
+    crate::ffi::recover(
+        || {
+            let allocator = ox_content_allocator::Allocator::for_source_len(ast_json.len());
+            match ox_content_mdast::from_json::from_mdast_json(&allocator, &ast_json) {
+                Ok(document) => RenderResult {
+                    html: ox_content_renderer::HtmlRenderer::new().render(&document),
+                    errors: vec![],
+                },
+                Err(error) => RenderResult { html: String::new(), errors: vec![error.to_string()] },
+            }
+        },
+        || RenderResult {
+            html: String::new(),
+            errors: vec![crate::ffi::UNEXPECTED_PANIC.to_string()],
+        },
+    )
 }
 
 /// Returns the version of ox_content_napi.

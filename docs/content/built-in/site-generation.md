@@ -353,8 +353,18 @@ oxContent({
 ```
 
 Each transformer receives the parsed AST plus `{ filePath, frontmatter,
-options }` and returns the (possibly replaced) AST. Transformers compose in
-array order.
+options }` and returns the (possibly replaced) AST, and may be `async`.
+Transformers compose in array order, each seeing the previous one's output.
+
+The tree is [mdast](https://github.com/syntax-tree/mdast), the same shape
+remark plugins operate on, and it arrives after frontmatter parsing and after
+the opt-in Markdown features have been expanded. Everything that follows —
+rendering, HTML postprocessing, sanitization, the table of contents — runs on
+the tree the last transformer returned, so a document with no transformers and
+one whose transformers leave the tree alone produce identical output.
+
+A transformer that throws, or returns something that is not a node, is
+reported as a build warning and skipped; the rest of the page still renders.
 
 ## Custom hosts (`ssg: false`)
 

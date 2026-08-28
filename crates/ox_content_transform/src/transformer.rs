@@ -32,6 +32,16 @@ const PREPARED_SOURCE_SECTION_CONTENT: u32 = 1;
 const PREPARED_SOURCE_SECTION_FRONTMATTER: u32 = 2;
 const PREPARED_SOURCE_SECTION_SOURCE_ORIGIN: u32 = 3;
 
+/// A parsed document on its way to a JavaScript `transformers` hook.
+pub struct MdastTransform {
+    /// The tree, as mdast JSON.
+    pub ast_json: String,
+    /// Frontmatter as JSON, which the tree has no room for.
+    pub frontmatter: String,
+    /// Preprocessing and parse errors collected so far.
+    pub errors: Vec<String>,
+}
+
 pub struct MarkdownTransformer {
     frontmatter: bool,
     toc_max_depth: u8,
@@ -81,29 +91,11 @@ impl MarkdownTransformer {
         let mut errors = preprocessed.errors;
 
         match parse_result {
-            Ok(document) => {
-                let mut html = self.render_html(&document);
-                if self.feature_options.has_postprocess() {
-                    let postprocessed = features::postprocess_html(&html, &self.feature_options);
-                    html = postprocessed.html;
-                    errors.extend(postprocessed.errors);
-                }
-                if self.sanitize_options.is_some() {
-                    html = crate::sanitize::sanitize_html(&html, self.sanitize_options.as_ref());
-                }
-
-                let metadata = extract_mdx_metadata(&document);
-                TransformResult {
-                    html,
-                    frontmatter: serde_json::to_string(&prepared.frontmatter)
-                        .unwrap_or_else(|_| "{}".to_string()),
-                    toc: extract_toc(&document, self.toc_max_depth),
-                    errors,
-                    imports: metadata.imports,
-                    exports: metadata.exports,
-                    components: metadata.components,
-                }
-            }
+            Ok(document) => self.finish(
+                &document,
+                serde_json::to_string(&prepared.frontmatter).unwrap_or_else(|_| "{}".to_string()),
+                errors,
+            ),
             Err(error) => TransformResult {
                 html: String::new(),
                 frontmatter: "{}".to_string(),
@@ -117,6 +109,70 @@ impl MarkdownTransformer {
                 components: vec![],
             },
         }
+    }
+
+    /// Runs a transform up to the point where the tree exists.
+    ///
+    /// The counterpart to [`Self::transform_from_mdast_json`]: frontmatter is
+    /// parsed and the opt-in Markdown features are expanded, then the tree is
+    /// handed over as JSON for a `transformers` hook to rewrite.
+    pub fn transform_mdast_json(&self, source: &str) -> MdastTransform {
+        let prepared = self.prepare_source(source);
+        let preprocessed = features::preprocess_markdown_with_frontmatter(
+            &prepared.content,
+            &self.feature_options,
+            &prepared.frontmatter,
+        );
+        let content = preprocessed.source.as_ref();
+        let allocator = Allocator::for_source_len(content.len());
+        let frontmatter =
+            serde_json::to_string(&prepared.frontmatter).unwrap_or_else(|_| "{}".to_string());
+        let mut errors = preprocessed.errors;
+
+        match self.parse_document(&allocator, content) {
+            Ok(document) => MdastTransform {
+                ast_json: ox_content_mdast::mdast::to_mdast_json(&document),
+                frontmatter,
+                errors,
+            },
+            Err(error) => {
+                errors.push(error.to_string());
+                MdastTransform { ast_json: String::new(), frontmatter, errors }
+            }
+        }
+    }
+
+    /// Finishes a transform from an mdast the caller may have rewritten.
+    ///
+    /// [`Self::transform`] owns the whole pipeline. This is the half after
+    /// parsing, so a `transformers` hook running in JavaScript can rewrite
+    /// the tree between the two without losing HTML postprocessing,
+    /// sanitization, the table of contents, or the MDX metadata.
+    ///
+    /// `frontmatter_json` is carried through untouched: it was parsed on the
+    /// way out and the tree has no room for it.
+    pub fn transform_from_mdast_json(
+        &self,
+        mdast_json: &str,
+        frontmatter_json: &str,
+    ) -> TransformResult {
+        let allocator = Allocator::for_source_len(mdast_json.len());
+        let document = match ox_content_mdast::from_json::from_mdast_json(&allocator, mdast_json) {
+            Ok(document) => document,
+            Err(error) => {
+                return TransformResult {
+                    html: String::new(),
+                    frontmatter: frontmatter_json.to_string(),
+                    toc: vec![],
+                    errors: vec![error.to_string()],
+                    imports: vec![],
+                    exports: vec![],
+                    components: vec![],
+                };
+            }
+        };
+
+        self.finish(&document, frontmatter_json.to_string(), Vec::new())
     }
 
     pub fn transform_mdast_raw(&self, source: &str) -> ox_content_mdast::transfer::Result<Vec<u8>> {
@@ -159,6 +215,35 @@ impl MarkdownTransformer {
         builder
             .push_section(PREPARED_SOURCE_SECTION_SOURCE_ORIGIN, prepared.source_origin.to_bytes());
         builder.finish()
+    }
+
+    /// Renders a parsed document and everything that follows rendering.
+    fn finish(
+        &self,
+        document: &Document<'_>,
+        frontmatter: String,
+        mut errors: Vec<String>,
+    ) -> TransformResult {
+        let mut html = self.render_html(document);
+        if self.feature_options.has_postprocess() {
+            let postprocessed = features::postprocess_html(&html, &self.feature_options);
+            html = postprocessed.html;
+            errors.extend(postprocessed.errors);
+        }
+        if self.sanitize_options.is_some() {
+            html = crate::sanitize::sanitize_html(&html, self.sanitize_options.as_ref());
+        }
+
+        let metadata = extract_mdx_metadata(document);
+        TransformResult {
+            html,
+            frontmatter,
+            toc: extract_toc(document, self.toc_max_depth),
+            errors,
+            imports: metadata.imports,
+            exports: metadata.exports,
+            components: metadata.components,
+        }
     }
 
     pub fn parse_document<'a>(

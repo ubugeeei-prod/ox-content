@@ -1507,6 +1507,16 @@ export interface JsMathOptions {
   enabled?: boolean
 }
 
+/** A parsed document on its way to a JavaScript `transformers` hook. */
+export interface JsMdastTransformResult {
+  /** The tree, as mdast JSON. */
+  astJson: string
+  /** Frontmatter as JSON, which the tree has no room for. */
+  frontmatter: string
+  /** Preprocessing and parse errors collected so far. */
+  errors: Array<string>
+}
+
 /** Built-in media embed transform switches. */
 export interface JsMediaEmbedsOptions {
   /**
@@ -3165,7 +3175,13 @@ export declare function prepareSource(source: string, options?: JsSourceOptions 
  */
 export declare function prepareSourceRaw(source: string, options?: JsSourceOptions | undefined | null): Uint8Array
 
-/** Renders an AST (provided as JSON) to HTML. */
+/**
+ * Renders an mdast (provided as JSON) to HTML.
+ *
+ * The counterpart to [`parse`]: a tree rewritten in JavaScript comes back
+ * through here and is rendered by the same renderer the original would
+ * have used.
+ */
 export declare function render(astJson: string): RenderResult
 
 /**
@@ -3240,6 +3256,26 @@ export declare function transformAsync(source: string, options?: JsTransformOpti
 
 /** Numbers headings, figures, and tables, and links `@id` references to them. */
 export declare function transformCrossReferences(html: string, options: JsCrossReferencesOptions): JsCrossReferenceOutput
+
+/**
+ * Finishes a transform from an mdast a JavaScript `transformers` hook may
+ * have rewritten.
+ *
+ * `transformMdastRaw` produces the tree; this renders it and runs
+ * everything that follows rendering — HTML postprocessing, sanitization,
+ * the table of contents, and the MDX metadata — so a rewritten tree loses
+ * none of it. `frontmatterJson` is carried through untouched.
+ */
+export declare function transformFromMdast(astJson: string, frontmatterJson: string, options?: JsTransformOptions | undefined | null): TransformResult
+
+/**
+ * Runs a transform up to the point where the tree exists.
+ *
+ * The counterpart to `transformFromMdast`: frontmatter is parsed and the
+ * opt-in Markdown features are expanded, then the tree is handed over as
+ * JSON for a `transformers` hook to rewrite.
+ */
+export declare function transformMdast(source: string, options?: JsTransformOptions | undefined | null): JsMdastTransformResult
 
 /**
  * Transforms Markdown into a raw mdast transfer buffer.

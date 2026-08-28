@@ -89,7 +89,9 @@ transformAsync
 transformCrossReferences
 transformMediaEmbeds
 transformMediaEmbedsWithDiagnostics
+transformMdast
 transformMdastRaw
+transformFromMdast
 transformPmEmbeds
 transformTabsEmbeds
 transformMermaid

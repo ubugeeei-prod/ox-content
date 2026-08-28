@@ -34,7 +34,15 @@
  * ```
  */
 
-import type { MdxImport, ResolvedOptions, TocEntry, TransformResult } from "./types";
+import type {
+  MarkdownNode,
+  MarkdownTransformer,
+  MdxImport,
+  ResolvedOptions,
+  TocEntry,
+  TransformContext,
+  TransformResult,
+} from "./types";
 import { highlightPageHtml } from "./highlight";
 
 /** A `<pre>` that names a language but has not been highlighted yet. */
@@ -69,6 +77,17 @@ import { toJsTimelineOptions } from "./timeline-options";
  * Provides access to compiled Rust functions for high-performance
  * Markdown parsing and rendering operations.
  */
+/** What the native transform entry points return. */
+interface NapiTransformResult {
+  html: string;
+  frontmatter: string;
+  toc: Array<{ depth: number; text: string; slug: string; children?: TocEntry[] }>;
+  errors: string[];
+  imports: MdxImport[];
+  exports: string[];
+  components: string[];
+}
+
 interface NapiBindings {
   /**
    * Simple Markdown parser and renderer in one step.
@@ -91,18 +110,33 @@ interface NapiBindings {
    * @param options - Comprehensive transformation options
    * @returns Transformed result with HTML, metadata, and TOC
    */
-  transform: (
+  transform: (source: string, options?: JsTransformOptions) => NapiTransformResult;
+
+  /**
+   * Parses Markdown into an mdast for the `transformers` hook to rewrite.
+   *
+   * @param source - Raw Markdown content (may include frontmatter)
+   * @param options - Comprehensive transformation options
+   * @returns The tree as JSON, frontmatter as JSON, and errors so far
+   */
+  transformMdast: (
     source: string,
     options?: JsTransformOptions,
-  ) => {
-    html: string;
-    frontmatter: string;
-    toc: Array<{ depth: number; text: string; slug: string; children?: TocEntry[] }>;
-    errors: string[];
-    imports: MdxImport[];
-    exports: string[];
-    components: string[];
-  };
+  ) => { astJson: string; frontmatter: string; errors: string[] };
+
+  /**
+   * Renders a possibly rewritten mdast and everything that follows.
+   *
+   * @param astJson - The tree as JSON
+   * @param frontmatterJson - Frontmatter as JSON, carried through untouched
+   * @param options - Comprehensive transformation options
+   * @returns Transformed result with HTML, metadata, and TOC
+   */
+  transformFromMdast: (
+    astJson: string,
+    frontmatterJson: string,
+    options?: JsTransformOptions,
+  ) => NapiTransformResult;
 
   /**
    * Generates an OG image as SVG.
@@ -641,7 +675,7 @@ export async function transformMarkdown(
     ? await prepareGraphvizFences(source, options.graphviz)
     : { markdown: source, replacements: new Map<string, string>() };
 
-  const result = napi.transform(graphviz.markdown, {
+  const napiOptions = {
     gfm: options.gfm,
     mdx: resolveMdxForFilePath(filePath, options.mdx),
     footnotes: options.footnotes,
@@ -753,7 +787,14 @@ export async function transformMarkdown(
         }
       : undefined,
     math: isMathEnabled(options.math),
-  });
+  };
+
+  // Hand-built option objects skip fields they do not exercise, so an
+  // absent list means no hook rather than a crash.
+  const transformers = options.transformers ?? [];
+  const result = transformers.length
+    ? await runTransformers(napi, graphviz.markdown, napiOptions, filePath, options, transformers)
+    : napi.transform(graphviz.markdown, napiOptions);
 
   if (result.errors.length > 0) {
     console.warn("[ox-content] Transform warnings:", result.errors);
@@ -925,6 +966,68 @@ function toJsSanitizeOptions(options: ResolvedOptions["sanitize"]): JsSanitizeOp
     allowedAttributes: options.allowedAttributes,
     allowedUrlSchemes: options.allowedUrlSchemes,
   };
+}
+
+/**
+ * Runs the configured `transformers` over the parsed tree.
+ *
+ * Markdown never passes through Vite's `transform` hook — the native layer
+ * reads it directly — so this is the only place user config can reach the
+ * AST. The tree is handed over after frontmatter parsing and Markdown
+ * feature expansion, and handed back for rendering, HTML postprocessing,
+ * and sanitization, so a transformer costs a document nothing else.
+ *
+ * A transformer that throws, or returns something that is not a node, is
+ * reported and skipped: one bad hook should not take the page down with it.
+ */
+async function runTransformers(
+  napi: NapiBindings,
+  markdown: string,
+  napiOptions: JsTransformOptions,
+  filePath: string,
+  options: ResolvedOptions,
+  transformers: readonly MarkdownTransformer[],
+): Promise<NapiTransformResult> {
+  const parsed = napi.transformMdast(markdown, napiOptions);
+  if (!parsed.astJson) {
+    return {
+      html: "",
+      frontmatter: parsed.frontmatter,
+      toc: [],
+      errors: parsed.errors,
+      imports: [],
+      exports: [],
+      components: [],
+    };
+  }
+
+  const errors = [...parsed.errors];
+  const context: TransformContext = {
+    filePath,
+    frontmatter: parseFrontmatterJson(parsed.frontmatter),
+    options,
+  };
+
+  let ast = JSON.parse(parsed.astJson) as MarkdownNode;
+  for (const transformer of transformers) {
+    try {
+      const next = await transformer.transform(ast, context);
+      if (!next || typeof next !== "object") {
+        errors.push(
+          `transformer "${transformer.name}" returned ${next === undefined ? "undefined" : String(next)} instead of a node`,
+        );
+        continue;
+      }
+      ast = next;
+    } catch (error) {
+      errors.push(
+        `transformer "${transformer.name}" failed: ${error instanceof Error ? error.message : String(error)}`,
+      );
+    }
+  }
+
+  const result = napi.transformFromMdast(JSON.stringify(ast), parsed.frontmatter, napiOptions);
+  return { ...result, errors: [...errors, ...result.errors] };
 }
 
 function parseFrontmatterJson(json: string): Record<string, unknown> {
