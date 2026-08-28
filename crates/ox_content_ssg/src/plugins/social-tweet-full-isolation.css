@@ -25,6 +25,10 @@
   margin: var(--ox-tweet-container-margin);
 }
 
+.ox-tweet.ox-tweet--full * {
+  box-sizing: border-box;
+}
+
 .ox-tweet.ox-tweet--full :where(img, video, figure, picture, svg) {
   margin: 0;
 }
@@ -39,8 +43,13 @@
 }
 
 .ox-tweet.ox-tweet--full :where(a) {
+  padding: 0;
+  font-size: inherit;
   font-weight: inherit;
+  line-height: inherit;
   text-decoration: none;
+  background: transparent;
+  border: 0;
 }
 
 .ox-tweet.ox-tweet--full :where(code, pre, kbd, samp) {

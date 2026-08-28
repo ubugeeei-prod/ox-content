@@ -127,27 +127,66 @@
 .ox-tweet--full .ox-tweet__action {
   display: flex;
   align-items: center;
-  margin-right: 1.25rem;
+  min-width: var(--ox-tweet-actions-icon-wrapper-size);
+  min-height: var(--ox-tweet-actions-icon-wrapper-size);
+  padding: 0;
+  margin: 0 1.25rem 0 0;
   font-size: var(--ox-tweet-actions-font-size);
-  font-weight: 700;
-  line-height: 1rem;
+  font-weight: var(--ox-tweet-actions-font-weight);
+  line-height: var(--ox-tweet-actions-line-height);
+  background: transparent;
+  border: 0;
+}
+
+.ox-tweet--full .ox-tweet__action-icon {
+  box-sizing: border-box;
+  display: flex;
+  flex: 0 0 var(--ox-tweet-actions-icon-wrapper-size);
+  align-items: center;
+  justify-content: center;
+  width: var(--ox-tweet-actions-icon-wrapper-size);
+  height: var(--ox-tweet-actions-icon-wrapper-size);
+  margin: 0 0.25rem 0 -0.25rem;
+  border-radius: 9999px;
 }
 
 .ox-tweet--full .ox-tweet__action .ox-tweet__icon {
-  margin-right: 0.25rem;
+  width: var(--ox-tweet-actions-icon-size);
+  height: var(--ox-tweet-actions-icon-size);
 }
 
-.ox-tweet--full .ox-tweet__action--like:hover {
+.ox-tweet--full .ox-tweet__action--like:hover .ox-tweet__action-text {
   color: var(--ox-tweet-color-red);
+  text-decoration-line: underline;
 }
 
-.ox-tweet--full .ox-tweet__action--reply:hover {
+.ox-tweet--full .ox-tweet__action--like:hover .ox-tweet__action-icon {
+  background-color: var(--ox-tweet-color-red-hover);
+}
+
+.ox-tweet--full .ox-tweet__action--reply:hover .ox-tweet__action-text {
   color: var(--ox-tweet-color-blue-text);
+  text-decoration-line: underline;
+}
+
+.ox-tweet--full .ox-tweet__action--reply:hover .ox-tweet__action-icon {
+  background-color: var(--ox-tweet-color-blue-hover);
 }
 
 .ox-tweet--full .ox-tweet__action--copy:hover,
 .ox-tweet--full .ox-tweet__action--copy[data-ox-tweet-copied] {
   color: var(--ox-tweet-color-green);
+}
+
+.ox-tweet--full .ox-tweet__action--copy:hover .ox-tweet__action-icon,
+.ox-tweet--full .ox-tweet__action--copy[data-ox-tweet-copied] .ox-tweet__action-icon {
+  background-color: var(--ox-tweet-color-green-hover);
+}
+
+.ox-tweet--full .ox-tweet__action--copy:hover .ox-tweet__action-text,
+.ox-tweet--full .ox-tweet__action--copy[data-ox-tweet-copied] .ox-tweet__action-text {
+  color: var(--ox-tweet-color-green);
+  text-decoration-line: underline;
 }
 
 .ox-tweet--full .ox-tweet__copied-text {
@@ -175,8 +214,9 @@
   width: 100%;
   min-height: 32px;
   padding: 0 1rem;
-  font-size: 0.875rem;
-  font-weight: 700;
+  font-size: var(--ox-tweet-replies-font-size);
+  font-weight: var(--ox-tweet-replies-font-weight);
+  line-height: var(--ox-tweet-replies-line-height);
   color: var(--ox-tweet-color-blue-text);
   border: var(--ox-tweet-border);
   border-radius: 9999px;

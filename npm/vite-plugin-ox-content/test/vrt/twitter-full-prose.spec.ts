@@ -23,7 +23,14 @@ const SOCIAL_SOURCES = ["social.css"];
  */
 const PROSE_CSS = `
 .prose { color: #374151; max-width: 65ch; }
-.prose a { color: #111827; text-decoration: underline; font-weight: 500; }
+.prose a {
+  color: #111827;
+  padding: 0.75rem 1.25rem;
+  font-size: 1.25em;
+  font-weight: 500;
+  line-height: 2;
+  text-decoration: underline;
+}
 .prose strong { font-weight: 600; }
 .prose ol, .prose ul { margin-top: 1.25em; margin-bottom: 1.25em; padding-inline-start: 1.625em; }
 .prose ol { list-style-type: decimal; }

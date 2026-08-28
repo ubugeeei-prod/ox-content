@@ -54,6 +54,8 @@ Contribution summary:
 - Reported the custom-host Markdown table migration that led to the
   browser-only table helper entrypoint and isolated table stylesheet.
 - Requested class-based dark-mode support for Twitter/X full-card styles.
+- Reported Twitter/X full-card action control geometry mismatches against
+  sveltweet production cards.
 
 ## Third-party attribution
 

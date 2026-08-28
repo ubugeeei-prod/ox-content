@@ -43,7 +43,14 @@
   --ox-tweet-body-line-height: 1.5rem;
   --ox-tweet-quoted-body-font-size: 0.938rem;
   --ox-tweet-info-font-size: 0.9375rem;
-  --ox-tweet-actions-font-size: 0.875rem;
+  --ox-tweet-actions-font-size: 1rem;
+  --ox-tweet-actions-line-height: 1.25rem;
+  --ox-tweet-actions-font-weight: 700;
+  --ox-tweet-actions-icon-size: 1.25em;
+  --ox-tweet-actions-icon-wrapper-size: 2rem;
+  --ox-tweet-replies-font-size: 0.875rem;
+  --ox-tweet-replies-line-height: 1rem;
+  --ox-tweet-replies-font-weight: 700;
   --ox-tweet-icon-size: 1.25em;
   --ox-tweet-border: 1px solid rgb(207, 217, 222);
   --ox-tweet-font-color: rgb(15, 20, 25);
