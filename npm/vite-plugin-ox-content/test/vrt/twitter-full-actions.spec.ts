@@ -49,10 +49,17 @@ test.describe("Twitter full-card actions", () => {
         const geometry = await actionGeometry(page);
         expect(geometry.rowHeight).toBeGreaterThanOrEqual(37);
         expect(geometry.rowHeight).toBeLessThan(45);
+        expect(
+          Math.abs(geometry.repliesOffsetTop - geometry.actionsOffsetBottom),
+        ).toBeLessThanOrEqual(1);
         expect(geometry.repliesHeight).toBeGreaterThanOrEqual(32);
         expect(Math.abs(geometry.repliesWidth - geometry.repliesParentWidth)).toBeLessThanOrEqual(
           1,
         );
+        const bottomInset = width === 550 ? 13 : 11;
+        expect(
+          Math.abs(geometry.cardHeight - geometry.repliesOffsetBottom - bottomInset),
+        ).toBeLessThanOrEqual(1);
         expect(geometry.copyHref).toBe(FIXTURE_PERMALINK);
         expect(geometry.copyUrl).toBe(FIXTURE_PERMALINK);
 
@@ -137,8 +144,12 @@ async function concatStyles(): Promise<string> {
 }
 
 async function actionGeometry(page: Page): Promise<{
+  actionsOffsetBottom: number;
+  cardHeight: number;
   rowHeight: number;
   repliesHeight: number;
+  repliesOffsetBottom: number;
+  repliesOffsetTop: number;
   repliesParentWidth: number;
   repliesWidth: number;
   copyHref: string | null;
@@ -162,11 +173,18 @@ async function actionGeometry(page: Page): Promise<{
     const repliesParent = card.querySelector(".ox-tweet__replies") as HTMLElement;
     const copy = card.querySelector("[data-ox-tweet-copy]") as HTMLAnchorElement;
     const rect = (node: Element) => node.getBoundingClientRect();
+    const cardRect = rect(card);
+    const rowRect = rect(row);
+    const repliesParentRect = rect(repliesParent);
 
     return {
-      rowHeight: rect(row).height,
+      actionsOffsetBottom: rowRect.bottom - cardRect.top,
+      cardHeight: cardRect.height,
+      rowHeight: rowRect.height,
       repliesHeight: rect(replies).height,
-      repliesParentWidth: rect(repliesParent).width,
+      repliesOffsetBottom: repliesParentRect.bottom - cardRect.top,
+      repliesOffsetTop: repliesParentRect.top - cardRect.top,
+      repliesParentWidth: repliesParentRect.width,
       repliesWidth: rect(replies).width,
       copyHref: copy.getAttribute("href"),
       copyUrl: copy.getAttribute("data-ox-tweet-copy-url"),

@@ -51,6 +51,8 @@ Markdown 属性とリッチなソーシャル埋め込みの見た目の同等�
 - ブラウザ専用の table helper entrypoint と独立した table stylesheet につながった、
   独自ホストでの Markdown table 移行課題を報告しました。
 - Twitter / X full card style の class ベース dark mode 対応を要望しました。
+- Twitter / X full card の action control と replies 配置の geometry が sveltweet の
+  本番 card と合っていないことを報告しました。
 
 ## 第三者の帰属
 
