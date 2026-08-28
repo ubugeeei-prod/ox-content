@@ -1381,6 +1381,7 @@ async function transformSsgPage(
     convertMdLinks: true,
     baseUrl: publicBase(context.base, context.ssgOptions.routePrefix),
     sourcePath: inputPath,
+    srcDir: context.srcDir,
   });
   const frontmatter = normalizeVitePressFrontmatter(result.frontmatter);
   const transformedHtml = await transformSsgHtml(result.html, context.options);
@@ -1888,6 +1889,7 @@ async function transformNotFoundMarkdown(
     // The page is written at the output root (`404.html`), so relative links
     // must resolve as if authored by that root's index page.
     sourcePath: path.join(context.srcDir, "index.md"),
+    srcDir: context.srcDir,
   });
   const frontmatter = normalizeVitePressFrontmatter(result.frontmatter);
   const transformedHtml = await transformSsgHtml(result.html, context.options);

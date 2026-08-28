@@ -314,6 +314,7 @@ async function renderPage(
     convertMdLinks: true,
     baseUrl: base,
     sourcePath: filePath,
+    srcDir,
   });
   const frontmatter = normalizeVitePressFrontmatter(result.frontmatter);
 

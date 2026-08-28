@@ -132,6 +132,40 @@ describe("transformMarkdown", () => {
     expect(result.html).toMatchSnapshot();
   });
 
+  it("places edit links inside the repository when rootDir is a repository path", async () => {
+    const srcDir = resolve(repoRoot, "docs/content");
+    const page = resolve(srcDir, "guide/nested.md");
+
+    const editHref = async (rootDir?: string): Promise<string | undefined> => {
+      const result = await transformMarkdown(
+        "# Nested\n",
+        page,
+        createResolvedOptions({
+          editThisPage: {
+            enabled: true,
+            repoUrl: "https://gitlab.example.com/owner/repo",
+            branch: "main",
+            rootDir,
+          },
+        }),
+        { sourcePath: page, srcDir },
+      );
+      return /<a href="([^"]+)"/.exec(result.html.split("ox-edit-this-page")[1] ?? "")?.[1];
+    };
+
+    // The page path is measured from srcDir and rootDir goes in front of it.
+    expect(await editHref("docs/content")).toBe(
+      "https://gitlab.example.com/owner/repo/edit/main/docs/content/guide/nested.md",
+    );
+    expect(await editHref("packages/site/docs")).toBe(
+      "https://gitlab.example.com/owner/repo/edit/main/packages/site/docs/guide/nested.md",
+    );
+    // Never the build machine's own path, whatever rootDir says.
+    for (const rootDir of [undefined, "", ".", "docs", "/nowhere/on/disk"]) {
+      expect(await editHref(rootDir)).not.toContain(repoRoot);
+    }
+  });
+
   it("leaves {badge} markup literal unless opted in", async () => {
     const markdown = "{badge:tip}Beta{/badge}";
 

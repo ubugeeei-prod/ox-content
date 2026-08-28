@@ -241,7 +241,24 @@ oxContent({
 </p>
 ```
 
-編集 URL に結合する前にソースパスからプレフィックスを除く必要があるときは `rootDir` を設定します。
+既定ではページのパスはビルドを実行したディレクトリからの相対になります。通常の構成ではリポジトリのルートです。
+
+ソースルートがリポジトリの別の場所（パッケージやドキュメント用のワークスペース）にあるときは `rootDir` を設定します。値はリポジトリの中で `srcDir` がある場所を表し、ページのパスは `srcDir` からの相対になります。
+
+```ts
+oxContent({
+  srcDir: "docs",
+  editThisPage: {
+    repoUrl: "https://gitlab.example.com/owner/repo",
+    branch: "main",
+    rootDir: "packages/site/docs",
+  },
+});
+```
+
+```html
+<a href="https://gitlab.example.com/owner/repo/edit/main/packages/site/docs/guide/nested.md"></a>
+```
 
 ## コレクション
 

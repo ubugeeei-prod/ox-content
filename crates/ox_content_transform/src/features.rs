@@ -104,7 +104,12 @@ struct ResolvedEmojiShortcodeOptions {
 struct ResolvedEditThisPageOptions {
     repo_url: String,
     branch: String,
-    root_dir: PathBuf,
+    /// `rootDir` as configured, trimmed of blanks and surrounding slashes.
+    root_dir: Option<String>,
+    /// Absolute source root, when the build supplied one.
+    src_dir: Option<PathBuf>,
+    /// The build's working directory, resolved once per page.
+    working_dir: PathBuf,
     source_path: String,
     label: String,
 }

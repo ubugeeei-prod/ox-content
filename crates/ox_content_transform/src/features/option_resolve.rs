@@ -50,14 +50,25 @@ pub(super) fn resolve_edit_this_page(
         return None;
     }
 
+    let root_dir = options
+        .root_dir
+        .as_deref()
+        .map(str::trim)
+        .map(|value| value.strip_prefix("./").unwrap_or(value))
+        .filter(|value| !value.is_empty() && *value != ".")
+        .map(ToOwned::to_owned);
+
     Some(ResolvedEditThisPageOptions {
         repo_url,
+        root_dir,
+        src_dir: options.src_dir.as_deref().filter(|value| !value.is_empty()).map(PathBuf::from),
+        working_dir: working_directory(),
         branch: options.branch.clone().unwrap_or_else(|| "main".to_string()),
-        root_dir: options.root_dir.as_deref().filter(|value| !value.is_empty()).map_or_else(
-            || std::env::current_dir().unwrap_or_else(|_| PathBuf::from(".")),
-            PathBuf::from,
-        ),
         source_path: source_path.to_string(),
         label: options.label.clone().unwrap_or_else(|| "Edit this page".to_string()),
     })
+}
+
+fn working_directory() -> PathBuf {
+    std::env::current_dir().unwrap_or_else(|_| PathBuf::from("."))
 }

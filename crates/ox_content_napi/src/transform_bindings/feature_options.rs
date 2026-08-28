@@ -217,10 +217,18 @@ pub struct JsEditThisPageOptions {
     /// Default: `"main"`.
     pub branch: Option<String>,
 
-    /// Root directory used to relativize `sourcePath`.
+    /// Where the source root sits inside the repository. Prefixed to the
+    /// page path, which is then taken relative to `src_dir`.
     ///
-    /// Default: no extra root prefix.
+    /// Default: no prefix, and the page path stays relative to the process's
+    /// working directory.
     pub root_dir: Option<String>,
+
+    /// Absolute path of the source root on disk, supplied by the build so
+    /// `root_dir` can be joined with the page's path inside that root.
+    ///
+    /// Default: none, which makes `root_dir` inert.
+    pub src_dir: Option<String>,
 
     /// Link label.
     ///
@@ -235,6 +243,7 @@ impl From<JsEditThisPageOptions> for EditThisPageOptions {
             repo_url: value.repo_url,
             branch: value.branch,
             root_dir: value.root_dir,
+            src_dir: value.src_dir,
             label: value.label,
         }
     }

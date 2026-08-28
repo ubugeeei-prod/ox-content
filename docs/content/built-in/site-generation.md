@@ -279,8 +279,27 @@ The rendered link points at the file that produced the page:
 </p>
 ```
 
-Set `rootDir` when source paths need a prefix stripped before being joined to
-the edit URL.
+By default the page path is taken relative to the directory the build runs in,
+which is the repository root for the usual layout.
+
+Set `rootDir` when the source root sits somewhere else in the repository — a
+package or a docs workspace. The value says where `srcDir` lives inside the
+repository, and the page path is measured from `srcDir`:
+
+```ts
+oxContent({
+  srcDir: "docs",
+  editThisPage: {
+    repoUrl: "https://gitlab.example.com/owner/repo",
+    branch: "main",
+    rootDir: "packages/site/docs",
+  },
+});
+```
+
+```html
+<a href="https://gitlab.example.com/owner/repo/edit/main/packages/site/docs/guide/nested.md"></a>
+```
 
 ## Collections
 

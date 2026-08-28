@@ -885,11 +885,20 @@ export interface JsEditThisPageOptions {
    */
   branch?: string
   /**
-   * Root directory used to relativize `sourcePath`.
+   * Where the source root sits inside the repository. Prefixed to the
+   * page path, which is then taken relative to `src_dir`.
    *
-   * Default: no extra root prefix.
+   * Default: no prefix, and the page path stays relative to the process's
+   * working directory.
    */
   rootDir?: string
+  /**
+   * Absolute path of the source root on disk, supplied by the build so
+   * `root_dir` can be joined with the page's path inside that root.
+   *
+   * Default: none, which makes `root_dir` inert.
+   */
+  srcDir?: string
   /**
    * Link label.
    *

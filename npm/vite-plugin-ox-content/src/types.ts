@@ -3514,7 +3514,17 @@ export interface EditThisPageOptions {
   /**
    * Source root inside the repository, used before the page path.
    *
-   * Set this when `srcDir` is nested in a package or docs workspace.
+   * Set this when `srcDir` is nested in a package or docs workspace: the
+   * value says where `srcDir` lives inside the repository, and the page
+   * path is measured from `srcDir` rather than from the directory the build
+   * runs in.
+   *
+   * @example
+   * ```ts
+   * // repository holds packages/site/docs, srcDir is "docs"
+   * rootDir: 'packages/site/docs'
+   * // -> <repoUrl>/edit/<branch>/packages/site/docs/guide/nested.md
+   * ```
    *
    * @default undefined
    */
