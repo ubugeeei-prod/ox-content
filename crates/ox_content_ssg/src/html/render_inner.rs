@@ -23,6 +23,7 @@ use super::section_index::SECTION_INDEX_CSS;
 use super::social::{generate_mobile_social_links_html, generate_social_links_html};
 use super::team::TEAM_CSS;
 use super::theme_css::generate_theme_css;
+use super::urls::with_base;
 use super::utils::{
     contributor_views, format_last_updated, generate_toc_html, html_locale_attrs,
     page_content_contains_any, wrap_css_section,
@@ -225,13 +226,7 @@ pub(super) fn generate_html_inner(
     let logo_height = header_config.and_then(|h| h.logo_height).unwrap_or(28);
     let show_site_name_text = header_config.and_then(|h| h.show_site_name_text).unwrap_or(true);
 
-    let resolve_theme_asset = |url: &str| {
-        if url.starts_with("http://") || url.starts_with("https://") || url.starts_with('/') {
-            url.to_string()
-        } else {
-            format!("{}{}", config.base, url)
-        }
-    };
+    let resolve_theme_asset = |url: &str| with_base(&config.base, url);
 
     let logo_src = resolve_theme_asset(logo_url);
     let logo_light_src =

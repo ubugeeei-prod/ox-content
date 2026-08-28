@@ -1,5 +1,6 @@
 use askama::Template;
 
+use super::urls::with_base;
 use super::{EntryPageConfig, EntryTemplate, FeatureView, HeroActionView, HeroImage, HeroView};
 
 /// Converts a `.md` link to an HTML path for entry page frontmatter links.
@@ -42,19 +43,7 @@ fn convert_entry_link(link: &str, base: &str) -> String {
 }
 
 fn convert_entry_asset(src: &str, base: &str) -> String {
-    if src.starts_with("http://")
-        || src.starts_with("https://")
-        || src.starts_with("//")
-        || src.starts_with('/')
-        || src.starts_with("data:")
-    {
-        return src.to_string();
-    }
-
-    let mut resolved = base.trim_end_matches('/').to_string();
-    resolved.push('/');
-    resolved.push_str(src);
-    resolved
+    with_base(base, src)
 }
 
 /// Generates the Entry page HTML (hero section and features).
@@ -188,9 +177,7 @@ fn render_icon(icon: &str, base: &str, self_hosted: bool) -> String {
 
     // Check if it's a local image path
     if icon.ends_with(".svg") || icon.ends_with(".png") {
-        let icon_src =
-            if icon.starts_with('/') { icon.to_string() } else { format!("{base}{icon}") };
-        return format!("<img src=\"{icon_src}\" alt=\"\" />");
+        return format!("<img src=\"{}\" alt=\"\" />", with_base(base, icon));
     }
 
     // Treat as emoji/text
@@ -227,7 +214,25 @@ mod tests {
             convert_entry_asset("oxcontent-dark.svg", "/ox-content/"),
             "/ox-content/oxcontent-dark.svg"
         );
-        assert_eq!(convert_entry_asset("/shared/logo.svg", "/ox-content/"), "/shared/logo.svg");
+        // A root-absolute path is written against the site root, the way the
+        // renderer already reads one in Markdown. Left as authored it 404s
+        // on a site deployed under a sub-path.
+        assert_eq!(
+            convert_entry_asset("/shared/logo.svg", "/ox-content/"),
+            "/ox-content/shared/logo.svg"
+        );
+        assert_eq!(convert_entry_asset("/shared/logo.svg", "/"), "/shared/logo.svg");
+    }
+
+    #[test]
+    fn entry_assets_outside_the_site_are_left_alone() {
+        for src in [
+            "https://cdn.example.com/logo.svg",
+            "//cdn.example.com/logo.svg",
+            "data:image/svg+xml;base64,PHN2Zy8+",
+        ] {
+            assert_eq!(convert_entry_asset(src, "/ox-content/"), src);
+        }
     }
 
     #[test]

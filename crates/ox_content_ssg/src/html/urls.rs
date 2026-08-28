@@ -40,6 +40,53 @@ pub(super) fn is_safe_href(href: &str) -> bool {
     true
 }
 
+/// Puts `base` in front of a path that resolves inside the site.
+///
+/// A site deployed under a sub-path needs every in-site URL prefixed. The
+/// renderer already does this for Markdown links and images, and the
+/// navigation this crate generates is built on `base` to begin with. A path
+/// written in theme config or entry-page frontmatter used to go out
+/// verbatim, so one page could carry both shapes and the hand-written half
+/// 404'd.
+///
+/// A root-absolute path is prefixed as written, the way an author would
+/// write it against the site root — the value is not inspected for a `base`
+/// that is already there, which matches how the renderer rebases Markdown.
+///
+/// Left alone: another origin, a protocol-relative `//` URL, a bare
+/// `#fragment`, and anything carrying a scheme (`data:`, `mailto:`,
+/// `javascript:`).
+pub(super) fn with_base(base: &str, url: &str) -> String {
+    let trimmed = url.trim();
+    if trimmed.is_empty()
+        || trimmed.starts_with('#')
+        || trimmed.starts_with("//")
+        || has_uri_scheme(trimmed)
+    {
+        return trimmed.to_string();
+    }
+
+    let base = base.trim_end_matches('/');
+    format!("{base}/{}", trimmed.trim_start_matches('/'))
+}
+
+/// True when `url` starts with `scheme:`, as opposed to a path with a colon.
+fn has_uri_scheme(url: &str) -> bool {
+    let mut chars = url.chars();
+    if !chars.next().is_some_and(|first| first.is_ascii_alphabetic()) {
+        return false;
+    }
+    for ch in chars {
+        if ch == ':' {
+            return true;
+        }
+        if !(ch.is_ascii_alphanumeric() || matches!(ch, '+' | '.' | '-')) {
+            return false;
+        }
+    }
+    false
+}
+
 pub(super) fn site_origin(site_url: &str) -> Option<String> {
     let (scheme, rest) = if let Some(rest) = site_url.strip_prefix("https://") {
         ("https", rest)

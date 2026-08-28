@@ -112,6 +112,34 @@ Theming — colors, fonts, header, footer, sidebar, custom CSS, and the opt-in
 page outline (`theme.aside`, default `false`) — is a topic of its own: see
 [Theming](../theming.md#page-outline).
 
+### Paths and `base`
+
+Write in-site paths against the site root and let `base` do the rest. A
+root-absolute path is prefixed with `base` wherever it is written — a Markdown
+link or image, `theme.header.logo`, an entry page's `hero.image.src`, a feature
+icon — so a site deployed under a sub-path resolves the same way as one at the
+root:
+
+```ts
+oxContent({ base: "/team/docs/" });
+```
+
+```md
+[Architecture](/architecture/)
+
+![Icon](/img/icon.png)
+```
+
+```html
+<a href="/team/docs/architecture/">Architecture</a> <img src="/team/docs/img/icon.png" alt="Icon" />
+```
+
+The value is used as authored: a path that already starts with `base` is
+prefixed again, so do not write one. Left untouched are URLs on another origin,
+protocol-relative `//` URLs, bare `#fragment` links, and anything carrying a
+scheme such as `data:` or `mailto:`. An asset that really does live at the
+server root, outside the site, needs a full URL.
+
 ## Custom Theme Component
 
 `ssg.render` hands the whole document to a JSX component. The component owns
