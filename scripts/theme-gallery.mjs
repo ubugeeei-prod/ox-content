@@ -28,6 +28,14 @@ const palettes = JSON.parse(
 
 const camel = (id) => id.replace(/-([a-z0-9])/g, (_, c) => c.toUpperCase());
 
+function pascal(id) {
+  return id
+    .split("-")
+    .filter(Boolean)
+    .map((part) => `${part[0]?.toUpperCase() ?? ""}${part.slice(1)}`)
+    .join(" ");
+}
+
 /** Mirrors `generate_theme_css` in crates/ox_content_ssg/src/html/theme_css.rs. */
 const COLOR_VARS = {
   primary: "color-primary",
@@ -101,6 +109,54 @@ function skinVars(skin) {
   };\n}`;
 }
 
+function readExportedTheme(src, exportName) {
+  const marker = `export const ${exportName}`;
+  const start = src.indexOf(marker);
+  if (start < 0) throw new Error(`Missing theme export: ${exportName}`);
+
+  const objectStart = src.indexOf("{", start);
+  if (objectStart < 0) throw new Error(`Missing object literal for theme export: ${exportName}`);
+
+  let depth = 0;
+  let quote = "";
+  let escaped = false;
+
+  for (let i = objectStart; i < src.length; i += 1) {
+    const ch = src[i];
+
+    if (quote) {
+      if (escaped) {
+        escaped = false;
+      } else if (ch === "\\") {
+        escaped = true;
+      } else if (ch === quote) {
+        quote = "";
+      }
+      continue;
+    }
+
+    if (ch === '"' || ch === "'" || ch === "`") {
+      quote = ch;
+      continue;
+    }
+
+    if (ch === "{") {
+      depth += 1;
+      continue;
+    }
+
+    if (ch === "}") {
+      depth -= 1;
+      if (depth === 0) {
+        const literal = src.slice(objectStart, i + 1);
+        return new Function(`return (${literal})`)();
+      }
+    }
+  }
+
+  throw new Error(`Unclosed object literal for theme export: ${exportName}`);
+}
+
 const NAV = [
   ["Getting started", ["Introduction", "Installation", "Quick start"]],
   ["Guide", ["Markdown", "Theming", "Plugins", "Deployment"]],
@@ -164,20 +220,41 @@ const skins = skinsManifest.skins.map((s) => ({
   head: s.embedHead ?? "",
 }));
 
-// Color modules are TypeScript, so read the exported object literal directly
-// rather than pulling a TS loader into this script.
-const schemeData = palettes.map((p) => {
+// Color modules are TypeScript, so read the exported object literals directly
+// rather than pulling a TS loader into this script. A package can expose named
+// variants from the same module; each variant deserves its own gallery row.
+const schemeData = palettes.flatMap((p) => {
   const src = readFileSync(join(ROOT, "npm", "theme-color", p.id, "src", "index.ts"), "utf-8");
-  const literal = src.slice(src.indexOf("= {") + 2, src.lastIndexOf("};") + 1);
-  const theme = new Function(`return (${literal})`)();
-  return {
-    id: p.id,
-    title: p.title,
-    description: p.description,
-    light: p.light,
-    dark: p.dark,
-    css: paletteCss(theme),
-  };
+  const entries = [
+    {
+      id: p.id,
+      title: p.title,
+      description: p.description,
+      light: p.light,
+      dark: p.dark,
+      exportName: camel(p.id),
+    },
+    ...(p.variants ?? []).map((variant) => ({
+      id: variant.name ?? `${p.id}-${variant.id}`,
+      title: `${p.title} ${pascal(variant.id)}`,
+      description: variant.description,
+      light: p.light,
+      dark: variant.dark,
+      exportName: variant.exportName,
+    })),
+  ];
+
+  return entries.map((entry) => {
+    const theme = readExportedTheme(src, entry.exportName);
+    return {
+      id: entry.id,
+      title: entry.title,
+      description: entry.description,
+      light: entry.light,
+      dark: entry.dark,
+      css: paletteCss(theme),
+    };
+  });
 });
 
 const DATA = { skins, schemes: schemeData, base: `${SSG_CSS}\n${ENTRY_CSS}`, landing, article };
