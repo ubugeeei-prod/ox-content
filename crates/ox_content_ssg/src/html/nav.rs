@@ -65,7 +65,12 @@ fn render_nav_list(
 fn render_nav_item(html: &mut String, item: &NavItem, current_path: &str, key_path: &str) {
     let href = safe_nav_href(&item.href);
     let title = escape_html(&item.title);
-    let active_class = if item.path == current_path { " active" } else { "" };
+    // A sidebar group with no `link` of its own has an empty path, and so
+    // does a page that is not part of the site's routes — the generated
+    // `404.html` above all. Matching those two on equality lit up every
+    // group header at once, so an entry without a route is never current.
+    let active_class =
+        if !item.path.is_empty() && item.path == current_path { " active" } else { "" };
     if item.children.is_empty() {
         push_fmt(
             html,
