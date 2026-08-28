@@ -76,6 +76,7 @@ node scripts/check-panic-constructs.mjs
 - Use conventional commit messages such as `feat: add parser option`, `fix: preserve heading ids`, or `docs: clarify Vite setup`.
 - Keep pull requests scoped to one purpose and describe the user-visible behavior, implementation notes, and verification performed.
 - Link related issues when there are any.
+- New issues and pull requests are assigned to @ubugeeei automatically, and pull requests opened by anyone else also get a review request. The assignee marks who triages, not who is blocked.
 - Include screenshots or rendered output for UI, documentation, or visual regression changes when that helps review.
 - Do not mix unrelated formatting or cleanup with feature and bug-fix changes.
 

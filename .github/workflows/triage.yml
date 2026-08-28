@@ -1,0 +1,55 @@
+name: Triage
+
+on:
+  issues:
+    types: [opened]
+  # `pull_request_target` so a pull request opened from a fork still runs with a
+  # write-scoped token. This workflow never checks out, builds, or runs anything
+  # from the pull request, which is what keeps that trigger safe here.
+  pull_request_target: # zizmor: ignore[dangerous-triggers]
+    types: [opened, ready_for_review]
+
+permissions: {}
+
+env:
+  MAINTAINER: ubugeeei
+
+jobs:
+  assign:
+    name: Assign the maintainer
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+      pull-requests: write
+    steps:
+      # Issues and pull requests share the `issues` endpoint for assignment, so
+      # one call covers both event types. Re-assigning is a no-op, and a pull
+      # request that was opened as a draft is already assigned by then.
+      - name: Add assignee
+        if: github.event.action != 'ready_for_review'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          NUMBER: ${{ github.event.issue.number || github.event.pull_request.number }}
+        run: |
+          jq -n --arg login "$MAINTAINER" '{assignees: [$login]}' |
+            gh api "repos/$GH_REPO/issues/$NUMBER/assignees" --method POST --input - --silent
+
+      # CODEOWNERS already requests the maintainer's review, but only for the
+      # paths it lists. This covers the rest. GitHub rejects a review request
+      # naming the pull request's own author, so those are skipped rather than
+      # failed; the assignment above is what surfaces those pull requests.
+      - name: Request review
+        if: github.event_name == 'pull_request_target' && !github.event.pull_request.draft
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          NUMBER: ${{ github.event.pull_request.number }}
+          AUTHOR: ${{ github.event.pull_request.user.login }}
+        run: |
+          if [ "$AUTHOR" = "$MAINTAINER" ]; then
+            echo "Pull request #$NUMBER was opened by $MAINTAINER; a review cannot be requested from the author."
+            exit 0
+          fi
+          jq -n --arg login "$MAINTAINER" '{reviewers: [$login]}' |
+            gh api "repos/$GH_REPO/pulls/$NUMBER/requested_reviewers" --method POST --input - --silent
