@@ -1,0 +1,140 @@
+name: Release recovery
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Release tag to recover, for example v3.0.0-alpha.17"
+        required: true
+        type: string
+
+permissions:
+  contents: write
+  id-token: write
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  publish-missing-npm:
+    name: Publish missing npm artifacts
+    runs-on: ubuntu-latest
+    environment: npm
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ inputs.tag }}
+          persist-credentials: false
+
+      - name: Setup Vite+
+        uses: voidzero-dev/setup-vp@313600b80b104eadebb9111787d37a2e83e014ca # v1.17.0
+        with:
+          node-version-file: ".node-version"
+          cache: true
+          run-install: true
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@29eef336d9b2848a0b548edc03f92a220660cdb8 # stable
+        with:
+          targets: wasm32-unknown-unknown
+
+      - name: Configure npm token
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: |
+          set -euo pipefail
+          if [ -z "${NODE_AUTH_TOKEN:-}" ]; then
+            echo "::error::NPM_TOKEN is not configured"
+            exit 1
+          fi
+          {
+            echo "registry=https://registry.npmjs.org"
+            echo "//registry.npmjs.org/:_authToken=\${NODE_AUTH_TOKEN}"
+          } > "$RUNNER_TEMP/npmrc"
+          echo "NPM_CONFIG_USERCONFIG=$RUNNER_TEMP/npmrc" >> "$GITHUB_ENV"
+
+      - name: Determine npm tag
+        env:
+          RECOVERY_TAG: ${{ inputs.tag }}
+        run: |
+          set -euo pipefail
+          VERSION="${RECOVERY_TAG#v}"
+          if [[ "$VERSION" == *"-"* ]]; then
+            PRE_ID="${VERSION#*-}"
+            TAG="${PRE_ID%%.*}"
+          else
+            TAG="latest"
+          fi
+
+          if [[ ! "$TAG" =~ ^[A-Za-z0-9][A-Za-z0-9._-]*$ ]]; then
+            echo "::error::Invalid npm dist-tag: $TAG"
+            exit 1
+          fi
+
+          echo "NPM_TAG=$TAG" >> "$GITHUB_ENV"
+
+      - name: Build material theme package
+        run: vp exec --filter @ox-content/theme-color-material -- vp pack
+
+      - name: Install wasm-pack
+        run: cargo install wasm-pack --locked
+
+      - name: Build WASM package
+        run: vp run build:wasm
+
+      - name: Publish missing npm packages
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: |
+          set -euo pipefail
+
+          publish_dir() {
+            local dir="$1"
+            local pkg_name pkg_version tarball
+
+            pkg_name=$(node -p "require('./${dir}/package.json').name")
+            pkg_version=$(node -p "require('./${dir}/package.json').version")
+
+            if npm view "${pkg_name}@${pkg_version}" version >/dev/null 2>&1; then
+              echo "Skipping ${pkg_name}@${pkg_version} (already published)"
+              return 0
+            fi
+
+            tarball=$(cd "$dir" && vp exec -- pnpm pack --pack-destination "$RUNNER_TEMP" | tail -1)
+            if [[ "$tarball" != /* ]]; then
+              tarball="$RUNNER_TEMP/$tarball"
+            fi
+            npm publish "$tarball" --provenance --access public --tag "$NPM_TAG"
+          }
+
+          publish_dir npm/theme-color/material
+          publish_dir crates/ox_content_wasm/pkg
+
+  create-release:
+    name: Create GitHub Release
+    runs-on: ubuntu-latest
+    needs: publish-missing-npm
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ inputs.tag }}
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Create Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REF_NAME: ${{ inputs.tag }}
+        run: |
+          set -euo pipefail
+          if gh release view "$GH_REF_NAME" >/dev/null 2>&1; then
+            echo "Release $GH_REF_NAME already exists; skipping."
+            exit 0
+          fi
+          if [[ "$GH_REF_NAME" == *-* ]]; then
+            gh release create "$GH_REF_NAME" --generate-notes --prerelease --verify-tag
+          else
+            gh release create "$GH_REF_NAME" --generate-notes --verify-tag
+          fi
