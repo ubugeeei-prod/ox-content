@@ -3150,6 +3150,21 @@ export interface MathOptions {
    * @default 'literal'
    */
   onError?: MathErrorPolicy;
+
+  /**
+   * Which KaTeX font formats to emit into the output directory.
+   *
+   * `.ttf` and `.woff` are three quarters of KaTeX's font bytes, and no
+   * browser that can run the rest of the site needs them — `@font-face`
+   * lists `woff2` first and stops at the first format it supports. Set
+   * `'all'` for a target that genuinely needs the older formats.
+   *
+   * Either way the fonts are emitted only when a page actually rendered
+   * math.
+   *
+   * @default 'woff2'
+   */
+  fontFormats?: KatexFontFormats;
 }
 
 /**
@@ -3158,11 +3173,17 @@ export interface MathOptions {
 export type MathErrorPolicy = "literal" | "error" | "render";
 
 /**
+ * Which of KaTeX's font formats to emit.
+ */
+export type KatexFontFormats = "woff2" | "all";
+
+/**
  * Resolved math transform options.
  */
 export interface ResolvedMathOptions {
   enabled: boolean;
   onError: MathErrorPolicy;
+  fontFormats: KatexFontFormats;
 }
 
 /**

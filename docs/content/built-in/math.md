@@ -107,6 +107,24 @@ sites that only want the delimiter scan — or CI images without the extra
 package — working while you decide whether typesetting is worth the
 dependency.
 
+## Emitted Assets
+
+KaTeX's stylesheet and fonts land in `__ox_katex__/` in the output directory,
+and only the pages that rendered math link them. A site that turns `math` on
+without writing any gets nothing: the assets are emitted when at least one
+page asks for them.
+
+Only the `woff2` fonts ship. `.ttf` and `.woff` are three quarters of the font
+bytes and no browser that can run the rest of the site needs them —
+`@font-face` lists `woff2` first and stops at the first format it supports.
+Ask for the rest when a target genuinely needs them:
+
+```ts
+oxContent({
+  math: { fontFormats: "all" },
+});
+```
+
 ## Related
 
 - [Syntax Extensions](./syntax-extensions.md) — other opt-in Markdown syntax.

@@ -142,9 +142,13 @@ function resolveEmojiShortcodeOptions(
 }
 
 export function resolveMathOptions(options: OxContentOptions["math"]): ResolvedOptions["math"] {
-  if (!options) return { enabled: false, onError: "literal" };
-  if (options === true) return { enabled: true, onError: "literal" };
-  return { enabled: options.enabled ?? true, onError: options.onError ?? "literal" };
+  if (!options) return { enabled: false, onError: "literal", fontFormats: "woff2" };
+  if (options === true) return { enabled: true, onError: "literal", fontFormats: "woff2" };
+  return {
+    enabled: options.enabled ?? true,
+    onError: options.onError ?? "literal",
+    fontFormats: options.fontFormats ?? "woff2",
+  };
 }
 function resolveAttrsOptions(options: OxContentOptions["attrs"]): ResolvedOptions["attrs"] {
   if (!options) return { enabled: false };

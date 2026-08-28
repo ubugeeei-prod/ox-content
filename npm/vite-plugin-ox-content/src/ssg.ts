@@ -9,6 +9,7 @@ import { generateOgImages } from "./og-image";
 import type { OgImagePageEntry } from "./og-image";
 import { transformAllPlugins } from "./plugins";
 import { copyKatexAssets } from "./plugins/math-assets";
+import { KATEX_ASSET_DIR } from "./plugins/math";
 import { writeSelfHostedThemeFonts } from "./theme-fonts";
 import { withSelfHostedIconHead, writeSelfHostedIcons } from "./icons";
 import type { TransformAllOptions } from "./plugins";
@@ -1119,8 +1120,11 @@ export async function buildSsg(options: ResolvedOptions, root: string): Promise<
     errors,
   );
 
-  if (options.math?.enabled) {
-    generatedFiles.push(...(await copyKatexAssets(outDir)));
+  // Only the pages that rendered math link the stylesheet, so a site that
+  // turned `math` on speculatively used to ship 1.2 MB of fonts nothing
+  // referenced. Emit them when at least one page asks for them.
+  if (options.math?.enabled && generatedPages.some((page) => page.html.includes(KATEX_ASSET_DIR))) {
+    generatedFiles.push(...(await copyKatexAssets(outDir, options.math.fontFormats)));
   }
   generatedFiles.push(
     ...(await writeSelfHostedThemeFonts({ fonts: ssgOptions.theme?.fonts ?? {}, outDir, root })),

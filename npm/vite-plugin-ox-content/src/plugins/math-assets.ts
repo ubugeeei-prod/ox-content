@@ -8,11 +8,25 @@ import { extname, join, relative, resolve, sep } from "node:path";
 import type { Plugin } from "vite";
 import { KATEX_ASSET_DIR, resolveKatexDist } from "./math";
 
+/** Font formats KaTeX ships, newest first. */
+const FONT_FORMATS = { woff2: [".woff2"], all: [".woff2", ".woff", ".ttf"] } as const;
+
+/** Which of KaTeX's font formats to emit. */
+export type KatexFontFormats = keyof typeof FONT_FORMATS;
+
 /**
- * Copies `katex.min.css` and `fonts/` into the SSG output.
+ * Copies `katex.min.css` and the requested font formats into the SSG output.
  * Returns an empty list when KaTeX is not installed.
+ *
+ * The `.ttf` and `.woff` sets are three quarters of the font bytes and no
+ * browser that can run the rest of the site needs them: `@font-face` lists
+ * `woff2` first and stops at the first format it supports. `formats: "all"`
+ * brings them back.
  */
-export async function copyKatexAssets(outDir: string): Promise<string[]> {
+export async function copyKatexAssets(
+  outDir: string,
+  formats: KatexFontFormats = "woff2",
+): Promise<string[]> {
   const dist = resolveKatexDist();
   if (!dist) {
     return [];
@@ -22,7 +36,15 @@ export async function copyKatexAssets(outDir: string): Promise<string[]> {
   await mkdir(join(dest, "fonts"), { recursive: true });
   const cssDest = join(dest, "katex.min.css");
   await copyFile(join(dist, "katex.min.css"), cssDest);
-  await cp(join(dist, "fonts"), join(dest, "fonts"), { recursive: true });
+
+  const wanted: readonly string[] = FONT_FORMATS[formats] ?? FONT_FORMATS.woff2;
+  await cp(join(dist, "fonts"), join(dest, "fonts"), {
+    recursive: true,
+    filter: (source) => {
+      const extension = extname(source);
+      return extension === "" || wanted.includes(extension);
+    },
+  });
   return [cssDest];
 }
 
