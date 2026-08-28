@@ -1,5 +1,5 @@
 import { importNapiModuleSync } from "./napi";
-import type { ReaderChromeOptions, ResolvedReaderChrome } from "./types";
+import type { ReaderChromeOptions, ResolvedReaderChrome } from "./reader-chrome-options";
 
 export type { ReaderChromeOptions, ResolvedReaderChrome };
 

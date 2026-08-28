@@ -1,9 +1,10 @@
 #!/usr/bin/env node
 
+import { spawnSync } from "node:child_process";
 import { mkdtempSync, rmSync, readFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join, relative } from "node:path";
-import { spawnSync } from "node:child_process";
+import { checkReaderChromeDeclarations } from "./package-dry-run-reader-chrome.mjs";
 
 const packages = [
   "crates/ox_content_napi",
@@ -70,10 +71,23 @@ function checkPackage(packageDir) {
   if (pkg.name === "@ox-content/napi") {
     checkNapiPackage(packageDir, pkg, files);
   }
+  if (pkg.name === "@ox-content/vite-plugin") {
+    checkReaderChromeDeclarations({
+      pkg,
+      tarball: packed.filename,
+      packDir,
+      failures,
+      readPackedFile,
+    });
+  }
 }
 
 function readPackedPackageJson(filename) {
-  const result = spawnSync("tar", ["-xOf", filename, "package/package.json"], {
+  return JSON.parse(readPackedFile(filename, "package.json"));
+}
+
+function readPackedFile(filename, path) {
+  const result = spawnSync("tar", ["-xOf", filename, `package/${path}`], {
     encoding: "utf8",
     stdio: ["ignore", "pipe", "pipe"],
   });
@@ -82,10 +96,10 @@ function readPackedPackageJson(filename) {
     throw result.error;
   }
   if (result.status !== 0) {
-    throw new Error(result.stderr || `Failed to read package.json from ${filename}`);
+    throw new Error(result.stderr || `Failed to read ${path} from ${filename}`);
   }
 
-  return JSON.parse(result.stdout);
+  return result.stdout;
 }
 
 function checkVitePeerDependency(pkg) {

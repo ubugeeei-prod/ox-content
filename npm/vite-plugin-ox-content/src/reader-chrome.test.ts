@@ -55,12 +55,20 @@ describe("reader chrome public API", () => {
     const source = readFileSync(join(packageRoot, "src/reader-chrome.ts"), "utf8");
     expect(source).not.toContain('from "./ssg"');
     expect(source).not.toContain("defaultTheme");
+    expect(source).not.toContain('from "./types"');
 
+    const typesScript = readFileSync(
+      join(packageRoot, "scripts/build-reader-chrome-types.mjs"),
+      "utf8",
+    );
+    expect(typesScript).toContain("reader-chrome.d.mts");
+    expect(typesScript).toContain("reader-chrome.d.cts");
     const buildScript = readFileSync(
       join(packageRoot, "scripts/build-reader-chrome-client.mjs"),
       "utf8",
     );
     expect(buildScript).toContain("reader_chrome_runtime.js");
+    expect(packageJson.scripts.build).toContain("node scripts/build-reader-chrome-types.mjs");
     expect(packageJson.scripts.build).toContain("node scripts/build-reader-chrome-client.mjs");
   });
 
