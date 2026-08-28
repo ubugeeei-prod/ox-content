@@ -211,6 +211,8 @@ function resolveEditThisPageOptions(
     repoUrl: options.repoUrl,
     branch: options.branch ?? "main",
     rootDir: options.rootDir,
+    provider: options.provider,
+    urlPattern: options.urlPattern,
     label: options.label ?? "Edit this page",
   };
 }

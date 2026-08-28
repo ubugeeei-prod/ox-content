@@ -12,6 +12,8 @@ fn options(root_dir: Option<&str>, src_dir: Option<&str>) -> EditThisPageOptions
         branch: Some("main".to_string()),
         root_dir: root_dir.map(ToOwned::to_owned),
         src_dir: src_dir.map(ToOwned::to_owned),
+        provider: None,
+        url_pattern: None,
         label: None,
     }
 }

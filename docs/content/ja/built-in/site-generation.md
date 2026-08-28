@@ -260,6 +260,39 @@ oxContent({
 <a href="https://gitlab.example.com/owner/repo/edit/main/packages/site/docs/guide/nested.md"></a>
 ```
 
+### 他のフォージ
+
+フォージごとにウェブエディタのパスが違うため、別のフォージ向けのリンクは 404 になります。
+
+| Provider    | 形                                        |
+| ----------- | ----------------------------------------- |
+| `github`    | `<repoUrl>/edit/<branch>/<path>`          |
+| `gitlab`    | `<repoUrl>/-/edit/<branch>/<path>`        |
+| `bitbucket` | `<repoUrl>/src/<branch>/<path>?mode=edit` |
+| `gitea`     | `<repoUrl>/_edit/<branch>/<path>`         |
+
+`gitlab.com`、`bitbucket.org`、`codeberg.org`、`gitea.com` は `repoUrl` から判別するので設定は要りません。自前でホストしている場合はホスト名からソフトウェアが分からないので `provider` を指定します。
+
+```ts
+oxContent({
+  editThisPage: {
+    repoUrl: "https://git.example.com/owner/repo",
+    provider: "gitlab",
+  },
+});
+```
+
+`gitea` は同じパスを引き継いだ Forgejo も含みます。どれにも当てはまらないときは `urlPattern` で形そのものを差し替えます。`{repoUrl}`、`{branch}`、`{path}` を埋め、それ以外の波括弧はそのまま残します。
+
+```ts
+oxContent({
+  editThisPage: {
+    repoUrl: "https://git.example.com/owner/repo",
+    urlPattern: "{repoUrl}/ui/edit?ref={branch}&file={path}",
+  },
+});
+```
+
 ## コレクション
 
 コレクションは Markdown ファイルを、遅延読み込み可能な問い合わせマニフェストとして出します。ブログ索引、変更履歴、「関連ページ」一覧に使えます。すべての Markdown を覆う既定の `content` コレクションは最初からあります。

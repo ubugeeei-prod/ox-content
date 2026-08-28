@@ -2,6 +2,10 @@ use std::path::{Path, PathBuf};
 
 use super::{ResolvedEditThisPageOptions, escape_html_attr, escape_html_text};
 
+pub(super) mod provider;
+
+use provider::render_pattern;
+
 pub(super) fn append_edit_this_page(html: &str, options: &ResolvedEditThisPageOptions) -> String {
     let href = edit_this_page_href(options);
     let mut out = String::with_capacity(html.len() + href.len() + options.label.len() + 96);
@@ -18,8 +22,12 @@ pub(super) fn append_edit_this_page(html: &str, options: &ResolvedEditThisPageOp
 }
 
 fn edit_this_page_href(options: &ResolvedEditThisPageOptions) -> String {
-    let path = page_path(options);
-    format!("{}/edit/{}/{}", options.repo_url, options.branch, percent_encode_path(&path))
+    render_pattern(
+        &options.url_pattern,
+        &options.repo_url,
+        &options.branch,
+        &percent_encode_path(&page_path(options)),
+    )
 }
 
 /// The page's path inside the repository.

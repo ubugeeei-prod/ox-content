@@ -2,6 +2,7 @@ use std::path::PathBuf;
 
 use crate::{AttrsOptions, EditThisPageOptions, EmojiShortcodeOptions, WikiLinkOptions};
 
+use super::edit::provider::resolve_pattern;
 use super::{ResolvedEditThisPageOptions, ResolvedEmojiShortcodeOptions, ResolvedWikiLinkOptions};
 
 pub(super) fn resolve_wiki_links(
@@ -58,8 +59,12 @@ pub(super) fn resolve_edit_this_page(
         .filter(|value| !value.is_empty() && *value != ".")
         .map(ToOwned::to_owned);
 
+    let url_pattern =
+        resolve_pattern(options.url_pattern.as_deref(), options.provider.as_deref(), &repo_url);
+
     Some(ResolvedEditThisPageOptions {
         repo_url,
+        url_pattern,
         root_dir,
         src_dir: options.src_dir.as_deref().filter(|value| !value.is_empty()).map(PathBuf::from),
         working_dir: working_directory(),

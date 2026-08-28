@@ -166,6 +166,43 @@ describe("transformMarkdown", () => {
     }
   });
 
+  it("shapes edit links for the forge the repository is hosted on", async () => {
+    const page = resolve(repoRoot, "docs/content/guide.md");
+
+    const editHref = async (editThisPage: Record<string, unknown>): Promise<string | undefined> => {
+      const result = await transformMarkdown(
+        "# Guide\n",
+        page,
+        createResolvedOptions({
+          editThisPage: { enabled: true, branch: "main", rootDir: "docs", ...editThisPage },
+        }),
+        { sourcePath: page, srcDir: resolve(repoRoot, "docs") },
+      );
+      return /<a href="([^"]+)"/.exec(result.html.split("ox-edit-this-page")[1] ?? "")?.[1];
+    };
+
+    expect(await editHref({ repoUrl: "https://gitlab.com/owner/repo" })).toBe(
+      "https://gitlab.com/owner/repo/-/edit/main/docs/content/guide.md",
+    );
+    expect(
+      await editHref({ repoUrl: "https://git.example.com/owner/repo", provider: "gitlab" }),
+    ).toBe("https://git.example.com/owner/repo/-/edit/main/docs/content/guide.md");
+    expect(await editHref({ repoUrl: "https://bitbucket.org/owner/repo" })).toBe(
+      "https://bitbucket.org/owner/repo/src/main/docs/content/guide.md?mode=edit",
+    );
+    expect(
+      await editHref({
+        repoUrl: "https://git.example.com/owner/repo",
+        urlPattern: "{repoUrl}/ui/edit?ref={branch}&file={path}",
+      }),
+      // `&` is escaped for the attribute, as any other href would be.
+    ).toBe("https://git.example.com/owner/repo/ui/edit?ref=main&#x26;file=docs/content/guide.md");
+    // Unchanged for the shape this option has always produced.
+    expect(await editHref({ repoUrl: "https://github.com/owner/repo" })).toBe(
+      "https://github.com/owner/repo/edit/main/docs/content/guide.md",
+    );
+  });
+
   it("leaves {badge} markup literal unless opted in", async () => {
     const markdown = "{badge:tip}Beta{/badge}";
 
