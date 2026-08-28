@@ -75,9 +75,15 @@ fn normalize_path(value: &str) -> &str {
     value.trim().trim_matches('/')
 }
 
+/// True when an entry points at a page of this site the pager can step to.
+///
+/// A sidebar group with no `link` of its own is still a nav item, and the
+/// theme gives it `href="#"` so the header can toggle the group. It is a
+/// heading, not a destination: stepping onto it left "Next" pointing at
+/// `#`, which goes nowhere. Its children are flattened either way.
 fn is_in_site_href(href: &str) -> bool {
     let trimmed = href.trim();
-    if trimmed.is_empty() {
+    if trimmed.is_empty() || trimmed.starts_with('#') {
         return false;
     }
     let lower = trimmed.to_ascii_lowercase();

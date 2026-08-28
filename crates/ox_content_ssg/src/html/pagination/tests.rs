@@ -329,3 +329,62 @@ fn generate_bare_html_is_unchanged() {
     assert!(!html.contains("pager"));
     assert!(!html.contains("Previous"));
 }
+
+#[test]
+fn flatten_skips_group_headers_without_a_link() {
+    // A sidebar group nested inside another group becomes a nav item with
+    // `href="#"`. Stepping onto it left the pager pointing at `#`.
+    let nav = guide(vec![
+        nav_item("First", "first", "/docs/first/index.html"),
+        nav_item_with_children(
+            "Nested Group",
+            "",
+            "#",
+            vec![nav_item("Child", "group/child", "/docs/group/child/index.html")],
+        ),
+        nav_item("Last", "last", "/docs/last/index.html"),
+    ]);
+
+    let html = generate_html(&page("first"), &nav, &config(true));
+    let pager = pager_html(&html).expect("first page should emit a pager");
+
+    assert!(!pager.contains(r##"href="#""##), "{pager}");
+    assert!(!pager.contains("Nested Group"), "{pager}");
+    assert!(pager.contains(r#"href="/docs/group/child/index.html""#), "{pager}");
+    assert!(pager.contains("Child"), "{pager}");
+}
+
+#[test]
+fn group_headers_do_not_capture_pages_with_an_empty_path() {
+    // The header's own path is empty, and so is the normalized path of the
+    // site root, so the root page used to resolve its neighbors from the
+    // header's position in the sidebar instead of its own.
+    let nav = guide(vec![
+        nav_item_with_children(
+            "Nested Group",
+            "",
+            "#",
+            vec![nav_item("Child", "group/child", "/docs/group/child/index.html")],
+        ),
+        nav_item("Last", "last", "/docs/last/index.html"),
+    ]);
+
+    let html = generate_html(&page("/"), &nav, &config(true));
+
+    assert!(pager_html(&html).is_none(), "a page outside the sidebar has no neighbors: {html}");
+}
+
+#[test]
+fn flatten_skips_fragment_only_hrefs() {
+    let nav = guide(vec![
+        nav_item("Intro", "intro", "/docs/intro/index.html"),
+        nav_item("Anchor", "", "#section"),
+        nav_item("API", "api", "/docs/api/index.html"),
+    ]);
+
+    let html = generate_html(&page("intro"), &nav, &config(true));
+    let pager = pager_html(&html).expect("in-site neighbor should still emit a pager");
+
+    assert!(pager.contains(r#"href="/docs/api/index.html""#), "{pager}");
+    assert!(!pager.contains("Anchor"), "{pager}");
+}
