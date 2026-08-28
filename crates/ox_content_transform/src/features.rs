@@ -4,7 +4,6 @@ use rustc_hash::FxHashMap;
 use std::borrow::Cow;
 use std::collections::HashMap;
 use std::hash::BuildHasher;
-use std::path::PathBuf;
 
 mod abbreviations;
 mod attr_tokens;
@@ -57,6 +56,7 @@ use images::ResolvedImageOptions;
 use includes::ResolvedIncludeOptions;
 use magic::ResolvedMagicLinks;
 use option_resolve::{
+    ResolvedEditThisPageOptions, ResolvedEmojiShortcodeOptions, ResolvedWikiLinkOptions,
     resolve_attrs, resolve_edit_this_page, resolve_emoji_shortcodes, resolve_wiki_links,
 };
 use segments::transform_markdown_text_segments;
@@ -89,31 +89,6 @@ pub struct TransformFeatureOptions {
     math: bool,
     attributes: bool,
     edit_this_page: Option<ResolvedEditThisPageOptions>,
-}
-#[derive(Clone)]
-struct ResolvedWikiLinkOptions {
-    base_url: String,
-}
-
-#[derive(Clone)]
-struct ResolvedEmojiShortcodeOptions {
-    custom: FxHashMap<String, String>,
-}
-
-#[derive(Clone)]
-struct ResolvedEditThisPageOptions {
-    repo_url: String,
-    branch: String,
-    /// `rootDir` as configured, trimmed of blanks and surrounding slashes.
-    root_dir: Option<String>,
-    /// Absolute source root, when the build supplied one.
-    src_dir: Option<PathBuf>,
-    /// The build's working directory, resolved once per page.
-    working_dir: PathBuf,
-    /// Edit-URL template for the forge the repository is hosted on.
-    url_pattern: String,
-    source_path: String,
-    label: String,
 }
 
 pub struct PreprocessResult<'a> {

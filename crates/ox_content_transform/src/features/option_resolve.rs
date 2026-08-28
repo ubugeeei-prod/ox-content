@@ -1,9 +1,36 @@
 use std::path::PathBuf;
 
+use rustc_hash::FxHashMap;
+
 use crate::{AttrsOptions, EditThisPageOptions, EmojiShortcodeOptions, WikiLinkOptions};
 
+#[derive(Clone)]
+pub(in crate::features) struct ResolvedWikiLinkOptions {
+    pub(in crate::features) base_url: String,
+}
+
+#[derive(Clone)]
+pub(in crate::features) struct ResolvedEmojiShortcodeOptions {
+    pub(in crate::features) custom: FxHashMap<String, String>,
+}
+
+#[derive(Clone)]
+pub(in crate::features) struct ResolvedEditThisPageOptions {
+    pub(in crate::features) repo_url: String,
+    pub(in crate::features) branch: String,
+    /// `rootDir` as configured, trimmed of blanks and surrounding slashes.
+    pub(in crate::features) root_dir: Option<String>,
+    /// Absolute source root, when the build supplied one.
+    pub(in crate::features) src_dir: Option<PathBuf>,
+    /// The build's working directory, resolved once per page.
+    pub(in crate::features) working_dir: PathBuf,
+    /// Edit-URL template for the forge the repository is hosted on.
+    pub(in crate::features) url_pattern: String,
+    pub(in crate::features) source_path: String,
+    pub(in crate::features) label: String,
+}
+
 use super::edit::provider::resolve_pattern;
-use super::{ResolvedEditThisPageOptions, ResolvedEmojiShortcodeOptions, ResolvedWikiLinkOptions};
 
 pub(super) fn resolve_wiki_links(
     options: Option<&WikiLinkOptions>,
