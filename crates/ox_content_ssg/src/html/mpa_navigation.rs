@@ -31,27 +31,24 @@ mod tests {
     }
 
     #[test]
-    fn root_cross_fade_is_overridden_to_stay_opaque() {
-        // The UA cross-fade adds the two root snapshots together with
-        // `plus-lighter`; anything the root leaves transparent is then counted
-        // twice and the page brightens partway through the navigation.
-        assert!(MPA_NAVIGATION_CSS.contains("::view-transition-old(root)"));
-        assert!(MPA_NAVIGATION_CSS.contains("::view-transition-new(root)"));
-        assert!(MPA_NAVIGATION_CSS.contains("mix-blend-mode: normal"));
+    fn the_transition_overlay_carries_the_page_background() {
+        // The page background is propagated to the canvas, so it is painted
+        // outside the root element and is missing from the `root` snapshot.
+        // Whatever the snapshots leave transparent has to land on the page
+        // color rather than on the compositor's own backdrop.
+        assert!(MPA_NAVIGATION_CSS.contains("::view-transition {"));
+        assert!(MPA_NAVIGATION_CSS.contains("background-color: var(--octc-color-bg);"));
     }
 
     #[test]
-    fn persistent_chrome_is_named_out_of_the_root_snapshot() {
-        for name in ["octc-header", "octc-sidebar", "octc-mobile-footer"] {
-            assert!(MPA_NAVIGATION_CSS.contains(name), "missing {name}");
-        }
-    }
-
-    #[test]
-    fn root_element_owns_the_canvas_background() {
-        // A `body`-only background is propagated to the canvas, which leaves the
-        // repaint behind a cross-document transition to the UA default color.
-        assert!(super::super::SSG_CSS.contains("background-color: var(--octc-color-bg);"));
+    fn the_ua_cross_fade_is_left_alone() {
+        // `plus-lighter` is what makes the outgoing and incoming alphas sum
+        // back to one over a transparent snapshot. Overriding it to `normal`
+        // sinks the whole page toward the backdrop partway through.
+        assert!(!MPA_NAVIGATION_CSS.contains("mix-blend-mode"));
+        assert!(!MPA_NAVIGATION_CSS.contains("view-transition-name"));
+        assert!(!MPA_NAVIGATION_CSS.contains("::view-transition-old"));
+        assert!(!MPA_NAVIGATION_CSS.contains("::view-transition-new"));
     }
 
     #[test]
