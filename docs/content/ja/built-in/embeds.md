@@ -443,7 +443,12 @@ fetch します。このサイトのように `fetch: false` にすると、カ�
 メトリクスとして描画されます。
 
 ```mdx
-<NpmPackage url="https://www.npmjs.com/package/vite" version="7.1.0" license="MIT" downloads="31M/week" />
+<NpmPackage
+  url="https://www.npmjs.com/package/vite"
+  version="7.1.0"
+  license="MIT"
+  downloads="31M/week"
+/>
 ```
 
 <NpmPackage url="https://www.npmjs.com/package/vite" name="vite" description="次世代フロントエンドツーリング" version="7.1.0" license="MIT" downloads="31M/week"></NpmPackage>
@@ -513,7 +518,11 @@ Figma は `file`、`design`、`board`、`proto`、`slides` と Community のリ�
 asciinema は player URL を `embed` として受け取れます。
 
 ```mdx
-<Vimeo url="https://vimeo.com/76979871" title="The New Vimeo Player" embed="https://player.vimeo.com/video/76979871" />
+<Vimeo
+  url="https://vimeo.com/76979871"
+  title="The New Vimeo Player"
+  embed="https://player.vimeo.com/video/76979871"
+/>
 ```
 
 <Vimeo url="https://vimeo.com/76979871" title="The New Vimeo Player (You Know, For Videos)" author="Vimeo Staff" duration="1:03" embed="https://player.vimeo.com/video/76979871"></Vimeo>
@@ -570,7 +579,7 @@ URL から読み取ります。
 | `iframe`       | `false`                       | playground / 動画の lazy iframe URL を付与        |
 | `parent`       | `[]`                          | Twitch iframe の parent ドメイン                  |
 
-`iframe` は *導出* される embed の話です。渡されたページ URL から provider が player
+`iframe` は _導出_ される embed の話です。渡されたページ URL から provider が player
 URL を組み立てられるようにします。明示的な `embed` 属性はどちらの設定でも効きます。
 
 `cache` だけなら 1 ビルド分の寿命です。`persistCache: true` にすると metadata を

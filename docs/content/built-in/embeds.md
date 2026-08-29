@@ -555,7 +555,12 @@ version and tag URLs where the provider exposes one. `version`, `downloads`,
 `license` and `stars` render as metrics:
 
 ```mdx
-<NpmPackage url="https://www.npmjs.com/package/vite" version="7.1.0" license="MIT" downloads="31M/week" />
+<NpmPackage
+  url="https://www.npmjs.com/package/vite"
+  version="7.1.0"
+  license="MIT"
+  downloads="31M/week"
+/>
 ```
 
 <NpmPackage url="https://www.npmjs.com/package/vite" name="vite" description="Next generation frontend tooling — fast by default" version="7.1.0" license="MIT" downloads="31M/week"></NpmPackage>
@@ -625,7 +630,11 @@ video cards with `duration`, `views` and `status` metrics. Vimeo, Loom and
 asciinema accept a player URL as `embed`:
 
 ```mdx
-<Vimeo url="https://vimeo.com/76979871" title="The New Vimeo Player" embed="https://player.vimeo.com/video/76979871" />
+<Vimeo
+  url="https://vimeo.com/76979871"
+  title="The New Vimeo Player"
+  embed="https://player.vimeo.com/video/76979871"
+/>
 ```
 
 <Vimeo url="https://vimeo.com/76979871" title="The New Vimeo Player (You Know, For Videos)" author="Vimeo Staff" duration="1:03" embed="https://player.vimeo.com/video/76979871"></Vimeo>
@@ -682,7 +691,7 @@ option, and the instance is read off the URL:
 | `iframe`       | `false`                       | Add lazy playground/video iframe URLs.           |
 | `parent`       | `[]`                          | Twitch iframe parent domain or domains.          |
 
-`iframe` is about *derived* embeds: it lets a provider build a player URL from
+`iframe` is about _derived_ embeds: it lets a provider build a player URL from
 the page URL it was given. An explicit `embed` attribute works either way.
 
 `cache` alone lives for one build. `persistCache: true` writes metadata to disk
