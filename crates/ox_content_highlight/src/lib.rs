@@ -24,6 +24,8 @@ mod theme;
 #[cfg(test)]
 mod element_tests;
 #[cfg(test)]
+mod language_tests;
+#[cfg(test)]
 mod test_support;
 #[cfg(test)]
 mod tests;

@@ -1,5 +1,19 @@
 //! Helpers shared by this crate's test modules.
 
+pub fn assert_text_has_capture_token(html: &str, text: &str, capture: &str) {
+    let token = crate::theme::token_for(capture).expect(capture);
+    let mut style = String::new();
+    crate::theme::push_color(&mut style, token);
+    let escaped = text
+        .replace('&', "&amp;")
+        .replace('<', "&lt;")
+        .replace('>', "&gt;")
+        .replace('"', "&quot;")
+        .replace('\'', "&#39;");
+    let needle = format!("<span style=\"{style}\">{escaped}</span>");
+    assert!(html.contains(&needle), "missing {capture} token for {text:?}\n{html}");
+}
+
 /// Strips the generated markup and unescapes, leaving what a reader sees.
 ///
 /// Highlighting may split a token across any number of spans, so the only

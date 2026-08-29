@@ -57,6 +57,14 @@ pub(super) fn grammars() -> &'static [Grammar] {
             "",
         ),
         grammar!(
+            "fish",
+            ["fish"],
+            tree_sitter_fish::language(),
+            tree_sitter_fish::HIGHLIGHTS_QUERY,
+            "",
+            "",
+        ),
+        grammar!(
             "powershell",
             ["powershell", "pwsh", "ps1", "psm1"],
             tree_sitter_powershell::LANGUAGE,

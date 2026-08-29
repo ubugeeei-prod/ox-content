@@ -58,6 +58,7 @@ tree-sitter 系列と合うメンテされた専用文法がまだありませ�
 | YAML       | `yaml`, `yml`                                                      |
 | Markdown   | `markdown`, `md`                                                   |
 | Bash       | `bash`, `sh`, `shell`, `zsh`, `shellscript`                        |
+| Fish       | `fish`                                                             |
 | TOML       | `toml`                                                             |
 | WGSL       | `wgsl`                                                             |
 | SQL        | `sql`                                                              |
@@ -87,6 +88,13 @@ let expensive = open usage.json
   | where cost > 10
   | get project
   | uniq
+```
+
+```fish
+function fish_prompt
+  set -l branch (git branch --show-current)
+  echo "$branch" | string upper
+end
 ```
 
 未知のタグは普通の `<pre><code>` のままです。例: `perl`、`elm`、

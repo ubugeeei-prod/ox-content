@@ -59,6 +59,7 @@ this tree-sitter line.
 | YAML       | `yaml`, `yml`                                                      |
 | Markdown   | `markdown`, `md`                                                   |
 | Bash       | `bash`, `sh`, `shell`, `zsh`, `shellscript`                        |
+| Fish       | `fish`                                                             |
 | TOML       | `toml`                                                             |
 | WGSL       | `wgsl`                                                             |
 | SQL        | `sql`                                                              |
@@ -97,6 +98,13 @@ let expensive = open usage.json
   | where cost > 10
   | get project
   | uniq
+```
+
+```fish
+function fish_prompt
+  set -l branch (git branch --show-current)
+  echo "$branch" | string upper
+end
 ```
 
 Unknown tags stay ordinary `<pre><code>` — for example `perl`, `elm`,
