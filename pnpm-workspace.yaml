@@ -28,12 +28,13 @@ catalog:
   vite: npm:@voidzero-dev/vite-plus-core@0.2.8
   vitest: 4.1.11
   vue: ^3.5.41
-  vite-plus: 0.2.9
+  vite-plus: 0.3.0
 
-onlyBuiltDependencies:
-  - esbuild
-  - sharp
-  - puppeteer
+allowBuilds:
+  esbuild: true
+  sharp: true
+  puppeteer: true
+
 packageExtensions:
   "@voidzero-dev/vite-plus-core@0.1.21":
     dependencies:

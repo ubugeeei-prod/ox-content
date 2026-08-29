@@ -1,8 +1,8 @@
 #!/usr/bin/env node
 
-import { spawnSync } from "node:child_process";
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
+import { runPnpm } from "./pnpm-command.mjs";
 
 const policy = readPolicy();
 const minimumSeverity = policy.npmAudit?.minimumSeverity ?? "high";
@@ -69,21 +69,6 @@ function runAudit() {
   }
 
   return parseJsonOutput(output);
-}
-
-function runPnpm(args) {
-  const result = spawnSync("corepack", ["pnpm", ...args], {
-    encoding: "utf8",
-    stdio: ["ignore", "pipe", "pipe"],
-  });
-  if (result.error?.code !== "ENOENT") {
-    return result;
-  }
-
-  return spawnSync("pnpm", args, {
-    encoding: "utf8",
-    stdio: ["ignore", "pipe", "pipe"],
-  });
 }
 
 function readPolicy() {

@@ -293,12 +293,32 @@
         "reason": "Optional native binary of yuku-codegen (MIT), a Vite+ build toolchain dependency; platform package omits its own license field."
       },
       {
+        "name": "@yuku-codegen/binding-darwin-arm64",
+        "license": "Unknown",
+        "reason": "Optional native binary of yuku-codegen (MIT), a Vite+ build toolchain dependency; platform package omits its own license field."
+      },
+      {
+        "name": "@yuku-codegen/binding-darwin-x64",
+        "license": "Unknown",
+        "reason": "Optional native binary of yuku-codegen (MIT), a Vite+ build toolchain dependency; platform package omits its own license field."
+      },
+      {
         "name": "@yuku-codegen/binding-linux-x64-musl",
         "license": "Unknown",
         "reason": "Optional native binary of yuku-codegen (MIT), a Vite+ build toolchain dependency; platform package omits its own license field."
       },
       {
         "name": "@yuku-parser/binding-linux-x64-gnu",
+        "license": "Unknown",
+        "reason": "Optional native binary of yuku-parser (MIT), a Vite+ build toolchain dependency; platform package omits its own license field."
+      },
+      {
+        "name": "@yuku-parser/binding-darwin-arm64",
+        "license": "Unknown",
+        "reason": "Optional native binary of yuku-parser (MIT), a Vite+ build toolchain dependency; platform package omits its own license field."
+      },
+      {
+        "name": "@yuku-parser/binding-darwin-x64",
         "license": "Unknown",
         "reason": "Optional native binary of yuku-parser (MIT), a Vite+ build toolchain dependency; platform package omits its own license field."
       },

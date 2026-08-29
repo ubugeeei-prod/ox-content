@@ -1,8 +1,8 @@
 #!/usr/bin/env node
 
-import { spawnSync } from "node:child_process";
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
+import { runPnpm } from "./pnpm-command.mjs";
 
 const policy = JSON.parse(readFileSync(resolve("config/dependency-policy.json"), "utf8"));
 const allowedLicenses = new Set(policy.licenses?.allowed ?? []);
@@ -82,21 +82,6 @@ function runInstall() {
   if (result.status !== 0) {
     throw new Error(result.stderr || result.stdout || "pnpm install failed.");
   }
-}
-
-function runPnpm(args) {
-  const result = spawnSync("corepack", ["pnpm", ...args], {
-    encoding: "utf8",
-    stdio: ["ignore", "pipe", "pipe"],
-  });
-  if (result.error?.code !== "ENOENT") {
-    return result;
-  }
-
-  return spawnSync("pnpm", args, {
-    encoding: "utf8",
-    stdio: ["ignore", "pipe", "pipe"],
-  });
 }
 
 function parseJsonOutput(output) {
