@@ -1,6 +1,20 @@
 use super::*;
 use crate::test_support::visible_text;
 
+fn assert_text_has_capture_token(html: &str, text: &str, capture: &str) {
+    let token = crate::theme::token_for(capture).expect(capture);
+    let mut style = String::new();
+    crate::theme::push_color(&mut style, token);
+    let escaped = text
+        .replace('&', "&amp;")
+        .replace('<', "&lt;")
+        .replace('>', "&gt;")
+        .replace('"', "&quot;")
+        .replace('\'', "&#39;");
+    let needle = format!("<span style=\"{style}\">{escaped}</span>");
+    assert!(html.contains(&needle), "missing {capture} token for {text:?}\n{html}");
+}
+
 #[test]
 fn unknown_language_is_left_to_the_caller() {
     assert!(highlight_to_html("hello", "brainfuck").is_none());
@@ -208,6 +222,58 @@ fn added_grammars_tokenize_and_escape() {
         }
         assert!(!html.contains("a < b"), "lang={lang} html={html}");
     }
+}
+
+#[test]
+fn nix_keeps_specific_captures_over_generic_identifiers() {
+    let code = r#"{
+  programs.nix-secure-enclave-key = {
+    enable = true;
+    identities.git-signing = {
+      keyFile = "~/.ssh/id_enclave_key";
+      source = import ./module.nix;
+    };
+  };
+}
+"#;
+
+    let html = highlight_to_html(code, "nix").expect("nix is supported");
+    assert_eq!(visible_text(&html), code);
+    assert_text_has_capture_token(&html, "programs", "property");
+    assert_text_has_capture_token(&html, "nix-secure-enclave-key", "property");
+    assert_text_has_capture_token(&html, "enable", "property");
+    assert_text_has_capture_token(&html, "identities", "property");
+    assert_text_has_capture_token(&html, "git-signing", "property");
+    assert_text_has_capture_token(&html, "keyFile", "property");
+    assert_text_has_capture_token(&html, "true", "constant.builtin");
+    assert_text_has_capture_token(&html, "import", "function.builtin");
+    assert_text_has_capture_token(&html, "./module.nix", "string.special");
+    assert_text_has_capture_token(&html, "\"~/.ssh/id_enclave_key\"", "string");
+}
+
+#[test]
+fn nix_covers_comments_keywords_parameters_calls_paths_and_interpolation() {
+    let code = r#"let
+  makePath = name: ./packages/${name};
+in with builtins; {
+  url = https://example.com/pkg;
+  names = map (name: makePath name) [ "core" ];
+  # production corpus shape
+}
+"#;
+
+    let html = highlight_to_html(code, "nix").expect("nix is supported");
+    assert_eq!(visible_text(&html), code);
+    assert_text_has_capture_token(&html, "let", "keyword");
+    assert_text_has_capture_token(&html, "in", "keyword");
+    assert_text_has_capture_token(&html, "with", "keyword");
+    assert_text_has_capture_token(&html, "makePath", "property");
+    assert_text_has_capture_token(&html, "name", "variable.parameter");
+    assert_text_has_capture_token(&html, "builtins", "constant.builtin");
+    assert_text_has_capture_token(&html, "map", "function.builtin");
+    assert_text_has_capture_token(&html, "https://example.com/pkg", "text.uri");
+    assert_text_has_capture_token(&html, "# production corpus shape", "comment");
+    assert_text_has_capture_token(&html, "${", "punctuation.special");
 }
 
 #[test]

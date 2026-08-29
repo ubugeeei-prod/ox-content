@@ -56,7 +56,7 @@ pub(super) fn grammars() -> &'static [Grammar] {
             "nix",
             ["nix"],
             tree_sitter_nix::LANGUAGE,
-            tree_sitter_nix::HIGHLIGHTS_QUERY,
+            include_str!("../../queries/nix-highlights.scm"),
             tree_sitter_nix::INJECTIONS_QUERY,
             "",
         ),

@@ -82,6 +82,15 @@ this tree-sitter line.
 | Scala      | `scala`, `sc`, `sbt`                                               |
 | R          | `r`, `rscript`                                                     |
 
+```nix
+{
+  programs.nix-secure-enclave-key = {
+    enable = true;
+    identities.git-signing.keyFile = "~/.ssh/id_enclave_key";
+  };
+}
+```
+
 Unknown tags stay ordinary `<pre><code>` — for example `perl`, `elm`,
 `assembly`, `asm`, `llvm`, `clojure`, and `brainfuck`. Do not alias those onto
 an unrelated grammar. Plain tags such as
