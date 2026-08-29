@@ -1,19 +1,5 @@
 use super::*;
-use crate::test_support::visible_text;
-
-fn assert_text_has_capture_token(html: &str, text: &str, capture: &str) {
-    let token = crate::theme::token_for(capture).expect(capture);
-    let mut style = String::new();
-    crate::theme::push_color(&mut style, token);
-    let escaped = text
-        .replace('&', "&amp;")
-        .replace('<', "&lt;")
-        .replace('>', "&gt;")
-        .replace('"', "&quot;")
-        .replace('\'', "&#39;");
-    let needle = format!("<span style=\"{style}\">{escaped}</span>");
-    assert!(html.contains(&needle), "missing {capture} token for {text:?}\n{html}");
-}
+use crate::test_support::{assert_text_has_capture_token, visible_text};
 
 #[test]
 fn unknown_language_is_left_to_the_caller() {
@@ -29,6 +15,7 @@ fn aliases_resolve_to_the_same_grammar() {
     for alias in ["bash", "sh", "shell", "zsh"] {
         assert!(supports(alias), "{alias} should be supported");
     }
+    assert!(supports("fish"));
     for alias in ["jsonc", "json5", "webmanifest"] {
         assert!(supports(alias), "{alias} should be supported");
     }
@@ -210,6 +197,7 @@ fn added_grammars_tokenize_and_escape() {
         ("--- a/x\n+++ b/x\n-a < b & c\n+a < b & d\n", "diff"),
         ("@c: red;\n.a::after { content: \"a < b & c\"; }\n", "less"),
         ("<?xml version=\"1.0\"?>\n<a b=\"c\">x &lt; y &amp; z</a>\n", "xml"),
+        ("echo \"a < b & c\" | string upper\n", "fish"),
         ("local s = \"a < b & c\"\n", "lua"),
         ("variable \"x\" {\n  default = \"a < b & c\"\n}\n", "terraform"),
         ("# a < b & c\nall:\n\techo hi\n", "makefile"),
