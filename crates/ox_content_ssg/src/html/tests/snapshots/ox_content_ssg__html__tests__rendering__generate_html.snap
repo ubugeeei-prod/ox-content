@@ -2032,11 +2032,52 @@ a:hover {
   .ox-breadcrumbs-item:not(:last-child)::after {
     margin-inline: 0.25rem;
   }
+  /* The desktop rhythm scaled for a phone: body blocks 0.875rem apart, framed
+   * blocks 1rem, headings still clearing more above than below. The steps keep
+   * the same relationships, just sized for a 360-420px column. */
   .content h1 {
     font-size: 1.5rem;
+    /* 1.08 is a display line-height for a title that never wraps. A mobile
+     * title almost always wraps, and at 24px those lines collide. */
+    line-height: 1.25;
+    letter-spacing: -0.02em;
+    margin-bottom: 0.75rem;
   }
   .content h2 {
-    font-size: 1.2rem;
+    font-size: 1.25rem;
+    margin-top: 2rem;
+    margin-bottom: 0.6rem;
+  }
+  /* h2 was scaled down here and h3 was not, so an h3 rendered larger than the
+   * h2 above it and the section hierarchy read backwards. */
+  .content h3 {
+    font-size: 1.0625rem;
+    margin-top: 1.5rem;
+    margin-bottom: 0.4rem;
+  }
+  .content h2 + h3 {
+    margin-top: 1rem;
+  }
+  .content h4 {
+    font-size: 0.9375rem;
+    margin-top: 1.15rem;
+    margin-bottom: 0.3rem;
+  }
+  .content p {
+    margin-bottom: 0.875rem;
+  }
+  .content ul,
+  .content ol {
+    margin: 0.875rem 0;
+    padding-left: 1.25rem;
+  }
+  .content blockquote,
+  .content table,
+  .content figure,
+  /* The code wrapper is also styled by a sheet concatenated after this one, so
+   * it needs the extra specificity to win. */
+  .content .ox-code {
+    margin-block: 1rem;
   }
   .content code {
     font-size: 0.82em;
@@ -2248,6 +2289,17 @@ a:hover {
   }
   .content h1 {
     font-size: 1.35rem;
+  }
+  .content h2 {
+    font-size: 1.15rem;
+    margin-top: 1.75rem;
+  }
+  .content h3 {
+    font-size: 1rem;
+    margin-top: 1.25rem;
+  }
+  .content h4 {
+    font-size: 0.9rem;
   }
   .content code {
     font-size: 0.8em;
