@@ -439,8 +439,9 @@ fetch します。このサイトのように `fetch: false` にすると、カ�
 ### パッケージレジストリ
 
 `embeds.packageRegistry` は npm、crates.io、PyPI、Docker Hub に対応し、provider が
-持つ version / tag URL も扱えます。`version`、`downloads`、`license`、`stars` は
-メトリクスとして描画されます。
+持つ version / tag URL も扱えます。`version`、`license`、`repository`、`downloads`、
+`stars` がメトリクスとして描画されます。`downloads` は `pulls` という綴りでも受け取り、
+下の Docker Hub カードはそちらを渡しています。
 
 ```mdx
 <NpmPackage

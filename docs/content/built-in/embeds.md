@@ -551,8 +551,9 @@ numbers stay pinned to whatever you wrote:
 ### Package registries
 
 `embeds.packageRegistry` covers npm, crates.io, PyPI and Docker Hub, including
-version and tag URLs where the provider exposes one. `version`, `downloads`,
-`license` and `stars` render as metrics:
+version and tag URLs where the provider exposes one. `version`, `license`,
+`repository`, `downloads` and `stars` render as metrics, and `downloads` also
+answers to `pulls` — which is what the Docker Hub card below passes:
 
 ```mdx
 <NpmPackage
