@@ -75,6 +75,7 @@ tree-sitter 系列と合うメンテされた専用文法がまだありませ�
 | Lua        | `lua`                                                              |
 | HCL        | `hcl`, `terraform`, `tf`, `tfvars`                                 |
 | Make       | `make`, `makefile`, `mk`                                           |
+| CMake      | `cmake`                                                            |
 | Diff       | `diff`, `patch`, `udiff`                                           |
 | PowerShell | `powershell`, `pwsh`, `ps1`, `psm1`                                |
 | Zig        | `zig`, `zon`                                                       |
@@ -95,6 +96,12 @@ function fish_prompt
   set -l branch (git branch --show-current)
   echo "$branch" | string upper
 end
+```
+
+```cmake
+cmake_minimum_required(VERSION 3.28)
+project(App)
+add_executable(app main.cpp)
 ```
 
 未知のタグは普通の `<pre><code>` のままです。例: `perl`、`elm`、
