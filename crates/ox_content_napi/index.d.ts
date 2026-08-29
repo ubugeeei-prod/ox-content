@@ -216,6 +216,9 @@ export declare function generateSsgBarePage(page: JsSsgBarePage): string
 /** Generates SSG HTML page with navigation and search. */
 export declare function generateSsgHtml(pageData: JsSsgPageData, navGroups: Array<JsSsgNavGroup>, config: JsSsgConfig): JsSsgHtmlResult
 
+/** Generates multiple themed SSG HTML pages while sharing navigation/config conversion. */
+export declare function generateSsgHtmlPages(pageDatas: Array<JsSsgPageData>, navGroups: Array<JsSsgNavGroup>, config: JsSsgConfig): Array<JsSsgHtmlResult>
+
 /** Returns unique git authors for a file. Empty when git is missing or fails. */
 export declare function getGitContributors(filePath: string, root?: string | undefined | null): Array<JsGitContributor>
 

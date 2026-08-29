@@ -1,7 +1,7 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
 exports[`transformMarkdown > can append edit links and import source snippets when opted in 1`] = `
-"<pre><code class="language-md">&#x3C;p align="center">
+"<pre><code class="language-md">&lt;p align=&quot;center&quot;&gt;
 </code></pre>
 <p class="ox-edit-this-page"><a href="https://github.com/ubugeeei-prod/ox-content/edit/main/docs/import.md" target="_blank" rel="noopener noreferrer">Suggest an edit</a></p>
 "

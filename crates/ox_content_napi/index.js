@@ -214,6 +214,7 @@ module.exports.generateSearchModuleFromOptions = binding.generateSearchModuleFro
 module.exports.collectSearchMarkdownFiles = binding.collectSearchMarkdownFiles;
 module.exports.normalizeVitePressFrontmatter = binding.normalizeVitePressFrontmatter;
 module.exports.generateSsgHtml = binding.generateSsgHtml;
+module.exports.generateSsgHtmlPages = binding.generateSsgHtmlPages;
 module.exports.renderHead = binding.renderHead;
 module.exports.applySsgReaderChromeHtml = binding.applySsgReaderChromeHtml;
 module.exports.getSsgReaderChromeCss = binding.getSsgReaderChromeCss;

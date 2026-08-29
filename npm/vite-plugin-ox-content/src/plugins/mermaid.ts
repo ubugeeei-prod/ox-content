@@ -98,6 +98,10 @@ export async function transformMermaidStatic(
   html: string,
   _options?: MermaidOptions,
 ): Promise<string> {
+  if (!html.includes("ox-mermaid")) {
+    return html;
+  }
+
   const napi = await loadNapi();
   if (!napi) {
     return html;

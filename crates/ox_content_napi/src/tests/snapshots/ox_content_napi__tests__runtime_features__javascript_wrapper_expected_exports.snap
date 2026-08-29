@@ -46,6 +46,7 @@ highlightHtmlCodeBlocksAsync
 nativeHighlightLanguages
 supportsHighlightLanguage
 generateSsgHtml
+generateSsgHtmlPages
 getGitContributors
 getGitLastUpdated
 getSearchDocumentScopes

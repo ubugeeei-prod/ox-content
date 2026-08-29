@@ -648,6 +648,127 @@ function localeCodesFor(locales: LocaleConfig[]): string[] {
   return codes;
 }
 
+type NapiModule = Awaited<ReturnType<typeof importNapiModule>>;
+type NapiSsgPageData = Parameters<NapiModule["generateSsgHtml"]>[0];
+type NapiSsgConfig = Parameters<NapiModule["generateSsgHtml"]>[2];
+type NapiSsgHtmlResult = ReturnType<NapiModule["generateSsgHtml"]>;
+type NapiGenerateSsgHtmlPages = (
+  pages: NapiSsgPageData[],
+  navGroups: RustNavGroup[],
+  config: NapiSsgConfig,
+) => NapiSsgHtmlResult[];
+
+function toNapiSsgPageData(pageData: SsgPageData): NapiSsgPageData {
+  return {
+    title: pageData.title,
+    description: pageData.description,
+    content: pageData.content,
+    toc: pageData.toc.map(toRustTocEntry),
+    lastUpdated: pageData.lastUpdated,
+    contributors: pageData.contributors,
+    path: pageData.path,
+    entryPage: pageData.entryPage,
+    prev: pageData.prev,
+    next: pageData.next,
+    breadcrumbs: pageData.breadcrumbs,
+    layout:
+      typeof pageData.frontmatter.layout === "string" ? pageData.frontmatter.layout : undefined,
+    chrome: pageData.chrome,
+    robots:
+      typeof pageData.frontmatter.robots === "string" ? pageData.frontmatter.robots : undefined,
+    canonical:
+      typeof pageData.frontmatter.canonical === "string"
+        ? pageData.frontmatter.canonical
+        : undefined,
+    markdownSource: pageData.markdownSource,
+  };
+}
+
+interface NapiSsgConfigInput {
+  siteName: string;
+  base: string;
+  ogImage?: string;
+  theme?: ResolvedThemeConfig;
+  locale?: string;
+  availableLocales?: LocaleConfig[];
+  pagination?: boolean;
+  readerChrome?: ResolvedReaderChrome;
+  breadcrumbs?: boolean;
+  localeSwitcher?: boolean;
+  localePaths?: SsgLocalePath[];
+  a11y?: ResolvedA11y;
+  team?: ResolvedTeamOptions;
+  pageChrome?: boolean;
+  breadcrumbRootHref?: string;
+  jsonLd?: ResolvedJsonLd;
+  siteUrl?: string;
+  headValidation?: false | "warn" | "strict";
+  iconsEnabled?: boolean;
+}
+
+function toNapiSsgConfig({
+  siteName,
+  base,
+  ogImage,
+  theme,
+  locale,
+  availableLocales,
+  pagination = false,
+  readerChrome = false,
+  breadcrumbs = false,
+  localeSwitcher = false,
+  localePaths,
+  a11y = false,
+  team = { enabled: false, members: [] },
+  pageChrome = false,
+  breadcrumbRootHref,
+  jsonLd = false,
+  siteUrl,
+  headValidation = false,
+  iconsEnabled = false,
+}: NapiSsgConfigInput): NapiSsgConfig {
+  const themeForRust = theme
+    ? themeToNapi(theme, locale, base, iconsEnabled)
+    : iconsEnabled
+      ? { embed: withSelfHostedIconHead(undefined, true, base) }
+      : undefined;
+
+  return {
+    siteName,
+    base,
+    breadcrumbRootHref,
+    ogImage,
+    siteUrl,
+    headValidation: headValidation || undefined,
+    theme: themeForRust,
+    locale,
+    availableLocales: availableLocales ? toRustLocales(availableLocales) : undefined,
+    pagination,
+    breadcrumbs,
+    readerChrome: readerChrome
+      ? {
+          copy: readerChrome.copy,
+          externalLinks: readerChrome.externalLinks,
+          backToTop: readerChrome.backToTop,
+        }
+      : undefined,
+    localeSwitcher: localeSwitcher || undefined,
+    localePaths,
+    a11y: a11y ? { skipLinkLabel: a11y.skipLinkLabel } : undefined,
+    team,
+    pageChrome,
+    jsonLd: jsonLd
+      ? {
+          breadcrumbs: jsonLd.breadcrumbs,
+          publisher: jsonLd.publisher,
+          siteUrl,
+          pageType: jsonLd.type,
+          graph: jsonLd.graph?.map((node) => JSON.stringify(node)),
+        }
+      : undefined,
+  };
+}
+
 /**
  * Generates HTML page with navigation using Rust NAPI bindings.
  */
@@ -676,120 +797,31 @@ export async function generateHtmlPage(
   iconsEnabled = false,
 ): Promise<string> {
   const mod = await importNapiModule();
-
-  // Convert TocEntry to the format expected by Rust (converter is module-scoped).
-  const tocForRust = pageData.toc.map(toRustTocEntry);
-
-  // Convert NavGroup to the format expected by Rust (cached per build).
   const navGroupsForRust = convertNavGroupsForRust(navGroups);
-
-  // Convert theme to NAPI format if provided
-  const themeForRust = theme
-    ? themeToNapi(theme, locale, base, iconsEnabled)
-    : iconsEnabled
-      ? { embed: withSelfHostedIconHead(undefined, true, base) }
-      : undefined;
-
-  // Convert entry page to NAPI format if provided
-  const entryPageForRust = pageData.entryPage
-    ? {
-        hero: pageData.entryPage.hero
-          ? {
-              name: pageData.entryPage.hero.name,
-              text: pageData.entryPage.hero.text,
-              tagline: pageData.entryPage.hero.tagline,
-              notice: pageData.entryPage.hero.notice
-                ? {
-                    title: pageData.entryPage.hero.notice.title,
-                    body: pageData.entryPage.hero.notice.body,
-                  }
-                : undefined,
-              image: pageData.entryPage.hero.image
-                ? {
-                    src: pageData.entryPage.hero.image.src,
-                    lightSrc: pageData.entryPage.hero.image.lightSrc,
-                    darkSrc: pageData.entryPage.hero.image.darkSrc,
-                    alt: pageData.entryPage.hero.image.alt,
-                    width: pageData.entryPage.hero.image.width,
-                    height: pageData.entryPage.hero.image.height,
-                  }
-                : undefined,
-              actions: pageData.entryPage.hero.actions?.map((a) => ({
-                theme: a.theme,
-                text: a.text,
-                link: a.link,
-              })),
-            }
-          : undefined,
-        features: pageData.entryPage.features?.map((f) => ({
-          icon: f.icon,
-          title: f.title,
-          details: f.details,
-          link: f.link,
-          linkText: f.linkText,
-        })),
-      }
-    : undefined;
-
   const result = mod.generateSsgHtml(
-    {
-      title: pageData.title,
-      description: pageData.description,
-      content: pageData.content,
-      toc: tocForRust,
-      lastUpdated: pageData.lastUpdated,
-      contributors: pageData.contributors,
-      path: pageData.path,
-      entryPage: entryPageForRust,
-      prev: pageData.prev,
-      next: pageData.next,
-      breadcrumbs: pageData.breadcrumbs,
-      layout:
-        typeof pageData.frontmatter.layout === "string" ? pageData.frontmatter.layout : undefined,
-      chrome: pageData.chrome,
-      robots:
-        typeof pageData.frontmatter.robots === "string" ? pageData.frontmatter.robots : undefined,
-      canonical:
-        typeof pageData.frontmatter.canonical === "string"
-          ? pageData.frontmatter.canonical
-          : undefined,
-      markdownSource: pageData.markdownSource,
-    },
+    toNapiSsgPageData(pageData),
     navGroupsForRust,
-    {
+    toNapiSsgConfig({
       siteName,
       base,
-      breadcrumbRootHref,
       ogImage,
-      siteUrl,
-      headValidation: headValidation || undefined,
-      theme: themeForRust,
+      theme,
       locale,
-      availableLocales: availableLocales ? toRustLocales(availableLocales) : undefined,
+      availableLocales,
       pagination,
+      readerChrome,
       breadcrumbs,
-      readerChrome: readerChrome
-        ? {
-            copy: readerChrome.copy,
-            externalLinks: readerChrome.externalLinks,
-            backToTop: readerChrome.backToTop,
-          }
-        : undefined,
       localeSwitcher: localeSwitcher || undefined,
       localePaths,
-      a11y: a11y ? { skipLinkLabel: a11y.skipLinkLabel } : undefined,
+      a11y,
       team,
       pageChrome,
-      jsonLd: jsonLd
-        ? {
-            breadcrumbs: jsonLd.breadcrumbs,
-            publisher: jsonLd.publisher,
-            siteUrl,
-            pageType: jsonLd.type,
-            graph: jsonLd.graph?.map((node) => JSON.stringify(node)),
-          }
-        : undefined,
-    },
+      breadcrumbRootHref,
+      jsonLd,
+      siteUrl,
+      headValidation,
+      iconsEnabled,
+    }),
   );
   const html = typeof result === "string" ? result : result.html;
   const diagnostics = typeof result === "string" ? [] : (result.diagnostics ?? []);
@@ -1570,6 +1602,19 @@ async function generateHtmlPages(
   collected: CollectedPageResults,
   errors: string[],
 ): Promise<GeneratedHtmlPage[]> {
+  const batchResult = await generateBuiltInHtmlPagesBatch(context, pageResults, errors);
+  if (batchResult) {
+    return batchResult;
+  }
+  return generateHtmlPagesSequential(context, pageResults, collected, errors);
+}
+
+async function generateHtmlPagesSequential(
+  context: BuildSsgContext,
+  pageResults: PageProcessResult[],
+  collected: CollectedPageResults,
+  errors: string[],
+): Promise<GeneratedHtmlPage[]> {
   const generatedPages: GeneratedHtmlPage[] = [];
 
   for (const pageResult of pageResults) {
@@ -1586,6 +1631,93 @@ async function generateHtmlPages(
   }
 
   return generatedPages;
+}
+
+async function generateBuiltInHtmlPagesBatch(
+  context: BuildSsgContext,
+  pageResults: PageProcessResult[],
+  errors: string[],
+): Promise<GeneratedHtmlPage[] | undefined> {
+  if (!canBatchBuiltInHtmlPages(context)) {
+    return undefined;
+  }
+
+  const mod = await importNapiModule();
+  const generatePages = (mod as NapiModule & { generateSsgHtmlPages?: NapiGenerateSsgHtmlPages })
+    .generateSsgHtmlPages;
+  if (!generatePages) {
+    return undefined;
+  }
+
+  const prepared = pageResults.map((pageResult) => {
+    const markdownSource = pageMarkdownSourceHref(context, pageResult);
+    const pageData = createSsgPageData(
+      pageResult,
+      context.ssgOptions.markdownSource?.copy && pageResult.source != null
+        ? markdownSource
+        : undefined,
+    );
+    return { pageResult, markdownSource, pageData };
+  });
+
+  const rendered = generatePages(
+    prepared.map(({ pageData }) => toNapiSsgPageData(pageData)),
+    convertNavGroupsForRust(context.navItems),
+    toNapiSsgConfig({
+      siteName: context.siteName,
+      base: context.base,
+      ogImage: context.ssgOptions.ogImage,
+      theme: context.ssgOptions.theme,
+      pagination: context.ssgOptions.pagination,
+      readerChrome: context.ssgOptions.readerChrome,
+      breadcrumbs: context.ssgOptions.breadcrumbs,
+      localeSwitcher: context.ssgOptions.localeSwitcher,
+      a11y: context.ssgOptions.a11y,
+      team: context.ssgOptions.team ?? { enabled: false, members: [] },
+      pageChrome: context.ssgOptions.pageChrome,
+      jsonLd: context.ssgOptions.jsonLd,
+      siteUrl: context.ssgOptions.siteUrl,
+      headValidation: context.ssgOptions.headValidation,
+      iconsEnabled: Boolean(context.options.icons?.enabled),
+    }),
+  );
+
+  const generatedPages: GeneratedHtmlPage[] = [];
+  for (let index = 0; index < prepared.length; index++) {
+    const page = prepared[index];
+    const result = rendered[index];
+    if (!page || !result) {
+      continue;
+    }
+    try {
+      reportHeadDiagnostics(result.diagnostics ?? [], context.ssgOptions.headValidation ?? false);
+      const html = injectSearchLocaleFilters(result.html, {
+        locales: [],
+        current: undefined,
+        defaultLocale: "en",
+      });
+      generatedPages.push({
+        inputPath: page.pageResult.inputPath,
+        outputPath: page.pageResult.routePaths.outputPath,
+        html: applyMarkdownSourceAlternate(context, html, page.markdownSource),
+      });
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : String(err);
+      errors.push(`Failed to generate HTML for ${page.pageResult.inputPath}: ${errorMessage}`);
+    }
+  }
+
+  return generatedPages;
+}
+
+function canBatchBuiltInHtmlPages(context: BuildSsgContext): boolean {
+  return (
+    !context.ssgOptions.render &&
+    !context.ssgOptions.bare &&
+    !context.options.i18n &&
+    !context.versionNavigation &&
+    !context.shouldGenerateOgImages
+  );
 }
 
 async function renderSsgPage(
@@ -2105,11 +2237,13 @@ async function writeGeneratedPages(
     }
   }
 
-  for (const page of optimizedOutput.pages) {
-    await fs.mkdir(path.dirname(page.outputPath), { recursive: true });
-    await fs.writeFile(page.outputPath, page.html, "utf-8");
-    generatedFiles.push(page.outputPath);
-  }
+  await Promise.all(
+    optimizedOutput.pages.map(async (page) => {
+      await fs.mkdir(path.dirname(page.outputPath), { recursive: true });
+      await fs.writeFile(page.outputPath, page.html, "utf-8");
+    }),
+  );
+  generatedFiles.push(...optimizedOutput.pages.map((page) => page.outputPath));
 
   const siteMaps = await writeSiteMapFiles({
     outDir: context.outDir,

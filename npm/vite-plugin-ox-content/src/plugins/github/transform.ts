@@ -94,6 +94,10 @@ export async function transformGitHub(
   repoDataMap?: Map<string, GitHubRepoData | null>,
   options?: GitHubOptions,
 ): Promise<string> {
+  if (!/<github\b/i.test(html)) {
+    return html;
+  }
+
   const mergedOptions = { ...defaultOptions, ...options };
   let dataMap = repoDataMap;
   if (!dataMap) {

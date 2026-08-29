@@ -79,6 +79,10 @@ export async function transformOgp(
   ogpDataMap?: Map<string, OgpData | null>,
   options?: OgpOptions,
 ): Promise<string> {
+  if (!/<ogcard\b/i.test(html)) {
+    return html;
+  }
+
   let dataMap = ogpDataMap;
   if (!dataMap) {
     dataMap = await prefetchOgpData(await collectOgpUrls(html), options);

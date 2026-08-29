@@ -76,7 +76,7 @@ describe("editThisPage", () => {
         urlPattern: "{repoUrl}/ui/edit?ref={branch}&file={path}",
       }),
       // `&` is escaped for the attribute, as any other href would be.
-    ).toBe("https://git.example.com/owner/repo/ui/edit?ref=main&#x26;file=docs/content/guide.md");
+    ).toBe("https://git.example.com/owner/repo/ui/edit?ref=main&amp;file=docs/content/guide.md");
     // Unchanged for the shape this option has always produced.
     expect(await editHref({ repoUrl: "https://github.com/owner/repo" })).toBe(
       "https://github.com/owner/repo/edit/main/docs/content/guide.md",

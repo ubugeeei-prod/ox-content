@@ -12,7 +12,7 @@ import {
   transformGitHub,
 } from "./plugins/github";
 import { summarizeCommitMessage } from "./plugins/github/source";
-import { transformBuiltinEmbeds } from "./plugins";
+import { transformBuiltinEmbeds, transformMermaidStatic } from "./plugins";
 import { collectOgpUrls, isSafeOgpUrl, transformOgp } from "./plugins/ogp";
 import { renderMarkdown } from "./render-markdown";
 import { transformMarkdown } from "./transform";
@@ -55,6 +55,21 @@ afterEach(() => {
 });
 
 describe("builtin embed input hardening", () => {
+  it("leaves HTML without GitHub embeds byte-for-byte untouched", async () => {
+    const html = "<p data-kind=plain>Just prose</p>";
+    await expect(transformGitHub(html)).resolves.toBe(html);
+  });
+
+  it("leaves HTML without Open Graph embeds byte-for-byte untouched", async () => {
+    const html = "<p data-kind=plain>Just prose</p>";
+    await expect(transformOgp(html)).resolves.toBe(html);
+  });
+
+  it("leaves HTML without Mermaid blocks byte-for-byte untouched", async () => {
+    const html = "<p data-kind=plain>Just prose</p>";
+    await expect(transformMermaidStatic(html)).resolves.toBe(html);
+  });
+
   it("accepts only safe GitHub repo references", async () => {
     expect(isSafeGitHubRepo("ubugeeei-prod/ox-content")).toBe(true);
     expect(isSafeGitHubRepo("../secret")).toBe(false);

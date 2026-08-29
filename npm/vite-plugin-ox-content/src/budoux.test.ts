@@ -92,7 +92,7 @@ describe("BudouX segmentation", () => {
 
     expect(result.html).toContain('<h1 id="日本語の本文です">日本語の|本文です。</h1>');
     expect(result.html).toContain("<code>日本語のコード</code>");
-    expect(result.html).toContain("&#x26; エンティティが|あります。");
+    expect(result.html).toContain("&amp; エンティティが|あります。");
     expect(result.html).toContain("<td>日本語</td>");
     expect(result.html).toContain("<td>表の|値です。</td>");
     expect(result.html).toContain('data-ox-island="Alert"');
