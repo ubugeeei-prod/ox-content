@@ -144,6 +144,11 @@
 }
 
 html {
+  /* The canvas background has to be owned by the root element, not inherited
+     from `body`: it is what the browser paints behind a cross-document view
+     transition and in the gap between two documents, and a `body`-only
+     background leaves that repaint to the UA default. */
+  background-color: var(--octc-color-bg);
   -webkit-text-size-adjust: 100%;
   text-size-adjust: 100%;
   scroll-padding-top: calc(var(--octc-header-height) + 1rem);

@@ -88,12 +88,25 @@ const themeToggle = document.querySelector(".theme-toggle"),
       return "system";
     }
   },
+  // `theme-color` tracks the system scheme through its media query, so a forced
+  // theme leaves the browser painting its own window — and the gap it shows
+  // between two documents mid-navigation — in the opposite color. Pinning the
+  // matching meta and muting the other keeps the two in step.
+  syncThemeColor = (theme) => {
+    for (const meta of document.querySelectorAll('meta[name="theme-color"][media]')) {
+      const base = (meta.dataset.octcMedia ??= meta.media),
+        scheme = base.includes("dark") ? "dark" : "light";
+      meta.media =
+        theme === "light" || theme === "dark" ? (theme === scheme ? "all" : "not all") : base;
+    }
+  },
   applyThemePreference = (theme) => {
     if (theme === "light" || theme === "dark") {
       document.documentElement.setAttribute("data-theme", theme);
     } else {
       document.documentElement.removeAttribute("data-theme");
     }
+    syncThemeColor(theme);
   },
   setTheme = (theme) => {
     if (theme !== "light" && theme !== "dark") return;

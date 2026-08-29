@@ -178,6 +178,11 @@ expression: "super::snapshot_text(&html)"
 }
 
 html {
+  /* The canvas background has to be owned by the root element, not inherited
+     from `body`: it is what the browser paints behind a cross-document view
+     transition and in the gap between two documents, and a `body`-only
+     background leaves that repaint to the UA default. */
+  background-color: var(--octc-color-bg);
   -webkit-text-size-adjust: 100%;
   text-size-adjust: 100%;
   scroll-padding-top: calc(var(--octc-header-height) + 1rem);
@@ -2280,6 +2285,54 @@ a:hover {
   @view-transition {
     navigation: auto;
   }
+
+  /* The header, sidebar and mobile footer are identical on both sides of a docs
+     navigation, so leaving them inside the `root` snapshot animates them for no
+     reason. Naming them lifts each into its own group, which the UA leaves
+     alone when the old and new snapshots match. The names are the ones the
+     theme skins already use, so a skin that animates them still wins. Selectors
+     stay anchored to the layout: a duplicate name anywhere in the document
+     aborts the whole transition, and `.header` is a plausible class for page
+     content to carry. */
+  body > .header {
+    view-transition-name: octc-header;
+  }
+  #ox-sidebar {
+    view-transition-name: octc-sidebar;
+  }
+  body > .mobile-footer {
+    view-transition-name: octc-mobile-footer;
+  }
+
+  /* The UA cross-fade composites the two root snapshots with `plus-lighter`.
+     That only stays neutral while both snapshots are fully opaque: any region
+     the root paints as transparent — the page background included, when it is
+     propagated to the canvas from `body` instead of being owned by `html` — is
+     added to itself and the page visibly brightens partway through. Holding the
+     outgoing snapshot opaque and fading the incoming one in over it keeps the
+     stack at full coverage for the whole animation, so neither the blend nor
+     the browser's own base color can show through. */
+  ::view-transition-old(root),
+  ::view-transition-new(root) {
+    mix-blend-mode: normal;
+  }
+
+  ::view-transition-old(root) {
+    animation: none;
+    opacity: 1;
+  }
+
+  ::view-transition-new(root) {
+    animation-name: octc-view-transition-in;
+    animation-duration: var(--octc-motion-base, 150ms);
+    animation-timing-function: var(--octc-motion-ease, ease);
+  }
+}
+
+@keyframes octc-view-transition-in {
+  from {
+    opacity: 0;
+  }
 }
 
 /* ox-content:css:mpa-navigation:end */
@@ -2472,12 +2525,25 @@ const themeToggle = document.querySelector(".theme-toggle"),
       return "system";
     }
   },
+  // `theme-color` tracks the system scheme through its media query, so a forced
+  // theme leaves the browser painting its own window — and the gap it shows
+  // between two documents mid-navigation — in the opposite color. Pinning the
+  // matching meta and muting the other keeps the two in step.
+  syncThemeColor = (theme) => {
+    for (const meta of document.querySelectorAll('meta[name="theme-color"][media]')) {
+      const base = (meta.dataset.octcMedia ??= meta.media),
+        scheme = base.includes("dark") ? "dark" : "light";
+      meta.media =
+        theme === "light" || theme === "dark" ? (theme === scheme ? "all" : "not all") : base;
+    }
+  },
   applyThemePreference = (theme) => {
     if (theme === "light" || theme === "dark") {
       document.documentElement.setAttribute("data-theme", theme);
     } else {
       document.documentElement.removeAttribute("data-theme");
     }
+    syncThemeColor(theme);
   },
   setTheme = (theme) => {
     if (theme !== "light" && theme !== "dark") return;
