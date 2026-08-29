@@ -374,96 +374,216 @@ oxContent({
 
 ## プロバイダカード
 
-プロバイダカードは、地図、記事、package、playground、動画、デザインリンク、
-スライド、コミュニティ、social post を静的な preview として描画します。既定で
-第三者スクリプトは読み込まず、安定した metadata は属性から直接渡せます。
+プロバイダカードは、地図、記事、package、playground、動画、デザインファイル、
+スライド、コミュニティ投稿を静的な preview として描画します。第三者の widget
+スクリプトは一切読み込みません。カードは transform が出力した HTML そのもので、
+値はビルド時に fetch したものか、属性で渡したもののどちらかです。
 
-次のカードはビルド時のネットワークリクエストなしで描画されます。
+provider が embed URL を公開しているカードは `embed` 属性も受け取ります。渡すと
+metadata の下に遅延読み込みの iframe が付き、リンクではなく現物がページに出ます。
+`embed` は provider ごとに検証され、その provider 自身の embed host と path だけを
+受け付けます。それ以外は描画せず捨てます。
 
-<CratesIo url="https://crates.io/crates/serde" name="serde" description="Rust のシリアライズフレームワーク" version="1.0.219" downloads="512M"></CratesIo>
+以下のカードはすべて実際に描画されたものです。各カードの上にあるタグがその出力元です。
 
-<PyPI url="https://pypi.org/project/requests" name="requests" description="HTTP for Humans" version="2.32.3"></PyPI>
+### 地図
 
-<DockerHub url="https://hub.docker.com/_/nginx" name="nginx" description="Nginx の公式ビルド"></DockerHub>
-
-<JSFiddle url="https://jsfiddle.net/ubugeeei/abc123/2/" title="レイアウト検証" author="ubugeeei"></JSFiddle>
-
-<Observable url="https://observablehq.com/@d3/bar-chart" title="棒グラフ" author="d3"></Observable>
+`embeds.googleMaps` は `place` と `address` から場所カードを描画します。Google Maps
+の embed URL を `embed` に渡すと、地図そのものを載せたカードになります。
 
 ```mdx
 <GoogleMaps
   url="https://www.google.com/maps/place/Tokyo+Station/"
-  place="Tokyo Station"
-  address="1 Chome Marunouchi, Chiyoda City"
+  place="東京駅"
+  address="東京都千代田区丸の内 1-9-1"
+  embed="https://www.google.com/maps/embed?pb=..."
 />
+```
 
+<GoogleMaps url="https://www.google.com/maps/place/Tokyo+Station/" place="東京駅" address="東京都千代田区丸の内 1-9-1" embed="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3241.2!2d139.7645!3d35.6812!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x60188bfbd89f700b%3A0x277c49ba34ed38!2z5p2x5Lqs6aeF!5e0!3m2!1sja!2sjp!4v1700000000000!5m2!1sja!2sjp"></GoogleMaps>
+
+`embed` を外すと同じタグがリンクのみのカードになります。閲覧時に Google へ
+リクエストを飛ばしたくないページ向けです。
+
+<GoogleMaps url="https://www.google.com/maps/place/Tokyo+Station/" place="東京駅" address="東京都千代田区丸の内 1-9-1"></GoogleMaps>
+
+`embed` として受け付けるのは `https://www.google.com/maps/embed…` だけです。場所 URL、
+`maps.app.goo.gl` の短縮リンク、その他の host は無視され、上のリンクのみのカードに
+フォールバックします。
+
+### 記事
+
+`embeds.qiita`、`embeds.zenn`、`embeds.note` は既定でタイトル・著者・カウントを
+fetch します。このサイトのように `fetch: false` にすると、カードは属性だけから
+組み立てられます。ビルドはオフラインのままで、数値も書いた値に固定されます。
+
+```mdx
 <Qiita
-  url="https://qiita.com/ubugeeei/items/abcdef123456"
-  title="Rust docs pipeline"
-  author="ubugeeei"
-  tags="Rust, Markdown"
-  likes="42"
+  url="https://qiita.com/ubugeeei/items/73a2416fd46cfe6311a8"
+  title="【日本語版】All we know about Vue 3’s Vapor Mode"
+  author="@ubugeeei"
+  tags="Vue.js, compiler, VaporMode"
+  likes="32"
+  dateTime="2023-12-17"
 >
-  Static cards keep builds predictable.
+  Vapor Mode は template を DOM 操作へ直接コンパイルします。
 </Qiita>
+```
 
-<NpmPackage url="https://www.npmjs.com/package/vite" />
-<CratesIo url="https://crates.io/crates/serde" />
-<PyPI url="https://pypi.org/project/requests" />
-<DockerHub url="https://hub.docker.com/_/nginx" />
+<Qiita url="https://qiita.com/ubugeeei/items/73a2416fd46cfe6311a8" title="【日本語版】All we know about Vue 3’s Vapor Mode" author="@ubugeeei" tags="Vue.js, compiler, VaporMode" likes="32" dateTime="2023-12-17" dateLabel="2023-12-17">Vapor Mode は仮想 DOM を組み立てず、template を DOM 操作へ直接コンパイルします。</Qiita>
 
-<CodePen url="https://codepen.io/ubugeeei/pen/abc123" />
-<CodeSandbox url="https://codesandbox.io/p/sandbox/vite-react-demo" />
+<Zenn url="https://zenn.dev/comm_vue_nuxt/articles/reactive-props-destructure" title="Reactive Props Destructure を支える技術" author="@ubugeeei" tags="Vue.js, reactivity" likes="58" dateTime="2024-09-08" dateLabel="2024-09-08">分割代入した props がなぜリアクティブなままでいられるのか。</Zenn>
 
-<JSFiddle url="https://jsfiddle.net/ubugeeei/abc123/2/" />
+<Note url="https://note.com/ubugeeei/n/n2ac2b02043da" title="【Vue Fes Japan】ハンズオン企画の裏テーマ！？" author="@ubugeeei" likes="11" dateTime="2024-10-31" dateLabel="2024-10-31">ハンズオンの題材に Nuxt Tutorial を選んだ理由。</Note>
 
-<Observable url="https://observablehq.com/@d3/bar-chart" />
+### パッケージレジストリ
 
-<Vimeo url="https://vimeo.com/123456789" />
+`embeds.packageRegistry` は npm、crates.io、PyPI、Docker Hub に対応し、provider が
+持つ version / tag URL も扱えます。`version`、`downloads`、`license`、`stars` は
+メトリクスとして描画されます。
 
-<Twitch url="https://www.twitch.tv/videos/40464143" />
+```mdx
+<NpmPackage url="https://www.npmjs.com/package/vite" version="7.1.0" license="MIT" downloads="31M/week" />
+```
 
-<Twitch url="https://clips.twitch.tv/FriendlySlug" />
+<NpmPackage url="https://www.npmjs.com/package/vite" name="vite" description="次世代フロントエンドツーリング" version="7.1.0" license="MIT" downloads="31M/week"></NpmPackage>
 
-<Twitch url="https://www.twitch.tv/twitchdev" />
+<CratesIo url="https://crates.io/crates/serde" name="serde" description="Rust のシリアライズフレームワーク" version="1.0.219" license="MIT OR Apache-2.0" downloads="512M"></CratesIo>
 
+<PyPI url="https://pypi.org/project/requests" name="requests" description="HTTP for Humans" version="2.32.3" license="Apache-2.0" downloads="1.2B/month"></PyPI>
+
+<DockerHub url="https://hub.docker.com/_/nginx" name="nginx" description="Nginx の公式ビルド" version="1.27-alpine" pulls="10B+"></DockerHub>
+
+### Playground
+
+`embeds.playgrounds` は CodePen、CodeSandbox、JSFiddle、Observable、Replit を
+まとめて扱います。それぞれ自身の embed URL を受け取れるので、説明ではなく
+動いている sandbox をそのまま見せられます。
+
+```mdx
+<CodePen
+  url="https://codepen.io/miriamsuzanne/pen/BEvjbm"
+  title="Angled Background CSS-only Mixin"
+  author="@miriamsuzanne"
+  embed="https://codepen.io/miriamsuzanne/embed/BEvjbm"
+/>
+```
+
+<CodePen url="https://codepen.io/miriamsuzanne/pen/BEvjbm" title="Angled Background CSS-only Mixin" author="@miriamsuzanne" language="HTML, CSS" embed="https://codepen.io/miriamsuzanne/embed/BEvjbm"></CodePen>
+
+<Observable url="https://observablehq.com/@d3/bar-chart" title="棒グラフ" author="@d3" language="Observable JavaScript" embed="https://observablehq.com/embed/@d3/bar-chart"></Observable>
+
+<JSFiddle url="https://jsfiddle.net/zalun/NmudS/" title="JSFiddle embedding example" author="@zalun" language="JavaScript" embed="https://jsfiddle.net/zalun/NmudS/embedded/result,js,html,css/"></JSFiddle>
+
+CodeSandbox だけは何も fetch しません。カードは URL と渡した属性だけから組み立てる
+ので、削除済みの sandbox でもビルドを落とさずカードを描画します。sandbox の
+指定方法は 4 通りすべて受け付けます（`/s/{id}`、`/p/sandbox/{id}`、
+`/p/devbox/{id}`、`/embed/{id}`）。
+
+<CodeSandbox url="https://codesandbox.io/s/new" title="React starter" author="CodeSandbox" runtime="Browser" language="JavaScript"></CodeSandbox>
+
+<Replit url="https://replit.com/@replit/Nodejs" title="Node.js" author="@replit" runtime="Node.js"></Replit>
+
+### デザインファイルとスライド
+
+`embeds.figma` と `embeds.googleSlides` は provider の共有 URL を受け取ります。
+Google Slides は `/embed` URL も受け取り、デッキをそのままページ内に描画します。
+
+```mdx
+<GoogleSlides
+  url="https://docs.google.com/presentation/d/1EAYk.../edit"
+  title="Baby album"
+  slides="9"
+  embed="https://docs.google.com/presentation/d/1EAYk.../embed"
+/>
+```
+
+<GoogleSlides url="https://docs.google.com/presentation/d/1EAYk18WDjIG-zp_0vLm3CsfQh_i8eXc67Jo2O9C6Vuc/edit" title="Baby album" author="Google Slides のサンプル" slides="9" embed="https://docs.google.com/presentation/d/1EAYk18WDjIG-zp_0vLm3CsfQh_i8eXc67Jo2O9C6Vuc/embed"></GoogleSlides>
+
+Figma は `file`、`design`、`board`、`proto`、`slides` と Community のリンクを
+受け付けます。ファイルキーは種別の次のセグメントで、その後ろの人間向け slug は
+無視されます。
+
+<Figma url="https://www.figma.com/community/file/1035203688168086460/material-3-design-kit" title="Material 3 Design Kit" author="Google" project="Material Design"></Figma>
+
+### 動画とターミナル録画
+
+`embeds.vimeo`、`embeds.loom`、`embeds.asciinema`、`embeds.twitch` は `duration`、
+`views`、`status` をメトリクスに持つ動画カードを描画します。Vimeo、Loom、
+asciinema は player URL を `embed` として受け取れます。
+
+```mdx
+<Vimeo url="https://vimeo.com/76979871" title="The New Vimeo Player" embed="https://player.vimeo.com/video/76979871" />
+```
+
+<Vimeo url="https://vimeo.com/76979871" title="The New Vimeo Player (You Know, For Videos)" author="Vimeo Staff" duration="1:03" embed="https://player.vimeo.com/video/76979871"></Vimeo>
+
+<Asciinema url="https://asciinema.org/a/569727" title="Star Wars: Episode IV" author="asciinema" duration="30:00" embed="https://asciinema.org/a/569727/iframe"></Asciinema>
+
+<Loom url="https://www.loom.com/share/09b1aa507cb846138847bf8e98b56a71" title="Loom product overview" author="Loom" embed="https://www.loom.com/embed/09b1aa507cb846138847bf8e98b56a71"></Loom>
+
+Twitch だけは例外です。player は埋め込み先ドメインを宣言しないと読み込みを拒否する
+ため、player URL は `embeds.twitch.parent` に安全なドメインを指定したときだけ生成
+されます。指定がなければカードは静的なままなので、`title`、`channel`、`duration`、
+`status`、`views`、`image` で見せる価値のあるカードにします。
+
+<Twitch url="https://www.twitch.tv/twitchdev" title="TwitchDev" channel="twitchdev" status="Offline" views="1.4M"></Twitch>
+
+### コミュニティと social post
+
+`embeds.discord`、`embeds.fediverse`、`embeds.facebook`、`embeds.threads`、
+`embeds.instagram` は同じカード形状を共有します（著者、本文、時刻、リアクション数）。
+`<Fediverse>`、`<Mastodon>`、`<Misskey>`、`<Mixi2>` は同じオプションで、instance は
+URL から読み取ります。
+
+```mdx
 <Mastodon
-  url="https://mastodon.social/@docs/111"
-  author="@docs@mastodon.social"
-  replies="3"
-  reposts="5"
-  likes="8"
+  url="https://mastodon.social/@Mastodon/117117221397911074"
+  author="@Mastodon@mastodon.social"
+  reposts="622"
+  likes="954"
 >
-  Fediverse release note.
+  Mastodon 5.0 の最初のお披露目。
 </Mastodon>
 ```
 
-| オプション | 既定      | 目的                                                  |
-| ---------- | --------- | ----------------------------------------------------- |
-| `fetch`    | `true`    | 記事 / package / playground / video metadata を取る。 |
-| `timeout`  | `10000`   | metadata リクエストのタイムアウト（ミリ秒）。         |
-| `cache`    | `true`    | このビルド中に取った metadata をメモリに残す。        |
-| `cacheTTL` | `3600000` | キャッシュの鮮度期間（ミリ秒）。                      |
-| `iframe`   | `false`   | playground/video の lazy iframe URL を追加する。      |
-| `parent`   | `[]`      | Twitch iframe の parent domain。                      |
+<Mastodon url="https://mastodon.social/@Mastodon/117117221397911074" author="@Mastodon@mastodon.social" reposts="622" likes="954" dateTime="2026-08-18" dateLabel="2026-08-18">Discovery Week の結果公開に続いて、Mastodon 5.0 を最初にお披露目します。</Mastodon>
 
-CodeSandbox はサンドボックスの 4 つの URL 形式すべてを受け付けます（`/s/{id}`、`/p/sandbox/{id}`、`/p/devbox/{id}`、`/embed/{id}`）。他のプレイグラウンドと違いフェッチは行いません。カードは URL と渡した属性だけから組み立てるので、削除済みのサンドボックスでもビルドを失敗させず、そこを指すカードを描画します。
+<Discord url="https://discord.com/invite/vue" title="Vue Land" server="Vue Land" channel="#vue-vapor">Vue とそのエコシステムのコミュニティサーバ。</Discord>
 
-`cache` だけならビルド 1 回分の寿命です。`persistCache: true` にするとメタデータをディスクにも書くので、クリーンビルドや新しい CI ワーカーでも、前回取得した内容を再利用して各プロバイダに問い合わせ直しません。何も見つからなかった照会も記憶するため、落ちているプロバイダを毎ビルド埋め込みごとに再試行することはありません。壊れたエントリはビルドを失敗させず破棄して取り直し、ディレクトリはハッシュをキーにするので、プロバイダ URL がその外に出ることはありません。
+<Facebook url="https://www.facebook.com/facebook" title="Facebook" author="Facebook">著者・本文・カウントを渡すだけで、Facebook の SDK は読み込みません。</Facebook>
 
-`<Fediverse>`、`<Mastodon>`、`<Misskey>`、`<Mixi2>` は
-`embeds.fediverse` を共有します。Google Maps は安全な Google Maps `embed`
-URL を渡したときだけ lazy iframe も出し、それ以外はリンクカードになります。
-package registry カードは npm、crates.io、PyPI、Docker Hub の package URL
-に対応し、provider が持つ version / tag URL も扱えます。未対応 scheme、
-認証情報つき URL、別 host の URL、取得できない metadata は、ビルドを落とさず
-元のタグかリンクカードへフォールバックします。package metadata fetch の失敗時は、
-status や error reason を含む `[ox-content]` warning も出します。
-Vimeo card は Vimeo の public oEmbed endpoint から metadata を取得します。
-Twitch card は既定では認証 API を呼ばないため、よりリッチな静的 metadata が必要なときは
-`title`、`channel`、`duration`、`status`、`views`、`image` を渡します。
-Twitch player URL は Twitch の embed 要件に合わせ、安全な `parent` domain が設定された
-ときだけ生成されます。
+<Threads url="https://www.threads.net/@instagram" title="@instagram on Threads" author="@instagram" replies="1.2K" likes="18K">Threads の投稿も同じカードで描画されます。</Threads>
+
+<Instagram url="https://www.instagram.com/instagram/" title="@instagram" author="@instagram" likes="24K">Instagram カードも静的なままで、embed スクリプトは読み込みません。</Instagram>
+
+### プロバイダのオプション
+
+| オプション     | 既定値                        | 用途                                              |
+| -------------- | ----------------------------- | ------------------------------------------------- |
+| `fetch`        | `true`                        | 記事・package・playground・動画の metadata を取得 |
+| `timeout`      | `10000`                       | metadata リクエストのタイムアウト (ms)            |
+| `cache`        | `true`                        | このビルド中、metadata をメモリにキャッシュ       |
+| `cacheTTL`     | `3600000`                     | 鮮度のウィンドウ (ms)                             |
+| `persistCache` | `false`                       | ビルドをまたいで metadata をディスクに保持        |
+| `cacheDir`     | `.cache/ox-content/providers` | 永続キャッシュのディレクトリ                      |
+| `iframe`       | `false`                       | playground / 動画の lazy iframe URL を付与        |
+| `parent`       | `[]`                          | Twitch iframe の parent ドメイン                  |
+
+`iframe` は *導出* される embed の話です。渡されたページ URL から provider が player
+URL を組み立てられるようにします。明示的な `embed` 属性はどちらの設定でも効きます。
+
+`cache` だけなら 1 ビルド分の寿命です。`persistCache: true` にすると metadata を
+ディスクにも書くので、クリーンビルドや新しい CI ワーカーが前回の取得結果を再利用します。
+見つからなかった lookup も記憶するため、落ちている provider をビルドのたびに embed の
+数だけ再試行することはありません。壊れたエントリはビルドを落とさず破棄して取り直し、
+ディレクトリは hash で鍵付けされるので、provider URL がその外へ出ることはありません。
+
+未対応 scheme、認証情報つき URL、別 host の URL、取得できない metadata は、ビルドを
+落とさず元のタグかリンクカードへフォールバックします。package metadata fetch の失敗時は、
+status や error reason を含む `[ox-content]` warning も出します。Vimeo card は Vimeo の
+public oEmbed endpoint から metadata を取得し、Twitch card は既定では認証 API を
+呼びません。
 
 ## Spotify
 

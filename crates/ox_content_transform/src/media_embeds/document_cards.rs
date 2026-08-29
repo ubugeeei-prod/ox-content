@@ -36,6 +36,9 @@ pub(super) fn render_figma(element: &ComponentElement<'_>) -> Option<String> {
     let segments = path_segments(parsed.path);
     let (kind, key) = match segments.as_slice() {
         [kind @ ("file" | "design" | "board" | "proto" | "slides"), key, ..] => (*kind, *key),
+        // A Community file is the Figma link most likely to be pasted into a
+        // document, and it carries the same key one segment deeper.
+        ["community", kind @ ("file" | "board" | "proto" | "slides"), key, ..] => (*kind, *key),
         _ => return None,
     };
     safe_file_key(key)?;

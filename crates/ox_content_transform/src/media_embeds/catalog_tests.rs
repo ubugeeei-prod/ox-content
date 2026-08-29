@@ -67,6 +67,7 @@ fn figma_file_design_and_prototype_all_render() {
         "https://www.figma.com/design/AbC123/My-Design",
         "https://www.figma.com/proto/AbC123/My-Design",
         "https://www.figma.com/board/AbC123/My-Board",
+        "https://www.figma.com/community/file/AbC123/Design-Kit",
     ] {
         let out = render_catalog(&format!(r#"<figma url="{url}"></figma>"#));
         assert!(out.contains("ox-provider-card--figma"), "{url}: {out}");
