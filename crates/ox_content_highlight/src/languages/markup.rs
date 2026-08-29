@@ -120,5 +120,13 @@ pub(super) fn grammars() -> &'static [Grammar] {
             tree_sitter_cmake::INJECTIONS_QUERY,
             "",
         ),
+        grammar!(
+            "vimscript",
+            ["vimscript", "vim"],
+            tree_sitter_vim::language(),
+            include_str!("../../queries/vim-highlights.scm"),
+            tree_sitter_vim::INJECTIONS_QUERY,
+            "",
+        ),
     ]
 }

@@ -54,3 +54,33 @@ endif()
     assert!(html.contains("&lt;"), "{html}");
     assert!(html.contains("&amp;"), "{html}");
 }
+
+#[test]
+fn vimscript_highlights_functions_commands_ranges_strings_and_comments() {
+    let code = r#"function! s:Run(cmd) abort
+  let l:output = execute(a:cmd)
+  1,3s/foo/bar/g
+  lua print("hi")
+  echo "done < &"
+  " production corpus shape
+endfunction
+"#;
+
+    let html = highlight_to_html(code, "vimscript").expect("vimscript is supported");
+    assert_eq!(visible_text(&html), code);
+    assert_text_has_capture_token(&html, "function", "keyword");
+    assert_text_has_capture_token(&html, "Run", "function");
+    assert_text_has_capture_token(&html, "cmd", "variable.parameter");
+    assert_text_has_capture_token(&html, "let", "keyword");
+    assert_text_has_capture_token(&html, "l:", "module");
+    assert_text_has_capture_token(&html, "execute", "function");
+    assert_text_has_capture_token(&html, "1", "number");
+    assert_text_has_capture_token(&html, "foo/bar/g", "keyword");
+    assert_text_has_capture_token(&html, "lua", "keyword");
+    assert_text_has_capture_token(&html, "echo", "keyword");
+    assert_text_has_capture_token(&html, "\"done < &\"", "string");
+    assert_text_has_capture_token(&html, "\" production corpus shape", "comment");
+    assert_text_has_capture_token(&html, "endfunction", "keyword");
+    assert!(html.contains("&lt;"), "{html}");
+    assert!(html.contains("&amp;"), "{html}");
+}

@@ -76,6 +76,7 @@ tree-sitter 系列と合うメンテされた専用文法がまだありませ�
 | HCL        | `hcl`, `terraform`, `tf`, `tfvars`                                 |
 | Make       | `make`, `makefile`, `mk`                                           |
 | CMake      | `cmake`                                                            |
+| Vimscript  | `vimscript`, `vim`                                                 |
 | Diff       | `diff`, `patch`, `udiff`                                           |
 | PowerShell | `powershell`, `pwsh`, `ps1`, `psm1`                                |
 | Zig        | `zig`, `zon`                                                       |
@@ -102,6 +103,13 @@ end
 cmake_minimum_required(VERSION 3.28)
 project(App)
 add_executable(app main.cpp)
+```
+
+```vimscript
+function! s:Run(cmd) abort
+  let l:output = execute(a:cmd)
+  echo "done"
+endfunction
 ```
 
 未知のタグは普通の `<pre><code>` のままです。例: `perl`、`elm`、
