@@ -62,6 +62,7 @@ fn aliases_resolve_to_the_same_grammar() {
     for alias in ["makefile", "make", "mk"] {
         assert!(supports(alias), "{alias} should be supported");
     }
+    assert!(supports("cmake"));
     for alias in ["powershell", "pwsh", "ps1"] {
         assert!(supports(alias), "{alias} should be supported");
     }
@@ -201,6 +202,7 @@ fn added_grammars_tokenize_and_escape() {
         ("local s = \"a < b & c\"\n", "lua"),
         ("variable \"x\" {\n  default = \"a < b & c\"\n}\n", "terraform"),
         ("# a < b & c\nall:\n\techo hi\n", "makefile"),
+        ("set(NAME \"a < b & c\")\n", "cmake"),
         ("Write-Host \"a < b & c\"\n", "powershell"),
         ("-- a < b & c\nmain = putStrLn \"hi\"\n", "haskell"),
         ("# a < b & c\ndefmodule M do\nend\n", "elixir"),

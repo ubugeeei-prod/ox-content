@@ -112,5 +112,13 @@ pub(super) fn grammars() -> &'static [Grammar] {
             "",
             "",
         ),
+        grammar!(
+            "cmake",
+            ["cmake"],
+            tree_sitter_cmake::LANGUAGE,
+            include_str!("../../queries/cmake-highlights.scm"),
+            tree_sitter_cmake::INJECTIONS_QUERY,
+            "",
+        ),
     ]
 }
