@@ -1,0 +1,37 @@
+/* Same-document colour-scheme change. Every rule is scoped to an attribute the
+   runtime sets for the length of one theme toggle, so none of it can reach the
+   cross-document `@view-transition` used for MPA navigation — that transition
+   needs the UA cross-fade left alone. */
+
+/* The circle is drawn by clipping one snapshot over the other, so the UA
+   cross-fade has to stop first: two half-opacity snapshots would show the clip
+   through the layer beneath it. */
+:root[data-ox-theme-transition]::view-transition-old(root),
+:root[data-ox-theme-transition]::view-transition-new(root) {
+  animation: none;
+  mix-blend-mode: normal;
+}
+
+/* Whichever snapshot the circle is drawn on has to sit on top of the other. */
+:root[data-ox-theme-transition="expand"]::view-transition-old(root) {
+  z-index: 1;
+}
+:root[data-ox-theme-transition="expand"]::view-transition-new(root) {
+  z-index: 2;
+}
+:root[data-ox-theme-transition="shrink"]::view-transition-old(root) {
+  z-index: 2;
+}
+:root[data-ox-theme-transition="shrink"]::view-transition-new(root) {
+  z-index: 1;
+}
+
+/* Element-level colour transitions would animate underneath the snapshot and
+   bleed the old palette into the new one. The runtime holds this attribute
+   only while the theme is mutated, and drops it once both snapshots exist. */
+:root[data-ox-theme-transition-suppress],
+:root[data-ox-theme-transition-suppress] *,
+:root[data-ox-theme-transition-suppress] *::before,
+:root[data-ox-theme-transition-suppress] *::after {
+  transition: none !important;
+}

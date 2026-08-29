@@ -48,6 +48,7 @@ export const STYLE_ENTRIES = /** @type {const} */ ([
   { name: "citations.css", sources: ["plugins/citations.css"] },
   { name: "not-by-ai.css", sources: ["plugins/not-by-ai.css"] },
   { name: "reader-chrome.css", sources: ["html/reader_chrome.css"] },
+  { name: "theme-transition.css", sources: ["html/theme_transition.css"] },
 ]);
 
 export const ALL_STYLESHEET = "all.css";

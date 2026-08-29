@@ -23,6 +23,7 @@ use super::section_index::SECTION_INDEX_CSS;
 use super::social::{generate_mobile_social_links_html, generate_social_links_html};
 use super::team::TEAM_CSS;
 use super::theme_css::generate_theme_css;
+use super::theme_transition::{THEME_TRANSITION_CSS, toggle_transition_enabled};
 use super::urls::with_base;
 use super::utils::{
     contributor_views, format_last_updated, generate_toc_html, html_locale_attrs,
@@ -77,6 +78,10 @@ pub(super) fn generate_html_inner(
 
     if view_transitions_enabled(theme) {
         css_sections.push(wrap_css_section("mpa-navigation", MPA_NAVIGATION_CSS));
+    }
+    let theme_transition = toggle_transition_enabled(theme);
+    if theme_transition {
+        css_sections.push(wrap_css_section("theme-transition", THEME_TRANSITION_CSS));
     }
     if is_entry_page {
         css_sections.push(wrap_css_section("entry", ENTRY_CSS));
@@ -243,6 +248,7 @@ pub(super) fn generate_html_inner(
         locale_switcher_html: &locale_switcher_html,
         markdown_source_chrome,
         reader_needs_js: reader_chrome.needs_js(),
+        theme_transition,
     });
     let self_hosted_icons = theme_has_self_hosted_icons(theme);
     let social_links_html = theme

@@ -28,6 +28,7 @@ mod social;
 mod team;
 mod theme;
 mod theme_css;
+mod theme_transition;
 mod urls;
 mod utils;
 

@@ -78,6 +78,16 @@
         "default": "./dist/reader-chrome-client.cjs"
       }
     },
+    "./theme-transition/client": {
+      "import": {
+        "types": "./dist/theme-transition-client.d.mts",
+        "default": "./dist/theme-transition-client.mjs"
+      },
+      "require": {
+        "types": "./dist/theme-transition-client.d.cts",
+        "default": "./dist/theme-transition-client.cjs"
+      }
+    },
     "./twitter/client": {
       "import": {
         "types": "./dist/twitter-client.d.mts",
@@ -116,14 +126,15 @@
     "./styles/graphviz.css": "./dist/styles/graphviz.css",
     "./styles/citations.css": "./dist/styles/citations.css",
     "./styles/not-by-ai.css": "./dist/styles/not-by-ai.css",
-    "./styles/reader-chrome.css": "./dist/styles/reader-chrome.css"
+    "./styles/reader-chrome.css": "./dist/styles/reader-chrome.css",
+    "./styles/theme-transition.css": "./dist/styles/theme-transition.css"
   },
   "publishConfig": {
     "access": "public",
     "provenance": true
   },
   "scripts": {
-    "build": "vp pack && node scripts/build-reader-chrome-types.mjs && node scripts/build-standalone-entries.mjs && node scripts/build-reader-chrome-client.mjs && node scripts/build-twitter-client.mjs && node scripts/copy-component-styles.mjs",
+    "build": "vp pack && node scripts/build-reader-chrome-types.mjs && node scripts/build-standalone-entries.mjs && node scripts/build-reader-chrome-client.mjs && node scripts/build-theme-transition-client.mjs && node scripts/build-twitter-client.mjs && node scripts/copy-component-styles.mjs",
     "build:styles": "node scripts/copy-component-styles.mjs",
     "dev": "vp pack --watch",
     "typecheck": "tsgo --noEmit",

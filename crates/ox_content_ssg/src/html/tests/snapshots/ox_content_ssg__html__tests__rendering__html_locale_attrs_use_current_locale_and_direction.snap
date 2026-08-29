@@ -2576,7 +2576,18 @@ window.addEventListener("storage", (event) => {
   if (event.key === "theme") syncThemePreference();
 });
 
-themeToggle?.addEventListener("click", () => setTheme(getTheme() === "dark" ? "light" : "dark"));
+// The circular reveal is opt-in and ships as its own section, so the toggle
+// falls back to an immediate switch when it is not on the page.
+const toggleTheme = (event) => {
+  const next = getTheme() === "dark" ? "light" : "dark";
+  if (typeof applyThemeTransition === "function") {
+    void applyThemeTransition({ event, nextTheme: next, apply: () => setTheme(next) });
+  } else {
+    setTheme(next);
+  }
+};
+
+themeToggle?.addEventListener("click", toggleTheme);
 
 const markdownTableScrollLabel = () =>
   (document.documentElement.lang || "").toLowerCase().startsWith("ja")
@@ -2710,7 +2721,7 @@ mobileSearchBtn?.addEventListener("click", () => {
   void openSearch();
 });
 
-mobileThemeBtn?.addEventListener("click", () => setTheme(getTheme() === "dark" ? "light" : "dark"));
+mobileThemeBtn?.addEventListener("click", toggleTheme);
 
 document.querySelectorAll(".ox-api-controls").forEach((controls) => {
   const targetSelector = controls.getAttribute("data-ox-api-target");

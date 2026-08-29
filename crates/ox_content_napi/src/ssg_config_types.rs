@@ -1,0 +1,159 @@
+//! Page and site configuration passed from JavaScript.
+//!
+//! Split out of `ssg_theme_types`, which holds the theme *shape*; these are the
+//! per-build and per-page options that travel alongside it.
+
+use napi_derive::napi;
+
+use super::JsThemeConfig;
+
+/// SSG configuration.
+#[napi(object)]
+#[derive(Clone)]
+pub struct JsSsgConfig {
+    pub site_name: String,
+    pub base: String,
+    pub breadcrumb_root_href: Option<String>,
+    pub og_image: Option<String>,
+    pub site_url: Option<String>,
+    pub head_validation: Option<String>,
+    /// Theme configuration.
+    pub theme: Option<JsThemeConfig>,
+    /// Current locale for this page.
+    pub locale: Option<String>,
+    /// Available locales for locale switcher.
+    pub available_locales: Option<Vec<JsLocaleInfo>>,
+    /// When true, render previous/next page links after the article.
+    pub pagination: Option<bool>,
+    /// When true, render a breadcrumb trail above the article.
+    pub breadcrumbs: Option<bool>,
+    /// Opt-in copy, external-link, and back-to-top chrome.
+    pub reader_chrome: Option<JsReaderChrome>,
+    /// Opt-in header locale switcher.
+    pub locale_switcher: Option<bool>,
+    /// Existing sibling hrefs and locale roots.
+    pub locale_paths: Option<Vec<JsLocalePath>>,
+    /// Opt-in skip link and print styles. Presence enables the feature.
+    #[napi(js_name = "a11y")]
+    pub a11y: Option<JsA11y>,
+    /// Opt-in team / members page. Omitted stays off.
+    pub team: Option<JsTeamOptions>,
+    /// When true, honor per-page frontmatter chrome flags.
+    pub page_chrome: Option<bool>,
+    /// Opt-in JSON-LD structured data. Presence enables the feature.
+    pub json_ld: Option<JsJsonLd>,
+}
+
+/// Opt-in JSON-LD structured data. Presence of the object enables the feature.
+#[napi(object)]
+#[derive(Clone, Default)]
+pub struct JsJsonLd {
+    /// When false, omit BreadcrumbList even if a visible trail exists.
+    pub breadcrumbs: Option<bool>,
+    /// Optional publisher. Missing fields are not invented.
+    pub publisher: Option<JsJsonLdPublisher>,
+    /// Site origin used for `@id` / `url`.
+    pub site_url: Option<String>,
+    pub page_type: Option<String>,
+    pub graph: Option<Vec<String>>,
+}
+
+/// Optional JSON-LD publisher. Only configured fields are emitted.
+#[napi(object)]
+#[derive(Clone, Default)]
+pub struct JsJsonLdPublisher {
+    /// Organization name.
+    pub name: Option<String>,
+    /// Organization URL. Unsafe schemes are dropped.
+    pub url: Option<String>,
+}
+
+/// Opt-in skip link and print styles. Presence of the object enables the feature.
+#[napi(object, js_name = "JsA11y")]
+#[derive(Clone)]
+pub struct JsA11y {
+    /// Override for the skip-link label. Empty / omitted uses "Skip to content".
+    pub skip_link_label: Option<String>,
+}
+
+/// One link on a team member card.
+#[napi(object)]
+#[derive(Clone, Default)]
+pub struct JsTeamLink {
+    /// Visible label.
+    pub label: String,
+    /// Destination URL.
+    pub href: String,
+}
+
+/// One person on the team page.
+#[napi(object)]
+#[derive(Clone, Default)]
+pub struct JsTeamMember {
+    /// Display name.
+    pub name: String,
+    /// Optional role or title.
+    pub role: Option<String>,
+    /// Avatar URL.
+    pub avatar: Option<String>,
+    /// Optional profile or social links.
+    pub links: Option<Vec<JsTeamLink>>,
+}
+
+/// Opt-in team / members page. Presence of the object enables the feature.
+#[napi(object)]
+#[derive(Clone, Default)]
+pub struct JsTeamOptions {
+    /// When false, `layout: team` is ignored.
+    pub enabled: Option<bool>,
+    /// Members rendered as static cards.
+    pub members: Option<Vec<JsTeamMember>>,
+}
+
+/// One child link on a generated section index.
+#[napi(object)]
+#[derive(Clone, Default)]
+pub struct JsSectionIndexItem {
+    /// Visible title. Escaped in HTML.
+    pub title: String,
+    /// Destination. `javascript:` and other schemes are rejected.
+    pub href: String,
+    /// Optional card description. Escaped in HTML.
+    pub description: Option<String>,
+}
+
+/// Opt-in reader chrome flags. Presence of the object enables the feature.
+#[napi(object)]
+#[derive(Clone)]
+pub struct JsReaderChrome {
+    /// Copy button on fenced code blocks.
+    pub copy: Option<bool>,
+    /// Icon and `rel` on outbound links.
+    pub external_links: Option<bool>,
+    /// Back-to-top control that appears after scroll.
+    pub back_to_top: Option<bool>,
+}
+
+/// Locale information for the locale switcher.
+#[napi(object)]
+#[derive(Clone)]
+pub struct JsLocaleInfo {
+    /// BCP 47 locale tag.
+    pub code: String,
+    /// Display name.
+    pub name: String,
+    /// Text direction.
+    pub dir: String,
+}
+
+/// Sibling page or locale-root href for one locale.
+#[napi(object)]
+#[derive(Clone)]
+pub struct JsLocalePath {
+    /// BCP 47 locale tag.
+    pub code: String,
+    /// Href of the same page in this locale, when that translation exists.
+    pub href: Option<String>,
+    /// Locale home href used when `href` is missing.
+    pub root: Option<String>,
+}

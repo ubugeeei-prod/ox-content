@@ -190,6 +190,20 @@ export interface ThemeConfig {
    */
   viewTransitions?: boolean;
   /**
+   * Circular reveal for a same-document theme change.
+   *
+   * `"circle"` opts the built-in toggle into the reveal published at
+   * `@ox-content/vite-plugin/theme-transition/client`. Omitted or `false`
+   * leaves the toggle immediate.
+   *
+   * Unrelated to {@link ThemeConfig.viewTransitions}, which covers
+   * cross-document navigation. Browsers without View Transitions, and readers
+   * who ask for reduced motion, always get the immediate switch.
+   *
+   * @default false
+   */
+  toggleTransition?: false | "circle";
+  /**
    * Show the right-hand "On this page" outline.
    *
    * Default `false`. When `true`, the outline is rendered only on pages
@@ -264,6 +278,7 @@ export interface ThemeConfig {
 export interface ResolvedThemeConfig {
   name: string;
   viewTransitions: boolean;
+  toggleTransition: false | "circle";
   aside: boolean;
   breadcrumbs: boolean;
   headingPermalink: "hover" | "always";
@@ -292,6 +307,7 @@ export interface ResolvedThemeConfig {
 export const defaultTheme: ThemeConfig = {
   name: "default",
   viewTransitions: true,
+  toggleTransition: false,
   aside: false,
   breadcrumbs: false,
   headingPermalink: "hover",
@@ -483,6 +499,7 @@ export function resolveTheme(config?: ThemeConfig | ThemeConfig[]): ResolvedThem
   return {
     name: merged.name ?? "custom",
     viewTransitions: merged.viewTransitions ?? defaultTheme.viewTransitions ?? true,
+    toggleTransition: merged.toggleTransition === "circle" ? "circle" : false,
     aside: merged.aside ?? defaultTheme.aside ?? false,
     breadcrumbs: resolveThemeFlag(merged.breadcrumbs),
     headingPermalink: merged.headingPermalink === "always" ? "always" : "hover",
@@ -553,6 +570,7 @@ export function themeToNapi(
 
   return {
     viewTransitions: theme.viewTransitions,
+    toggleTransition: theme.toggleTransition === "circle" ? "circle" : undefined,
     aside: theme.aside,
     breadcrumbs: theme.breadcrumbs,
     headingPermalink: theme.headingPermalink,

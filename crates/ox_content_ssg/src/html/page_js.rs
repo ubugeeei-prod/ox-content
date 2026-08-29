@@ -1,5 +1,6 @@
 use super::header_chrome::{HEADER_CHROME_JS, header_chrome_needs_js};
 use super::reader_chrome::READER_CHROME_JS;
+use super::theme_transition::THEME_TRANSITION_JS;
 use super::utils::{page_content_contains_any, wrap_js_section};
 use super::{SOCIAL_TWEET_FULL_JS, SSG_JS, TABS_JS};
 
@@ -12,6 +13,7 @@ pub(super) struct PageJsInput<'a> {
     pub locale_switcher_html: &'a str,
     pub markdown_source_chrome: bool,
     pub reader_needs_js: bool,
+    pub theme_transition: bool,
 }
 
 /// Assembles feature-level JS the same way page CSS is sectioned.
@@ -29,6 +31,9 @@ pub(super) fn assemble_page_js(input: &PageJsInput<'_>) -> String {
     }
     if input.reader_needs_js {
         sections.push(wrap_js_section("reader-chrome", READER_CHROME_JS));
+    }
+    if input.theme_transition {
+        sections.push(wrap_js_section("theme-transition", THEME_TRANSITION_JS));
     }
     if page_content_contains_any(input.content, &["data-ox-tweet-copy"]) {
         sections.push(wrap_js_section("plugin-social-tweet-full", SOCIAL_TWEET_FULL_JS));
@@ -61,6 +66,7 @@ mod tests {
             locale_switcher_html: "",
             markdown_source_chrome: false,
             reader_needs_js: false,
+            theme_transition: false,
         }
     }
 
@@ -75,6 +81,9 @@ mod tests {
         assert!(!js.contains("ox-code-play"), "{js}");
         assert!(!js.contains("initIslands"), "{js}");
         assert!(!js.contains("mermaid"), "{js}");
+        // Core carries the `typeof applyThemeTransition` guard; what has to
+        // stay out is the section that defines it.
+        assert!(!js.contains("// ox-content:js:theme-transition:"), "{js}");
     }
 
     #[test]
@@ -119,5 +128,14 @@ mod tests {
         reader.reader_needs_js = true;
         let js = assemble_page_js(&reader);
         assert!(js.contains("// ox-content:js:reader-chrome:start"), "{js}");
+    }
+
+    #[test]
+    fn the_theme_reveal_is_its_own_opt_in_section() {
+        let mut reveal = input("<p>Hello</p>", "");
+        reveal.theme_transition = true;
+        let js = assemble_page_js(&reveal);
+        assert!(js.contains("// ox-content:js:theme-transition:start"), "{js}");
+        assert!(js.contains("function applyThemeTransition(options)"), "{js}");
     }
 }

@@ -94,6 +94,7 @@ export default defineConfig(({ mode }) => {
           ogImage,
           theme: defineTheme({
             extends: defaultTheme,
+            toggleTransition: "circle",
             aside: true,
             nav: [
               { text: { en: "Guide", ja: "ガイド" }, link: `${base}getting-started/` },

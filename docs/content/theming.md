@@ -33,6 +33,65 @@ defineTheme({
 
 External links, downloads, and hash-only links retain normal browser behavior.
 
+## Theme Toggle Reveal
+
+`viewTransitions` covers navigation between documents. The theme toggle is a
+_same-document_ change, and it switches instantly by default. Opt into a
+circular reveal that grows out of wherever the reader activated the control:
+
+```ts
+defineTheme({
+  toggleTransition: "circle",
+});
+```
+
+Switching to dark grows the incoming snapshot over the outgoing one; switching
+to light collapses the outgoing snapshot to reveal the new palette underneath.
+A pointer press reveals from the pointer, and a keyboard or programmatic
+activation reveals from the centre of the control. Browsers without View
+Transitions, and readers who ask for `prefers-reduced-motion: reduce`, keep the
+immediate switch.
+
+The two options are independent: `toggleTransition` never touches the
+cross-document snapshots, and its stylesheet is scoped to an attribute the
+runtime holds for the length of one toggle.
+
+### From a custom host
+
+A host that renders its own toggle can drive the same primitive instead of
+reimplementing it. `apply` is your synchronous theme mutation — the reveal
+wraps it, it does not own your state, markup, or icons:
+
+```ts
+import { applyThemeTransition } from "@ox-content/vite-plugin/theme-transition/client";
+import "@ox-content/vite-plugin/styles/theme-transition.css";
+
+button.addEventListener("click", (event) => {
+  const next = document.documentElement.dataset.theme === "dark" ? "light" : "dark";
+  void applyThemeTransition({
+    event,
+    nextTheme: next,
+    apply: () => setTheme(next),
+  });
+});
+```
+
+| Option      | Default         | Purpose                                              |
+| ----------- | --------------- | ---------------------------------------------------- |
+| `apply`     | —               | Synchronous theme mutation. Required.                |
+| `event`     | —               | Activation event. Supplies the reveal origin.        |
+| `nextTheme` | —               | `"light"` collapses the circle; anything else grows. |
+| `duration`  | `420`           | Reveal duration in milliseconds.                     |
+| `easing`    | `"ease-in-out"` | Reveal easing.                                       |
+
+The returned promise resolves once the transition settles, including when it is
+skipped, so a rapid double-toggle never leaves an unhandled rejection. The
+stylesheet uses the public `data-theme` contract and pulls in no framework.
+
+Prior art: the circular reveal is @hooray's VitePress implementation, by way of
+[@ryoppippi](https://github.com/ryoppippi)'s
+[svelte-fancy-darkmode](https://github.com/ryoppippi/svelte-fancy-darkmode).
+
 ## Localized Sidebar Labels
 
 Every sidebar `text` accepts either one string or a locale map. The same map

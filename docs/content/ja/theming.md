@@ -23,6 +23,50 @@ defineTheme({
 
 外部リンク、ダウンロード、ハッシュのみのリンクは、普通のブラウザ挙動のままです。
 
+## テーマトグルの円形リビール
+
+`viewTransitions` は文書間の遷移の話です。テーマトグルは _同一文書内_ の変更で、既定では即座に切り替わります。読者が操作した位置から広がる円形のリビールにはオプトインします。
+
+```ts
+defineTheme({
+  toggleTransition: "circle",
+});
+```
+
+ダークへ切り替えるときは新しいスナップショットを古い方の上に広げ、ライトへ切り替えるときは古いスナップショットを畳んで下の新しい配色を見せます。ポインタ操作ならその座標から、キーボードやプログラムからの起動ならコントロールの中心から広がります。View Transitions 非対応のブラウザと `prefers-reduced-motion: reduce` の読者は、これまでどおり即座の切り替えになります。
+
+2 つのオプションは独立しています。`toggleTransition` は文書間のスナップショットに触れず、そのスタイルシートはランタイムがトグル 1 回のあいだだけ保持する属性にスコープされています。
+
+### カスタムホストから
+
+独自のトグルを描画するホストは、実装し直さずに同じプリミティブを呼べます。`apply` は同期的なテーマ変更処理です。リビールはそれを包むだけで、状態・マークアップ・アイコンは持ちません。
+
+```ts
+import { applyThemeTransition } from "@ox-content/vite-plugin/theme-transition/client";
+import "@ox-content/vite-plugin/styles/theme-transition.css";
+
+button.addEventListener("click", (event) => {
+  const next = document.documentElement.dataset.theme === "dark" ? "light" : "dark";
+  void applyThemeTransition({
+    event,
+    nextTheme: next,
+    apply: () => setTheme(next),
+  });
+});
+```
+
+| オプション  | 既定値          | 用途                                   |
+| ----------- | --------------- | -------------------------------------- |
+| `apply`     | —               | 同期的なテーマ変更処理。必須           |
+| `event`     | —               | 起動イベント。リビールの原点を決める   |
+| `nextTheme` | —               | `"light"` は円を畳み、それ以外は広げる |
+| `duration`  | `420`           | リビールの時間 (ms)                    |
+| `easing`    | `"ease-in-out"` | リビールのイージング                   |
+
+戻り値の Promise は遷移が落ち着いた時点で解決します。スキップされた場合も解決するので、素早い連続トグルでも unhandled rejection は残りません。スタイルシートは公開されている `data-theme` の契約だけを使い、フレームワークを持ち込みません。
+
+先行実装: この円形リビールは @hooray の VitePress 実装が元で、[@ryoppippi](https://github.com/ryoppippi) の [svelte-fancy-darkmode](https://github.com/ryoppippi/svelte-fancy-darkmode) 経由で移植しています。
+
 ## ローカライズしたサイドバーラベル
 
 すべてのサイドバー `text` は、1 つの文字列でもロケールマップでも構いません。同じマップはトップレベルグループ、リンク付き親、入れ子項目で動きます。

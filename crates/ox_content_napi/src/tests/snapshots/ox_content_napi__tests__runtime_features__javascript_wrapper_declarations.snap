@@ -2564,6 +2564,8 @@ export interface JsThemeColors {
 export interface JsThemeConfig {
   /** Progressive cross-document transitions for same-origin MPA navigation. */
   viewTransitions?: boolean
+  /** Circular reveal for a same-document theme change. `"circle"` opts in. */
+  toggleTransition?: string
   /** Right-hand "On this page" outline. Omitted and `false` hide it. */
   aside?: boolean
   /** Breadcrumb trail from the site root through sidebar ancestors. */
