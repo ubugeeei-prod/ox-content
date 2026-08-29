@@ -21,6 +21,19 @@ describe("detect-pr-benchmark-scope", () => {
     expect(parseOutputs(result.stdout)).toEqual({ runtime: "true", bundle: "true" });
   });
 
+  it("skips runtime benchmark for highlight-only lockfile updates", () => {
+    const result = runScope([
+      "Cargo.lock",
+      "crates/ox_content_highlight/Cargo.toml",
+      "crates/ox_content_highlight/queries/vim-highlights.scm",
+      "crates/ox_content_highlight/src/languages/markup.rs",
+      "docs/content/built-in/code-blocks.md",
+    ]);
+
+    expect(result.status).toBe(0);
+    expect(parseOutputs(result.stdout)).toEqual({ runtime: "false", bundle: "true" });
+  });
+
   it("runs only the bundle gate for theme and UI package edits", () => {
     const result = runScope(["npm/theme/swiss/src/style.css"]);
 

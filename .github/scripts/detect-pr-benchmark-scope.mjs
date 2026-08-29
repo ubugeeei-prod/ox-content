@@ -60,16 +60,7 @@ const files = readFileSync(inputPath, "utf8")
   .map((file) => file.trim())
   .filter(Boolean);
 
-const scope = files.reduce(
-  (current, file) => {
-    const fileScope = classifyFile(file);
-    return {
-      runtime: current.runtime || fileScope.runtime,
-      bundle: current.bundle || fileScope.bundle,
-    };
-  },
-  { runtime: false, bundle: false },
-);
+const scope = classifyFiles(files);
 
 console.error(
   `Benchmark scope: runtime=${formatBoolean(scope.runtime)} bundle=${formatBoolean(
@@ -103,6 +94,58 @@ function classifyFile(file) {
   // Unknown paths stay conservative. This keeps new source trees protected
   // until they are deliberately classified.
   return { runtime: true, bundle: true };
+}
+
+/**
+ * @param {string[]} files
+ * @returns {{ runtime: boolean; bundle: boolean }}
+ */
+function classifyFiles(files) {
+  const scope = files.reduce(
+    (current, file) => {
+      const fileScope = classifyFile(file);
+      return {
+        runtime: current.runtime || fileScope.runtime,
+        bundle: current.bundle || fileScope.bundle,
+      };
+    },
+    { runtime: false, bundle: false },
+  );
+
+  if (scope.runtime && isHighlightOnlyCargoLockChange(files)) {
+    return { runtime: false, bundle: scope.bundle };
+  }
+
+  return scope;
+}
+
+/**
+ * Highlight-only changes still need bundle/artifact measurement, but the
+ * Markdown parser runtime benchmark does not become more informative just
+ * because their dependency additions touch Cargo.lock.
+ *
+ * @param {string[]} files
+ * @returns {boolean}
+ */
+function isHighlightOnlyCargoLockChange(files) {
+  return (
+    files.includes("Cargo.lock") &&
+    files.some((file) => file.startsWith("crates/ox_content_highlight/")) &&
+    files.every(isHighlightOnlyBenchmarkFile)
+  );
+}
+
+/**
+ * @param {string} file
+ * @returns {boolean}
+ */
+function isHighlightOnlyBenchmarkFile(file) {
+  return (
+    file === "Cargo.lock" ||
+    file.startsWith("crates/ox_content_highlight/") ||
+    matchesAny(file, TEST_ONLY_PATTERNS) ||
+    matchesAny(file, BENCHMARK_NEUTRAL_PATTERNS)
+  );
 }
 
 /**
