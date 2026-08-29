@@ -142,7 +142,12 @@ jobs:
 
   publish-napi:
     name: Publish @ox-content/napi
-    runs-on: blacksmith-32vcpu-ubuntu-2404
+    # npm verifies the provenance bundle against the runner environment and
+    # rejects anything minted outside a GitHub-hosted runner. Blacksmith hosts
+    # register as "self-hosted", so every provenance publish in this job fails
+    # with a 422. Keep this job on the GitHub-hosted tier; the build jobs and
+    # the crates.io publish are free to stay on Blacksmith.
+    runs-on: ubuntu-latest
     needs: build-napi
     # The npm environment is part of the trusted publisher identity: each
     # package's publisher on npmjs.com names this repository, the workflow file,
@@ -282,7 +287,8 @@ jobs:
 
   publish-packages:
     name: Publish npm packages
-    runs-on: blacksmith-32vcpu-ubuntu-2404
+    # GitHub-hosted for the same provenance reason as `publish-napi`.
+    runs-on: ubuntu-latest
     needs: publish-napi
     # The npm environment is part of the trusted publisher identity: each
     # package's publisher on npmjs.com names this repository, the workflow file,
@@ -353,13 +359,8 @@ jobs:
       # Only the WASM package still needs Rust here. The native binding was
       # built by `build-napi` and published by `publish-napi`; the npm package
       # builds treat `@ox-content/napi` as external, so they never load it.
-      - name: Mount sticky cache
-        uses: ./.github/actions/mount-sticky-cache
-        with:
-          key-prefix: ${{ github.repository }}-publish-${{ github.job }}
-          cargo: "true"
-          target: target
-
+      # No sticky cache to warm it either: those disks exist only on Blacksmith
+      # hosts, and this job has to stay GitHub-hosted for provenance.
       - name: Install wasm-pack
         run: cargo install wasm-pack --locked
 
@@ -368,7 +369,7 @@ jobs:
       - name: Build packages
         # The limit matches the one CI passes through
         # `OX_CONTENT_VP_PACKAGE_BUILD_CONCURRENCY`; unbounded fan-out over ~80
-        # packages is not a good trade on a 32-vCPU runner.
+        # packages is not a good trade on a runner this size.
         run: vp run --concurrency-limit 12 --filter './npm/**' build
 
       - name: Build WASM package

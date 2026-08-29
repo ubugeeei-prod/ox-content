@@ -16,7 +16,12 @@ env:
 jobs:
   publish-missing-npm:
     name: Publish missing npm artifacts
-    runs-on: blacksmith-32vcpu-ubuntu-2404
+    # npm verifies the provenance bundle against the runner environment and
+    # rejects anything minted outside a GitHub-hosted runner. Blacksmith hosts
+    # register as "self-hosted", so every provenance publish in this job fails
+    # with a 422. Keep this job on the GitHub-hosted tier; the build jobs and
+    # the crates.io publish are free to stay on Blacksmith.
+    runs-on: ubuntu-latest
     environment: npm
     permissions:
       contents: read
