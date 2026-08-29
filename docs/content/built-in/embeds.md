@@ -313,10 +313,10 @@ uses privacy-enhanced mode (`youtube-nocookie.com`) and lazy loading by
 default:
 
 ```mdx
-<youtube id="Ny8pjacNIv8" title="An Evening with Ron Carter at Emmet’s Place" />
+<YouTube id="Ny8pjacNIv8" title="An Evening with Ron Carter at Emmet’s Place" />
 ```
 
-<youtube id="Ny8pjacNIv8" title="An Evening with Ron Carter at Emmet’s Place" />
+<YouTube id="Ny8pjacNIv8" title="An Evening with Ron Carter at Emmet’s Place" />
 
 `id`, `url`, and `href` attributes are accepted; `youtu.be`, `watch?v=`,
 `shorts`, and `embed` URL shapes are all recognized. `start` accepts a
@@ -325,7 +325,7 @@ URL. Invalid, negative, fractional, overflowing, or duplicated values are
 ignored. Omitting `start` leaves the previous URL unchanged.
 
 ```mdx
-<youtube id="Ny8pjacNIv8" title="An Evening with Ron Carter at Emmet’s Place" start="4190" />
+<YouTube id="Ny8pjacNIv8" title="An Evening with Ron Carter at Emmet’s Place" start="4190" />
 ```
 
 ## Twitter/X

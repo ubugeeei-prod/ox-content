@@ -150,3 +150,17 @@ fn non_privacy_and_no_fullscreen_no_lazy() {
         r#"<div class="ox-youtube" style="aspect-ratio: 4/3;"><iframe src="https://www.youtube.com/embed/dQw4w9WgXcQ" title="YouTube video dQw4w9WgXcQ" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin"></iframe></div>"#
     );
 }
+
+#[test]
+fn the_tag_is_matched_however_it_is_cased() {
+    // Every other embed is authored PascalCase, and the docs spell this one
+    // `<YouTube>` to match. HTML tag names are case-insensitive, so both have
+    // to reach the same iframe.
+    let lower = transform_youtube(r#"<youtube id="dQw4w9WgXcQ"></youtube>"#, &opts());
+    let pascal = transform_youtube(r#"<YouTube id="dQw4w9WgXcQ"></YouTube>"#, &opts());
+    let self_closing = transform_youtube(r#"<YouTube id="dQw4w9WgXcQ" />"#, &opts());
+
+    assert!(lower.contains("ox-youtube"), "{lower}");
+    assert_eq!(pascal, lower);
+    assert_eq!(self_closing, lower);
+}

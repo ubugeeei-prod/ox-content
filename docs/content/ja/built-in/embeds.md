@@ -256,15 +256,15 @@ pnpm vite preview</code></pre>
 YouTube 埋め込みは SSG ビルドと dev preview で常に処理されます。iframe はプライバシー強化モード（`youtube-nocookie.com`）と遅延読み込みが既定です。
 
 ```mdx
-<youtube id="Ny8pjacNIv8" title="An Evening with Ron Carter at Emmet’s Place" />
+<YouTube id="Ny8pjacNIv8" title="An Evening with Ron Carter at Emmet’s Place" />
 ```
 
-<youtube id="Ny8pjacNIv8" title="An Evening with Ron Carter at Emmet’s Place" />
+<YouTube id="Ny8pjacNIv8" title="An Evening with Ron Carter at Emmet’s Place" />
 
 `id`、`url`、`href` 属性を受け付けます。`youtu.be`、`watch?v=`、`shorts`、`embed` の URL 形はどれも認識します。`start` は非負整数の秒で、iframe URL に `?start=` を付けます。不正、負、小数、オーバーフロー、重複した値は無視します。`start` を省略すると、これまでの URL のままです。
 
 ```mdx
-<youtube id="Ny8pjacNIv8" title="An Evening with Ron Carter at Emmet’s Place" start="4190" />
+<YouTube id="Ny8pjacNIv8" title="An Evening with Ron Carter at Emmet’s Place" start="4190" />
 ```
 
 ## Twitter / X
