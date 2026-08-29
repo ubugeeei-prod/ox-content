@@ -1,0 +1,54 @@
+name: Setup wasm-pack
+description: Install a pinned, checksum-verified wasm-pack release binary.
+
+inputs:
+  version:
+    description: wasm-pack release to install, without the leading `v`.
+    default: "0.15.0"
+  sha256:
+    description: >-
+      SHA-256 of wasm-pack-v<version>-x86_64-unknown-linux-musl.tar.gz.
+      Refresh it together with `version`:
+      curl -sSL https://github.com/rustwasm/wasm-pack/releases/download/v<version>/wasm-pack-v<version>-x86_64-unknown-linux-musl.tar.gz | sha256sum
+    default: c09f971ecaed9a2efc80fdcea7a00ef6b53c7fadc8c57d1f61b53a6aa66b668a
+
+runs:
+  using: composite
+  steps:
+    # `cargo install wasm-pack --locked` compiled the tool from source on every
+    # release: ~70s of the publish job spent rebuilding a binary upstream
+    # already ships. The prebuilt musl tarball drops that to a couple of
+    # seconds, and it is a download rather than a cache, so there is no cache
+    # entry for anything to poison on the way into a provenance-signed publish.
+    # Pinning the version also stops a release from silently picking up
+    # whatever wasm-pack happens to be newest that day.
+    - name: Install wasm-pack
+      shell: bash
+      env:
+        WASM_PACK_VERSION: ${{ inputs.version }}
+        WASM_PACK_SHA256: ${{ inputs.sha256 }}
+      run: |
+        set -euo pipefail
+
+        if [ "$RUNNER_OS" != "Linux" ] || [ "$RUNNER_ARCH" != "X64" ]; then
+          echo "::error::setup-wasm-pack only pins the x86_64 Linux tarball, but this runner is $RUNNER_OS/$RUNNER_ARCH."
+          exit 1
+        fi
+
+        name="wasm-pack-v${WASM_PACK_VERSION}-x86_64-unknown-linux-musl"
+        url="https://github.com/rustwasm/wasm-pack/releases/download/v${WASM_PACK_VERSION}/${name}.tar.gz"
+        tmp=$(mktemp -d)
+        trap 'rm -rf "$tmp"' EXIT
+
+        curl --fail --location --silent --show-error --retry 3 --retry-connrefused \
+          --output "$tmp/wasm-pack.tar.gz" "$url"
+        echo "${WASM_PACK_SHA256}  $tmp/wasm-pack.tar.gz" | sha256sum --check --status || {
+          echo "::error::Checksum mismatch for ${name}.tar.gz. Expected ${WASM_PACK_SHA256}, got $(sha256sum "$tmp/wasm-pack.tar.gz" | cut -d' ' -f1)."
+          exit 1
+        }
+
+        tar -xzf "$tmp/wasm-pack.tar.gz" -C "$tmp"
+        install -Dm755 "$tmp/${name}/wasm-pack" "$HOME/.cargo/bin/wasm-pack"
+        echo "$HOME/.cargo/bin" >> "$GITHUB_PATH"
+
+        "$HOME/.cargo/bin/wasm-pack" --version

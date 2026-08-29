@@ -77,8 +77,28 @@ jobs:
       - name: Build material theme package
         run: vp exec --filter @ox-content/theme-color-material -- vp pack
 
+      # Deliberately not `uses: ./.github/actions/setup-wasm-pack`: this job
+      # checks out `inputs.tag`, so a local action resolves to the copy in that
+      # tag, and every tag published so far predates the action. Keep this block
+      # in sync with `.github/actions/setup-wasm-pack/action.yml` - same pinned
+      # release, same checksum.
       - name: Install wasm-pack
-        run: cargo install wasm-pack --locked
+        env:
+          WASM_PACK_VERSION: "0.15.0"
+          WASM_PACK_SHA256: c09f971ecaed9a2efc80fdcea7a00ef6b53c7fadc8c57d1f61b53a6aa66b668a
+        run: |
+          set -euo pipefail
+          name="wasm-pack-v${WASM_PACK_VERSION}-x86_64-unknown-linux-musl"
+          url="https://github.com/rustwasm/wasm-pack/releases/download/v${WASM_PACK_VERSION}/${name}.tar.gz"
+          tmp=$(mktemp -d)
+          trap 'rm -rf "$tmp"' EXIT
+          curl --fail --location --silent --show-error --retry 3 --retry-connrefused \
+            --output "$tmp/wasm-pack.tar.gz" "$url"
+          echo "${WASM_PACK_SHA256}  $tmp/wasm-pack.tar.gz" | sha256sum --check --status
+          tar -xzf "$tmp/wasm-pack.tar.gz" -C "$tmp"
+          install -Dm755 "$tmp/${name}/wasm-pack" "$HOME/.cargo/bin/wasm-pack"
+          echo "$HOME/.cargo/bin" >> "$GITHUB_PATH"
+          "$HOME/.cargo/bin/wasm-pack" --version
 
       - name: Build WASM package
         run: vp run build:wasm

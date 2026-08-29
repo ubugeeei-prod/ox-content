@@ -359,10 +359,8 @@ jobs:
       # Only the WASM package still needs Rust here. The native binding was
       # built by `build-napi` and published by `publish-napi`; the npm package
       # builds treat `@ox-content/napi` as external, so they never load it.
-      # No sticky cache to warm it either: those disks exist only on Blacksmith
-      # hosts, and this job has to stay GitHub-hosted for provenance.
       - name: Install wasm-pack
-        run: cargo install wasm-pack --locked
+        uses: ./.github/actions/setup-wasm-pack
 
       # `build:npm` would pull in `build:napi` through the task graph, which is
       # the duplicate release compile this job used to pay for twice.
@@ -372,6 +370,9 @@ jobs:
         # packages is not a good trade on a runner this size.
         run: vp run --concurrency-limit 12 --filter './npm/**' build
 
+      # Compiled cold every release: the sticky disks that would warm it exist
+      # only on Blacksmith hosts, and this job has to stay GitHub-hosted for
+      # provenance.
       - name: Build WASM package
         run: vp run build:wasm
 
