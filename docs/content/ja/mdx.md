@@ -320,6 +320,77 @@ island の JavaScript は、そのページが実際に使うコンポーネン�
 解決済みの文書ローカル import の交差です。入れ子やフラグメント内のタグも、
 登録されているか、そのページが import していればハイドレートされます。
 
+## document props ページの island
+
+`mdxDocumentProps: true` は `.mdx` をページテンプレートとして描画します。本文と
+コンポーネントの props は描画時にホストから渡され、コンポーネントは island の
+プレースホルダではなく、生成されるページコンポーネントの実際の子になります。
+型付きのビルド時 props が効くのはこのためで、同時に、ページをサーバ描画するだけの
+ホストにはハイドレートする対象が無い理由でもあります。
+
+動かしたいコンポーネントには `oxIsland` を付けます。ビルド時 props はサーバ描画に
+そのまま使われ、ランタイムが必要とする island のラッパーが付きます。
+
+```mdx
+import Counter from "./Counter.svelte";
+
+# {title}
+
+<Counter initial={initial} oxIsland />
+```
+
+コンポーネントはラッパーの内側でサーバ描画されるので、JavaScript 無しでもページは
+読めますし、ランタイムは既存の DOM をハイドレートします（2 つ目を mount しません）。
+印を付けなかったものはただの子のままで、JavaScript は一切載りません。
+
+| ディレクティブ                      | 効果                                     |
+| ----------------------------------- | ---------------------------------------- |
+| `oxIsland`                          | island 化し、即座にハイドレート          |
+| `oxIsland="idle"`                   | `requestIdleCallback` でハイドレート     |
+| `oxIsland="visible"`                | 画面に入ったらハイドレート               |
+| `oxIsland="media"`                  | `oxIslandMedia` が一致したらハイドレート |
+| `oxIslandMedia="(min-width: 40em)"` | `media` 戦略で待つクエリ                 |
+
+戦略はリテラルである必要があります。ビルド時に決まるもので、document prop から
+解決するものではありません。
+
+### ランタイムの起動
+
+このモードの要点はホストがページをハイドレートしないことなので、ランタイムを
+ページコンポーネント自身から起動することはできません。代わりに生成モジュールが
+export します。island が無いページは export 自体を持ちません。
+
+```ts
+import Page, { hydrateIslands } from "./page.mdx";
+import { render } from "svelte/server";
+
+// サーバ
+const html = render(Page, { props: { title: "Example", initial: 1 } }).body;
+
+// クライアント
+const controller = hydrateIslands();
+// ページを破棄するときは controller.destroy()
+```
+
+`hydrateIslands` は引数をそのまま [`initIslands`](./packages/vite-plugin-ox-content.md)
+に渡すので、読み込み戦略のオプションもコントローラの後始末も、他の場所とまったく
+同じ挙動です。
+
+### props はクライアントまで届く必要がある
+
+印を付けたコンポーネントに渡された props はラッパーへシリアライズされ、
+ハイドレーションはサーバが使ったのと同じ値から始まります。その旅に耐えられない
+props（関数、シンボル、循環参照）は、対象の prop 名を挙げた診断で描画を失敗させます。
+
+```
+[ox-content-svelte] Island "Counter" in /docs/page.mdx received a function for
+prop "onSelect", which cannot be serialised for hydration. Pass a JSON value,
+or drop oxIsland to keep the component server-only.
+```
+
+よくある原因はコールバックを渡していることです。振る舞いをコンポーネント側へ
+移すか、そのコンポーネントはサーバ専用のままにしてください。
+
 ## テーマ内の静的 JSX
 
 コンポーネント island とは別に、Ox Content は小さな **静的 JSX

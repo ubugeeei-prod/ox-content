@@ -404,6 +404,18 @@ interface MdxTemplateContext {
   usedComponents: Set<string>;
   expressionsByMarker: Map<string, MdxDocumentExpression>;
   islandRanges: MdxIslandRange[];
+  /** Components that carried `oxIsland`, in document order. */
+  hydratedIslands: Set<string>;
+}
+
+/** Opt a document-props component into the island contract. */
+const MDX_ISLAND_DIRECTIVE = "oxIsland";
+const MDX_ISLAND_MEDIA_DIRECTIVE = "oxIslandMedia";
+const MDX_ISLAND_LOAD_STRATEGIES = new Set(["eager", "idle", "visible", "media"]);
+
+interface MdxIslandHydration {
+  load: string;
+  media?: string;
 }
 
 function prepareMdxDocumentExpressions(
@@ -637,16 +649,23 @@ function generateMdxDocumentPropsSvelteModule(
     documentPath: id,
     root: options.root,
   });
-  const template = renderMdxDocumentTemplate(html, usedComponents, id, documentExpressions);
+  const { template, hydratedIslands } = renderMdxDocumentTemplate(
+    html,
+    usedComponents,
+    id,
+    documentExpressions,
+  );
+  const moduleScript = renderMdxIslandModuleScript(hydratedIslands, imports);
 
-  return `
+  return `${moduleScript}
 <script>
-  ${imports}
+  ${hydratedIslands.length > 0 ? "" : imports}
 
   const frontmatter = ${JSON.stringify(frontmatter)};
   export { frontmatter };
 
   let __ox_mdx_props = $props();
+${hydratedIslands.length > 0 ? renderMdxIslandPropsSerializer(filePathLiteral) : ""}
 
   function __ox_mdx_document_prop(props, path, expression) {
     const propName = path.join(".");
@@ -678,12 +697,87 @@ function generateMdxDocumentPropsSvelteModule(
 `;
 }
 
+/**
+ * Island wiring for a document-props page.
+ *
+ * This host never hydrates the whole page — that is the point of the mode — so
+ * the runtime cannot be started from `onMount`. It is exported instead, and the
+ * host calls it once on the client. Pages with no islands get no module script
+ * at all and stay zero-JavaScript.
+ */
+function renderMdxIslandModuleScript(hydratedIslands: readonly string[], imports: string): string {
+  if (hydratedIslands.length === 0) return "";
+  const registry = hydratedIslands.map((name) => `    ${name},`).join("\n");
+
+  return `
+<script module>
+  import { createRawSnippet, hydrate, mount, unmount } from 'svelte';
+  import { initIslands, readIslandSlotHtml } from '@ox-content/islands';
+  ${imports}
+
+  const __ox_island_components = {
+${registry}
+  };
+
+  export function hydrateIslands(options) {
+    return initIslands((element, props) => {
+      const Component = __ox_island_components[element.dataset.oxIsland];
+      if (!Component) return;
+
+      const islandContent = readIslandSlotHtml(element);
+      const componentProps = { ...props };
+      if (islandContent) {
+        componentProps.children = createRawSnippet(() => ({
+          render: () => \`<div>\${islandContent}</div>\`,
+        }));
+      }
+
+      const attach = element.dataset.oxSsr === 'true' ? hydrate : mount;
+      const instance = attach(Component, { target: element, props: componentProps });
+      return () => unmount(instance);
+    }, { selector: '[data-ox-island]', ...options });
+  }
+</script>`;
+}
+
+/**
+ * `JSON.stringify` drops functions and `undefined` silently and throws an
+ * opaque error on a cycle, either of which turns into an island that renders
+ * but never comes alive. Walking first turns both into a build diagnostic that
+ * names the prop.
+ */
+function renderMdxIslandPropsSerializer(filePathLiteral: string): string {
+  return `
+  function __ox_mdx_island_props(componentName, props) {
+    const seen = new WeakSet();
+    const check = (value, path) => {
+      const kind = typeof value;
+      if (value === null || kind === 'string' || kind === 'number' || kind === 'boolean') return;
+      if (kind !== 'object') {
+        throw new Error('[ox-content-svelte] Island "' + componentName + '" in ' + ${filePathLiteral} + ' received a ' + kind + ' for prop "' + path + '", which cannot be serialised for hydration. Pass a JSON value, or drop ${MDX_ISLAND_DIRECTIVE} to keep the component server-only.');
+      }
+      if (seen.has(value)) {
+        throw new Error('[ox-content-svelte] Island "' + componentName + '" in ' + ${filePathLiteral} + ' received a circular value for prop "' + path + '", which cannot be serialised for hydration.');
+      }
+      seen.add(value);
+      if (Array.isArray(value)) {
+        value.forEach((item, index) => check(item, path + '[' + index + ']'));
+        return;
+      }
+      for (const key of Object.keys(value)) check(value[key], path ? path + '.' + key : key);
+    };
+    for (const key of Object.keys(props)) check(props[key], key);
+    return JSON.stringify(props);
+  }
+`;
+}
+
 function renderMdxDocumentTemplate(
   html: string,
   usedComponents: string[],
   filePath: string,
   documentExpressions: readonly MdxDocumentExpression[],
-): string {
+): { template: string; hydratedIslands: string[] } {
   const context: MdxTemplateContext = {
     html,
     filePath,
@@ -692,8 +786,10 @@ function renderMdxDocumentTemplate(
       documentExpressions.map((expression) => [expression.marker, expression] as const),
     ),
     islandRanges: findMdxIslandRanges(html),
+    hydratedIslands: new Set(),
   };
-  return renderHtmlRange(context, 0, html.length);
+  const template = renderHtmlRange(context, 0, html.length);
+  return { template, hydratedIslands: [...context.hydratedIslands] };
 }
 
 function renderHtmlRange(context: MdxTemplateContext, start: number, end: number): string {
@@ -785,11 +881,121 @@ function renderDocumentExpression(expression: MdxDocumentExpression): string {
 
 function renderMdxIslandTemplate(context: MdxTemplateContext, island: MdxIslandRange): string {
   assertSvelteComponentName(island.name, context.filePath);
-  const attrs = renderMdxIslandAttributes(readMdxIslandPayload(island), context.filePath);
+  const payload = readMdxIslandPayload(island);
+  const hydration = takeMdxIslandHydration(payload, island.name, context.filePath);
+  const attrs = renderMdxIslandAttributes(payload, context.filePath);
   const children = renderHtmlRange(context, island.contentStart, island.closeStart);
-  return children
+  const element = children
     ? `<${island.name}${attrs}>${children}</${island.name}>`
     : `<${island.name}${attrs} />`;
+
+  if (!hydration) return element;
+
+  // The component still renders server-side, inside the wrapper, so the island
+  // runtime can hydrate the existing DOM instead of mounting a second copy.
+  context.hydratedIslands.add(island.name);
+  const wrapperAttrs = [
+    `data-ox-island="${island.name}"`,
+    'data-ox-ssr="true"',
+    `data-ox-load="${hydration.load}"`,
+  ];
+  if (hydration.media) wrapperAttrs.push(`data-ox-media=${JSON.stringify(hydration.media)}`);
+  wrapperAttrs.push(
+    `data-ox-props={${mdxIslandPropsExpression(payload, island.name, context.filePath)}}`,
+  );
+  return `<div ${wrapperAttrs.join(" ")}>${element}</div>`;
+}
+
+/**
+ * Reads and removes the island directives so they never reach the component.
+ *
+ * The strategy is a build-time decision, so it has to be a literal: resolving
+ * it from a document prop would mean the wrapper could not be written until
+ * render time, by which point the load strategy has already been read.
+ */
+function takeMdxIslandHydration(
+  payload: MdxIslandPayload,
+  name: string,
+  filePath: string,
+): MdxIslandHydration | undefined {
+  for (const directive of [MDX_ISLAND_DIRECTIVE, MDX_ISLAND_MEDIA_DIRECTIVE]) {
+    if (directive in payload.expressions) {
+      throw new Error(
+        `[ox-content-svelte] "${directive}" on <${name}> in ${filePath} has to be a literal, not a document prop: the load strategy is chosen when the page is built.`,
+      );
+    }
+  }
+  if (!(MDX_ISLAND_DIRECTIVE in payload.props)) return undefined;
+
+  const raw = payload.props[MDX_ISLAND_DIRECTIVE];
+  const media = payload.props[MDX_ISLAND_MEDIA_DIRECTIVE];
+  delete payload.props[MDX_ISLAND_DIRECTIVE];
+  delete payload.props[MDX_ISLAND_MEDIA_DIRECTIVE];
+
+  const load = raw === true || raw === "" ? "eager" : raw;
+  if (typeof load !== "string" || !MDX_ISLAND_LOAD_STRATEGIES.has(load)) {
+    throw new Error(
+      `[ox-content-svelte] Unknown island load strategy ${JSON.stringify(raw)} on <${name}> in ${filePath}. Use ${[...MDX_ISLAND_LOAD_STRATEGIES].join(", ")}.`,
+    );
+  }
+  if (load === "media" && typeof media !== "string") {
+    throw new Error(
+      `[ox-content-svelte] <${name} ${MDX_ISLAND_DIRECTIVE}="media"> in ${filePath} needs ${MDX_ISLAND_MEDIA_DIRECTIVE} with the query to wait for.`,
+    );
+  }
+  return { load, media: typeof media === "string" ? media : undefined };
+}
+
+/**
+ * The same props the component is rendered with, serialised for the client.
+ *
+ * Built in attribute order so a spread and a named prop resolve the way Svelte
+ * resolves them in the template above.
+ */
+function mdxIslandPropsExpression(
+  payload: MdxIslandPayload,
+  name: string,
+  filePath: string,
+): string {
+  const parts: string[] = [];
+
+  for (const spread of payload.spreads) {
+    const expression = spread.trim().startsWith("...")
+      ? spread.trim().slice(3).trim()
+      : spread.trim();
+    const path = parseDocumentPropPath(expression);
+    if (!path) {
+      throw new Error(
+        `[ox-content-svelte] Unsupported MDX document prop spread "{${spread}}" in ${filePath}. Only identifiers and dotted property paths are supported.`,
+      );
+    }
+    parts.push(documentPropResolverExpression(path, expression));
+  }
+
+  const entries: string[] = [];
+  for (const [key, value] of Object.entries(payload.props)) {
+    entries.push(`${JSON.stringify(key)}: ${renderSvelteLiteral(value)}`);
+  }
+  for (const [key, expression] of Object.entries(payload.expressions)) {
+    const path = parseDocumentPropPath(expression.trim());
+    if (!path) {
+      throw new Error(
+        `[ox-content-svelte] Unsupported MDX document prop expression "{${expression}}" for prop "${key}" in ${filePath}. Only identifiers and dotted property paths are supported.`,
+      );
+    }
+    entries.push(
+      `${JSON.stringify(key)}: ${documentPropResolverExpression(path, expression.trim())}`,
+    );
+  }
+  if (entries.length > 0) parts.push(`{ ${entries.join(", ")} }`);
+
+  const merged =
+    parts.length === 0
+      ? "{}"
+      : parts.length === 1
+        ? parts[0]
+        : `Object.assign({}, ${parts.join(", ")})`;
+  return `__ox_mdx_island_props(${JSON.stringify(name)}, ${merged})`;
 }
 
 function renderMdxIslandAttributes(payload: MdxIslandPayload, filePath: string): string {

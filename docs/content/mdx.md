@@ -326,6 +326,80 @@ intersected with the global component map and any resolved document-local
 imports, so a nested or fragmented tag still hydrates when it is
 registered or imported by that page.
 
+## Islands in a document-props page
+
+`mdxDocumentProps: true` renders an `.mdx` file as a page template: document
+text and component props come from the host at render time, and the components
+are real children of the generated page component rather than island
+placeholders. That is what makes typed build-time props work — and it is also
+why a host that only server-renders the page has nothing to hydrate.
+
+Mark the components that need to come alive with `oxIsland`. They keep their
+build-time props for the server render, and gain the island wrapper the
+runtime needs:
+
+```mdx
+import Counter from "./Counter.svelte";
+
+# {title}
+
+<Counter initial={initial} oxIsland />
+```
+
+The component still renders on the server, inside the wrapper, so the page is
+readable without JavaScript and the runtime hydrates the existing DOM rather
+than mounting a second copy. Everything not marked stays a plain child and
+ships no JavaScript at all.
+
+| Directive                           | Effect                                     |
+| ----------------------------------- | ------------------------------------------ |
+| `oxIsland`                          | Island, hydrated eagerly                   |
+| `oxIsland="idle"`                   | Hydrate during `requestIdleCallback`       |
+| `oxIsland="visible"`                | Hydrate when the element scrolls into view |
+| `oxIsland="media"`                  | Hydrate when `oxIslandMedia` matches       |
+| `oxIslandMedia="(min-width: 40em)"` | The query for the `media` strategy         |
+
+The strategy has to be a literal — it is chosen when the page is built, not
+resolved from a document prop.
+
+### Starting the runtime
+
+The whole point of this mode is that the host does not hydrate the page, so
+the runtime cannot start itself from the page component. The generated module
+exports it instead, and pages with no islands do not export it at all:
+
+```ts
+import Page, { hydrateIslands } from "./page.mdx";
+import { render } from "svelte/server";
+
+// Server
+const html = render(Page, { props: { title: "Example", initial: 1 } }).body;
+
+// Client
+const controller = hydrateIslands();
+// controller.destroy() when the page goes away
+```
+
+`hydrateIslands` forwards its argument to
+[`initIslands`](./packages/vite-plugin-ox-content.md), so the load-strategy
+options and the controller cleanup behave exactly as they do everywhere else.
+
+### Props have to reach the client
+
+The props a marked component is rendered with are serialised onto its wrapper,
+so hydration starts from the same values the server used. A prop that cannot
+survive that trip — a function, a symbol, a cycle — fails the render with a
+diagnostic naming the prop:
+
+```
+[ox-content-svelte] Island "Counter" in /docs/page.mdx received a function for
+prop "onSelect", which cannot be serialised for hydration. Pass a JSON value,
+or drop oxIsland to keep the component server-only.
+```
+
+Passing a callback down is the usual cause. Either move the behaviour inside
+the component, or leave the component server-only.
+
 ## Static JSX in themes
 
 Separately from component islands, Ox Content ships a small **static JSX

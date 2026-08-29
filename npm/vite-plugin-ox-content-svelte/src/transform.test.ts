@@ -1,14 +1,11 @@
-import { mkdtemp, rm, writeFile } from "node:fs/promises";
-import os from "node:os";
-import path from "node:path";
-import { pathToFileURL } from "node:url";
 import { describe, expect, it } from "vite-plus/test";
 import { render } from "svelte/server";
 import { transformMarkdownWithSvelte } from "./transform";
-import type { Component } from "svelte";
-import type { ResolvedSvelteOptions } from "./types";
-
-type GeneratedComponent = Component<Record<string, unknown>>;
+import {
+  createOptions,
+  stripSvelteComments,
+  withGeneratedModule,
+} from "../test/fixtures/transform-harness";
 
 describe("transformMarkdownWithSvelte", () => {
   it("turns registered components into islands and leaves fenced tags literal", async () => {
@@ -212,44 +209,3 @@ describe("transformMarkdownWithSvelte", () => {
     );
   });
 });
-
-function createOptions(overrides: Partial<ResolvedSvelteOptions> = {}): ResolvedSvelteOptions {
-  return {
-    srcDir: "docs",
-    outDir: "dist",
-    base: "/",
-    extensions: [".md", ".markdown", ".mdx"],
-    gfm: true,
-    frontmatter: true,
-    toc: true,
-    tocMaxDepth: 3,
-    codeAnnotations: { enabled: false, metaKey: "annotate" },
-    components: { Alert: "./src/components/Alert.svelte" },
-    runes: true,
-    embeds: { github: false, openGraph: false },
-    root: "/repo",
-    mdxDocumentProps: false,
-    ...overrides,
-  } as ResolvedSvelteOptions;
-}
-
-async function withGeneratedModule(
-  code: string,
-  callback: (component: GeneratedComponent) => void | Promise<void>,
-): Promise<void> {
-  const dir = await mkdtemp(path.join(os.tmpdir(), "ox-content-svelte-mdx-props-"));
-  const file = path.join(dir, "page.mjs");
-  await writeFile(file, code, "utf8");
-  try {
-    const mod = (await import(`${pathToFileURL(file).href}?t=${Date.now()}`)) as {
-      default: GeneratedComponent;
-    };
-    await callback(mod.default);
-  } finally {
-    await rm(dir, { recursive: true, force: true });
-  }
-}
-
-function stripSvelteComments(html: string): string {
-  return html.replace(/<!--[\s\S]*?-->/g, "");
-}
