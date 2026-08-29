@@ -16,7 +16,7 @@ env:
 jobs:
   publish-missing-npm:
     name: Publish missing npm artifacts
-    runs-on: ubuntu-latest
+    runs-on: blacksmith-32vcpu-ubuntu-2404
     environment: npm
     permissions:
       contents: read
@@ -39,20 +39,15 @@ jobs:
         with:
           targets: wasm32-unknown-unknown
 
-      - name: Configure npm token
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-        run: |
-          set -euo pipefail
-          if [ -z "${NODE_AUTH_TOKEN:-}" ]; then
-            echo "::error::NPM_TOKEN is not configured"
-            exit 1
-          fi
-          {
-            echo "registry=https://registry.npmjs.org"
-            echo "//registry.npmjs.org/:_authToken=\${NODE_AUTH_TOKEN}"
-          } > "$RUNNER_TEMP/npmrc"
-          echo "NPM_CONFIG_USERCONFIG=$RUNNER_TEMP/npmrc" >> "$GITHUB_ENV"
+      - name: Setup npm registry
+        run: npm config set registry https://registry.npmjs.org
+
+      # Same trusted-publishing path as publish.yml: npm detects the Actions
+      # OIDC token and exchanges it for a short-lived publish credential, and
+      # generates provenance on that path. No long-lived token takes part in
+      # publishing anywhere in this repository.
+      - name: Install npm with trusted publishing support
+        run: npm install -g npm@11.19.0 # zizmor: ignore[adhoc-packages]
 
       - name: Determine npm tag
         env:
@@ -83,9 +78,12 @@ jobs:
       - name: Build WASM package
         run: vp run build:wasm
 
+      # A package name that has never been published cannot be recovered here:
+      # trusted publishing has no package to attach a publisher to, so npm
+      # rejects the OIDC exchange. Bootstrapping a new name is a one-time human
+      # publish followed by `npm trust github <pkg> --file publish.yml
+      # --repo <owner/repo> --env npm`, after which every release is OIDC again.
       - name: Publish missing npm packages
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: |
           set -euo pipefail
 
@@ -113,7 +111,7 @@ jobs:
 
   create-release:
     name: Create GitHub Release
-    runs-on: ubuntu-latest
+    runs-on: blacksmith-32vcpu-ubuntu-2404
     needs: publish-missing-npm
     permissions:
       contents: write
