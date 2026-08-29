@@ -67,6 +67,7 @@ this tree-sitter line.
 | Ruby       | `ruby`, `rb`                                                       |
 | PHP        | `php`                                                              |
 | Nix        | `nix`                                                              |
+| Nushell    | `nu`, `nushell`                                                    |
 | C#         | `csharp`, `cs`                                                     |
 | Swift      | `swift`                                                            |
 | Kotlin     | `kotlin`, `kt`                                                     |
@@ -89,6 +90,13 @@ this tree-sitter line.
     identities.git-signing.keyFile = "~/.ssh/id_enclave_key";
   };
 }
+```
+
+```nu
+let expensive = open usage.json
+  | where cost > 10
+  | get project
+  | uniq
 ```
 
 Unknown tags stay ordinary `<pre><code>` — for example `perl`, `elm`,

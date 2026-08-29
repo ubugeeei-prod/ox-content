@@ -66,6 +66,7 @@ tree-sitter 系列と合うメンテされた専用文法がまだありませ�
 | Ruby       | `ruby`, `rb`                                                       |
 | PHP        | `php`                                                              |
 | Nix        | `nix`                                                              |
+| Nushell    | `nu`, `nushell`                                                    |
 | C#         | `csharp`, `cs`                                                     |
 | Swift      | `swift`                                                            |
 | Kotlin     | `kotlin`, `kt`                                                     |
@@ -80,6 +81,13 @@ tree-sitter 系列と合うメンテされた専用文法がまだありませ�
 | Elixir     | `elixir`, `ex`, `exs`                                              |
 | Scala      | `scala`, `sc`, `sbt`                                               |
 | R          | `r`, `rscript`                                                     |
+
+```nu
+let expensive = open usage.json
+  | where cost > 10
+  | get project
+  | uniq
+```
 
 未知のタグは普通の `<pre><code>` のままです。例: `perl`、`elm`、
 `assembly`、`asm`、`llvm`、`clojure`、`brainfuck`。無関係な文法へ alias

@@ -51,6 +51,9 @@ fn aliases_resolve_to_the_same_grammar() {
     }
     assert!(supports("php"));
     assert!(supports("nix"));
+    for alias in ["nu", "nushell"] {
+        assert!(supports(alias), "{alias} should be supported");
+    }
     for alias in ["csharp", "cs"] {
         assert!(supports(alias), "{alias} should be supported");
     }
@@ -95,6 +98,10 @@ fn aliases_resolve_to_the_same_grammar() {
     assert_eq!(
         highlight_to_html("export const C = () => <p />;\n", "typescriptreact"),
         highlight_to_html("export const C = () => <p />;\n", "tsx")
+    );
+    assert_eq!(
+        highlight_to_html("let x = true\n", "nu"),
+        highlight_to_html("let x = true\n", "nushell")
     );
 }
 
@@ -195,6 +202,7 @@ fn added_grammars_tokenize_and_escape() {
         ("def f(x)\n  x < 1 && \"a & b\"\nend\n", "rb"),
         ("<?php echo \"a < b & c > d\";\n", "php"),
         ("let x = \"a < b & c\"; in x\n", "nix"),
+        ("let x = \"a < b & c\"\n", "nu"),
         ("class A { string F() { return \"a < b & c\"; } }\n", "cs"),
         ("let s = \"a < b & c\"\n", "swift"),
         ("fun main() { val s = \"a < b & c\" }\n", "kt"),
@@ -274,6 +282,40 @@ in with builtins; {
     assert_text_has_capture_token(&html, "https://example.com/pkg", "text.uri");
     assert_text_has_capture_token(&html, "# production corpus shape", "comment");
     assert_text_has_capture_token(&html, "${", "punctuation.special");
+}
+
+#[test]
+fn nushell_highlights_native_language_constructs() {
+    let code = r#"let expensive = open --raw usage.json
+  | where cost > 10
+  | get project
+  | uniq
+
+def summarise [rows: list<record>] {
+  $rows | group-by project
+  { project: "core", active: true }
+  ls err> errors.log
+  # production corpus shape < &
+}
+"#;
+
+    let html = highlight_to_html(code, "nu").expect("nu is supported");
+    assert_eq!(visible_text(&html), code);
+    assert_text_has_capture_token(&html, "let", "keyword");
+    assert_text_has_capture_token(&html, "def", "keyword");
+    assert_text_has_capture_token(&html, "open", "function.builtin");
+    assert_text_has_capture_token(&html, "raw", "attribute");
+    assert_text_has_capture_token(&html, "|", "operator");
+    assert_text_has_capture_token(&html, ">", "operator");
+    assert_text_has_capture_token(&html, "err>", "operator");
+    assert_text_has_capture_token(&html, "expensive", "variable.parameter");
+    assert_text_has_capture_token(&html, "rows", "variable.parameter");
+    assert_text_has_capture_token(&html, "project", "property");
+    assert_text_has_capture_token(&html, "list", "type");
+    assert_text_has_capture_token(&html, "record", "type");
+    assert_text_has_capture_token(&html, "\"core\"", "string");
+    assert_text_has_capture_token(&html, "true", "constant.builtin");
+    assert_text_has_capture_token(&html, "# production corpus shape < &", "comment");
 }
 
 #[test]

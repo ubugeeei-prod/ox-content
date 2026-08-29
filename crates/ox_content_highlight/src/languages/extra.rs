@@ -61,6 +61,14 @@ pub(super) fn grammars() -> &'static [Grammar] {
             "",
         ),
         grammar!(
+            "nu",
+            ["nu", "nushell"],
+            tree_sitter_nu::LANGUAGE,
+            include_str!("../../queries/nu-highlights.scm"),
+            "",
+            "",
+        ),
+        grammar!(
             "csharp",
             ["csharp", "cs"],
             tree_sitter_c_sharp::LANGUAGE,
