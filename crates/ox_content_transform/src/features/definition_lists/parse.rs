@@ -169,10 +169,14 @@ pub(super) fn raw_html_open(line: &str) -> Option<&'static str> {
 }
 
 fn html_tag_starts(rest: &str, name: &str) -> bool {
-    rest.len() >= name.len()
-        && rest[..name.len()].eq_ignore_ascii_case(name)
-        && rest
-            .as_bytes()
+    // Compare bytes: `rest` is arbitrary line text, so slicing it at the
+    // name's byte length lands inside a character whenever the line opens
+    // with something like `<x\u{3042}`. Every tag name here is ASCII, so a
+    // byte-wise match implies the prefix was ASCII too.
+    let bytes = rest.as_bytes();
+    bytes.len() >= name.len()
+        && bytes[..name.len()].eq_ignore_ascii_case(name.as_bytes())
+        && bytes
             .get(name.len())
             .is_none_or(|byte| *byte == b'>' || *byte == b'/' || byte.is_ascii_whitespace())
 }
