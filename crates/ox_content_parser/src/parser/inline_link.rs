@@ -34,6 +34,16 @@ impl<'a> Parser<'a> {
             return Ok(());
         }
 
+        // Every accepting branch below needs a `]`, and `scan_balanced`
+        // only reports that there is none after walking to the end of the
+        // content — once per bracket, which is quadratic over a run of
+        // them. Settle it for the whole slice first.
+        if !self.has_close_bracket_from(content, *pos + 1) {
+            Self::push_text(children, "[", offset + link_start, offset + link_start + 1);
+            *pos = link_start + 1;
+            return Ok(());
+        }
+
         *pos += 1;
         let text_start = *pos;
         *pos = Self::scan_balanced(content, *pos, b'[', b']');
@@ -75,7 +85,10 @@ impl<'a> Parser<'a> {
 
             // Full [text][label] and collapsed [text][] reference forms.
             let mut well_formed_reference = false;
-            if !inner_has_link && bytes.get(close + 1) == Some(&b'[') {
+            if !inner_has_link
+                && bytes.get(close + 1) == Some(&b'[')
+                && self.has_close_bracket_from(content, close + 2)
+            {
                 let label_start = close + 2;
                 let label_end = Self::scan_balanced(content, label_start, b'[', b']');
                 if label_end < content.len() && bytes[label_end] == b']' {

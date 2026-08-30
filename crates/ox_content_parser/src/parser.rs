@@ -225,6 +225,17 @@ pub struct Parser<'a> {
     /// long as the cache exists.
     link_probe_cache: std::cell::RefCell<rustc_hash::FxHashMap<(usize, usize), bool>>,
 
+    /// Memoized position of the final `]` in a content slice, keyed the same
+    /// way as `link_probe_cache`.
+    ///
+    /// A `[` can only open something when a `]` follows it, and
+    /// `scan_balanced` answers that by walking to the end of the content.
+    /// A run of brackets with no closer therefore paid one full walk per
+    /// bracket: 64 KiB of `[ ` took 1.0 s, growing x16 for every x4 of
+    /// input. The position of the last `]` settles it for every bracket in
+    /// the slice at once, so the run costs one scan in total.
+    last_close_bracket: std::cell::RefCell<rustc_hash::FxHashMap<(usize, usize), Option<usize>>>,
+
     /// The last `[scanned_from, blank_line)` window found while bounding a
     /// link reference definition, so a run of them costs one scan in total.
     ///
@@ -258,6 +269,7 @@ impl<'a> Parser<'a> {
             footnote_labels: None,
             lazy_lines: None,
             link_probe_cache: std::cell::RefCell::default(),
+            last_close_bracket: std::cell::RefCell::default(),
             definition_region: None,
         };
         // A single fused pre-pass collects both the reference definitions
@@ -296,6 +308,7 @@ impl<'a> Parser<'a> {
             // line, and every block quote and list item builds one of these.
             lazy_lines: (!lazy_lines.is_empty()).then(|| std::rc::Rc::new(lazy_lines)),
             link_probe_cache: std::cell::RefCell::default(),
+            last_close_bracket: std::cell::RefCell::default(),
             definition_region: None,
         }
     }

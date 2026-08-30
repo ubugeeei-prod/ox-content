@@ -24,6 +24,16 @@ impl<'a> Parser<'a> {
         }
 
         let image_start = *pos;
+
+        // Nothing can close this bracket, so skip the balanced scan that
+        // would walk to the end of the content to reach the same verdict.
+        // Same fallback as below, reached without the walk.
+        if !self.has_close_bracket_from(content, *pos + 2) {
+            Self::push_text(children, "![", offset + image_start, offset + image_start + 2);
+            *pos = image_start + 2;
+            return Ok(());
+        }
+
         *pos += 2;
         let alt_start = *pos;
         *pos = Self::scan_balanced(content, *pos, b'[', b']');
@@ -47,7 +57,9 @@ impl<'a> Parser<'a> {
             }
 
             let mut well_formed_reference = false;
-            if bytes.get(close + 1) == Some(&b'[') {
+            if bytes.get(close + 1) == Some(&b'[')
+                && self.has_close_bracket_from(content, close + 2)
+            {
                 let label_start = close + 2;
                 let label_end = Self::scan_balanced(content, label_start, b'[', b']');
                 if label_end < content.len() && bytes[label_end] == b']' {
@@ -145,6 +157,27 @@ impl<'a> Parser<'a> {
     /// backslash escapes, code spans (an unmatched opener stays literal),
     /// autolinks, and inline raw HTML. This is what makes
     /// `[not a `link](/foo`)` a code span instead of a link.
+    /// Reports whether a `]` exists at or after `from` in `content`.
+    ///
+    /// `scan_balanced` finds that out by walking to the end of the content,
+    /// which is one full walk per bracket and quadratic over a run of them.
+    /// The answer is the same for every bracket in a slice, so the position
+    /// of the final `]` is computed once and reused.
+    pub(super) fn has_close_bracket_from(&self, content: &'a str, from: usize) -> bool {
+        let key = (content.as_ptr() as usize, content.len());
+
+        let cached = self.last_close_bracket.borrow().get(&key).copied();
+        let last = if let Some(last) = cached {
+            last
+        } else {
+            let last = memchr::memrchr(b']', content.as_bytes());
+            self.last_close_bracket.borrow_mut().insert(key, last);
+            last
+        };
+
+        last.is_some_and(|last| last >= from)
+    }
+
     pub(super) fn scan_balanced(content: &str, mut cursor: usize, open: u8, close: u8) -> usize {
         let bytes = content.as_bytes();
         let mut depth = 1;
