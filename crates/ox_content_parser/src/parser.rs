@@ -224,6 +224,18 @@ pub struct Parser<'a> {
     /// the parser, so an address plus a length names one byte range for as
     /// long as the cache exists.
     link_probe_cache: std::cell::RefCell<rustc_hash::FxHashMap<(usize, usize), bool>>,
+
+    /// The last `[scanned_from, blank_line)` window found while bounding a
+    /// link reference definition, so a run of them costs one scan in total.
+    ///
+    /// A definition may not contain a blank line, so `try_parse_definition_node`
+    /// cuts its candidate region at the next one. Scanning for that from each
+    /// definition made a document that is nothing but definitions quadratic:
+    /// 16,000 of them (197 KB) took 567 ms against 0.3 ms for the same bytes
+    /// of prose. Every definition in one run shares the same boundary, and
+    /// block parsing walks forward, so the previous answer stays valid for
+    /// any start inside the window.
+    definition_region: Option<(usize, usize)>,
 }
 
 impl<'a> Parser<'a> {
@@ -246,6 +258,7 @@ impl<'a> Parser<'a> {
             footnote_labels: None,
             lazy_lines: None,
             link_probe_cache: std::cell::RefCell::default(),
+            definition_region: None,
         };
         // A single fused pre-pass collects both the reference definitions
         // and the footnote labels (see `prepass.rs`).
@@ -283,6 +296,7 @@ impl<'a> Parser<'a> {
             // line, and every block quote and list item builds one of these.
             lazy_lines: (!lazy_lines.is_empty()).then(|| std::rc::Rc::new(lazy_lines)),
             link_probe_cache: std::cell::RefCell::default(),
+            definition_region: None,
         }
     }
 

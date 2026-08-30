@@ -172,8 +172,10 @@ impl<'a> Parser<'a> {
         let start = self.position;
         // Definitions cannot contain blank lines; cut the candidate region
         // at the next one so the destination/title scanners stay in
-        // paragraph bounds.
-        let region_end = next_blank_line(self.source.as_bytes(), start);
+        // paragraph bounds. Consecutive definitions share that boundary, so
+        // reuse the last one rather than re-scanning to it per definition —
+        // that scan is what made a definition-only document quadratic.
+        let region_end = self.definition_region_end(start);
         let parsed = self.parse_reference_definition(&self.source[start..region_end])?;
 
         let identifier =
@@ -187,6 +189,21 @@ impl<'a> Parser<'a> {
             title: parsed.title,
             span: Span::new(start as u32, end as u32),
         })))
+    }
+
+    /// Position of the first blank line at or after `start`, reusing the
+    /// previous scan whenever `start` falls inside the window it covered.
+    fn definition_region_end(&mut self, start: usize) -> usize {
+        if let Some((scanned_from, blank_line)) = self.definition_region
+            && (scanned_from..=blank_line).contains(&start)
+        {
+            // No blank line lies in `scanned_from..blank_line`, so the first
+            // one at or after any `start` in that window is the same one.
+            return blank_line;
+        }
+        let blank_line = next_blank_line(self.source.as_bytes(), start);
+        self.definition_region = Some((start, blank_line));
+        blank_line
     }
 
     /// Joins the block-quote-stripped lines of the paragraph chunk that
