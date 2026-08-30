@@ -1,7 +1,50 @@
 use super::*;
 
-pub(super) fn byte_to_char_index(text: &str, byte_index: usize) -> usize {
-    text[..byte_index.min(text.len())].chars().count()
+fn clamp_to_char_boundary(text: &str, byte_index: usize) -> usize {
+    let mut index = byte_index.min(text.len());
+    while !text.is_char_boundary(index) {
+        index -= 1;
+    }
+    index
+}
+
+/// Converts byte offsets to character offsets in one forward pass.
+///
+/// Counting from the front of the line for every match of a scan is quadratic
+/// in the line length — a single 1 MiB line took seconds. Regex matches arrive
+/// in order, so a cursor only ever has to count the gap since its last answer.
+pub(super) struct CharIndexCursor<'a> {
+    ascii_only: bool,
+    byte_index: usize,
+    char_index: usize,
+    text: &'a str,
+}
+
+impl<'a> CharIndexCursor<'a> {
+    pub(super) fn new(text: &'a str) -> Self {
+        Self { ascii_only: text.is_ascii(), byte_index: 0, char_index: 0, text }
+    }
+
+    /// Offsets are expected to arrive in non-decreasing order. One that goes
+    /// backwards restarts the count from the front rather than answering with
+    /// a stale character index, so an out-of-order caller stays correct and
+    /// only loses the speedup.
+    pub(super) fn char_index(&mut self, byte_index: usize) -> usize {
+        let byte_index = clamp_to_char_boundary(self.text, byte_index);
+
+        if self.ascii_only {
+            return byte_index;
+        }
+
+        if byte_index < self.byte_index {
+            self.byte_index = 0;
+            self.char_index = 0;
+        }
+
+        self.char_index += self.text[self.byte_index..byte_index].chars().count();
+        self.byte_index = byte_index;
+        self.char_index
+    }
 }
 
 pub(super) fn collect_char_boundaries(text: &str) -> Vec<usize> {
@@ -127,4 +170,66 @@ pub(super) fn levenshtein(left: &str, right: &str) -> usize {
     }
 
     previous_row[right_chars.len()]
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn cursor_matches_a_full_recount_at_every_boundary() {
+        for text in [
+            "",
+            "plain ascii text",
+            "日本語のテキスト",
+            "mixed 日本語 and ascii ではの",
+            "combining a\u{0301}e\u{0301}o\u{0301} marks",
+            "emoji \u{1F600} and \u{1F1EF}\u{1F1F5} flags",
+        ] {
+            let mut cursor = CharIndexCursor::new(text);
+            for byte_index in 0..=text.len() {
+                if !text.is_char_boundary(byte_index) {
+                    continue;
+                }
+                let expected = text[..byte_index].chars().count();
+                assert_eq!(cursor.char_index(byte_index), expected, "{text:?} at {byte_index}");
+            }
+        }
+    }
+
+    #[test]
+    fn cursor_recovers_when_offsets_go_backwards() {
+        let text = "日本語 mixed テキスト";
+        let mut cursor = CharIndexCursor::new(text);
+
+        let far = text.len();
+        assert_eq!(cursor.char_index(far), text.chars().count());
+        // Walking back has to recount rather than report a stale index.
+        assert_eq!(cursor.char_index(0), 0);
+        assert_eq!(cursor.char_index("日本語".len()), 3);
+    }
+
+    #[test]
+    fn cursor_clamps_past_the_end_and_off_a_boundary() {
+        let text = "日本語";
+        let mut cursor = CharIndexCursor::new(text);
+
+        // Past the end clamps to the end.
+        assert_eq!(cursor.char_index(text.len() + 100), 3);
+
+        // Inside a multi-byte character rounds down to its start.
+        let mut cursor = CharIndexCursor::new(text);
+        assert_eq!(cursor.char_index(4), 1);
+        assert_eq!(cursor.char_index(5), 1);
+        assert_eq!(cursor.char_index(6), 2);
+    }
+
+    #[test]
+    fn cursor_takes_the_ascii_fast_path_without_changing_answers() {
+        let text = "the quick brown fox";
+        let mut cursor = CharIndexCursor::new(text);
+        for byte_index in 0..=text.len() {
+            assert_eq!(cursor.char_index(byte_index), byte_index);
+        }
+    }
 }

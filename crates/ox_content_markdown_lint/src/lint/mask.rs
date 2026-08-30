@@ -37,27 +37,23 @@ pub(super) fn mask_markdown_line(line: &str) -> String {
     if let Some(list_prefix_pattern) = LIST_PREFIX_PATTERN.as_ref()
         && let Some(prefix_match) = list_prefix_pattern.find(line)
     {
-        let (start, end) = byte_range_to_char_range(line, prefix_match.start(), prefix_match.end());
+        let mut cursor = CharIndexCursor::new(line);
+        let start = cursor.char_index(prefix_match.start());
+        let end = cursor.char_index(prefix_match.end());
         blank_range(&mut chars, start, end);
     }
 
-    if let Some(footnote_pattern) = FOOTNOTE_PATTERN.as_ref() {
-        for value in footnote_pattern.find_iter(line) {
-            let (start, end) = byte_range_to_char_range(line, value.start(), value.end());
-            blank_range(&mut chars, start, end);
-        }
-    }
+    // Each scan restarts at the front of the line, so each gets its own
+    // cursor; within a scan the matches arrive in order.
+    for pattern in [FOOTNOTE_PATTERN.as_ref(), URL_PATTERN.as_ref(), HTML_TAG_PATTERN.as_ref()] {
+        let Some(pattern) = pattern else {
+            continue;
+        };
 
-    if let Some(url_pattern) = URL_PATTERN.as_ref() {
-        for value in url_pattern.find_iter(line) {
-            let (start, end) = byte_range_to_char_range(line, value.start(), value.end());
-            blank_range(&mut chars, start, end);
-        }
-    }
-
-    if let Some(html_tag_pattern) = HTML_TAG_PATTERN.as_ref() {
-        for value in html_tag_pattern.find_iter(line) {
-            let (start, end) = byte_range_to_char_range(line, value.start(), value.end());
+        let mut cursor = CharIndexCursor::new(line);
+        for value in pattern.find_iter(line) {
+            let start = cursor.char_index(value.start());
+            let end = cursor.char_index(value.end());
             blank_range(&mut chars, start, end);
         }
     }
@@ -161,8 +157,4 @@ fn blank_range(chars: &mut [char], start: usize, end: usize) {
     for value in chars.iter_mut().take(safe_end).skip(safe_start) {
         *value = ' ';
     }
-}
-
-fn byte_range_to_char_range(text: &str, start: usize, end: usize) -> (usize, usize) {
-    (byte_to_char_index(text, start), byte_to_char_index(text, end))
 }

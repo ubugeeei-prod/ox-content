@@ -13,8 +13,9 @@ pub(super) fn collect_tokens(
     let mut cjk_tokens = Vec::new();
 
     if let Some(cjk_run_pattern) = CJK_RUN_PATTERN.as_ref() {
+        let mut cursor = CharIndexCursor::new(masked_line);
         for value in cjk_run_pattern.find_iter(masked_line) {
-            let start = byte_to_char_index(masked_line, value.start());
+            let start = cursor.char_index(value.start());
             cjk_tokens.extend(collect_cjk_tokens(value.as_str(), start, languages, dictionary));
         }
     }
@@ -65,9 +66,10 @@ fn collect_latin_tokens(
     let mut tokens = Vec::new();
 
     if let Some(latin_word_pattern) = LATIN_WORD_PATTERN.as_ref() {
+        let mut cursor = CharIndexCursor::new(masked_line);
         for value in latin_word_pattern.find_iter(masked_line) {
             let text = value.as_str().to_string();
-            let start = byte_to_char_index(masked_line, value.start());
+            let start = cursor.char_index(value.start());
             let end = start + count_code_points(value.as_str());
             tokens.push(Token { end, language: fallback_language.clone(), start, text });
         }
