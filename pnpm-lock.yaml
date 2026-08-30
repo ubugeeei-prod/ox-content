@@ -183,8 +183,8 @@ importers:
         specifier: ^7.2.4
         version: 7.2.4(supports-color@10.2.2)
       '@mizchi/markdown':
-        specifier: ^0.8.1
-        version: 0.8.1
+        specifier: ^0.8.2
+        version: 0.8.2
       '@ox-content/napi':
         specifier: workspace:*
         version: link:../../crates/ox_content_napi
@@ -313,8 +313,8 @@ importers:
   benchmarks/commonmark-conformance:
     dependencies:
       '@mizchi/markdown':
-        specifier: ^0.8.1
-        version: 0.8.1
+        specifier: ^0.8.2
+        version: 0.8.2
       '@ox-content/napi':
         specifier: workspace:*
         version: link:../../crates/ox_content_napi
@@ -3787,8 +3787,8 @@ packages:
   '@mermaid-js/parser@1.2.0':
     resolution: {integrity: sha512-oYPyv8A4As1yH5Bx+04iQEQxXuIQDe0GKCNSRgao6z8AM9jixXIfP0vsppRLvGf+nKIOb9/LdpWA4YuJiVvESA==}
 
-  '@mizchi/markdown@0.8.1':
-    resolution: {integrity: sha512-OAym6fErecomnLjNfrfIz/H1mw8d706s+XaXVLgiQqJGUbexbbW+0ohty1baelsVh4Hg739G+qm5Tn86lglDKA==}
+  '@mizchi/markdown@0.8.2':
+    resolution: {integrity: sha512-7lqI6WuKO4RtuQRdt4nVEZPXGHwUwWjO4FPRntcGMdZ7E3tR9WWsQgGEUjQfNnPtPudJgaWzgRWyTwRFwVXUyA==}
     engines: {node: '>=24'}
     peerDependencies:
       '@luna_ui/luna': ^0.23.0
@@ -11012,7 +11012,7 @@ snapshots:
     dependencies:
       '@chevrotain/types': 11.1.2
 
-  '@mizchi/markdown@0.8.1': {}
+  '@mizchi/markdown@0.8.2': {}
 
   '@napi-rs/canvas-android-arm64@0.1.100':
     optional: true
