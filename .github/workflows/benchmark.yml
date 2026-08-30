@@ -80,6 +80,15 @@ jobs:
         # is no project lockfile to install it from.
         run: npm install --global bun@1.3.14 # zizmor: ignore[adhoc-packages]
 
+      # @mizchi/markdown ships a native MoonBit build in its source repository.
+      # The runtime benchmark builds the matching gitHead for the package
+      # version under test, so install the MoonBit CLI when runtime rows run.
+      - name: Setup MoonBit
+        if: steps.scope.outputs.runtime == 'true'
+        run: |
+          curl -fsSL https://cli.moonbitlang.com/install/unix.sh | bash
+          echo "$HOME/.moon/bin" >> "$GITHUB_PATH"
+
       - name: Setup Rust
         if: steps.scope.outputs.runtime == 'true' || steps.scope.outputs.bundle == 'true'
         uses: dtolnay/rust-toolchain@29eef336d9b2848a0b548edc03f92a220660cdb8 # stable

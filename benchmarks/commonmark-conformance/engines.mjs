@@ -24,6 +24,8 @@ async function optional(name, load) {
   }
 }
 
+const MIZCHI_COMMONMARK_OPTIONS = { autolink: false, tagfilter: false };
+
 /** @returns {Promise<Array<[string, (markdown: string) => string]>>} */
 export async function collectJsRenderers() {
   const renderers = [];
@@ -127,9 +129,24 @@ export async function collectJsRenderers() {
   const satteri = await optional("satteri", () => import("satteri"));
   if (satteri) renderers.push(["satteri", (input) => satteri.markdownToHtml(input).html]);
 
-  // @mizchi/markdown exposes no CommonMark mode; scored as it ships.
+  // @mizchi/markdown exposes CommonMark switches to disable its default
+  // autolink and tagfilter extensions. Score both package runtimes with the
+  // same strict options.
   const mizchi = await optional("@mizchi/markdown", () => import("@mizchi/markdown"));
-  if (mizchi) renderers.push(["@mizchi/markdown", (input) => mizchi.toHtml(input)]);
+  if (mizchi) {
+    renderers.push([
+      "@mizchi/markdown (js)",
+      (input) => mizchi.toHtml(input, MIZCHI_COMMONMARK_OPTIONS),
+    ]);
+  }
+
+  const mizchiWasm = await optional("@mizchi/markdown/wasm", () => import("@mizchi/markdown/wasm"));
+  if (mizchiWasm) {
+    renderers.push([
+      "@mizchi/markdown (wasm)",
+      (input) => mizchiWasm.toHtml(input, MIZCHI_COMMONMARK_OPTIONS),
+    ]);
+  }
 
   // @tanstack/markdown exposes no CommonMark mode; scored as it ships.
   const tanstack = await optional("@tanstack/markdown", async () => {

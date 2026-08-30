@@ -34,10 +34,11 @@ Two decisions make the comparison fair, and both are load-bearing:
 - **Configuration.** Each engine runs in the most spec-faithful mode it exposes,
   not in its benchmark defaults: `markdown-it` and `markdown-it-ts` use their
   `commonmark` presets, `micromark` and `remark-html` are told to pass raw HTML
-  through, and `md4w` runs with `parseFlags: 0`. Otherwise the column would
-  measure a default preset rather than the engine. Engines with no such mode
-  (`marked`, `md4x`, `@tanstack/markdown`, `@mizchi/markdown`) are scored as
-  they ship, which each entry notes.
+  through, `md4w` runs with `parseFlags: 0`, and the `@mizchi/markdown` JS,
+  Wasm, and native rows disable their default autolink and tagfilter
+  extensions. Otherwise the column would measure a default preset rather than
+  the engine. Engines with no such mode (`marked`, `md4x`,
+  `@tanstack/markdown`) are scored as they ship, which each entry notes.
 - **Comparison.** Both sides pass through `normalize_html`, the normalizer the
   in-repo conformance suite uses, reached through the native binary's
   `--normalize` filter so JS and native engines are judged identically. A
@@ -50,7 +51,8 @@ Two decisions make the comparison fair, and both are load-bearing:
   it is not tuned to one engine.
 
 The sweep needs `cargo` because the normalizer lives in the native binary; `bun`
-is optional and adds the `Bun.markdown.html` row.
+is optional and adds the `Bun.markdown.html` row, while `git` and `moon` add the
+`@mizchi/markdown (native)` row.
 
 Regenerate with:
 
@@ -92,6 +94,11 @@ pulldown-cmark's `push_html` stands in for the render side of that stack.
 The runner mirrors the JS harness protocol byte-for-byte (same sample
 document, sizes, warmup, iteration counts, and `--runs` median selection),
 which its unit tests pin against `parse-benchmark-bun.mjs`.
+
+The `@mizchi/markdown (native)` row is built separately from the installed
+package version's upstream gitHead with `moon build --target native`. It runs
+the same in-process parse and parse+render workloads as the JS package rows,
+skipping itself when `git` or `moon` is unavailable.
 
 ## OSS Markdown corpus (real-world inputs)
 

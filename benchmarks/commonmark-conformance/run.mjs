@@ -27,6 +27,7 @@ import { readFileSync, writeFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
+import { loadMizchiMarkdownNativeConformanceRenderings } from "../mizchi-markdown-native.mjs";
 import { collectJsRenderers } from "./engines.mjs";
 import { parseSpec } from "./spec-txt.mjs";
 
@@ -219,6 +220,11 @@ async function main() {
     name,
     renderAll(render, examples),
   ]);
+
+  const mizchiNative = loadMizchiMarkdownNativeConformanceRenderings(examples);
+  if (mizchiNative) {
+    rendered.push([mizchiNative.name, mizchiNative.rendered]);
+  }
 
   const bun = loadBunRenderings();
   if (bun) {

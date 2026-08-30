@@ -10,6 +10,8 @@ import { performance } from "node:perf_hooks";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
+import { loadMizchiMarkdownNativeBenchmarks } from "../mizchi-markdown-native.mjs";
+
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const BUN_BENCHMARK_SCRIPT = join(__dirname, "parse-benchmark-bun.mjs");
 // Resolved relative to this script (not process.cwd()) so the CI flow that
@@ -75,15 +77,19 @@ Here's a [link](https://example.com) and an image: ![alt](image.png)
 Final paragraph with \`inline code\` and more text.
 `;
 
-// Repeat the sample to create larger documents
-const sizes = {
-  small: sampleMarkdown,
-  medium: Array(10).fill(sampleMarkdown).join("\n\n"),
-  large: Array(100).fill(sampleMarkdown).join("\n\n"),
+const SIZE_SPECS = [
+  { name: "small", repeats: 1, iterations: 100 },
+  { name: "medium", repeats: 10, iterations: 50 },
+  { name: "large", repeats: 100, iterations: 20 },
   // ~1 MB document: stresses parsers at a scale typical of a large
   // single-file handbook chapter or a concatenated docs bundle.
-  huge: Array(2150).fill(sampleMarkdown).join("\n\n"),
-};
+  { name: "huge", repeats: 2150, iterations: 5 },
+];
+
+// Repeat the sample to create larger documents.
+const sizes = Object.fromEntries(
+  SIZE_SPECS.map(({ name, repeats }) => [name, Array(repeats).fill(sampleMarkdown).join("\n\n")]),
+);
 
 /**
  * Benchmark a sync function
@@ -502,15 +508,23 @@ async function runBenchmarks() {
     console.log("@ox-content/wasm pkg not built (vp run build:wasm), skipping\n");
   }
 
-  // @mizchi/markdown (markdown.mbt) is a MoonBit-authored Markdown compiler
-  // shipped as a pure-JS build. Loaded defensively like satteri so an older
-  // checkout without the dependency skips it rather than crashing.
-  let mizchi = null;
+  // @mizchi/markdown (markdown.mbt) ships separate JS, Wasm, and native
+  // runtimes. Load each defensively so copied base benchmarks still run if a
+  // checkout predates one of the package exports or the native toolchain.
+  let mizchiJs = null;
   try {
-    mizchi = await import("@mizchi/markdown");
-    console.log("Using @mizchi/markdown\n");
+    mizchiJs = await import("@mizchi/markdown");
+    console.log("Using @mizchi/markdown (js)\n");
   } catch {
-    console.log("@mizchi/markdown not available, skipping mizchi comparisons\n");
+    console.log("@mizchi/markdown not available, skipping mizchi JS comparisons\n");
+  }
+
+  let mizchiWasm = null;
+  try {
+    mizchiWasm = await import("@mizchi/markdown/wasm");
+    console.log("Using @mizchi/markdown (wasm)\n");
+  } catch {
+    console.log("@mizchi/markdown/wasm not available, skipping mizchi Wasm comparisons\n");
   }
 
   // TanStack Markdown exposes separate parser and HTML renderer entry points.
@@ -576,6 +590,17 @@ async function runBenchmarks() {
     console.log("native competitors not available, skipping\n");
   }
 
+  const mizchiNative = loadMizchiMarkdownNativeBenchmarks({
+    sampleMarkdown,
+    sizeSpecs: SIZE_SPECS,
+    runs: options.runs,
+  });
+  if (mizchiNative) {
+    console.log("Using @mizchi/markdown (native)\n");
+  } else {
+    console.log("@mizchi/markdown native benchmark not available, skipping\n");
+  }
+
   const md = new MarkdownIt();
   const mdTs = MarkdownItTs ? MarkdownItTs() : null;
   const remarkParseProcessor = unified().use(remarkParse);
@@ -613,10 +638,17 @@ async function runBenchmarks() {
     });
   }
 
-  if (mizchi) {
+  if (mizchiJs) {
     parsers.push({
-      name: "@mizchi/markdown",
-      fn: (input) => mizchi.parse(input),
+      name: "@mizchi/markdown (js)",
+      fn: (input) => mizchiJs.parse(input),
+    });
+  }
+
+  if (mizchiWasm) {
+    parsers.push({
+      name: "@mizchi/markdown (wasm)",
+      fn: (input) => mizchiWasm.parse(input),
     });
   }
 
@@ -674,10 +706,17 @@ async function runBenchmarks() {
     });
   }
 
-  if (mizchi) {
+  if (mizchiJs) {
     renderers.push({
-      name: "@mizchi/markdown",
-      fn: (input) => mizchi.toHtml(input),
+      name: "@mizchi/markdown (js)",
+      fn: (input) => mizchiJs.toHtml(input),
+    });
+  }
+
+  if (mizchiWasm) {
+    renderers.push({
+      name: "@mizchi/markdown (wasm)",
+      fn: (input) => mizchiWasm.toHtml(input),
     });
   }
 
@@ -712,12 +751,11 @@ async function runBenchmarks() {
     });
   }
 
-  for (const [sizeName, content] of Object.entries(sizes)) {
+  for (const { name: sizeName, iterations } of SIZE_SPECS) {
+    const content = sizes[sizeName];
     const sizeKB = (content.length / 1024).toFixed(1);
     console.log(`\n## ${sizeName.toUpperCase()} (${sizeKB} KB)`);
 
-    const iterations =
-      sizeName === "huge" ? 5 : sizeName === "large" ? 20 : sizeName === "medium" ? 50 : 100;
     const suites = {};
 
     // Parse only benchmark
@@ -733,6 +771,10 @@ async function runBenchmarks() {
     const nativeParseRows = nativeCompetitors?.parse?.[sizeName];
     if (Array.isArray(nativeParseRows)) {
       parseResults.push(...nativeParseRows);
+    }
+    const mizchiNativeParseRows = mizchiNative?.parse?.[sizeName];
+    if (Array.isArray(mizchiNativeParseRows)) {
+      parseResults.push(...mizchiNativeParseRows);
     }
     parseResults.sort((a, b) => (b.opsPerSec || 0) - (a.opsPerSec || 0));
     suites.parseOnly = parseResults;
@@ -754,6 +796,10 @@ async function runBenchmarks() {
     const nativeRenderRows = nativeCompetitors?.render?.[sizeName];
     if (Array.isArray(nativeRenderRows)) {
       renderResults.push(...nativeRenderRows);
+    }
+    const mizchiNativeRenderRows = mizchiNative?.render?.[sizeName];
+    if (Array.isArray(mizchiNativeRenderRows)) {
+      renderResults.push(...mizchiNativeRenderRows);
     }
     renderResults.sort((a, b) => (b.opsPerSec || 0) - (a.opsPerSec || 0));
     suites.parseAndRender = renderResults;
