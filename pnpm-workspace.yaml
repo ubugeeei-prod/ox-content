@@ -57,4 +57,4 @@ peerDependencyRules:
     vite: "*"
     vitest: "*"
 minimumReleaseAgeExclude:
-  - "@mizchi/markdown@0.8.2"
+  - "@mizchi/markdown@0.8.3"
