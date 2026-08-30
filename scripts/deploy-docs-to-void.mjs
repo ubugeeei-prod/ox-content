@@ -49,6 +49,13 @@ const run = (command, args, options = {}) => {
   }
 };
 
+// pnpm 12 fails an install whose dependencies carry unapproved build
+// scripts, and `pnpm dlx` runs outside the workspace, so the `allowBuilds`
+// list in pnpm-workspace.yaml never reaches it. The approval is only
+// accepted as a CLI flag — `npm_config_*` is ignored — and `vpx` has no way
+// to pass one through, so the dlx call is spelled out below.
+const voidBuildDependencies = ["better-sqlite3", "esbuild", "workerd"];
+
 const voidArgs = ["void@0.10.8", "deploy"];
 
 if (!hasOption(extraArgs, "--project")) {
@@ -73,4 +80,12 @@ run("vp", ["build"], {
     OX_CONTENT_DOCS_SITE_URL: docsSiteUrl,
   },
 });
-run("vpx", voidArgs);
+run("vp", [
+  "exec",
+  "--",
+  "pnpm",
+  "dlx",
+  "--yes",
+  ...voidBuildDependencies.flatMap((name) => ["--allow-build", name]),
+  ...voidArgs,
+]);

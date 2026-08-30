@@ -323,6 +323,16 @@ jobs:
           --package-json-path crates/ox_content_napi/package.json
           --npm-dir binding-packages --no-gh-release --skip-optional-publish
 
+      # pkg-pr-new's `--pnpm` flag shells out to a `pnpm` binary of its own.
+      # setup-vp drives pnpm through corepack, so only `corepack` lands on
+      # PATH and that spawn fails with ENOENT. The shim resolves the version
+      # in `packageManager`, which is the one corepack already fetched.
+      - name: Put pnpm on PATH for pkg-pr-new
+        run: |
+          mkdir -p "$HOME/.local/bin"
+          corepack enable --install-directory "$HOME/.local/bin" pnpm
+          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+
       - name: Publish to pkg-pr-new
         id: publish-pkg-pr-new
         continue-on-error: ${{ github.event_name == 'pull_request' }}
