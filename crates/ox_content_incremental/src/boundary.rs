@@ -7,47 +7,83 @@ use memchr::memchr;
 /// unstable tail while still letting the UI render that tail provisionally.
 #[must_use]
 pub fn stable_prefix_len(source: &str) -> usize {
-    let bytes = source.as_bytes();
-    let mut pos = 0usize;
-    let mut blank_boundary = 0usize;
-    let mut stable_boundary = 0usize;
-    let mut fence: Option<(u8, usize)> = None;
+    BoundaryScan::default().advance(source)
+}
 
-    while pos < bytes.len() {
-        let line_start = pos;
-        let line_end =
-            memchr(b'\n', &bytes[line_start..]).map_or(bytes.len(), |off| line_start + off);
-        let next_line = if line_end < bytes.len() { line_end + 1 } else { line_end };
-        let line = strip_cr(&source[line_start..line_end]);
+/// Resumable form of the [`stable_prefix_len`] scan.
+///
+/// A streaming caller asks for the stable prefix after every chunk, and the
+/// answer depends on state that only accumulates: how far the scan got, the
+/// fence it is inside, and where the last run of blank lines ended. Keeping
+/// that state turns a whole-buffer rescan per chunk into one pass over the
+/// stream. It matters most exactly where nothing commits — a long fenced
+/// code block arriving in chunks — which is where the rescan was quadratic.
+#[derive(Debug, Clone, Default)]
+pub struct BoundaryScan {
+    /// Bytes of the buffer already consumed as complete lines.
+    pos: usize,
+    fence: Option<(u8, usize)>,
+    /// Offset just past the most recent run of blank lines, or `0`.
+    blank_boundary: usize,
+    /// Highest offset proven safe to commit.
+    stable_boundary: usize,
+}
 
-        if let Some((fence_byte, fence_len)) = fence {
-            if is_closing_fence(line, fence_byte, fence_len) {
-                fence = None;
-            }
-            pos = next_line;
-            continue;
+impl BoundaryScan {
+    /// Consumes whatever `source` has gained since the last call and returns
+    /// the stable prefix length. `source` must be the same buffer, extended
+    /// at the end (and rebased through [`Self::commit`] when it is drained).
+    pub fn advance(&mut self, source: &str) -> usize {
+        let bytes = source.as_bytes();
+        while self.pos < bytes.len() {
+            let Some(offset) = memchr(b'\n', &bytes[self.pos..]) else {
+                break;
+            };
+            let line_end = self.pos + offset;
+            let line = strip_cr(&source[self.pos..line_end]);
+            self.step(line, line_end + 1);
+            self.pos = line_end + 1;
         }
 
-        if let Some(opening) = opening_fence(line) {
-            fence = Some(opening);
-            pos = next_line;
-            continue;
+        // The buffer may end mid-line. Such a line can still prove a
+        // boundary — an unindented character after a blank line does that
+        // on its own — but it may grow into something else on the next
+        // chunk, so score it without keeping the state it implies.
+        if self.pos < bytes.len() {
+            let mut tentative = self.clone();
+            tentative.step(strip_cr(&source[self.pos..]), bytes.len());
+            return tentative.stable_boundary;
         }
-
-        if line.trim().is_empty() {
-            blank_boundary = next_line;
-            pos = next_line;
-            continue;
-        }
-
-        if blank_boundary != 0 && indentation_columns(line) == 0 {
-            stable_boundary = blank_boundary;
-        }
-        blank_boundary = 0;
-        pos = next_line;
+        self.stable_boundary
     }
 
-    stable_boundary
+    /// Rebases the scan after `len` bytes have been drained from the front.
+    pub fn commit(&mut self, len: usize) {
+        self.pos = self.pos.saturating_sub(len);
+        self.blank_boundary = self.blank_boundary.saturating_sub(len);
+        self.stable_boundary = self.stable_boundary.saturating_sub(len);
+    }
+
+    fn step(&mut self, line: &str, next_line: usize) {
+        if let Some((fence_byte, fence_len)) = self.fence {
+            if is_closing_fence(line, fence_byte, fence_len) {
+                self.fence = None;
+            }
+            return;
+        }
+        if let Some(opening) = opening_fence(line) {
+            self.fence = Some(opening);
+            return;
+        }
+        if line.trim().is_empty() {
+            self.blank_boundary = next_line;
+            return;
+        }
+        if self.blank_boundary != 0 && indentation_columns(line) == 0 {
+            self.stable_boundary = self.blank_boundary;
+        }
+        self.blank_boundary = 0;
+    }
 }
 
 pub fn opening_fence(line: &str) -> Option<(u8, usize)> {

@@ -4,7 +4,7 @@ use ox_content_allocator::Allocator;
 use ox_content_ast::Document;
 use ox_content_parser::{ParseResult, Parser, ParserOptions};
 
-use crate::boundary::stable_prefix_len;
+use crate::boundary::BoundaryScan;
 use crate::provisional::complete_provisional_markdown;
 use crate::result::IncrementalParseResult;
 
@@ -21,6 +21,9 @@ pub struct IncrementalParser {
     committed_bytes: usize,
     total_bytes: usize,
     is_final: bool,
+    /// Boundary scan carried across appends so each chunk is examined once
+    /// rather than the whole pending buffer being rescanned per chunk.
+    scan: BoundaryScan,
 }
 
 impl IncrementalParser {
@@ -33,6 +36,7 @@ impl IncrementalParser {
             committed_bytes: 0,
             total_bytes: 0,
             is_final: false,
+            scan: BoundaryScan::default(),
         }
     }
 
@@ -60,8 +64,8 @@ impl IncrementalParser {
         self.total_bytes = self.total_bytes.saturating_add(chunk.len());
         self.is_final = is_final;
 
-        let commit_len =
-            if is_final { self.pending.len() } else { stable_prefix_len(&self.pending) };
+        let stable_len = self.scan.advance(&self.pending);
+        let commit_len = if is_final { self.pending.len() } else { stable_len };
 
         if commit_len == 0 {
             return Ok(IncrementalParseResult::empty(
@@ -84,6 +88,7 @@ impl IncrementalParser {
         };
 
         self.pending.drain(..commit_len);
+        self.scan.commit(commit_len);
         self.committed_bytes = self.committed_bytes.saturating_add(commit_len);
 
         Ok(IncrementalParseResult {
@@ -136,6 +141,7 @@ impl IncrementalParser {
     /// Clears all stream state.
     pub fn reset(&mut self) {
         self.pending.clear();
+        self.scan = BoundaryScan::default();
         self.committed_bytes = 0;
         self.total_bytes = 0;
         self.is_final = false;
