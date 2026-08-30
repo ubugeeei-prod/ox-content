@@ -352,13 +352,24 @@ importers:
         specifier: ^11.0.5
         version: 11.0.5
 
+  benchmarks/scale:
+    dependencies:
+      '@ox-content/vite-plugin':
+        specifier: workspace:*
+        version: link:../../npm/vite-plugin-ox-content
+    devDependencies:
+      vite:
+        specifier: npm:@voidzero-dev/vite-plus-core@0.2.8
+        version: '@voidzero-dev/vite-plus-core@0.2.8(@types/node@26.2.0)(esbuild@0.28.2)(jiti@1.21.7)(terser@5.49.0)(typescript@7.0.2)(yaml@2.9.0)'
+      vite-plus:
+        specifier: 'catalog:'
+        version: 0.3.0(@types/node@26.2.0)(@voidzero-dev/vite-plus-core@0.2.8(@types/node@26.2.0)(esbuild@0.28.2)(jiti@1.21.7)(terser@5.49.0)(typescript@7.0.2)(yaml@2.9.0))(esbuild@0.28.2)(jiti@1.21.7)(svelte@5.56.10)(terser@5.49.0)(typescript@7.0.2)(yaml@2.9.0)
+
   crates/ox_content_napi:
     devDependencies:
       '@napi-rs/cli':
         specifier: ^3.8.6
         version: 3.8.6(@emnapi/core@1.9.2)(@emnapi/runtime@1.9.2)(@types/node@26.2.0)
-
-  crates/ox_content_wasm/pkg: {}
 
   deploy: {}
 
