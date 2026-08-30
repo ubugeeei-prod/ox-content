@@ -39,17 +39,25 @@ impl<'a> Parser<'a> {
             // Links may not contain other links; when the bracket text
             // parses to one, the outer bracket stays literal and the
             // inner (re-parsed after the fallback) wins.
-            let inner_has_link = memchr::memchr(b'[', link_text.as_bytes()).is_some_and(|_| {
-                self.parse_inline(link_text, offset + text_start)
-                    .is_ok_and(|nodes| contains_link(&nodes))
-            });
+            //
+            // The probe needs the parsed children, and so does every
+            // accepting branch below, so parse once and hand the nodes on.
+            // The verdict is memoized because the literal-bracket fallback
+            // makes the caller re-scan these same bytes; re-probing there
+            // is what turns nested brackets into exponential work.
+            let mut inner_nodes = None;
+            let inner_has_link = memchr::memchr(b'[', link_text.as_bytes()).is_some()
+                && self.probe_link_text(link_text, offset + text_start, &mut inner_nodes);
 
             // Inline form: [text](dest "title")
             if !inner_has_link
                 && bytes.get(close + 1) == Some(&b'(')
                 && let Some(target) = self.parse_link_target(content, close + 1)
             {
-                let children_nodes = self.parse_inline(link_text, offset + text_start)?;
+                let children_nodes = match inner_nodes.take() {
+                    Some(nodes) => nodes,
+                    None => self.parse_inline(link_text, offset + text_start)?,
+                };
                 children.push(Node::Link(self.allocator.boxed(Link {
                     url: target.url,
                     title: target.title,
@@ -71,7 +79,10 @@ impl<'a> Parser<'a> {
                     let key = if raw_label.trim().is_empty() { link_text } else { raw_label };
                     if let Some(reference) = self.lookup_reference(key) {
                         let (url, title) = (reference.url, reference.title);
-                        let children_nodes = self.parse_inline(link_text, offset + text_start)?;
+                        let children_nodes = match inner_nodes.take() {
+                            Some(nodes) => nodes,
+                            None => self.parse_inline(link_text, offset + text_start)?,
+                        };
                         children.push(Node::Link(self.allocator.boxed(Link {
                             url,
                             title,
@@ -94,7 +105,10 @@ impl<'a> Parser<'a> {
                 && let Some(reference) = self.lookup_reference(link_text)
             {
                 let (url, title) = (reference.url, reference.title);
-                let children_nodes = self.parse_inline(link_text, offset + text_start)?;
+                let children_nodes = match inner_nodes.take() {
+                    Some(nodes) => nodes,
+                    None => self.parse_inline(link_text, offset + text_start)?,
+                };
                 children.push(Node::Link(self.allocator.boxed(Link {
                     url,
                     title,
@@ -111,6 +125,35 @@ impl<'a> Parser<'a> {
         Self::push_text(children, "[", offset + link_start, offset + link_start + 1);
         *pos = link_start + 1;
         Ok(())
+    }
+
+    /// Reports whether `link_text` already parses to something containing a
+    /// link, so the surrounding bracket cannot become one.
+    ///
+    /// On a cache miss the parsed nodes are handed back through `nodes`,
+    /// because an accepting branch in `parse_link` needs exactly those
+    /// children and would otherwise parse the same bytes a second time.
+    fn probe_link_text(
+        &self,
+        link_text: &'a str,
+        offset: usize,
+        nodes: &mut Option<Vec<'a, Node<'a>>>,
+    ) -> bool {
+        let key = (link_text.as_ptr() as usize, link_text.len());
+        // Borrow only for the lookup: the parse below re-enters this method.
+        let cached = self.link_probe_cache.borrow().get(&key).copied();
+        if let Some(verdict) = cached {
+            return verdict;
+        }
+        let Ok(parsed) = self.parse_inline(link_text, offset) else {
+            // A failing sub-parse cannot yield a link, and the caller's own
+            // parse of the same text surfaces the error.
+            return false;
+        };
+        let verdict = contains_link(&parsed);
+        self.link_probe_cache.borrow_mut().insert(key, verdict);
+        *nodes = Some(parsed);
+        verdict
     }
 
     pub(super) fn parse_image(

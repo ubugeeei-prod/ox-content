@@ -171,6 +171,22 @@ pub struct Parser<'a> {
     /// construction and must not be reinterpreted as setext underlines
     /// during the re-parse.
     lazy_lines: Option<std::rc::Rc<rustc_hash::FxHashSet<u32>>>,
+
+    /// Memoized "this bracket text already contains a link" verdicts,
+    /// keyed by the address and length of the bracketed slice.
+    ///
+    /// CommonMark forbids a link inside a link, so `parse_link` has to
+    /// parse the bracket text before it can decide whether the outer
+    /// bracket is a link at all. When it is not, the bracket stays literal
+    /// and the caller re-scans the same bytes, parsing that inner text a
+    /// second time. Without memoization every nesting level doubles the
+    /// work, so `[[[[a](u)](u)](u)]...` costs 2^depth — a 200-byte
+    /// document already runs for minutes.
+    ///
+    /// Every slice lives in the source or the arena, both of which outlive
+    /// the parser, so an address plus a length names one byte range for as
+    /// long as the cache exists.
+    link_probe_cache: std::cell::RefCell<rustc_hash::FxHashMap<(usize, usize), bool>>,
 }
 
 impl<'a> Parser<'a> {
@@ -192,6 +208,7 @@ impl<'a> Parser<'a> {
             definitions: None,
             footnote_labels: None,
             lazy_lines: None,
+            link_probe_cache: std::cell::RefCell::default(),
         };
         // A single fused pre-pass collects both the reference definitions
         // and the footnote labels (see `prepass.rs`).
@@ -222,6 +239,7 @@ impl<'a> Parser<'a> {
             // Most sub-sources are entered without any lazy continuation
             // line, and every block quote and list item builds one of these.
             lazy_lines: (!lazy_lines.is_empty()).then(|| std::rc::Rc::new(lazy_lines)),
+            link_probe_cache: std::cell::RefCell::default(),
         }
     }
 
