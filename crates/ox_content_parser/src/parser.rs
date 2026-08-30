@@ -18,6 +18,7 @@ mod indented_code;
 mod inline;
 mod inline_helpers;
 mod inline_html;
+mod inline_link;
 mod leaf;
 mod line_scan;
 mod list;
