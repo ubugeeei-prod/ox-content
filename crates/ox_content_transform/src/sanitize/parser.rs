@@ -34,9 +34,29 @@ impl<'a> ParsedTag<'a> {
             return None;
         }
         let attr_text = raw[cursor..].trim();
-        let self_closing = attr_text.ends_with('/');
-        let attr_text = attr_text.trim_end_matches('/').trim();
+        // A trailing `/` only marks self-closing when it stands on its own.
+        // Against an unquoted attribute value it is part of that value —
+        // `<img src=a.png/>` is `src="a.png/"` to a browser — so stripping
+        // every trailing slash truncated URLs such as `href=/docs/page/`.
+        let self_closing = closes_tag(attr_text);
+        let attr_text =
+            if self_closing { attr_text[..attr_text.len() - 1].trim_end() } else { attr_text };
         Some(Self { name, closing, self_closing, attrs: parse_attrs(attr_text) })
+    }
+}
+
+/// Whether the attribute text ends in a self-closing `/`.
+///
+/// It does when the slash is the whole text (`<br/>`) or when whitespace or
+/// a closing quote separates it from what came before (`<img src="a"/>`).
+/// A slash glued to an unquoted value belongs to that value.
+fn closes_tag(attr_text: &str) -> bool {
+    let Some(rest) = attr_text.strip_suffix('/') else {
+        return false;
+    };
+    match rest.chars().next_back() {
+        None => true,
+        Some(ch) => ch.is_whitespace() || ch == '"' || ch == '\'',
     }
 }
 
@@ -52,7 +72,6 @@ fn parse_attrs(mut raw: &str) -> Vec<ParsedAttr<'_>> {
         while name_end < bytes.len()
             && !bytes[name_end].is_ascii_whitespace()
             && bytes[name_end] != b'='
-            && bytes[name_end] != b'/'
         {
             name_end += 1;
         }
@@ -78,10 +97,11 @@ fn parse_attrs(mut raw: &str) -> Vec<ParsedAttr<'_>> {
                     raw = "";
                 }
             } else {
-                let value_end = raw
-                    .bytes()
-                    .position(|byte| byte.is_ascii_whitespace() || byte == b'/')
-                    .unwrap_or(raw.len());
+                // An unquoted value runs to the next whitespace. `/` does not
+                // end it — HTML only stops on whitespace or `>`, and the tag's
+                // own `>` is already gone by the time we get here.
+                let value_end =
+                    raw.bytes().position(|byte| byte.is_ascii_whitespace()).unwrap_or(raw.len());
                 value = Some(&raw[..value_end]);
                 raw = &raw[value_end..];
             }
