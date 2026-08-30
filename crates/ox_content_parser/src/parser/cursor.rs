@@ -155,7 +155,11 @@ impl<'a> Parser<'a> {
                 Self::try_parse_fenced_code_at(line, trimmed)
             }
             b'{' => {
+                // `looks_like_flow_expression` walks to the end of the
+                // source to report that nothing closed, so a run of lines
+                // starting with an unclosed `{` would pay one walk each.
                 self.options.mdx
+                    && self.has_closer_from(self.source, trimmed_start + 1, b'}')
                     && super::mdx_jsx::looks_like_flow_expression(self.source, trimmed_start)
             }
             b'<' => {

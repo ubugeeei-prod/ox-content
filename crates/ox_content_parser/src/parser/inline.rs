@@ -50,14 +50,6 @@ impl<'a> Parser<'a> {
         self.options.mdx
     }
 
-    fn next_inline_marker(&self, bytes: &[u8], from: usize) -> usize {
-        let special = next_inline_special(bytes, from);
-        if !self.allows_mdx_text_expression() || from >= special {
-            return special;
-        }
-        memchr(b'{', &bytes[from..special]).map_or(special, |rel| from + rel)
-    }
-
     pub(super) fn parse_inline(
         &self,
         content: &'a str,
@@ -65,7 +57,8 @@ impl<'a> Parser<'a> {
     ) -> ParseResult<Vec<'a, Node<'a>>> {
         profile_span!("parser::parse_inline");
         let bytes = content.as_bytes();
-        let first_special = self.next_inline_marker(bytes, 0);
+        let mut markers = InlineMarkerScan::new(self.allows_mdx_text_expression());
+        let first_special = markers.next(bytes, 0);
 
         // Plain text is both the most common inline shape and exactly one AST
         // node. Reserving the general four-node floor here wasted three
@@ -94,7 +87,7 @@ impl<'a> Parser<'a> {
             // one Text node. This keeps the parser on bulk byte scans for
             // prose and only enters the slower match when a real marker byte
             // has been reached.
-            pos = first_scan.take().unwrap_or_else(|| self.next_inline_marker(bytes, pos));
+            pos = first_scan.take().unwrap_or_else(|| markers.next(bytes, pos));
 
             // Fold soft line breaks into the running text node. A newline
             // with non-whitespace on both sides is a soft break with nothing
@@ -112,7 +105,7 @@ impl<'a> Parser<'a> {
                 && !matches!(bytes[pos - 1], b' ' | b'\t')
                 && !matches!(bytes[pos + 1], b' ' | b'\t' | b'\n')
             {
-                pos = self.next_inline_marker(bytes, pos + 1);
+                pos = markers.next(bytes, pos + 1);
             }
 
             if pos > start {
@@ -328,5 +321,65 @@ impl<'a> Parser<'a> {
         Self::push_text(children, &content[*pos..*pos + 2], offset + *pos, offset + *pos + 2);
         *pos += 2;
         Ok(())
+    }
+}
+
+/// A memo for one forward byte scan over a fixed slice.
+///
+/// Both scans below are position-independent: when the next hit at or
+/// after `origin` is `hit`, it is still `hit` for every position in
+/// `origin..=hit`. Recomputing only when the cursor leaves that window is
+/// what keeps the walk linear.
+#[derive(Clone, Copy)]
+struct ForwardScan {
+    origin: usize,
+    hit: usize,
+}
+
+impl ForwardScan {
+    const fn new() -> Self {
+        // `usize::MAX` cannot be a real origin, so the first lookup always
+        // computes.
+        Self { origin: usize::MAX, hit: 0 }
+    }
+
+    fn hit(&mut self, from: usize, find: impl FnOnce(usize) -> usize) -> usize {
+        if from < self.origin || from > self.hit {
+            self.origin = from;
+            self.hit = find(from);
+        }
+        self.hit
+    }
+}
+
+/// Where the next byte that can start an inline construct is.
+///
+/// `{` is not in the classifier's byte set, so with MDX on it was found by
+/// scanning to the next real marker first and then searching the span in
+/// between. In prose whose only markers are braces that first scan runs to
+/// the end of the content — for every brace — so a line of `{a} ` cost
+/// O(n²): 32 KiB took 6.8 ms against 0.005 ms without MDX, growing x15 for
+/// every x4 of input. Caching both scans costs two words and removes the
+/// repeat.
+struct InlineMarkerScan {
+    brace: ForwardScan,
+    mdx: bool,
+    special: ForwardScan,
+}
+
+impl InlineMarkerScan {
+    const fn new(mdx: bool) -> Self {
+        Self { brace: ForwardScan::new(), mdx, special: ForwardScan::new() }
+    }
+
+    fn next(&mut self, bytes: &[u8], from: usize) -> usize {
+        let special = self.special.hit(from, |at| next_inline_special(bytes, at));
+        if !self.mdx {
+            return special;
+        }
+        let brace = self
+            .brace
+            .hit(from, |at| memchr(b'{', &bytes[at..]).map_or(bytes.len(), |rel| at + rel));
+        special.min(brace)
     }
 }
