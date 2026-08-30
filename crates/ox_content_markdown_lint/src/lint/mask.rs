@@ -124,14 +124,17 @@ fn mask_link_targets(line_chars: &[char], chars: &mut [char]) {
         }
 
         if line_chars[index + 1] == '[' {
-            let mut cursor = index + 2;
-            while cursor < line_chars.len() {
-                if line_chars[cursor] == ']' {
-                    blank_range(chars, index, cursor + 1);
-                    index = cursor + 1;
-                    break;
+            // `index` has to move whether or not the reference label
+            // closes. It used to move only on the `]`, so a `][` with no
+            // later `]` — `text ][ text`, or any line where the brackets do
+            // not pair up — spun here forever.
+            match line_chars[index + 2..].iter().position(|value| *value == ']') {
+                Some(offset) => {
+                    let close = index + 2 + offset;
+                    blank_range(chars, index, close + 1);
+                    index = close + 1;
                 }
-                cursor += 1;
+                None => index += 1,
             }
         } else {
             index += 1;
