@@ -15,46 +15,57 @@ const HEADER_ANCHOR_OPEN: &str = "<a class=\"header-anchor\"";
 pub(super) fn transform_attribute_syntax(html: &str) -> Option<String> {
     let bytes = html.as_bytes();
     let mut out = String::with_capacity(html.len());
-    let mut cursor = 0usize;
+    // `out` holds exactly `html[..flushed]`, rewritten where an attribute
+    // block applied. `scan` is only where to look for the next `{`.
+    //
+    // These were one variable, and moving it past a block that did not
+    // apply meant the text before that block was never written: a later
+    // rewrite copied from the moved position and everything between was
+    // dropped. It also made an enclosing tag that had already been written
+    // look rewritable, which sliced backwards and aborted the process.
+    let mut flushed = 0usize;
+    let mut scan = 0usize;
     let mut changed = false;
 
-    while cursor < bytes.len() {
-        let Some(relative) = memchr::memchr(b'{', &bytes[cursor..]) else {
+    while scan < bytes.len() {
+        let Some(relative) = memchr::memchr(b'{', &bytes[scan..]) else {
             break;
         };
-        let attr_start = cursor + relative;
+        let attr_start = scan + relative;
         let Some(attr_end) = find_attr_block_end(html, attr_start) else {
-            cursor = attr_start + 1;
+            scan = attr_start + 1;
             continue;
         };
         let attrs = &html[attr_start + 1..attr_end];
         let Some(parsed) = ParsedAttrs::parse(attrs) else {
-            cursor = attr_start + 1;
+            scan = attr_start + 1;
             continue;
         };
 
         if let Some(next) =
-            try_apply_attrs_inside_element(html, &mut out, cursor, attr_start, attr_end, &parsed)
+            try_apply_attrs_inside_element(html, &mut out, flushed, attr_start, attr_end, &parsed)
         {
             changed = true;
-            cursor = next;
+            flushed = next;
+            scan = next;
             continue;
         }
 
-        if try_apply_attrs_to_previous_element(html, &mut out, cursor, attr_start, &parsed)
+        if try_apply_attrs_to_previous_element(html, &mut out, flushed, attr_start, &parsed)
             .is_some()
         {
             changed = true;
-            cursor = attr_end + 1;
+            flushed = attr_end + 1;
+            scan = flushed;
             continue;
         }
-        cursor = attr_start + 1;
+        scan = attr_start + 1;
     }
 
     if !changed {
         return None;
     }
-    out.push_str(&html[cursor..]);
+    out.push_str(&html[flushed..]);
     Some(out)
 }
 
@@ -77,7 +88,11 @@ fn try_apply_attrs_inside_element(
         return None;
     }
     let open_marker = format!("<{tag_name}");
-    let open_start = html[..attr_start].rfind(&open_marker)?;
+    // Only the region after `cursor` is still rewritable: everything before
+    // it has already been written to `out`. Searching the whole prefix found
+    // enclosing tags that were long since emitted — a second `{...}` in one
+    // paragraph re-found that paragraph's own `<p>`.
+    let open_start = cursor + html[cursor..attr_start].rfind(&open_marker)?;
     let open_end = scan_tag_end(html, open_start)?;
     if open_end > attr_start {
         return None;
@@ -129,6 +144,7 @@ fn try_apply_attrs_to_adjacent_inline_child(
 
     if let Some((tag_start, tag_end, _close_end, tag_name)) =
         find_previous_wrapped_element(html, trimmed_end)
+        && tag_start >= cursor
         && tag_start >= container_open_end
         && is_adjacent_inline_attr_target_tag(&tag_name)
     {
@@ -140,6 +156,7 @@ fn try_apply_attrs_to_adjacent_inline_child(
     }
 
     if let Some((tag_start, tag_end, tag_name)) = find_previous_void_element(html, trimmed_end)
+        && tag_start >= cursor
         && tag_start >= container_open_end
         && is_adjacent_inline_attr_target_tag(&tag_name)
     {
@@ -167,8 +184,11 @@ fn try_apply_attrs_to_previous_element(
     }
     let whitespace = &html[trimmed_end..attr_start];
 
+    // As in `try_apply_attrs_inside_element`, an element that starts before
+    // `cursor` has already been written out and can no longer be rewritten.
     if let Some((tag_start, tag_end, close_end, _tag_name)) =
         find_previous_wrapped_element(html, trimmed_end)
+        && tag_start >= cursor
     {
         out.push_str(&html[cursor..tag_start]);
         write_open_tag_attrs(out, &html[tag_start..tag_end], attrs);
@@ -184,7 +204,9 @@ fn try_apply_attrs_to_previous_element(
         return Some(close_end);
     }
 
-    if let Some((tag_start, tag_end, _tag_name)) = find_previous_void_element(html, trimmed_end) {
+    if let Some((tag_start, tag_end, _tag_name)) = find_previous_void_element(html, trimmed_end)
+        && tag_start >= cursor
+    {
         out.push_str(&html[cursor..tag_start]);
         write_open_tag_attrs(out, &html[tag_start..tag_end], attrs);
         out.push_str(&html[tag_end..trimmed_end]);
