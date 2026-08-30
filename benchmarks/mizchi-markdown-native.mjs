@@ -104,6 +104,18 @@ function prepareNativeCommand({ sampleMarkdown, sizeSpecs }) {
 
   writeNativeCommand(checkoutDir, sampleMarkdown, sizeSpecs);
 
+  const update = spawnSync("moon", ["update"], {
+    cwd: checkoutDir,
+    encoding: "utf8",
+    maxBuffer: 64 * 1024 * 1024,
+    timeout: 5 * 60 * 1000,
+  });
+
+  if (update.error || update.status !== 0) {
+    warnNativeUnavailable("resolve native source dependencies", update);
+    return null;
+  }
+
   const build = spawnSync("moon", ["build", "--target", "native", "--release", COMMAND_PATH], {
     cwd: checkoutDir,
     encoding: "utf8",
