@@ -1,4 +1,5 @@
 mod flatten;
+mod walk;
 
 use super::super::{
     EntryPageConfig, HeadValidation, NavGroup, NavItem, PageChromeFlags, PageData, PagerOverride,
