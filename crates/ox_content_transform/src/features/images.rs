@@ -47,11 +47,20 @@ pub(super) fn replace_images(segment: &str, options: &ResolvedImageOptions, out:
         return;
     }
 
+    // A `![` with no `]` after it cannot be an image, and `split_balanced`
+    // only reports that after walking to the end of the segment — once per
+    // `![`, which is quadratic over a run of them: 64 KiB of `![ ` took
+    // 0.49 s and grew x16 for every x4 of input. The last `]` settles it for
+    // every `![` in the segment at once.
+    let last_close = memchr::memrchr(b']', segment.as_bytes());
+
     let mut cursor = 0usize;
     while let Some(relative) = segment[cursor..].find("![") {
         let start = cursor + relative;
         out.push_str(&segment[cursor..start]);
-        if let Some(parsed) = parse_image(&segment[start..], options) {
+        if last_close.is_some_and(|last| last > start + 1)
+            && let Some(parsed) = parse_image(&segment[start..], options)
+        {
             emit_image(out, options, &parsed);
             cursor = start + parsed.end;
         } else {

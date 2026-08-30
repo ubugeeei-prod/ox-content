@@ -9,9 +9,10 @@
 use ox_content_allocator::Vec;
 use ox_content_ast::{Link, Node, Span, Text};
 
+mod candidate;
 mod scan;
 
-use self::scan::find_candidate;
+use self::candidate::find_candidate;
 pub(super) use self::scan::may_contain_autolink;
 
 use crate::parser::Parser;
@@ -110,33 +111,50 @@ impl<'a> Parser<'a> {
 }
 
 impl<'a> Parser<'a> {
+    /// Merges runs of adjacent `Text` nodes into one.
+    ///
+    /// Each run used to be `drain`ed and the merged node `insert`ed, and both
+    /// shift every node after the run. A paragraph that alternates text with
+    /// something else is all runs — `@[a](b) ` repeated is exactly that — so
+    /// the shifting cost O(n²): 256 KiB took 1.6 s and grew x19 for every x4
+    /// of input. A write cursor touches each node once.
     fn coalesce_adjacent_text(&self, children: &mut Vec<'a, Node<'a>>) {
         profile_span_detail!("parser::coalesce_text");
-        let mut i = 0;
-        while i + 1 < children.len() {
-            if !matches!(children[i], Node::Text(_)) || !matches!(children[i + 1], Node::Text(_)) {
-                i += 1;
-                continue;
+        let mut write = 0usize;
+        let mut read = 0usize;
+
+        while read < children.len() {
+            let run_start = read;
+            while read < children.len() && matches!(children[read], Node::Text(_)) {
+                read += 1;
             }
-            let mut j = i + 1;
-            while j < children.len() && matches!(children[j], Node::Text(_)) {
-                j += 1;
-            }
-            let mut merged = self.allocator.new_string();
-            let mut span = Span::new(0, 0);
-            for (index, node) in children[i..j].iter().enumerate() {
-                if let Node::Text(text) = node {
-                    if index == 0 {
-                        span = text.span;
+
+            match read - run_start {
+                // Not text at all: keep it, at the cursor.
+                0 => {
+                    children.swap(write, read);
+                    read += 1;
+                }
+                // A lone text node has nothing to merge with.
+                1 => children.swap(write, run_start),
+                _ => {
+                    let mut merged = self.allocator.new_string();
+                    let mut span = Span::new(0, 0);
+                    for (index, node) in children[run_start..read].iter().enumerate() {
+                        if let Node::Text(text) = node {
+                            if index == 0 {
+                                span = text.span;
+                            }
+                            span = Span::new(span.start, text.span.end);
+                            merged.push_str(text.value);
+                        }
                     }
-                    span = Span::new(span.start, text.span.end);
-                    merged.push_str(text.value);
+                    children[write] = Node::Text(Text { value: merged.into_bump_str(), span });
                 }
             }
-            let merged_node = Node::Text(Text { value: merged.into_bump_str(), span });
-            children.drain(i..j);
-            children.insert(i, merged_node);
-            i += 1;
+            write += 1;
         }
+
+        children.truncate(write);
     }
 }

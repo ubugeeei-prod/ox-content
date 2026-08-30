@@ -32,9 +32,17 @@ pub(super) fn transform_attribute_syntax(html: &str) -> Option<String> {
             break;
         };
         let attr_start = scan + relative;
-        let Some(attr_end) = find_attr_block_end(html, attr_start) else {
-            scan = attr_start + 1;
-            continue;
+        let attr_end = match find_attr_block_end(html, attr_start) {
+            AttrBlockEnd::Closed(end) => end,
+            AttrBlockEnd::OpenUntil(stop) => {
+                // Every `{` up to that byte would walk to it and stop there
+                // too. Skipping them together is what keeps a line of
+                // unclosed braces linear: checking them one at a time walked
+                // the rest of the line per brace, so 32 KiB of `{ ` took
+                // 0.34 s and grew x16 for every x4 of input.
+                scan = stop.max(attr_start + 1);
+                continue;
+            }
         };
         let attrs = &html[attr_start + 1..attr_end];
         let Some(parsed) = ParsedAttrs::parse(attrs) else {
@@ -284,15 +292,25 @@ fn visible_text(html: &str) -> String {
     out
 }
 
-fn find_attr_block_end(html: &str, start: usize) -> Option<usize> {
+/// Where an attribute block opened at `start` ends.
+enum AttrBlockEnd {
+    /// The `}` that closes it.
+    Closed(usize),
+    /// No `}` before this index, which holds a byte that cannot appear inside
+    /// a block (or is the end of the input). Every `{` before it stops at the
+    /// same byte, so none of them can close either.
+    OpenUntil(usize),
+}
+
+fn find_attr_block_end(html: &str, start: usize) -> AttrBlockEnd {
     let bytes = html.as_bytes();
     let mut i = start + 1;
     while i < bytes.len() {
         match bytes[i] {
-            b'}' => return Some(i),
-            b'\n' | b'\r' | b'<' | b'>' => return None,
+            b'}' => return AttrBlockEnd::Closed(i),
+            b'\n' | b'\r' | b'<' | b'>' => return AttrBlockEnd::OpenUntil(i),
             _ => i += 1,
         }
     }
-    None
+    AttrBlockEnd::OpenUntil(bytes.len())
 }

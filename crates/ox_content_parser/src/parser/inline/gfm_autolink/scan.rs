@@ -15,19 +15,23 @@ use super::{AutolinkScan, Candidate};
 /// The one-shot `memmem::find` rebuilds its SIMD prefilter on every call, and
 /// this scan runs over every text node of every document — on short prose
 /// nodes that setup cost dominated the search itself.
-static WWW_FINDER: LazyLock<memmem::Finder<'static>> =
+pub(super) static WWW_FINDER: LazyLock<memmem::Finder<'static>> =
     LazyLock::new(|| memmem::Finder::new("www."));
 
 /// The three schemes share one needle: `http://`, `https://` and `ftp://`
 /// all end in `://` and differ only in the name in front. One pass for
 /// `://` therefore finds every scheme candidate, in position order, in
 /// place of three separate whole-node substring scans.
-static SCHEME_FINDER: LazyLock<memmem::Finder<'static>> =
+pub(super) static SCHEME_FINDER: LazyLock<memmem::Finder<'static>> =
     LazyLock::new(|| memmem::Finder::new("://"));
 
 /// Scheme names accepted in front of `://`, longest first so `https://`
 /// is not mistaken for a `ttp`-suffixed shorter name.
 const SCHEMES: [&str; 3] = ["https", "http", "ftp"];
+
+/// Length of the longest name in [`SCHEMES`], which is how far in front of
+/// a `://` a candidate can begin.
+pub(super) const LONGEST_SCHEME: usize = 5;
 
 /// Cheap pre-flight over a block's raw inline content: can the autolink
 /// pass possibly rewrite anything here, and if so does it need the `www.`
@@ -85,69 +89,9 @@ fn scheme_is_markdown_destination(bytes: &[u8], colon_slash_slash: usize) -> boo
     false
 }
 
-/// Finds the earliest valid autolink candidate in `value`.
-pub(super) fn find_candidate(value: &str, scan: AutolinkScan) -> Option<Candidate> {
-    crate::profile_span_detail!("parser::gfm_autolink_scan");
-    let bytes = value.as_bytes();
-    let mut best: Option<Candidate> = None;
-
-    // One `memchr2` decides whether the scheme and email scans can match at
-    // all. Together with the block's `www.` verdict it means the ordinary
-    // prose node — the overwhelming majority — leaves this function after a
-    // single vectorized byte scan, with no substring searcher touched.
-    let has_scheme_or_email = memchr::memchr2(b':', b'@', bytes).is_some();
-    if !has_scheme_or_email && !scan.may_have_www {
-        return None;
-    }
-
-    if has_scheme_or_email {
-        let mut from = 0;
-        while let Some(offset) = SCHEME_FINDER.find(&bytes[from..]) {
-            let at = from + offset;
-            if let Some(prefix_len) = scheme_prefix_len(bytes, at) {
-                // `at + 3 - prefix_len` steps back over the scheme name to
-                // the first byte of the candidate.
-                if let Some(candidate) = validate_url(value, at + 3 - prefix_len, prefix_len) {
-                    best = Some(candidate);
-                    break;
-                }
-            }
-            from = at + 3;
-        }
-
-        let mut from = 0;
-        while let Some(offset) = memchr::memchr(b'@', &bytes[from..]) {
-            let at = from + offset;
-            if let Some(candidate) = validate_email(value, at) {
-                if best.as_ref().is_none_or(|current| candidate.start < current.start) {
-                    best = Some(candidate);
-                }
-                break;
-            }
-            from = at + 1;
-        }
-    }
-
-    if scan.may_have_www {
-        let mut from = 0;
-        while let Some(offset) = WWW_FINDER.find(&bytes[from..]) {
-            let at = from + offset;
-            if let Some(candidate) = validate_url(value, at, 4) {
-                if best.as_ref().is_none_or(|current| candidate.start < current.start) {
-                    best = Some(candidate);
-                }
-                break;
-            }
-            from = at + 4;
-        }
-    }
-
-    best
-}
-
 /// Length of the whole `scheme://` prefix ending at the `://` that starts
 /// at `at`, or `None` when the bytes in front are not a known scheme.
-fn scheme_prefix_len(bytes: &[u8], at: usize) -> Option<usize> {
+pub(super) fn scheme_prefix_len(bytes: &[u8], at: usize) -> Option<usize> {
     SCHEMES.iter().find(|name| bytes[..at].ends_with(name.as_bytes())).map(|name| name.len() + 3)
 }
 
@@ -160,7 +104,7 @@ fn valid_boundary(value: &str, start: usize) -> bool {
         .is_none_or(|ch| ch.is_whitespace() || matches!(ch, '*' | '_' | '~' | '('))
 }
 
-fn validate_url(value: &str, start: usize, prefix_len: usize) -> Option<Candidate> {
+pub(super) fn validate_url(value: &str, start: usize, prefix_len: usize) -> Option<Candidate> {
     if !valid_boundary(value, start) {
         return None;
     }
@@ -283,7 +227,7 @@ fn trim_trailing_punctuation(value: &str, start: usize, mut end: usize) -> usize
     }
 }
 
-fn validate_email(value: &str, at: usize) -> Option<Candidate> {
+pub(super) fn validate_email(value: &str, at: usize) -> Option<Candidate> {
     let bytes = value.as_bytes();
     // Local part: alphanumerics plus `.`, `-`, `_`, `+`.
     let mut start = at;

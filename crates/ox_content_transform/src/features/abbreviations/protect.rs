@@ -7,10 +7,24 @@ pub(super) struct ProtectedSpan {
 
 pub(super) fn next_protected(segment: &str, from: usize) -> Option<ProtectedSpan> {
     let bytes = segment.as_bytes();
+
+    // A `[` with no `]` after it cannot open a link, and a `<` with no `>`
+    // after it cannot open a tag — but the scans below only report that after
+    // walking to the end of the segment, once per candidate. Bounding the
+    // search at the last closer settles it for every candidate at once:
+    // without this, 32 KiB of `*[` ` took 9.5 ms and grew x14 for every x4 of
+    // input, on text with no abbreviations in it at all.
+    let last_bracket = memchr::memrchr(b']', bytes);
+    let last_angle = memchr::memrchr(b'>', bytes);
+
     let mut cursor = from;
     while cursor < bytes.len() {
-        let bracket = memchr::memchr(b'[', &bytes[cursor..]).map(|rel| cursor + rel);
-        let angle = memchr::memchr(b'<', &bytes[cursor..]).map(|rel| cursor + rel);
+        let bracket = last_bracket
+            .filter(|last| cursor < *last)
+            .and_then(|last| memchr::memchr(b'[', &bytes[cursor..last]).map(|rel| cursor + rel));
+        let angle = last_angle
+            .filter(|last| cursor < *last)
+            .and_then(|last| memchr::memchr(b'<', &bytes[cursor..last]).map(|rel| cursor + rel));
         match (bracket, angle) {
             (None, None) => return None,
             (Some(start), Some(angle)) if angle < start => {

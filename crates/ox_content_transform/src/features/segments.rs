@@ -160,9 +160,19 @@ fn transform_inline_code_and_comment_segments(
 ) -> bool {
     let bytes = line.as_bytes();
     let mut cursor = 0usize;
+
+    // `find("<!--")` walks the rest of the line, and the answer only moves
+    // forward, so asking it once per iteration made a line of many code spans
+    // quadratic — 32 KiB of `` *[` `` took 9.5 ms and grew x13 for every x4 of
+    // input, on a line with no comment in it at all. Recomputing only when the
+    // cursor passes the last answer scans each stretch once.
+    let mut comment = line.find("<!--");
+
     while cursor < bytes.len() {
+        if comment.is_some_and(|at| at < cursor) {
+            comment = line[cursor..].find("<!--").map(|rel| cursor + rel);
+        }
         let tick = memchr::memchr(b'`', &bytes[cursor..]).map(|rel| cursor + rel);
-        let comment = line[cursor..].find("<!--").map(|rel| cursor + rel);
         match (tick, comment) {
             (None, None) => {
                 transform(&line[cursor..], out);
