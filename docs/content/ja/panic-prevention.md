@@ -18,6 +18,9 @@ cargo test -p ox_content_ssg --lib paths -- --nocapture
 cargo test -p ox_content_transform --lib hostile_user_content
 cargo test -p ox_content_renderer --lib svelte_public_codegen
 cargo test -p ox_content_napi hostile_markdown
+
+# transform パイプライン全体に対する有界な fuzz レーン
+cargo test -p ox_content_transform --test pipeline_fuzz
 ```
 
 CI は `.github/workflows/ci.yml` の `Panic constructs` ジョブでゲートを実行します。`vp run check:panic-constructs` と `vp run workspace:check` も同じスクリプトです。
@@ -57,7 +60,7 @@ CI は `.github/workflows/ci.yml` の `Panic constructs` ジョブでゲート�
 ## 残作業（後続 PR）
 
 - 残りのワークスペースを終える: `ox_content_docs`、`ox_content_lsp`、`ox_content_i18n`、`ox_content_search`、`ox_content_highlight`、`ox_content_wasm`、Vite バインディング、エディタ crate。
-- CI に有界な fuzz / property レーンを追加する（既存の `fuzz/` ターゲットは nightly が必要で、必須 CI ジョブではありません）。
+- 有界な fuzz レーンを transform パイプライン以外にも広げる。`cargo test -p ox_content_transform --test pipeline_fuzz` は通常のテストジョブで動き、トークンの寄せ集めと実際のブロックテンプレートの 2 通りで文書を生成して全機能を同時に通します（上記の `{.class}` と定義リストの abort はこれで見つかりました）。SSG・docs・エディタ側にはまだ同等のものがなく、`fuzz/` ターゲットは依然として nightly が必要で必須 CI ジョブではありません。
 - 公開成果物の FFI 境界で `panic = "abort"` ではなく unwind を使えるかを決める。
 - 残サイトを証明または書き換えるたびに `config/panic-allowlist.json` を縮める。
 

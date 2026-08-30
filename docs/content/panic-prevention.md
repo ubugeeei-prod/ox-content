@@ -18,6 +18,9 @@ cargo test -p ox_content_ssg --lib paths -- --nocapture
 cargo test -p ox_content_transform --lib hostile_user_content
 cargo test -p ox_content_renderer --lib svelte_public_codegen
 cargo test -p ox_content_napi hostile_markdown
+
+# Bounded fuzz lane over the whole transform pipeline
+cargo test -p ox_content_transform --test pipeline_fuzz
 ```
 
 CI runs the gate as the `Panic constructs` job in `.github/workflows/ci.yml`. `vp run check:panic-constructs` and `vp run workspace:check` run the same script.
@@ -57,7 +60,7 @@ The five focus crates also `deny` `clippy::unwrap_used`, `expect_used`, `panic`,
 ## Remaining work (follow-up PRs)
 
 - Finish the rest of the workspace: `ox_content_docs`, `ox_content_lsp`, `ox_content_i18n`, `ox_content_search`, `ox_content_highlight`, `ox_content_wasm`, Vite bindings, and editor crates.
-- Add bounded fuzz / property lanes in CI (the existing `fuzz/` targets still need nightly and are not a required CI job).
+- Extend the bounded fuzz lanes past the transform pipeline. `cargo test -p ox_content_transform --test pipeline_fuzz` runs in the ordinary test job and generates documents two ways — token soup and real block templates — against every feature at once; it found the `{.class}` and definition-list aborts listed above. The SSG, docs, and editor surfaces have no equivalent yet, and the `fuzz/` targets still need nightly and are not a required CI job.
 - Decide whether published artifacts can use unwind at FFI boundaries instead of `panic = "abort"`.
 - Keep shrinking `config/panic-allowlist.json` as each remaining site is proven or rewritten.
 
