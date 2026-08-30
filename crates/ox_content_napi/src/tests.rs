@@ -53,6 +53,7 @@ mod docs_nav_output;
 mod entry_points;
 mod frontmatter;
 mod git_contributors;
+mod git_lastmod;
 mod mdx_bindings;
 mod render_scratch;
 mod runtime_features;
