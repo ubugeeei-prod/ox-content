@@ -7,7 +7,7 @@
     "conformance": "node run.mjs --json results.json"
   },
   "dependencies": {
-    "@mizchi/markdown": "^0.6.5",
+    "@mizchi/markdown": "^0.8.1",
     "@ox-content/napi": "workspace:*",
     "@tanstack/markdown": "^0.0.13",
     "markdown-it": "^15.0.0",

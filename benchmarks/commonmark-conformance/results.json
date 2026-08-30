@@ -6,6 +6,10 @@
   },
   "comparison": "normalized",
   "engines": {
+    "@ox-content/wasm": {
+      "passed": 652,
+      "total": 652
+    },
     "Bun.markdown.html": {
       "passed": 652,
       "total": 652
@@ -46,8 +50,16 @@
       "passed": 649,
       "total": 652
     },
+    "md4x (wasm)": {
+      "passed": 649,
+      "total": 652
+    },
     "satteri": {
       "passed": 645,
+      "total": 652
+    },
+    "@mizchi/markdown": {
+      "passed": 641,
       "total": 652
     },
     "marked": {
@@ -58,12 +70,12 @@
       "passed": 598,
       "total": 652
     },
-    "@tanstack/markdown": {
-      "passed": 309,
+    "ferromark": {
+      "passed": 579,
       "total": 652
     },
-    "@mizchi/markdown": {
-      "passed": 299,
+    "@tanstack/markdown": {
+      "passed": 309,
       "total": 652
     }
   }

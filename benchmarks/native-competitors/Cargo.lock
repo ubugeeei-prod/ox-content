@@ -97,21 +97,21 @@ dependencies = [
 
 [[package]]
 name = "ox_content_allocator"
-version = "2.89.0"
+version = "3.0.0-beta.0"
 dependencies = [
  "bumpalo",
 ]
 
 [[package]]
 name = "ox_content_ast"
-version = "2.89.0"
+version = "3.0.0-beta.0"
 dependencies = [
  "ox_content_allocator",
 ]
 
 [[package]]
 name = "ox_content_parser"
-version = "2.89.0"
+version = "3.0.0-beta.0"
 dependencies = [
  "compact_str",
  "memchr",
@@ -123,13 +123,14 @@ dependencies = [
 
 [[package]]
 name = "ox_content_renderer"
-version = "2.89.0"
+version = "3.0.0-beta.0"
 dependencies = [
  "compact_str",
  "memchr",
  "ox_content_allocator",
  "ox_content_ast",
  "rustc-hash",
+ "serde_json",
  "smallvec",
  "thiserror",
 ]

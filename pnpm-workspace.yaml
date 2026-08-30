@@ -56,3 +56,5 @@ peerDependencyRules:
   allowedVersions:
     vite: "*"
     vitest: "*"
+minimumReleaseAgeExclude:
+  - "@mizchi/markdown@0.8.1"
