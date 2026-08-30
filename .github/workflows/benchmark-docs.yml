@@ -55,6 +55,13 @@ jobs:
       - name: Setup Rust
         uses: dtolnay/rust-toolchain@29eef336d9b2848a0b548edc03f92a220660cdb8 # stable
 
+      # The docs refresh includes @mizchi/markdown's native MoonBit runtime in
+      # both the speed tables and the CommonMark coverage table.
+      - name: Setup MoonBit
+        run: |
+          curl -fsSL https://cli.moonbitlang.com/install/unix.sh | bash
+          echo "$HOME/.moon/bin" >> "$GITHUB_PATH"
+
       - name: Mount sticky cache
         uses: ./.github/actions/mount-sticky-cache
         with:

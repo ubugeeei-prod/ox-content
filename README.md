@@ -312,7 +312,7 @@ Run the benchmark with:
 node benchmarks/bundle-size/parse-benchmark.mjs
 ```
 
-The script compares against `@tanstack/markdown`, `markdown-it-ts`, `satteri`, `@mizchi/markdown`, `md4w (md4c)`, and `md4x (napi)` by default, and includes `Bun.markdown.html` automatically when `bun` is installed.
+The script compares against `@tanstack/markdown`, `markdown-it-ts`, `satteri`, `@mizchi/markdown` (JS, Wasm, and native), `md4w (md4c)`, and `md4x` (NAPI and Wasm) by default, and includes `Bun.markdown.html` automatically when `bun` is installed.
 
 ## CommonMark Conformance
 
@@ -322,7 +322,7 @@ Ox Content targets full CommonMark conformance. The engine is checked against th
 - **GFM profile: 649 / 652 examples.** The three differences are spec examples 608, 611, and 612, where the GFM autolink extension deliberately linkifies bare URLs and emails that plain CommonMark leaves as text. They are listed in `crates/ox_content_renderer/tests/spec_fixtures/commonmark-known-failures.txt`.
 - **GFM extensions: every example** in the GitHub Flavored Markdown 0.29-gfm spec sections for tables, task lists, strikethrough, autolinks, and disallowed raw HTML, driven by `spec_gfm.rs`.
 
-Where the two Ox Content rows in the tables differ: `ox-content (native)` is the core profile and scores 100%, while `@ox-content/napi` scores 99.5% because its defaults enable the bare-URL autolinking builtin, which linkifies examples 602, 608, and 611. Pass `autolinkUrls: false` to turn it off.
+Where the two Ox Content rows in the tables differ: `ox-content (native)` is the core profile and scores 100%, while `@ox-content/napi` scores 99.5% because its defaults enable the bare-URL autolinking builtin, which linkifies examples 602, 608, and 611. Pass `autolinkUrls: false` to turn it off. The `@mizchi/markdown` JS, Wasm, and native rows likewise disable their default autolink and tagfilter extensions for the CommonMark column; the speed rows keep runtime defaults.
 
 Extensions beyond CommonMark — GFM tables, task lists, strikethrough, footnotes, and the built-in embeds — are opt-out rather than opt-in, so a document that uses none of them renders exactly as the specification requires. [Markdown Baseline](https://ubugeeei-prod.github.io/ox-content/built-in/markdown/) lists each toggle.
 

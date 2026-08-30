@@ -6,6 +6,18 @@
   },
   "comparison": "normalized",
   "engines": {
+    "@mizchi/markdown (js)": {
+      "passed": 652,
+      "total": 652
+    },
+    "@mizchi/markdown (native)": {
+      "passed": 652,
+      "total": 652
+    },
+    "@mizchi/markdown (wasm)": {
+      "passed": 652,
+      "total": 652
+    },
     "@ox-content/wasm": {
       "passed": 652,
       "total": 652
@@ -56,10 +68,6 @@
     },
     "satteri": {
       "passed": 645,
-      "total": 652
-    },
-    "@mizchi/markdown": {
-      "passed": 641,
       "total": 652
     },
     "marked": {

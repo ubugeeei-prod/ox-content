@@ -155,11 +155,10 @@ the engine — is what separates the top two rows there. The JavaScript-facing
 `@ox-content/napi` row is 4.0–5.1x faster than the two TypeScript renderers on
 parse-only and 7.1–12.1x faster on parse+render. At ~1 MB those N-API leads grow
 to 7.7–8.7x and 11.4–12.0x respectively, while the native pipeline sustains
-267–370 MB/s. At that size the incremental CST parser (`@mizchi/markdown`, tuned
-for real-time editing rather than bulk parsing) falls to ~2 ops/sec on parse-only
-while recovering to ~23 ops/sec on parse+render, whereas the `unified`/`remark`
-pipeline stays at ~1 op/sec in both tables and `micromark` measures ~1 op/sec on
-parse+render.
+267–370 MB/s. The `@mizchi/markdown` rows are split by JS, Wasm, and native
+runtime so package-boundary and native-build costs stay visible, while the
+`unified`/`remark` pipeline stays at ~1 op/sec in both ~1 MB tables and
+`micromark` measures ~1 op/sec on parse+render.
 
 The runtime sweep covers more than the tables above. The harness also runs small
 and medium Markdown inputs, an async parse+render target for the N-API package
@@ -210,8 +209,10 @@ Two choices make that comparison fair, and both matter when reading the numbers:
   `commonmark` presets, `micromark` and `remark-html` are told to pass raw HTML
   through instead of escaping it, and `md4w` runs with `parseFlags: 0`. Judging
   an engine by a default preset that enables GFM extensions would measure the
-  preset rather than the engine. Engines that expose no such mode — `marked`,
-  `md4x`, `@tanstack/markdown`, `@mizchi/markdown` — are scored as they ship.
+  preset rather than the engine. The `@mizchi/markdown` JS, Wasm, and native
+  rows disable their default autolink and tagfilter extensions for this column.
+  Engines that expose no such mode — `marked`, `md4x`, `@tanstack/markdown` —
+  are scored as they ship.
 - **Both sides pass through the conformance suite's HTML normalizer**, so
   differences that do not change how a document renders (entity spelling,
   attribute order, `<br />` vs `<br>`, whitespace between block tags) are not

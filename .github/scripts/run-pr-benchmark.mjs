@@ -17,6 +17,8 @@ if (options.skipRuntime && options.skipBundle) {
 const sourceRoot = resolve(options.source ?? requiredEnv("GITHUB_WORKSPACE"));
 
 for (const file of [
+  "benchmarks/mizchi-markdown-native.mjs",
+  "benchmarks/mizchi-markdown-native-template.mjs",
   "benchmarks/bundle-size/parse-benchmark.mjs",
   "benchmarks/bundle-size/parse-benchmark-bun.mjs",
   "benchmarks/bundle-size/measure.mjs",
