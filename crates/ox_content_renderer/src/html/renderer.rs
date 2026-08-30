@@ -50,6 +50,12 @@ pub struct HtmlRenderer {
     footnote_index: FxHashMap<CompactString, u32>,
     /// Document-order footnote list used when `semantic_footnotes` is on.
     footnote_records: Vec<footnotes::FootnoteRecord>,
+    /// Slugs already handed to a footnote, mapped to the next `-N` suffix
+    /// to try for that slug as a base. Presence means "taken", so one
+    /// lookup answers both questions the uniquifier asks. This replaces a
+    /// scan of `footnote_records` per footnote, which made a document of
+    /// many footnotes quadratic. Cleared per render like the heading map.
+    footnote_slug_counts: FxHashMap<CompactString, usize>,
     toc_entries: Vec<InlineTocEntry>,
     /// Whether the document being rendered contains at least one
     /// `[[toc]]` directive paragraph. Cached at `render()` entry so each
@@ -117,6 +123,7 @@ impl HtmlRenderer {
             footnote_ref_counts: FxHashMap::default(),
             footnote_index: FxHashMap::default(),
             footnote_records: Vec::new(),
+            footnote_slug_counts: FxHashMap::default(),
             toc_entries: Vec::new(),
             document_has_toc_marker: false,
             // Pre-size the heading scratch buffers: a typical heading text

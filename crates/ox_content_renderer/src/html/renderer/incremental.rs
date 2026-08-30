@@ -26,6 +26,7 @@ impl HtmlRenderer {
         let footnote_ref_counts = self.footnote_ref_counts.clone();
         let footnote_index = self.footnote_index.clone();
         let footnote_records = self.footnote_records.clone();
+        let footnote_slug_counts = self.footnote_slug_counts.clone();
         let html = self.render_fragment_with_scan(document, document_scan);
         if let Some(heading_id_counts) = heading_id_counts {
             self.heading_id_counts = heading_id_counts;
@@ -33,6 +34,7 @@ impl HtmlRenderer {
         self.footnote_ref_counts = footnote_ref_counts;
         self.footnote_index = footnote_index;
         self.footnote_records = footnote_records;
+        self.footnote_slug_counts = footnote_slug_counts;
         html
     }
 
