@@ -7,7 +7,7 @@
 import * as path from "path";
 import * as crypto from "crypto";
 import { availableParallelism } from "os";
-import { openBrowser } from "./browser";
+import { openBrowser, openBrowserPool } from "./browser";
 import type { OgBrowserSession } from "./browser";
 import { renderHtmlToPngWithSatori } from "./satori-renderer";
 import { getDefaultSatoriTemplate, getDefaultTemplate } from "./template";
@@ -30,7 +30,8 @@ export type {
   OgImageSatoriOptions,
 } from "./types";
 
-export type { OgBrowserSession } from "./browser";
+export type { OgBrowserPool, OgBrowserSession } from "./browser";
+export { openBrowser, openBrowserPool } from "./browser";
 
 /**
  * Resolves user-provided OG image options with defaults.
@@ -624,9 +625,11 @@ export async function generateOgImages(
     return renderSatoriPages(keyed, templateFn, options, cacheDir, root);
   }
 
-  // Launch browser
-  await using session = await openBrowser();
-  if (!session) {
+  // One browser per worker: rendering does not parallelize inside a single
+  // browser, so this is where the concurrency option actually buys something.
+  const concurrency = Math.max(1, Math.min(options.concurrency, keyed.length));
+  await using pool = await openBrowserPool(concurrency);
+  if (!pool) {
     return pages.map((p) => ({
       outputPath: p.outputPath,
       cached: false,
@@ -634,23 +637,44 @@ export async function generateOgImages(
     }));
   }
 
-  const results: OgImageResult[] = [];
-
   // Resolve public directory for serving local assets in templates
   const publicDir = path.join(root, "public");
 
-  // Process pages with concurrency control
-  const concurrency = Math.max(1, options.concurrency);
+  // Awaited, not returned: `await using` disposes when this function returns,
+  // and returning the promise would close every browser before the first
+  // render finished.
+  return await mapWithSessions(keyed, pool.sessions, (entry, session) =>
+    renderSinglePage(entry, templateFn, options, cacheDir, session, publicDir),
+  );
+}
 
-  for (let i = 0; i < keyed.length; i += concurrency) {
-    const batch = keyed.slice(i, i + concurrency);
-    const batchResults = await Promise.all(
-      batch.map((entry) =>
-        renderSinglePage(entry, templateFn, options, cacheDir, session, publicDir),
-      ),
-    );
-    results.push(...batchResults);
-  }
+/**
+ * Runs `render` over `items`, one at a time per session, in input order.
+ *
+ * A shared cursor rather than fixed batches: a batch waits for its slowest
+ * member before the next one starts, so one heavy card idled every other
+ * worker until it finished. Results are written by index, so the order the
+ * caller gets back does not depend on which session finished first.
+ */
+export async function mapWithSessions<Item, Result>(
+  items: readonly Item[],
+  sessions: readonly OgBrowserSession[],
+  render: (item: Item, session: OgBrowserSession) => Promise<Result>,
+): Promise<Result[]> {
+  const results: Result[] = new Array(items.length);
+  let next = 0;
+
+  await Promise.all(
+    sessions.map(async (session) => {
+      for (;;) {
+        const index = next++;
+        if (index >= items.length) {
+          return;
+        }
+        results[index] = await render(items[index] as Item, session);
+      }
+    }),
+  );
 
   return results;
 }

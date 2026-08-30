@@ -23,6 +23,50 @@ html, body { width: ${width}px; height: ${height}px; overflow: hidden; }
 </html>`;
 }
 
+const MIME_TYPES: Record<string, string> = {
+  ".svg": "image/svg+xml",
+  ".png": "image/png",
+  ".jpg": "image/jpeg",
+  ".jpeg": "image/jpeg",
+  ".gif": "image/gif",
+  ".webp": "image/webp",
+  ".woff": "font/woff",
+  ".woff2": "font/woff2",
+  ".ttf": "font/ttf",
+  ".css": "text/css",
+  ".js": "application/javascript",
+};
+
+/**
+ * Serves local assets from `publicDir` for anything the card requests.
+ *
+ * Registered once per page rather than once per render: a handler added on
+ * every render stacks up on a page that is reused, and Playwright then walks
+ * the whole stack for every request.
+ */
+export async function routePublicDir(page: Page, publicDir: string): Promise<void> {
+  const fs = await import("fs/promises");
+  await page.route("**/*", async (route) => {
+    const url = new URL(route.request().url());
+    // Only intercept paths that look like local assets (not data: or blob:)
+    if (url.protocol !== "http:" && url.protocol !== "https:") {
+      await route.continue();
+      return;
+    }
+    const filePath = path.join(publicDir, url.pathname);
+    try {
+      const body = await fs.readFile(filePath);
+      const ext = path.extname(filePath).toLowerCase();
+      await route.fulfill({
+        body,
+        contentType: MIME_TYPES[ext] || "application/octet-stream",
+      });
+    } catch {
+      await route.continue();
+    }
+  });
+}
+
 /**
  * Renders an HTML string to a PNG buffer using Chromium.
  *
@@ -41,43 +85,6 @@ export async function renderHtmlToPng(
   publicDir?: string,
 ): Promise<Buffer> {
   await page.setViewportSize({ width, height });
-
-  // Serve local assets from the public directory
-  if (publicDir) {
-    const fs = await import("fs/promises");
-    await page.route("**/*", async (route) => {
-      const url = new URL(route.request().url());
-      // Only intercept paths that look like local assets (not data: or blob:)
-      if (url.protocol !== "http:" && url.protocol !== "https:") {
-        await route.continue();
-        return;
-      }
-      const filePath = path.join(publicDir, url.pathname);
-      try {
-        const body = await fs.readFile(filePath);
-        const ext = path.extname(filePath).toLowerCase();
-        const mimeTypes: Record<string, string> = {
-          ".svg": "image/svg+xml",
-          ".png": "image/png",
-          ".jpg": "image/jpeg",
-          ".jpeg": "image/jpeg",
-          ".gif": "image/gif",
-          ".webp": "image/webp",
-          ".woff": "font/woff",
-          ".woff2": "font/woff2",
-          ".ttf": "font/ttf",
-          ".css": "text/css",
-          ".js": "application/javascript",
-        };
-        await route.fulfill({
-          body,
-          contentType: mimeTypes[ext] || "application/octet-stream",
-        });
-      } catch {
-        await route.continue();
-      }
-    });
-  }
 
   const fullHtml = wrapHtml(html, width, height, !!publicDir);
   // `load` fires once the document and its subresources — images, fonts, the
