@@ -8,7 +8,7 @@
 //! text nodes in place. Unpaired runs simply stay literal text.
 
 use ox_content_allocator::Vec;
-use ox_content_ast::{Node, Span};
+use ox_content_ast::{Node, Span, Text};
 
 use crate::parser::Parser;
 #[allow(unused_imports)]
@@ -65,15 +65,21 @@ impl<'a> Parser<'a> {
     }
 
     /// Pairs delimiters and restructures `children` into the emphasis
-    /// tree, spec algorithm "process emphasis" (without the
-    /// openers_bottom optimization; delimiter counts per sequence are
-    /// small in practice).
+    /// tree, spec algorithm "process emphasis".
+    ///
+    /// Two things keep it linear on delimiter-dense sequences. Paired
+    /// nodes are lifted out of `children` in place, leaving empty text
+    /// slots behind, so `node_index` never moves and no pairing has to
+    /// walk the vector fixing indices up. And a failed opener search
+    /// records how far down it looked (`openers_bottom`), so the next
+    /// closer of the same class does not repeat it.
     pub(in crate::parser) fn process_emphasis(
         &self,
         children: &mut Vec<'a, Node<'a>>,
         delimiters: &mut Vec<'a, Delimiter>,
     ) {
         profile_span!("parser::process_emphasis");
+        let mut openers_bottom = OpenersBottom::default();
         let mut closer_idx = 0;
         while closer_idx < delimiters.len() {
             if !delimiters[closer_idx].can_close || delimiters[closer_idx].remaining == 0 {
@@ -81,12 +87,17 @@ impl<'a> Parser<'a> {
                 continue;
             }
 
-            let Some(opener_idx) = find_opener(delimiters, closer_idx) else {
+            let bottom = openers_bottom.get(&delimiters[closer_idx]);
+            let Some(opener_idx) = find_opener(delimiters, closer_idx, bottom) else {
+                // Nothing below this closer can pair with a later closer of
+                // the same class either, so remember where to stop next time.
+                openers_bottom.set(&delimiters[closer_idx]);
                 if !delimiters[closer_idx].can_open {
-                    delimiters.remove(closer_idx);
-                } else {
-                    closer_idx += 1;
+                    // It cannot open and has just failed to close: retire it
+                    // rather than shifting the rest of the vector down.
+                    delimiters[closer_idx].remaining = 0;
                 }
+                closer_idx += 1;
                 continue;
             };
 
@@ -99,16 +110,18 @@ impl<'a> Parser<'a> {
             let opener_node = delimiters[opener_idx].node_index;
             let closer_node = delimiters[closer_idx].node_index;
 
-            // Move the nodes between the delimiters into the new
-            // emphasis node, inserted right after the opener's text node.
-            // Delimiter text nodes emptied by earlier (inner) pairings are
-            // dropped on the way — they render as nothing.
+            // Lift the nodes between the delimiters into the new emphasis
+            // node and leave empty text behind, so every index stays put.
+            // Text nodes emptied by earlier (inner) pairings are dropped on
+            // the way — they render as nothing. The range is never empty:
+            // two runs of the same marker cannot be adjacent children.
             let mut inner = self.allocator.new_vec();
-            inner.extend(
-                children
-                    .drain(opener_node + 1..closer_node)
-                    .filter(|node| !matches!(node, Node::Text(text) if text.value.is_empty())),
-            );
+            for slot in &mut children[opener_node + 1..closer_node] {
+                let node = core::mem::replace(slot, empty_text());
+                if !matches!(&node, Node::Text(text) if text.value.is_empty()) {
+                    inner.push(node);
+                }
+            }
             let span = inner_span(&inner, use_delims);
             let node = if use_delims == 2 {
                 Node::Strong(self.allocator.boxed(ox_content_ast::Strong { children: inner, span }))
@@ -117,51 +130,26 @@ impl<'a> Parser<'a> {
                     self.allocator.boxed(ox_content_ast::Emphasis { children: inner, span }),
                 )
             };
-            children.insert(opener_node + 1, node);
+            children[opener_node + 1] = node;
 
             // Trim the delimiter text nodes in place (they may end up
             // empty, which renders as nothing).
             trim_text_tail(&mut children[opener_node], use_delims);
-            let closer_node_now = opener_node + 2;
-            trim_text_head(&mut children[closer_node_now], use_delims);
+            trim_text_head(&mut children[closer_node], use_delims);
 
-            // Drop delimiters between the pair and fix indices right of it.
-            let removed_nodes = closer_node - opener_node - 2;
-            delimiters.retain(|delimiter| {
-                delimiter.node_index <= opener_node || delimiter.node_index >= closer_node
-            });
-            for delimiter in delimiters.iter_mut() {
-                if delimiter.node_index >= closer_node {
-                    delimiter.node_index -= removed_nodes;
-                }
+            // Delimiters strictly inside the pair are now unreachable, and
+            // the pair itself has spent `use_delims` characters. Retiring an
+            // entry means zeroing `remaining`: both the loop above and
+            // `find_opener` already skip those, and erasing it from the
+            // vector instead would shift every later entry down — which is
+            // what made a paragraph full of emphasis quadratic.
+            for delimiter in &mut delimiters[opener_idx + 1..closer_idx] {
+                delimiter.remaining = 0;
             }
-
-            let Some(opener_pos) = delimiters.iter().position(|d| d.node_index == opener_node)
-            else {
-                closer_idx += 1;
-                continue;
-            };
-            let Some(closer_pos) = delimiters.iter().position(|d| d.node_index == closer_node_now)
-            else {
-                closer_idx += 1;
-                continue;
-            };
-            delimiters[opener_pos].remaining -= use_delims as usize;
-            delimiters[closer_pos].remaining -= use_delims as usize;
-
-            // Remove exhausted entries, higher index first so the lower
-            // one stays valid. The next iteration resumes at the closer
-            // (which may retry with a new opener if it has characters
-            // left) or at its successor.
-            let mut next_closer = closer_pos;
-            if delimiters[closer_pos].remaining == 0 {
-                delimiters.remove(closer_pos);
-            }
-            if delimiters[opener_pos].remaining == 0 {
-                delimiters.remove(opener_pos);
-                next_closer -= 1;
-            }
-            closer_idx = next_closer;
+            delimiters[opener_idx].remaining -= use_delims as usize;
+            delimiters[closer_idx].remaining -= use_delims as usize;
+            // Stay on the closer: with characters left it retries against an
+            // earlier opener, and otherwise the top of the loop steps over it.
         }
 
         // Emptied delimiter text nodes at this level render as nothing;
@@ -170,10 +158,54 @@ impl<'a> Parser<'a> {
     }
 }
 
-fn find_opener(delimiters: &[Delimiter], closer_idx: usize) -> Option<usize> {
+/// Placeholder left where a node has been lifted into an emphasis node.
+/// Empty text renders as nothing and is dropped once pairing is done.
+fn empty_text<'a>() -> Node<'a> {
+    Node::Text(Text { value: "", span: Span::new(0, 0) })
+}
+
+/// Lowest opener still worth examining, per closer class.
+///
+/// The spec keys this on the delimiter character, the closer's original
+/// run length modulo three, and whether the closer can also open — the
+/// three things the rule of three consults. The stored value is a
+/// `node_index`, which no longer moves, so it stays a valid bound for the
+/// whole sequence.
+#[derive(Default)]
+struct OpenersBottom {
+    star: [[Option<usize>; 2]; 3],
+    underscore: [[Option<usize>; 2]; 3],
+}
+
+impl OpenersBottom {
+    fn slot(&mut self, closer: &Delimiter) -> &mut Option<usize> {
+        let table = if closer.marker == b'_' { &mut self.underscore } else { &mut self.star };
+        &mut table[closer.orig_len % 3][usize::from(closer.can_open)]
+    }
+
+    fn get(&mut self, closer: &Delimiter) -> Option<usize> {
+        *self.slot(closer)
+    }
+
+    fn set(&mut self, closer: &Delimiter) {
+        *self.slot(closer) = Some(closer.node_index);
+    }
+}
+
+/// Nearest opener that may pair with `delimiters[closer_idx]`, stopping at
+/// `bottom` — a `node_index` a previous failed search for this closer class
+/// already proved nothing below could match.
+fn find_opener(
+    delimiters: &[Delimiter],
+    closer_idx: usize,
+    bottom: Option<usize>,
+) -> Option<usize> {
     let closer = &delimiters[closer_idx];
     for opener_idx in (0..closer_idx).rev() {
         let opener = &delimiters[opener_idx];
+        if bottom.is_some_and(|bottom| opener.node_index < bottom) {
+            return None;
+        }
         if opener.marker != closer.marker || !opener.can_open || opener.remaining == 0 {
             continue;
         }
