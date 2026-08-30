@@ -15,8 +15,10 @@ impl<'a> Parser<'a> {
             return Ok(None);
         }
 
-        // `max_nesting_depth == 0` means unlimited. Sub-parsers inherit depth,
-        // so a positive cap actually applies to quotes and list items.
+        // `max_nesting_depth == 0` means unlimited. Every sub-source parser
+        // is built one level deeper than its parent, so a positive cap
+        // applies to quotes, list items, footnote bodies, and JSX children
+        // alike, however they are combined.
         if self.options.max_nesting_depth > 0 && self.nesting_depth > self.options.max_nesting_depth
         {
             return Err(ParseError::NestingTooDeep {

@@ -39,7 +39,7 @@ Test-only `unwrap` / `expect` / `panic!` are out of scope.
 - **SSG paths**: `strip_markdown_extension` compared the last N bytes with a `&str` slice. A 4-byte emoji path (`😀`) panicked at a non-character boundary before the comparison ran. The helper now compares ASCII suffixes on bytes.
 - **SSG entry links**: `.md` stripping uses the same byte-safe suffix check.
 - **Parser lists / emphasis**: local `expect`s after initialization or retain are now `get_or_insert_with` / `if let`.
-- **Parser nesting**: quote and list item sub-parsers inherit `nesting_depth`, so `max_nesting_depth` is actually enforced.
+- **Parser nesting**: every sub-source parser — block quote, list item, footnote body, JSX children — is built one level deeper than its parent, so `max_nesting_depth` bounds the recursion of a parse however the constructs are combined. It defaults to 100 even without the GFM profile, because `0` (unlimited) lets a deeply nested document overflow the stack, and a stack overflow aborts rather than unwinds.
 - **Renderer / SWAR scans**: 8-byte `try_into().unwrap()` copies into a stack array after a length check.
 - **N-API cache**: a missing transformed file is a `Result` error, not `expect`.
 - **N-API FFI**: `parse`, `parse_and_render`, and `transform` recover from unexpected panics in unwind builds.

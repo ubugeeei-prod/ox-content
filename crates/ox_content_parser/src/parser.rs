@@ -34,9 +34,10 @@ mod tests;
 
 /// Parser options.
 ///
-/// `Default::default()` keeps optional Markdown extensions disabled. Use
-/// [`ParserOptions::gfm`] to enable the GitHub Flavored Markdown profile.
-#[derive(Debug, Clone, Default)]
+/// `Default::default()` keeps optional Markdown extensions disabled but
+/// still bounds nesting. Use [`ParserOptions::gfm`] to enable the GitHub
+/// Flavored Markdown profile.
+#[derive(Debug, Clone)]
 pub struct ParserOptions {
     /// Enable the GFM convenience profile.
     ///
@@ -103,10 +104,45 @@ pub struct ParserOptions {
 
     /// Maximum nesting depth for block elements.
     ///
-    /// `0` means unlimited. [`ParserOptions::gfm`] and [`ParserOptions::mdx`]
-    /// set this to `100`.
+    /// Every construct that re-enters the parser on a sub-source — block
+    /// quotes, list items, footnote definitions, and JSX children — counts
+    /// one level, so the cap bounds the recursion depth of a parse no
+    /// matter how the constructs are combined.
+    ///
+    /// `0` means unlimited, which lets a deeply nested document exhaust the
+    /// stack and take the host process down with it. Prefer a finite cap on
+    /// any input you did not write yourself.
+    ///
+    /// Default: `100`, including [`ParserOptions::gfm`] and
+    /// [`ParserOptions::mdx`].
     pub max_nesting_depth: usize,
 }
+
+impl Default for ParserOptions {
+    fn default() -> Self {
+        Self {
+            gfm: false,
+            footnotes: false,
+            task_lists: false,
+            tables: false,
+            strikethrough: false,
+            autolinks: false,
+            cjk_emphasis: false,
+            mdx: false,
+            // Not `0`: an unbounded parse of hostile input overflows the
+            // stack, and a stack overflow aborts rather than unwinds, so
+            // no caller can recover from it.
+            max_nesting_depth: DEFAULT_MAX_NESTING_DEPTH,
+        }
+    }
+}
+
+/// Block nesting levels allowed before a parse fails with
+/// [`ParseError::NestingTooDeep`](crate::ParseError::NestingTooDeep).
+///
+/// Deep enough that no hand-written document reaches it, shallow enough
+/// that the recursion it permits fits in a default thread stack.
+const DEFAULT_MAX_NESTING_DEPTH: usize = 100;
 
 impl ParserOptions {
     /// Creates new parser options with GFM extensions enabled.
@@ -122,14 +158,14 @@ impl ParserOptions {
             // Not part of GFM: GitHub renders these runs per CommonMark too.
             cjk_emphasis: false,
             mdx: false,
-            max_nesting_depth: 100,
+            max_nesting_depth: DEFAULT_MAX_NESTING_DEPTH,
         }
     }
 
     /// Creates parser options with MDX enabled and GFM left off.
     #[must_use]
     pub fn mdx() -> Self {
-        Self { mdx: true, max_nesting_depth: 100, ..Self::default() }
+        Self { mdx: true, ..Self::default() }
     }
 }
 
@@ -201,11 +237,17 @@ impl<'a> Parser<'a> {
         parser
     }
 
-    /// Creates a parser for re-parsing a stripped sub-source (block quote
-    /// or list item content) that shares this parser's reference
-    /// definitions instead of re-collecting them.
+    /// Creates a parser for re-parsing a stripped sub-source (block quote,
+    /// list item, footnote body, or JSX child content) that shares this
+    /// parser's reference definitions instead of re-collecting them.
     /// Sub-parser that also knows which of its lines were added by lazy
     /// continuation (offsets into `source`).
+    ///
+    /// Every sub-source is one block level deeper than its parent, so the
+    /// depth is raised here rather than at each call site: this is the only
+    /// way a block construct re-enters the parser, and counting it in one
+    /// place is what makes [`ParserOptions::max_nesting_depth`] apply to
+    /// all of them.
     pub(crate) fn sub_parser_with_lazy_lines(
         &self,
         source: &'a str,
@@ -216,7 +258,7 @@ impl<'a> Parser<'a> {
             source,
             options: self.options.clone(),
             position: 0,
-            nesting_depth: self.nesting_depth,
+            nesting_depth: self.nesting_depth + 1,
             definitions: self.definitions.clone(),
             footnote_labels: self.footnote_labels.clone(),
             // Most sub-sources are entered without any lazy continuation

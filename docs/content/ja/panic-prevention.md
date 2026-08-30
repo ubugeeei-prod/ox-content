@@ -39,7 +39,7 @@ CI は `.github/workflows/ci.yml` の `Panic constructs` ジョブでゲート�
 - **SSG パス**: `strip_markdown_extension` は末尾 N バイトを `&str` スライスで比較していました。4 バイトの絵文字パス（`😀`）は、比較の前に文字境界以外で panic していました。ヘルパーは ASCII 接尾辞をバイト列で比較します。
 - **SSG エントリリンク**: `.md` の除去も同じバイト安全な接尾辞チェックです。
 - **パーサーの list / emphasis**: 初期化後や retain 後の局所 `expect` は `get_or_insert_with` / `if let` になりました。
-- **パーサーの入れ子**: 引用と list item のサブパーサーは `nesting_depth` を引き継ぐので、`max_nesting_depth` が実際に効きます。
+- **パーサーの入れ子**: サブソースのパーサー（引用・list item・脚注本文・JSX の子）はすべて親より 1 段深い深さで生成されるので、構文の組み合わせによらず `max_nesting_depth` が再帰の深さを縛ります。GFM プロファイルなしでも既定値は 100 です。`0`（無制限）だと深く入れ子になった文書がスタックを溢れさせ、スタックオーバーフローは巻き戻しではなく abort になるためです。
 - **レンダラー / SWAR スキャン**: 長さ確認後の 8 バイト `try_into().unwrap()` はスタック配列へのコピーです。
 - **N-API キャッシュ**: 変換済みファイルの欠落は `expect` ではなく `Result` エラーです。
 - **N-API FFI**: `parse`、`parse_and_render`、`transform` は unwind ビルドで想定外 panic から回復します。

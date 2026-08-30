@@ -16,7 +16,6 @@ impl<'a> Parser<'a> {
     /// arena storage before recursive parsing.
     pub(super) fn parse_block_quote(&mut self, start: usize) -> ParseResult<Option<Node<'a>>> {
         profile_span!("parser::parse_block_quote");
-        self.nesting_depth += 1;
 
         // Collect lines belonging to this block quote and strip the `>` prefix.
         // Write straight into a bump-allocated `String` so we don't pay for
@@ -133,8 +132,6 @@ impl<'a> Parser<'a> {
         let inner_str = inner.into_bump_str();
         let sub_parser = self.sub_parser_with_lazy_lines(inner_str, lazy_lines);
         let sub_doc = sub_parser.parse()?;
-
-        self.nesting_depth -= 1;
 
         let span = Span::new(start as u32, self.position as u32);
         Ok(Some(Node::BlockQuote(

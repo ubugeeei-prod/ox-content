@@ -121,9 +121,8 @@ impl<'a> Parser<'a> {
         }
         let inner = &self.source[inner_start..inner_end];
         let child_source = children::normalize_indentation(self.allocator, inner);
-        let mut sub =
+        let sub =
             self.sub_parser_with_lazy_lines(child_source.source, rustc_hash::FxHashSet::default());
-        sub.nesting_depth = self.nesting_depth + 1;
         let mut children = sub.parse()?.children;
         for child in &mut children {
             if let Some(offsets) = &child_source.offsets {
