@@ -89,7 +89,15 @@ jobs:
           fi
           vp run vscode:build
           cd npm/vscode-ox-content
-          vp exec -- pnpm dlx @vscode/vsce package \
+          # pnpm 12 fails any install whose dependencies carry unapproved
+          # build scripts, and `pnpm dlx` installs outside the workspace, so
+          # the `allowBuilds` list in pnpm-workspace.yaml never reaches vsce's
+          # tree. The approval is accepted only as a CLI flag, so name the two
+          # packages here.
+          vp exec -- pnpm dlx \
+            --allow-build @vscode/vsce-sign \
+            --allow-build keytar \
+            @vscode/vsce package \
             --target "${{ matrix.vscode-target }}" \
             --out "../../dist/vscode/vscode-ox-content-${{ matrix.vscode-target }}.vsix" \
             --no-dependencies

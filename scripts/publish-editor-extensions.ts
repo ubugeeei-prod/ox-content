@@ -20,6 +20,12 @@ const initialDelayMs = 30_000;
 const maxDelayMs = 300_000;
 const vsixDir = "dist/vscode";
 
+// pnpm 12 fails any install whose dependencies carry unapproved build scripts,
+// and `pnpm dlx` installs outside the workspace, so the `allowBuilds` list in
+// pnpm-workspace.yaml never reaches these trees. The approval is accepted only
+// as a CLI flag; ovsx pulls vsce, so both registries need the same pair.
+const allowBuildFlags = ["@vscode/vsce-sign", "keytar"].flatMap((name) => ["--allow-build", name]);
+
 const registries: Record<string, Registry> = {
   "vscode-marketplace": {
     label: "VS Code Marketplace",
@@ -29,6 +35,7 @@ const registries: Record<string, Registry> = {
       "--",
       "pnpm",
       "dlx",
+      ...allowBuildFlags,
       "@vscode/vsce",
       "publish",
       "--skip-duplicate",
@@ -44,6 +51,7 @@ const registries: Record<string, Registry> = {
       "--",
       "pnpm",
       "dlx",
+      ...allowBuildFlags,
       "ovsx",
       "publish",
       vsix,
