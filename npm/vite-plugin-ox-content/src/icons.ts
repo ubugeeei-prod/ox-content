@@ -181,6 +181,31 @@ export interface WriteSelfHostedIconsResult {
   names: string[];
 }
 
+export interface RenderSelfHostedIconsCssOptions {
+  options: ResolvedIconsOptions;
+  root: string;
+  srcDir?: string;
+  socialLinks?: unknown;
+}
+
+export interface RenderSelfHostedIconsCssResult {
+  css: string;
+  errors: string[];
+  names: string[];
+}
+
+/** Render resolved icon CSS. Missing collections or names become errors. */
+export async function renderSelfHostedIconsCss(
+  input: RenderSelfHostedIconsCssOptions,
+): Promise<RenderSelfHostedIconsCssResult> {
+  if (!input.options.enabled) {
+    return { css: "", errors: [], names: [] };
+  }
+  const names = await collectResolvedIconNames(input);
+  const { icons, errors } = await resolveIconBodies(names, input.root);
+  return { css: renderIconsCss(icons), errors, names };
+}
+
 /** Copy resolved icon CSS into `outDir`. Missing collections or names become errors. */
 export async function writeSelfHostedIcons(
   input: WriteSelfHostedIconsOptions,
@@ -188,18 +213,17 @@ export async function writeSelfHostedIcons(
   if (!input.options.enabled) {
     return { files: [], errors: [], names: [] };
   }
-  const names = await collectResolvedIconNames(input);
-  const { icons, errors } = await resolveIconBodies(names, input.root);
+  const result = await renderSelfHostedIconsCss(input);
   const destDir = join(input.outDir, ICON_ASSET_DIR);
   await mkdir(destDir, { recursive: true });
   const cssPath = join(destDir, ICON_CSS_NAME);
-  await writeFile(cssPath, renderIconsCss(icons), "utf8");
-  return { files: [cssPath], errors, names };
+  await writeFile(cssPath, result.css, "utf8");
+  return { files: [cssPath], errors: result.errors, names: result.names };
 }
 
 export { iconClassName };
 
-async function collectResolvedIconNames(input: WriteSelfHostedIconsOptions): Promise<string[]> {
+async function collectResolvedIconNames(input: RenderSelfHostedIconsCssOptions): Promise<string[]> {
   const names = new Set<string>();
   for (const item of input.options.safelist) {
     addName(names, item);

@@ -25,6 +25,7 @@ import {
 } from "./dev-server";
 import { createOgViewerPlugin } from "./og-viewer";
 import { createI18nPlugin } from "./i18n";
+import { createAssetsPlugin } from "./assets";
 import { isMarkdownFilePath } from "./markdown";
 import { generateCollectionsVirtualModule } from "./collections";
 import type { OxContentOptions, ResolvedOptions } from "./types";
@@ -249,6 +250,7 @@ export function oxContent(options: OxContentOptions = {}): Plugin[] {
     createEnvironmentPlugin(resolvedOptions),
     createDocsPlugin(resolvedOptions, getRoot),
     createSsgPlugin(resolvedOptions, getRoot, ssgDevCache),
+    createAssetsPlugin(resolvedOptions, getRoot, () => config),
     createCollectionsPlugin(resolvedOptions, getRoot),
     createSearchPlugin(resolvedOptions, getRoot),
   ];
@@ -930,6 +932,15 @@ export { resolvePwaOptions } from "./pwa";
 export { resolveTaxonomiesOptions } from "./taxonomies";
 export { resolveVersionsOptions } from "./versions";
 export { resolveResourcesOptions, PageResourceError } from "./resources";
+export {
+  resolveSelfHostedAssetManifest,
+  writeSelfHostedAssets,
+  type OxContentAssetManifest,
+  type OxContentAssetPreload,
+  type SelfHostedAssetOptions,
+  type WriteSelfHostedAssetsInput,
+  type WriteSelfHostedAssetsResult,
+} from "./assets";
 export { resolveTeamOptions } from "./team";
 export { resolveSectionIndexOptions } from "./section-index";
 export { resolveSearchOptions, buildSearchIndex, writeSearchIndex } from "./search";

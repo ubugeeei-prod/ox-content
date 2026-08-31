@@ -34,7 +34,10 @@ export function fontMime(fileName: string): string {
   return "font/woff2";
 }
 
-export function renderFontFaceCss(faces: AcquiredSelfHostFace[]): string {
+export function renderFontFaceCss(
+  faces: AcquiredSelfHostFace[],
+  options: { urlPrefix?: string } = {},
+): string {
   return faces
     .map((face) => {
       const range = face.unicodeRange ? `\n  unicode-range: ${face.unicodeRange};` : "";
@@ -54,7 +57,7 @@ export function renderFontFaceCss(faces: AcquiredSelfHostFace[]): string {
   font-style: ${face.style};
   font-weight: ${face.weight};
   font-display: ${face.display};
-  src: url(./${fileName}) format("${format}");${range}
+  src: url(${options.urlPrefix ?? "./"}${fileName}) format("${format}");${range}
 }`;
     })
     .join("\n\n");

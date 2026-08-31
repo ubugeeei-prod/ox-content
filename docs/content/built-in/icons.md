@@ -59,5 +59,8 @@ an installed collection are not written to CSS.
 Generated CSS is written to `__ox_icons__/icons.css` and linked from the theme
 `<head>`, next to [self-hosted fonts](../theming.md#fonts). Existing
 `icon-[prefix--name]` markup can keep working while you migrate templates.
+Custom Vite hosts can import `virtual:ox-content/assets.css` or read
+`virtual:ox-content/asset-manifest`; the same stylesheet is served in dev and
+written during production builds.
 
 `false` or omitted keeps the current CDN fallback on entry-page Iconify icons.

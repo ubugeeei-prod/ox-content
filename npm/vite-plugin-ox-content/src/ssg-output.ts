@@ -6,11 +6,18 @@
  */
 
 import { renderFeedFiles, resolveFeedsOptions, writeFeedFiles, type FeedItemInput } from "./feeds";
+import { resolveIconsOptions } from "./icons";
 import { shouldPublishMarkdownSource, type MarkdownSourcePageInput } from "./markdown-source";
 import { resolvePublishStateOptions } from "./publish-state";
 import { resolveResourcesOptions } from "./resources";
 import { resolveSiteMapsOptions, writeSiteMapFiles, type SiteMapPageInput } from "./site-maps";
 import { resolveSsgOptions } from "./ssg";
+import {
+  writeSelfHostedAssets,
+  type SelfHostedAssetOptions,
+  type WriteSelfHostedAssetsInput,
+  type WriteSelfHostedAssetsResult,
+} from "./assets";
 import {
   resolveGitLastmod,
   writeMarkdownCompanions,
@@ -20,6 +27,7 @@ import {
 } from "./ssg-output-write";
 import type {
   FeedsOptions,
+  IconsOptions,
   OxContentOptions,
   PublishStateOptions,
   ResolvedFeedsOptions,
@@ -39,8 +47,10 @@ export {
   writeFeedFiles,
   writeMarkdownCompanions,
   writeResourceFiles,
+  writeSelfHostedAssets,
   writeSiteMapFiles,
 };
+export type { SelfHostedAssetOptions, WriteSelfHostedAssetsInput, WriteSelfHostedAssetsResult };
 export type {
   FeedItemInput,
   WriteMarkdownSourceFilesInput,
@@ -61,6 +71,7 @@ export type { SsgOutputPageInput } from "./types";
 /** Same option objects `oxContent()` / `buildSsg()` accept. `ssg.enabled` is ignored. */
 export interface PlanSsgOutputsOptions {
   base?: string;
+  icons?: boolean | IconsOptions;
   resources?: boolean | ResourcesOptions;
   feeds?: boolean | FeedsOptions;
   siteMaps?: boolean | SiteMapsOptions;
@@ -83,6 +94,7 @@ export interface PlanSsgOutputsInput {
 
 /** Planned writer inputs. Call the matching `write*` function for each feature. */
 export interface SsgOutputPlan {
+  selfHostedAssets: WriteSelfHostedAssetsInput;
   resources: WriteResourceFilesInput;
   markdownCompanions: {
     outDir: string;
@@ -123,6 +135,7 @@ export interface SsgOutputPlan {
 export function planSsgOutputs(input: PlanSsgOutputsInput): SsgOutputPlan {
   const raw = input.options ?? {};
   const ssg = resolveSsgOptions(raw.ssg);
+  const icons = resolveIconsOptions(raw.icons);
   const resources = resolveResourcesOptions(raw.resources);
   const feeds = resolveFeedsOptions(raw.feeds);
   const siteMaps = resolveSiteMapsOptions(raw.siteMaps);
@@ -132,6 +145,16 @@ export function planSsgOutputs(input: PlanSsgOutputsInput): SsgOutputPlan {
   const lastmod = ssg.lastUpdated || siteMaps.enabled;
 
   return {
+    selfHostedAssets: {
+      outDir: input.outDir,
+      root: input.root,
+      options: {
+        base,
+        srcDir: input.srcDir ?? "",
+        icons,
+        ssg,
+      },
+    },
     resources: {
       pages: resourcePages(input.pages, resources),
       srcDir: input.srcDir ?? "",

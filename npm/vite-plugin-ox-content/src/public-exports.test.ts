@@ -42,6 +42,7 @@ describe("public export surface", () => {
       "readerChromeCss",
       "readerChromeIsEnabled",
       "readerChromeNeedsJs",
+      "resolveSelfHostedAssetManifest",
       "readerChromeScript",
       "renderReaderChromeAttributes",
       "renderReaderChromeScriptTag",
@@ -78,6 +79,7 @@ describe("public export surface", () => {
       "writeMarkdownCompanions",
       "writeResourceFiles",
       "writeSearchIndex",
+      "writeSelfHostedAssets",
       "writeSiteMapFiles",
     ].sort();
 

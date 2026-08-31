@@ -31,3 +31,29 @@ declare module "virtual:ox-content/collections" {
   };
   export default api;
 }
+
+declare module "virtual:ox-content/assets.css" {
+  const css: string;
+  export default css;
+}
+
+declare module "virtual:ox-content/asset-manifest" {
+  export interface OxContentAssetPreload {
+    href: string;
+    as: "font";
+    type: string;
+    crossorigin: true;
+  }
+
+  export interface OxContentAssetManifest {
+    stylesheets: string[];
+    preloads: OxContentAssetPreload[];
+    headTags: string;
+  }
+
+  export const stylesheets: string[];
+  export const preloads: OxContentAssetPreload[];
+  export const headTags: string;
+  const manifest: OxContentAssetManifest;
+  export default manifest;
+}

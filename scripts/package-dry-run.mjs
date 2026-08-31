@@ -6,6 +6,7 @@ import { tmpdir } from "node:os";
 import { join, relative } from "node:path";
 import { checkReaderChromeDeclarations } from "./package-dry-run-reader-chrome.mjs";
 import { checkTwitterClientDeclarations } from "./package-dry-run-twitter-client.mjs";
+import { checkVitePluginDeclarations } from "./package-dry-run-vite-plugin.mjs";
 
 const packages = [
   "crates/ox_content_napi",
@@ -73,6 +74,12 @@ function checkPackage(packageDir) {
     checkNapiPackage(packageDir, pkg, files);
   }
   if (pkg.name === "@ox-content/vite-plugin") {
+    checkVitePluginDeclarations({
+      pkg,
+      tarball: packed.filename,
+      failures,
+      readPackedFile,
+    });
     checkReaderChromeDeclarations({
       pkg,
       tarball: packed.filename,

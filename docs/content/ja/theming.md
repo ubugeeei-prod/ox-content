@@ -255,6 +255,51 @@ fonts: {
 
 `selfHost: true` がないオブジェクトは CSS スタックだけを設定し、ファイルの取得や出力はしません。
 
+### 独自ホストでのセルフホストアセット
+
+組み込み SSG テーマは、セルフホストフォントと Iconify CSS を自動で `<head>` に
+リンクします。独自ホストは document shell を自分で持つので、Vite の virtual
+asset contract を使います。
+
+```ts
+import "virtual:ox-content/assets.css";
+
+// または、server renderer が <head> を持つ場合:
+import { headTags } from "virtual:ox-content/asset-manifest";
+```
+
+クライアント entry が stylesheet を管理するなら CSS import を使います。サーバ
+renderer が `<head>` を持つなら `headTags`（または `stylesheets` と
+`preloads`）を使います。どちらも組み込みテーマと同じ `__ox_fonts__` /
+`__ox_icons__` URL を使い、dev で配信され、本番 build ではローカルアセットを
+書きます。
+
+Ox Content がページを描画しない場合でも、plugin から theme が見える形にしてください。
+
+```ts
+oxContent({
+  icons: { safelist: ["carbon:checkbox"] },
+  ssg: {
+    enabled: false,
+    theme: {
+      fonts: {
+        sans: {
+          family: "Inter",
+          provider: "local",
+          path: "@fontsource/inter",
+          weights: [400, 600],
+          selfHost: true,
+        },
+      },
+    },
+  },
+});
+```
+
+boolean の `ssg: false` でも SSG は無効になりますが、theme を運ぶ場所がありません。
+bare / 独自 Vite ホストでセルフホストアセットを使う場合は
+`ssg: { enabled: false, theme }` にしてください。
+
 セットしたキーだけが出ます。省略した色、フォント、レイアウトは [既定テーマの値](#既定テーマの値) に落ちるので、アクセント 1 つを上書きするためにパレット全体を書き直す必要はありません。
 
 ## ダークモード

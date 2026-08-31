@@ -9,6 +9,7 @@ description: 既定テーマなしで、リソース・Markdown 併記・フィ�
 Ox Content に次の出力の計画と書き出しを任せられます。
 
 - コンテンツアドレスのリソース指紋と URL 書き換え
+- セルフホストフォントと Iconify アセットファイル
 - ホストが描画した HTML ページ向けの Markdown 併記
 - RSS / Atom / JSON フィードと sitemap メタデータ
 - git 由来の `lastmod`
@@ -24,6 +25,7 @@ import {
   writeMarkdownCompanions,
   writeFeedFiles,
   writeSiteMapFiles,
+  writeSelfHostedAssets,
 } from "@ox-content/vite-plugin";
 
 const plan = planSsgOutputs({
@@ -55,6 +57,7 @@ const plan = planSsgOutputs({
 });
 
 await writeResourceFiles(plan.resources);
+await writeSelfHostedAssets(plan.selfHostedAssets);
 await writeMarkdownCompanions(plan.markdownCompanions);
 const feedFiles = await renderFeedFiles(plan.feeds);
 await writeFeedFiles(plan.feeds);
@@ -71,6 +74,7 @@ boolean の `ssg: false` は SSG を切ると同時に `markdownSource`、
 | ------------------------- | ------------------------------------------------------------------------------------- |
 | `planSsgOutputs`          | ホストのページと `buildSsg()` と同じオプションから writer 入力を作る。                |
 | `writeResourceFiles`      | ページバンドル資産に指紋を付け、ホスト HTML の URL を書き換える。                     |
+| `writeSelfHostedAssets`   | 独自ホスト向けに `__ox_icons__` と `__ox_fonts__` のファイルを書く。                  |
 | `writeMarkdownCompanions` | ホスト描画ページの横に元の Markdown を書く。copy-as-markdown の writer を再利用する。 |
 | `renderFeedFiles`         | filesystem に書かずに RSS / Atom / JSON フィードファイルを描画する。                  |
 | `writeFeedFiles`          | RSS / Atom / JSON フィードを書く。[名前付きフィード](./feeds.md) も含む。             |
@@ -84,7 +88,8 @@ boolean の `ssg: false` は SSG を切ると同時に `markdownSource`、
 プランナーを使わず、`buildSsg()` と同じ解決済みオプション
 （`resolveResourcesOptions`、`resolveFeedsOptions`、
 `resolveSiteMapsOptions`、`resolveMarkdownSourceOptions`）で writer を
-直接呼ぶこともできます。
+直接呼ぶこともできます。独自 renderer が `<head>` 用の stylesheet / preload
+タグを必要とするときは `resolveSelfHostedAssetManifest()` を使います。
 
 ## 関連
 

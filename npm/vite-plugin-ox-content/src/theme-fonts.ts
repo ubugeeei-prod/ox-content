@@ -220,7 +220,7 @@ export function themeFontHeadHtml(fonts: ThemeFontsLike, base?: string): string 
     return "";
   }
   const root = normalizeBasePath(base);
-  const tags = [`<link rel="stylesheet" href="${root}${FONT_ASSET_DIR}/${FONT_CSS_NAME}">`];
+  const tags = [`<link rel="stylesheet" href="${themeFontStylesheetHref(base)}">`];
   for (const face of faces) {
     if (!face.preload) {
       continue;
@@ -230,6 +230,10 @@ export function themeFontHeadHtml(fonts: ThemeFontsLike, base?: string): string 
     );
   }
   return tags.join("\n");
+}
+
+export function themeFontStylesheetHref(base?: string): string {
+  return `${normalizeBasePath(base)}${FONT_ASSET_DIR}/${FONT_CSS_NAME}`;
 }
 
 export function withSelfHostedFontHead<T extends { head?: string }>(

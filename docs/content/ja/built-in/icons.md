@@ -60,6 +60,9 @@ oxContent({
 [セルフホストフォント](../theming.md#フォント) と同じアセット経路です。既存の
 `icon-[prefix--name]` マークアップは、テンプレートを一気に書き換えなくても
 動き続けます。
+独自 Vite ホストは `virtual:ox-content/assets.css` を import するか、
+`virtual:ox-content/asset-manifest` を読めます。同じ stylesheet が dev で配信され、
+本番 build で書き込まれます。
 
 `false` または省略では、エントリページの Iconify アイコンはこれまでどおり
 CDN フォールバックです。

@@ -38,7 +38,7 @@ describe("planSsgOutputs", () => {
       ],
     });
 
-    expect(plan.resources.options.enabled).toBe(false);
+    expect(plan.resources.options?.enabled).toBe(false);
     expect(plan.resources.pages).toEqual([]);
     expect(plan.markdownCompanions.options.enabled).toBe(false);
     expect(plan.markdownCompanions.pages).toEqual([]);
@@ -87,6 +87,64 @@ describe("planSsgOutputs", () => {
       lastUpdated: 1_704_067_200_000,
     });
     expect(plan.siteMaps.pages[1]?.draft).toBe(true);
+  });
+
+  it("keeps self-hosted assets available for host-rendered pages", () => {
+    const plan = planSsgOutputs({
+      outDir: "/site/dist",
+      root: "/site",
+      srcDir: "content",
+      options: {
+        base: "/docs/",
+        icons: { safelist: ["mdi:github"] },
+        ssg: {
+          enabled: false,
+          theme: {
+            fonts: {
+              sans: {
+                family: "Ox Test",
+                provider: "local",
+                path: "./fonts/ox-test.woff2",
+                selfHost: true,
+                preload: true,
+              },
+            },
+            socialLinks: [{ icon: "mdi:discord", link: "https://discord.example" }],
+          },
+        },
+      },
+      pages: [],
+    });
+
+    expect(plan.selfHostedAssets).toMatchObject({
+      outDir: "/site/dist",
+      root: "/site",
+      options: {
+        base: "/docs/",
+        srcDir: "content",
+        icons: {
+          enabled: true,
+          mode: "css-mask",
+          syntax: "unocss",
+          include: [],
+          safelist: ["mdi:github"],
+        },
+        ssg: {
+          enabled: false,
+          theme: {
+            fonts: {
+              sans: {
+                family: "Ox Test",
+                path: "./fonts/ox-test.woff2",
+                selfHost: true,
+                preload: true,
+              },
+            },
+            socialLinks: [{ icon: "mdi:discord", link: "https://discord.example" }],
+          },
+        },
+      },
+    });
   });
 });
 

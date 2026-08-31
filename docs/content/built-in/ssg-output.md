@@ -9,6 +9,7 @@ Custom hosts that set `ssg: false` keep their own page templates. They can
 still ask Ox Content to plan and emit:
 
 - content-addressed resource fingerprinting and URL rewriting
+- self-hosted font and Iconify asset files
 - Markdown companion files for host-rendered HTML pages
 - RSS / Atom / JSON feeds and sitemap metadata
 - git-derived `lastmod`
@@ -24,6 +25,7 @@ import {
   writeMarkdownCompanions,
   writeFeedFiles,
   writeSiteMapFiles,
+  writeSelfHostedAssets,
 } from "@ox-content/vite-plugin";
 
 const plan = planSsgOutputs({
@@ -55,6 +57,7 @@ const plan = planSsgOutputs({
 });
 
 await writeResourceFiles(plan.resources);
+await writeSelfHostedAssets(plan.selfHostedAssets);
 await writeMarkdownCompanions(plan.markdownCompanions);
 const feedFiles = await renderFeedFiles(plan.feeds);
 await writeFeedFiles(plan.feeds);
@@ -71,6 +74,7 @@ fields should still resolve.
 | ------------------------- | --------------------------------------------------------------------------------------- |
 | `planSsgOutputs`          | Build writer inputs from host pages and the same option objects `buildSsg()` reads.     |
 | `writeResourceFiles`      | Fingerprint page-bundle assets and rewrite host HTML URLs.                              |
+| `writeSelfHostedAssets`   | Write self-hosted `__ox_icons__` and `__ox_fonts__` files for a custom host.            |
 | `writeMarkdownCompanions` | Write original Markdown beside host-rendered pages. Reuses the copy-as-markdown writer. |
 | `renderFeedFiles`         | Render RSS / Atom / JSON feed files without filesystem writes.                          |
 | `writeFeedFiles`          | Write RSS / Atom / JSON feeds, including [named feeds](./feeds.md).                     |
@@ -83,7 +87,8 @@ or `siteMaps` is on, the planner calls `resolveGitLastmod(inputPath, root)`.
 Hosts can skip the planner and call a writer with the same resolved option
 objects `buildSsg()` already uses (`resolveResourcesOptions`,
 `resolveFeedsOptions`, `resolveSiteMapsOptions`,
-`resolveMarkdownSourceOptions`).
+`resolveMarkdownSourceOptions`). Use `resolveSelfHostedAssetManifest()` when a
+custom renderer needs the matching stylesheet and preload tags for `<head>`.
 
 ## Related
 

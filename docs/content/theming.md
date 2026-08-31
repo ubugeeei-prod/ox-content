@@ -294,6 +294,51 @@ fonts: {
 Object families without `selfHost: true` only set the CSS stack; they do not
 download or emit font files.
 
+### Self-hosted assets in a custom host
+
+The built-in SSG theme links self-hosted fonts and Iconify CSS automatically.
+Custom hosts own their document shell, so they can use the Vite virtual asset
+contract instead:
+
+```ts
+import "virtual:ox-content/assets.css";
+
+// Or, when the server renderer owns <head>:
+import { headTags } from "virtual:ox-content/asset-manifest";
+```
+
+Use the CSS import when the host's client entry owns styles. Use `headTags` (or
+the exported `stylesheets` and `preloads`) when the server renderer owns
+`<head>`. Both paths use the same `__ox_fonts__` and `__ox_icons__` URLs as the
+built-in theme, work in dev, and write local assets during production builds.
+
+Keep the theme visible to the plugin even when Ox Content is not rendering
+pages:
+
+```ts
+oxContent({
+  icons: { safelist: ["carbon:checkbox"] },
+  ssg: {
+    enabled: false,
+    theme: {
+      fonts: {
+        sans: {
+          family: "Inter",
+          provider: "local",
+          path: "@fontsource/inter",
+          weights: [400, 600],
+          selfHost: true,
+        },
+      },
+    },
+  },
+});
+```
+
+Boolean `ssg: false` still disables SSG, but it has no place to carry the
+theme. Use `ssg: { enabled: false, theme }` for self-hosted assets in a
+bare/custom Vite host.
+
 Only the keys you set are emitted. Omitted colors, fonts, and layout values fall
 back to the [default theme](#default-theme-values), so overriding a single accent
 never forces you to redeclare the rest of the palette.
