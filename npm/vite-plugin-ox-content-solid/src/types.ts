@@ -43,7 +43,7 @@ export type ComponentsOption = ComponentsMap | string | string[];
  * still provides shared parsing, embeds, and environment setup.
  *
  * Solid has no runtime JSX factory, so the generated modules must still be
- * compiled by `vite-plugin-solid`. See {@link SolidIntegrationOptions.verifySolidPlugin}.
+ * compiled by `@solidjs/vite-plugin`. See {@link SolidIntegrationOptions.verifySolidPlugin}.
  */
 export interface SolidIntegrationOptions extends OxContentOptions {
   /**
@@ -84,25 +84,24 @@ export interface SolidIntegrationOptions extends OxContentOptions {
   codeAnnotations?: boolean | CodeAnnotationsOptions;
 
   /**
-   * Fail fast when `vite-plugin-solid` cannot compile the generated modules.
+   * Fail fast when `@solidjs/vite-plugin` cannot compile the generated modules.
    *
    * Markdown files are emitted as Solid JSX, and Solid's JSX has no runtime
-   * factory to fall back on: it only works after `babel-preset-solid` has
-   * compiled it. `vite-plugin-solid` only looks at `.jsx`/`.tsx` ids unless its
-   * own `extensions` option lists the Markdown extensions too, so a missing
-   * entry surfaces as an opaque syntax error in an unrelated file.
+   * factory to fall back on. `@solidjs/vite-plugin` only compiles Markdown ids
+   * when its `extensions` option lists the Markdown extensions too, so a
+   * missing entry surfaces as an opaque syntax error in an unrelated file.
    *
    * With this enabled the plugin checks the resolved plugin list and throws a
    * message naming the extensions that are missing. Turn it off when Solid JSX
-   * is compiled by something other than `vite-plugin-solid`.
+   * is compiled by something other than `@solidjs/vite-plugin`.
    *
    * @default true
    *
    * @example
    * ```ts
    * plugins: [
-   *   solid({ extensions: ['.md', '.markdown', '.mdx'] }),
    *   oxContentSolid({ srcDir: 'docs' }),
+   *   solid({ extensions: ['.md', '.markdown', '.mdx'], compiler: 'native' }),
    * ]
    * ```
    */

@@ -97,7 +97,7 @@ Vue、Svelte、Solid も同じように `@ox-content/vite-plugin-vue`
 `@ox-content/vite-plugin-solid`（`oxContentSolid`）で動きます。`components` が glob のとき、
 コンポーネント名は PascalCase にしたファイル名です。
 
-Solid 連携は加えて `vite-plugin-solid` より前に動かす必要があり、
+Solid 連携は加えて `@solidjs/vite-plugin` より前に動かす必要があり、
 そちらには Markdown 拡張子を渡す必要があります。
 [そのリファレンスページ](/packages/vite-plugin-ox-content-solid.md#plugin-order-and-extensions) を見てください。
 
@@ -133,7 +133,7 @@ specifier はそのファイルのディレクトリから解決されます。�
 island の内側 HTML を差し替えられます。アダプタがサーバーで描画した HTML は
 server-rendered として印が付き、クライアント runtime は重複した subtree を
 mount せず hydrate できます。そのフックはアダプタ側に置きます。コア
-レンダラーは `react-dom/server`、`svelte/server`、`solid-js/web` を import しません。
+レンダラーは `react-dom/server`、`svelte/server`、`@solidjs/web` を import しません。
 
 ## Markdown でコンポーネントを書く
 

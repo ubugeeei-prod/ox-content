@@ -96,8 +96,8 @@ Vue, Svelte, and Solid work the same way via `@ox-content/vite-plugin-vue`
 `@ox-content/vite-plugin-solid` (`oxContentSolid`). When `components` is a glob,
 the component name is the PascalCased file name.
 
-The Solid integration additionally has to run before `vite-plugin-solid`, which
-must be given the Markdown extensions — see
+The Solid integration additionally has to run before `@solidjs/vite-plugin`,
+which must be given the Markdown extensions — see
 [its reference page](./packages/vite-plugin-ox-content-solid.md#plugin-order-and-extensions).
 
 ## Document-local imports
@@ -132,7 +132,7 @@ that do not declare a local import. Framework plugins may also pass an optional
 at transform time. Adapter-rendered HTML is marked as server-rendered so the
 client runtime can hydrate it instead of mounting a duplicate subtree. That hook
 lives on the adapter; the core renderer does not import `react-dom/server`,
-`svelte/server`, or `solid-js/web`.
+`svelte/server`, or `@solidjs/web`.
 
 ## Authoring components in Markdown
 

@@ -5,15 +5,19 @@ Solid integration for Ox Content - embed Solid components in Markdown.
 ## Installation
 
 ```bash
-vp install @ox-content/vite-plugin-solid solid-js vite-plugin-solid
+vp install @ox-content/vite-plugin-solid solid-js@next @solidjs/web@next @solidjs/vite-plugin
 ```
+
+This 3.x beta adapter targets Solid 2 and `@solidjs/vite-plugin`. It does not
+preserve the Solid 1 + `vite-plugin-solid` peer dependency path; keep the older
+adapter release if your app has to stay on Solid 1.
 
 ## Usage
 
 ```ts
 // vite.config.ts
 import { defineConfig } from "vite";
-import solid from "vite-plugin-solid";
+import solid from "@solidjs/vite-plugin";
 import { oxContentSolid } from "@ox-content/vite-plugin-solid";
 
 export default defineConfig({
@@ -23,7 +27,7 @@ export default defineConfig({
       // Auto-discover components with glob pattern
       components: "./src/components/*.tsx",
     }),
-    solid({ extensions: [".md", ".markdown", ".mdx"] }),
+    solid({ extensions: [".md", ".markdown", ".mdx"], compiler: "native" }),
   ],
 });
 ```
@@ -34,15 +38,16 @@ Unlike the Vue, React, and Svelte integrations, this plugin has two setup rules
 that are not optional. Both follow from the same fact: **Solid's JSX is
 compile-time only.** There is no runtime element factory like React's
 `createElement` or Vue's `h` to fall back on, so Markdown is emitted as Solid
-JSX and `vite-plugin-solid` is what turns it into DOM or SSR instructions.
+JSX and `@solidjs/vite-plugin` is what turns it into DOM or SSR instructions.
 
 1. `oxContentSolid()` must come **before** `solid()` in the `plugins` array.
    Both plugins are `enforce: "pre"`, so array order decides which one sees the
-   Markdown file first. If `solid()` runs first, Babel tries to parse raw
-   Markdown as JSX.
-2. `solid()` must be given the Markdown extensions. By default it only looks at
-   `.jsx` and `.tsx` files, so the generated modules would be handed to the
-   browser as uncompiled JSX.
+   Markdown file first. If `solid()` runs first, the Solid compiler sees raw
+   Markdown instead of the generated JSX.
+2. `solid()` must be given the Markdown extensions. Use
+   `compiler: "native"` for the Solid 2 native OXC compiler path. Without the
+   extensions, generated Markdown modules would be handed to the browser as
+   uncompiled JSX.
 
 Both mistakes are checked for you and reported with the fix — see
 [`verifySolidPlugin`](#verifysolidplugin).
@@ -92,7 +97,7 @@ first time a Markdown module comes out of the pipeline still uncompiled. Both
 throw a message naming the fix.
 
 Turn it off when Solid's JSX is compiled by something other than
-`vite-plugin-solid`.
+`@solidjs/vite-plugin`.
 
 ## Using Components in Markdown
 
@@ -124,7 +129,7 @@ import GtvChart from './gtv-chart/GtvChart.tsx'
 
 Optional `renderIsland(name, props, filePath)` can replace island inner HTML
 at transform time. The hook belongs on the Solid adapter; `@ox-content/vite-plugin`
-does not import `solid-js/web` for SSR.
+does not import `@solidjs/web` for SSR.
 
 ## Example Component
 
@@ -158,7 +163,7 @@ import components from "virtual:ox-content-solid/components";
 ```
 
 There is no `virtual:ox-content-solid/runtime` counterpart to the Svelte
-integration's: Solid mounts through `render` from `solid-js/web`, which the
+integration's: Solid mounts through `render` from `@solidjs/web`, which the
 generated modules import directly.
 
 ## Islands
@@ -166,7 +171,7 @@ generated modules import directly.
 Markdown that uses a registered or document-imported component is emitted with
 island markers and hydrated through `@ox-content/islands`, the same runtime the
 other framework integrations use. Each island is mounted with `render` from
-`solid-js/web` and disposed when the Markdown component unmounts.
+`@solidjs/web` and disposed when the Markdown component unmounts.
 
 Markdown without any registered or document-imported component skips the island
 runtime entirely and compiles to a single `innerHTML` binding.

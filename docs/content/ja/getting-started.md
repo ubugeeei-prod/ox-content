@@ -104,7 +104,7 @@ vp install @ox-content/vite-plugin-react@alpha react react-dom @vitejs/plugin-re
 vp install @ox-content/vite-plugin-svelte@alpha svelte @sveltejs/vite-plugin-svelte
 
 # Solid
-vp install @ox-content/vite-plugin-solid@alpha solid-js vite-plugin-solid
+vp install @ox-content/vite-plugin-solid@alpha solid-js@next @solidjs/web@next @solidjs/vite-plugin
 ```
 
 続き:

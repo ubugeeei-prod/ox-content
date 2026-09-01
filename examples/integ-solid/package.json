@@ -10,12 +10,13 @@
   },
   "dependencies": {
     "@ox-content/islands": "workspace:*",
+    "@solidjs/web": "catalog:",
     "solid-js": "catalog:"
   },
   "devDependencies": {
     "@ox-content/vite-plugin-solid": "workspace:*",
+    "@solidjs/vite-plugin": "catalog:",
     "vite": "catalog:",
-    "vite-plugin-solid": "catalog:",
     "vite-plus": "catalog:"
   }
 }

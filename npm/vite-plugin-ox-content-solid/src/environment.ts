@@ -25,7 +25,7 @@ export function createSolidMarkdownEnvironment(
       conditions: isSSR ? ["solid", "node", "import"] : ["solid", "browser", "import"],
     },
     optimizeDeps: {
-      include: isSSR ? [] : ["solid-js", "solid-js/web"],
+      include: isSSR ? [] : ["solid-js", "@solidjs/web"],
       exclude: ["@ox-content/vite-plugin", "@ox-content/vite-plugin-solid"],
     },
   };

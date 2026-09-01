@@ -1,12 +1,12 @@
 import { defineConfig } from "vite-plus";
-import solid from "vite-plugin-solid";
+import solid from "@solidjs/vite-plugin";
 import { oxContentSolid } from "@ox-content/vite-plugin-solid";
 
 export default defineConfig({
   plugins: [
     // Order matters: oxContentSolid() turns Markdown into Solid JSX, and
-    // vite-plugin-solid compiles that JSX. Both are `enforce: 'pre'`, so the
-    // array order is what decides which one sees the file first.
+    // @solidjs/vite-plugin compiles that JSX. Both are `enforce: 'pre'`, so
+    // the array order is what decides which one sees the file first.
     oxContentSolid({
       srcDir: "docs",
       // Auto-discover components using glob pattern
@@ -14,6 +14,6 @@ export default defineConfig({
     }),
     // Solid's JSX is compile-time only, so the Markdown extensions have to be
     // listed here for the generated modules to be compiled at all.
-    solid({ extensions: [".md", ".markdown", ".mdx"] }),
+    solid({ extensions: [".md", ".markdown", ".mdx"], compiler: "native" }),
   ],
 });

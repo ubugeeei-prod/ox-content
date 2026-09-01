@@ -12,7 +12,7 @@ export default defineConfig({
     clean: true,
     hash: false,
     deps: {
-      neverBundle: ["vite", "solid-js", "@ox-content/vite-plugin"],
+      neverBundle: ["vite", "solid-js", "@solidjs/web", "@ox-content/vite-plugin"],
     },
   }),
 });
