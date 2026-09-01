@@ -35,6 +35,9 @@ expression: "super::snapshot_text(&html)"
 :root {
   color-scheme: light dark;
   --octc-sidebar-width: 260px;
+  --octc-toc-width: 17rem;
+  --octc-toc-gap: 2.5rem;
+  --octc-toc-pad-inline: 1.25rem;
   --octc-header-height: 60px;
   --octc-mobile-footer-height: 56px;
   --octc-max-content-width: 960px;
@@ -93,8 +96,8 @@ expression: "super::snapshot_text(&html)"
   --octc-focus-offset: 2px;
   --octc-motion-base: 150ms;
   --octc-motion-ease: ease;
-  --octc-code-pad-block: 1.05rem;
-  --octc-code-pad-inline: 1rem;
+  --octc-code-pad-block: 1.1rem;
+  --octc-code-pad-inline: 1.15rem;
   --octc-code-title-pad-block: 0.75rem;
   --octc-code-title-gap: 0.875rem;
   --octc-table-cell-pad-block: 0.75rem;
@@ -1845,10 +1848,11 @@ a:hover {
   top: var(--octc-header-height);
   right: 0;
   bottom: 0;
-  width: 15rem;
-  padding: 2rem 1rem;
+  width: var(--octc-toc-width);
+  padding: 2rem var(--octc-toc-pad-inline) 2rem calc(var(--octc-toc-pad-inline) + 0.25rem);
   border-left: 1px solid color-mix(in srgb, var(--octc-color-border) 58%, transparent);
   overflow-y: auto;
+  overflow-wrap: anywhere;
 }
 .toc-title {
   margin-bottom: 0.75rem;
@@ -1866,7 +1870,7 @@ a:hover {
 }
 .toc-link {
   display: block;
-  padding: 0.25rem 0.5rem;
+  padding: 0.28rem 0.6rem;
   color: var(--octc-color-text-muted);
   font-size: 0.8125rem;
   line-height: 1.4;
@@ -1885,12 +1889,12 @@ a:hover {
 .toc-link--depth-6 {
   padding-left: 1.5rem;
 }
-@media (min-width: 1440px) {
+@media (min-width: 1480px) {
   .toc {
     display: block;
   }
   .main--with-toc {
-    padding-right: 17rem;
+    padding-right: calc(var(--octc-toc-width) + var(--octc-toc-gap));
   }
 }
 /* Mobile Footer Bar */
@@ -1899,9 +1903,9 @@ a:hover {
 }
 @media (max-width: 768px) {
   :root {
-    --octc-code-pad-block: 0.85rem;
-    --octc-code-pad-inline: 0.95rem;
-    --octc-code-title-pad-block: 0.65rem;
+    --octc-code-pad-block: 0.95rem;
+    --octc-code-pad-inline: 1rem;
+    --octc-code-title-pad-block: 0.7rem;
     --octc-code-title-gap: 0.75rem;
     --octc-table-cell-pad-block: 0.5rem;
     --octc-table-cell-pad-inline: 0.75rem;
@@ -2271,9 +2275,9 @@ a:hover {
 
 @media (max-width: 480px) {
   :root {
-    --octc-code-pad-block: 0.78rem;
-    --octc-code-pad-inline: 0.85rem;
-    --octc-code-title-pad-block: 0.6rem;
+    --octc-code-pad-block: 0.9rem;
+    --octc-code-pad-inline: 0.95rem;
+    --octc-code-title-pad-block: 0.65rem;
     --octc-code-title-gap: 0.72rem;
     --octc-table-cell-pad-block: 0.375rem;
     --octc-table-cell-pad-inline: 0.5rem;

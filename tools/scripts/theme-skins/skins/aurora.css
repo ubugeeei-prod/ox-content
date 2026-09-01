@@ -59,8 +59,6 @@ body::before {
 .header {
   border-radius: 0;
   background: var(--octc-au-veil);
-  backdrop-filter: blur(22px) saturate(150%);
-  -webkit-backdrop-filter: blur(22px) saturate(150%);
   border-bottom: 1px solid color-mix(in srgb, var(--octc-color-border) 38%, transparent);
 }
 .sidebar {

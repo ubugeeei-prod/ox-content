@@ -293,3 +293,6 @@ export default {export_name};
         motion = borrowed_string_record(&skin.motion.token_entries(), "    "),
     )
 }
+
+#[cfg(test)]
+mod tests;

@@ -4,7 +4,7 @@ Manuscript — A codex page — narrow measure, rubricated heads, and a table of
 
 **Form only.** Geometry, texture, typography and motion, written entirely
 against `--octc-*` custom properties. It names no colors, so it pairs with any
-`@ox-content/theme-color-*` scheme. About 8.6 kB of CSS, zero JavaScript, zero
+`@ox-content/theme-color-*` scheme. About 8.2 kB of CSS, zero JavaScript, zero
 runtime dependencies.
 
 ```bash

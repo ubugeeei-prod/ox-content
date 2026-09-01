@@ -52,7 +52,6 @@
 .nav-link:hover {
   background: transparent;
   padding-left: 0.95rem;
-  font-style: italic;
 }
 .nav-link.active {
   background: transparent;
@@ -130,7 +129,7 @@
   text-decoration-thickness: 1px;
 }
 .content a:hover {
-  font-style: italic;
+  text-decoration-thickness: 2px;
 }
 .content pre {
   border: 1px solid var(--octc-ed-rule-strong);

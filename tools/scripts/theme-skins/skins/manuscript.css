@@ -44,7 +44,7 @@
 }
 .nav-link:hover {
   background: transparent;
-  font-style: italic;
+  text-decoration: underline;
 }
 .nav-link.active {
   background: transparent;

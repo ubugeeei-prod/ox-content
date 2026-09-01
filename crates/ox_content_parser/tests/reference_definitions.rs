@@ -52,13 +52,52 @@ fn definition_run(count: usize) -> String {
     source
 }
 
-fn time_parse(source: &str) -> Duration {
+fn parse_once(source: &str) {
     let allocator = Allocator::new();
-    let start = Instant::now();
     let parsed = Parser::with_options(&allocator, source, ParserOptions::gfm()).parse();
-    let elapsed = start.elapsed();
     assert!(parsed.is_ok(), "source should parse");
-    elapsed
+}
+
+fn time_parse_batch(source: &str, runs: usize) -> Duration {
+    let start = Instant::now();
+    for _ in 0..runs {
+        parse_once(source);
+    }
+    start.elapsed()
+}
+
+#[derive(Clone, Copy)]
+struct TimingSample {
+    small_batch: Duration,
+    large: Duration,
+}
+
+fn fastest_equal_definition_sample(small_source: &str, large_source: &str) -> TimingSample {
+    parse_once(small_source);
+    parse_once(large_source);
+
+    let mut best = TimingSample { small_batch: Duration::MAX, large: Duration::MAX };
+    let mut best_ratio = f64::INFINITY;
+
+    for round in 0..5 {
+        let sample = if round % 2 == 0 {
+            let small_batch = time_parse_batch(small_source, 4);
+            let large = time_parse_batch(large_source, 1);
+            TimingSample { small_batch, large }
+        } else {
+            let large = time_parse_batch(large_source, 1);
+            let small_batch = time_parse_batch(small_source, 4);
+            TimingSample { small_batch, large }
+        };
+        let ratio = sample.large.as_secs_f64()
+            / sample.small_batch.max(Duration::from_micros(1)).as_secs_f64();
+        if ratio < best_ratio {
+            best = sample;
+            best_ratio = ratio;
+        }
+    }
+
+    best
 }
 
 #[test]
@@ -139,13 +178,19 @@ fn definition_runs_inside_a_block_quote_resolve() {
 
 #[test]
 fn a_run_of_definitions_costs_linear_time() {
-    // Four times the definitions used to cost sixteen times the work.
-    // Anything under eight proves the per-definition rescan is gone
-    // without pinning an absolute time on a shared runner.
-    let small = time_parse(&definition_run(4_000)).max(Duration::from_micros(1));
-    let large = time_parse(&definition_run(16_000));
+    // Compare equal bytes of work: four 4,000-definition runs against one
+    // 16,000-definition run. Quadratic rescanning makes the large input cost
+    // about four times the batch; a linear parser stays close to one.
+    let small_source = definition_run(4_000);
+    let large_source = definition_run(16_000);
+    let sample = fastest_equal_definition_sample(&small_source, &large_source);
+    let ratio =
+        sample.large.as_secs_f64() / sample.small_batch.max(Duration::from_micros(1)).as_secs_f64();
     assert!(
-        large < small * 8,
-        "16,000 definitions took {large:?} against {small:?} for 4,000; the rescan is back"
+        ratio < 2.5,
+        "16,000 definitions took {large:?} against {small:?} for four 4,000-definition runs \
+         (x{ratio:.1}); the rescan is back",
+        large = sample.large,
+        small = sample.small_batch
     );
 }

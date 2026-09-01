@@ -5,52 +5,13 @@
 
 /* --- The header should not announce itself -------------------------------- */
 
-/* A bar with its own fill and a rule under it reads as chrome bolted to the top
- * of the page. The header instead has no colour of its own at any point: it
- * simply blurs whatever scrolls beneath it, so the page keeps one continuous
- * surface and the bar is only ever implied by the softening behind the type.
- *
- * The blur is on by default, because without scroll-timeline support a fully
- * transparent bar would let text slide under it unreadably. Where the timeline
- * is available the blur starts at zero and comes up as the page moves, so at
- * rest there is no header at all. */
+/* Theme presets should not turn the header into a frosted band. The base layout
+ * already reserves the top chrome height, so the themed layer keeps it flat:
+ * no fill, no rule, no shadow, and no blur ramp that changes while reading. */
 .header {
   background: transparent;
   border-bottom: 0;
   box-shadow: none;
-}
-
-/* At rest the header carries nothing at all — no fill, no edge, no blur. The
- * first view has to be one unbroken image, and a frosted band across the top of
- * the hero is exactly the seam this treatment exists to remove.
- *
- * An article page is different: its text begins immediately under the bar, so
- * without a scroll timeline it needs the blur from the start or the copy slides
- * under unreadably. The entry page never needs that fallback, because at scroll
- * zero there is nothing beneath the header but the hero. */
-body:not(.entry-page) .header {
-  backdrop-filter: blur(14px) saturate(150%);
-  -webkit-backdrop-filter: blur(14px) saturate(150%);
-}
-
-/* Where the timeline exists, every page starts clear and settles as it moves. */
-@supports (animation-timeline: scroll()) {
-  .header {
-    animation: var(--octc-header-scroll, octc-header-settle) linear both;
-    animation-timeline: scroll(root block);
-    animation-range: 0 7rem;
-  }
-}
-
-@keyframes octc-header-settle {
-  from {
-    backdrop-filter: blur(0px) saturate(100%);
-    -webkit-backdrop-filter: blur(0px) saturate(100%);
-  }
-  to {
-    backdrop-filter: blur(14px) saturate(150%);
-    -webkit-backdrop-filter: blur(14px) saturate(150%);
-  }
 }
 
 /* The same on an article page. Even a transparent bar leaves an empty strip

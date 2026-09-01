@@ -4,7 +4,7 @@ Noir — One hard key light and a steep falloff — shapes picked out of the dar
 
 **Form only.** Geometry, texture, typography and motion, written entirely
 against `--octc-*` custom properties. It names no colors, so it pairs with any
-`@ox-content/theme-color-*` scheme. About 9.0 kB of CSS, zero JavaScript, zero
+`@ox-content/theme-color-*` scheme. About 8.6 kB of CSS, zero JavaScript, zero
 runtime dependencies.
 
 ```bash
