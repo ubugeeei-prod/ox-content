@@ -218,8 +218,9 @@ const expectWorkspaceLink = (
 ) => {
   const importerBlock = importerLockfileBlock(lockfile, importer);
   const expected = relative(importer, target).split(sep).join("/");
-  expect(importerBlock).toContain(`      '${dependency}':\n        specifier: workspace:*`);
-  expect(importerBlock).toContain(`version: link:${expected}`);
+  expect(importerBlock).toContain(
+    `      '${dependency}':\n        specifier: workspace:*\n        version: link:${expected}`,
+  );
 };
 
 const importerLockfileBlock = (lockfile: string, importer: string) => {
