@@ -237,7 +237,7 @@ export interface SsgOptions {
    * keeping network, memory, and file descriptor use bounded. Page rendering
    * and writes still run through the deterministic output stages.
    *
-   * @default 8
+   * @default 1
    */
   transformConcurrency?: number;
 
