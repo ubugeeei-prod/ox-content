@@ -116,6 +116,43 @@ describe("vitepress migration helpers", () => {
     expect(theme.footer?.message).toBe("Migrated from VitePress");
   });
 
+  it("preserves VitePress object-form social link icons as array links", () => {
+    const svg = '<svg viewBox="0 0 16 16"></svg>';
+    const options = fromVitePressConfig({
+      title: "Demo",
+      themeConfig: {
+        socialLinks: [
+          { icon: { svg }, link: "https://example.com", ariaLabel: "Example" },
+          { icon: "mastodon", link: "https://social.example/@demo" },
+        ],
+      },
+    });
+
+    expect(options.ssg).not.toBe(false);
+    if (!options.ssg || options.ssg === true) {
+      throw new Error("Expected migrated SSG options");
+    }
+    const theme = options.ssg.theme;
+    if (!theme || Array.isArray(theme)) {
+      throw new Error("Expected a single migrated theme");
+    }
+
+    expect(theme.socialLinks).toEqual([
+      { icon: { svg }, link: "https://example.com", ariaLabel: "Example" },
+      { icon: "mastodon", link: "https://social.example/@demo" },
+    ]);
+
+    const source = generateVitePressMigrationConfig({
+      title: "Demo",
+      themeConfig: {
+        socialLinks: [{ icon: { svg }, link: "https://example.com" }],
+      },
+    });
+
+    expect(source).toContain("socialLinks: [");
+    expect(source).toContain('svg: "<svg viewBox=\\"0 0 16 16\\"></svg>"');
+  });
+
   it("generates an editable ox-content options module", () => {
     const source = generateVitePressMigrationConfig(
       {
