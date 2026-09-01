@@ -4,6 +4,15 @@ import { sanitizeScreenName, visibleTextRange } from "./validate";
 
 type EntityKind = "url" | "media" | "hashtag" | "mention" | "symbol";
 
+const NAMED_ENTITIES: Record<string, string> = {
+  amp: "&",
+  apos: "'",
+  gt: ">",
+  lt: "<",
+  nbsp: "\u00a0",
+  quot: '"',
+};
+
 interface CollectedEntity extends TweetIndexedEntity {
   kind: EntityKind;
   href?: string;
@@ -14,7 +23,9 @@ export function renderTweetText(
   data: TweetBodyData,
   options?: { omitTrailingQuoteUrl?: boolean },
 ): string {
-  const [start, end] = visibleTextRange(data, options?.omitTrailingQuoteUrl === true);
+  const text = decodeTweetText(data.text);
+  const textData = text === data.text ? data : { ...data, text };
+  const [start, end] = visibleTextRange(textData, options?.omitTrailingQuoteUrl === true);
   const entities = collectEntities(data)
     .filter((entity) => validRange(entity.indices, start, end))
     .sort((left, right) => left.indices![0] - right.indices![0]);
@@ -24,14 +35,14 @@ export function renderTweetText(
   for (const entity of entities) {
     const [entityStart, entityEnd] = entity.indices!;
     if (entityStart < cursor) continue;
-    output += escapeText(data.text.slice(cursor, entityStart));
+    output += escapeText(text.slice(cursor, entityStart));
     if (entity.href) {
-      const label = entity.label ?? data.text.slice(entityStart, entityEnd);
+      const label = entity.label ?? text.slice(entityStart, entityEnd);
       output += `<a href="${escapeAttribute(entity.href)}" target="_blank" rel="noopener noreferrer">${escapeHtml(label)}</a>`;
     }
     cursor = entityEnd;
   }
-  output += escapeText(data.text.slice(cursor, end));
+  output += escapeText(text.slice(cursor, end));
   return output.trim();
 }
 
@@ -82,4 +93,27 @@ function validRange(
   end: number,
 ): indices is [number, number] {
   return Boolean(indices && indices[0] >= start && indices[1] <= end && indices[0] < indices[1]);
+}
+
+function decodeTweetText(value: string): string {
+  if (!value.includes("&")) {
+    return value;
+  }
+  return value.replace(/&(#[0-9]+|#[xX][0-9a-fA-F]+|[a-zA-Z][a-zA-Z0-9]*);/g, (match, body) => {
+    if (body.startsWith("#")) {
+      const code =
+        body[1] === "x" || body[1] === "X"
+          ? Number.parseInt(body.slice(2), 16)
+          : Number.parseInt(body.slice(1), 10);
+      if (!Number.isInteger(code) || code <= 0 || code > 0x10ffff) {
+        return match;
+      }
+      try {
+        return String.fromCodePoint(code);
+      } catch {
+        return match;
+      }
+    }
+    return NAMED_ENTITIES[body.toLowerCase()] ?? match;
+  });
 }

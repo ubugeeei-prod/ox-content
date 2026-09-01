@@ -83,6 +83,48 @@ describe("full-fidelity Tweet cards", () => {
     expect(html).not.toContain("👍");
   });
 
+  it("decodes syndication HTML entities once before escaping tweet text", () => {
+    const html = renderTweetText({
+      text: "0.13.4 -&gt; 0.13.5 &#45; &lt;b&gt; &amp;lt;i&amp;gt;",
+      user: user(),
+    });
+    expect(html).toContain("0.13.4 -&gt; 0.13.5 - &lt;b&gt; &amp;lt;i&amp;gt;");
+    expect(html).not.toContain("-&amp;gt;");
+    expect(html).not.toContain("<b>");
+    expect(html).not.toContain("<i>");
+  });
+
+  it("keeps entity ranges aligned after decoding syndication text", () => {
+    const docs = "https://t.co/docs";
+    const decoded = `Read & share ${docs} #ox @ox_content`;
+    const encoded = `Read &amp; share ${docs} #ox @ox_content`;
+    const html = renderTweetText({
+      text: encoded,
+      display_text_range: [0, decoded.length],
+      user: user(),
+      entities: {
+        urls: [
+          {
+            url: docs,
+            expanded_url: "https://example.com/docs",
+            display_url: "example.com/docs",
+            indices: span(decoded, docs),
+          },
+        ],
+        hashtags: [{ text: "ox", indices: span(decoded, "#ox") }],
+        user_mentions: [{ screen_name: "ox_content", indices: span(decoded, "@ox_content") }],
+      },
+    });
+    expect(html).toContain("Read &amp; share");
+    expect(html).toContain('href="https://example.com/docs"');
+    expect(html).toContain(">example.com/docs</a>");
+    expect(html).toContain('href="https://x.com/hashtag/ox"');
+    expect(html).toContain(">#ox</a>");
+    expect(html).toContain('href="https://x.com/ox_content"');
+    expect(html).toContain(">@ox_content</a>");
+    expect(html).not.toContain("&amp;amp;");
+  });
+
   it("drops unsafe mention hrefs and keeps JA/EN body text", () => {
     const text = "こんにちは <script> @bad";
     const html = renderTweetText(
@@ -122,7 +164,7 @@ describe("full-fidelity Tweet cards", () => {
         user: user(),
         quoted_tweet: {
           id_str: "99",
-          text: "Quoted 写真",
+          text: "Quoted &lt;photo&gt; &#45; safe",
           user: { name: "Other", screen_name: "other", is_blue_verified: true },
           mediaDetails: [
             { type: "photo", media_url_https: "https://pbs.twimg.com/media/quoted.jpg" },
@@ -131,7 +173,9 @@ describe("full-fidelity Tweet cards", () => {
       },
       { appearance: "full" },
     );
-    expect(quoted).toContain("Quoted 写真");
+    expect(quoted).toContain("Quoted &lt;photo&gt; - safe");
+    expect(quoted).not.toContain("&amp;lt;photo&amp;gt;");
+    expect(quoted).not.toContain("<photo>");
     expect(quoted).toContain("ox-tweet__badge--blue");
     expect(quoted).toContain("/tweets/555-quoted-media-1.jpg");
 
