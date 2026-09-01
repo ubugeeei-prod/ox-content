@@ -1,13 +1,7 @@
 #!/usr/bin/env node
 
 import { spawnSync } from "node:child_process";
-import {
-  copyFileSync,
-  existsSync,
-  mkdirSync,
-  symlinkSync,
-  writeFileSync,
-} from "node:fs";
+import { copyFileSync, existsSync, mkdirSync, writeFileSync } from "node:fs";
 import { cpus, totalmem } from "node:os";
 import { dirname, join, resolve } from "node:path";
 
@@ -21,36 +15,39 @@ if (options.skipRuntime && options.skipBundle) {
 }
 
 const sourceRoot = resolve(options.source ?? requiredEnv("GITHUB_WORKSPACE"));
+const sourceBenchmarkRoot = "tools/benchmarks";
+const checkoutBenchmarkRoot = detectBenchmarkRoot(checkoutRoot);
+const benchmarkPath = (path) => join(checkoutBenchmarkRoot, path);
 
 for (const file of [
-  "tools/benchmarks/mizchi-markdown-native.mjs",
-  "tools/benchmarks/mizchi-markdown-native-template.mjs",
-  "tools/benchmarks/bundle-size/parse-benchmark.mjs",
-  "tools/benchmarks/bundle-size/parse-benchmark-bun.mjs",
-  "tools/benchmarks/bundle-size/measure.mjs",
-  "tools/benchmarks/bundle-size/measure-artifacts.mjs",
-  "tools/benchmarks/native-competitors/Cargo.toml",
-  "tools/benchmarks/native-competitors/Cargo.lock",
-  "tools/benchmarks/native-competitors/src/bench.rs",
-  "tools/benchmarks/native-competitors/src/cli.rs",
-  "tools/benchmarks/native-competitors/src/conformance.rs",
-  "tools/benchmarks/native-competitors/src/json.rs",
-  "tools/benchmarks/native-competitors/src/main.rs",
+  "mizchi-markdown-native.mjs",
+  "mizchi-markdown-native-template.mjs",
+  "bundle-size/package.json",
+  "bundle-size/parse-benchmark.mjs",
+  "bundle-size/parse-benchmark-bun.mjs",
+  "bundle-size/measure.mjs",
+  "bundle-size/measure-artifacts.mjs",
+  "native-competitors/Cargo.toml",
+  "native-competitors/Cargo.lock",
+  "native-competitors/src/bench.rs",
+  "native-competitors/src/cli.rs",
+  "native-competitors/src/conformance.rs",
+  "native-competitors/src/json.rs",
+  "native-competitors/src/main.rs",
 ]) {
-  const from = join(sourceRoot, file);
-  const to = join(checkoutRoot, file);
+  const from = join(sourceRoot, sourceBenchmarkRoot, file);
+  const to = join(checkoutRoot, checkoutBenchmarkRoot, file);
   mkdirSync(dirname(to), { recursive: true });
   copyFileSync(from, to);
 }
 
 run("vp", ["install"]);
-linkLegacyBenchmarkDependencies();
 run("vp", ["run", "build:npm"]);
 if (options.skipRuntime) {
   writeSkippedRuntimeReport(options.runtimeJson);
 } else {
   run("node", [
-    "tools/benchmarks/bundle-size/parse-benchmark.mjs",
+    benchmarkPath("bundle-size/parse-benchmark.mjs"),
     "--runs",
     options.runs,
     "--json",
@@ -61,7 +58,7 @@ if (options.skipBundle) {
   writeSkippedBundleReport(options.bundleJson);
 } else {
   run("node", [
-    "tools/benchmarks/bundle-size/measure.mjs",
+    benchmarkPath("bundle-size/measure.mjs"),
     "--skip-install",
     "--json",
     options.bundleJson,
@@ -73,7 +70,7 @@ if (options.skipBundle) {
 // ask for it simply gets no artifact section in the report.
 if (options.artifactsJson) {
   run("node", [
-    "tools/benchmarks/bundle-size/measure-artifacts.mjs",
+    benchmarkPath("bundle-size/measure-artifacts.mjs"),
     "--json",
     options.artifactsJson,
   ]);
@@ -198,17 +195,19 @@ function requiredEnv(name) {
   return value;
 }
 
-function linkLegacyBenchmarkDependencies() {
-  const benchmarkNodeModules = join(
-    checkoutRoot,
-    "tools/benchmarks/bundle-size/node_modules",
-  );
-  const legacyNodeModules = join(checkoutRoot, "benchmarks/bundle-size/node_modules");
-
-  if (!existsSync(benchmarkNodeModules) && existsSync(legacyNodeModules)) {
-    mkdirSync(dirname(benchmarkNodeModules), { recursive: true });
-    symlinkSync(legacyNodeModules, benchmarkNodeModules, "dir");
+/**
+ * @param {string} root
+ * @returns {"tools/benchmarks" | "benchmarks"}
+ */
+function detectBenchmarkRoot(root) {
+  if (existsSync(join(root, "tools/benchmarks/bundle-size/package.json"))) {
+    return "tools/benchmarks";
   }
+  if (existsSync(join(root, "benchmarks/bundle-size/package.json"))) {
+    return "benchmarks";
+  }
+
+  return "tools/benchmarks";
 }
 
 /**

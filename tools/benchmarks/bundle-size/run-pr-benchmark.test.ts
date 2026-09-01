@@ -1,7 +1,7 @@
 import { spawnSync } from "node:child_process";
-import { mkdtempSync, readFileSync } from "node:fs";
+import { chmodSync, mkdirSync, mkdtempSync, readFileSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
-import { join, resolve } from "node:path";
+import { delimiter, dirname, join, resolve } from "node:path";
 import { describe, expect, it } from "vite-plus/test";
 import {
   packageBuildConcurrencyEnvName,
@@ -61,4 +61,104 @@ describe("run-pr-benchmark", () => {
       `${packageBuildConcurrencyEnvName} must be a positive integer`,
     );
   });
+
+  it("runs copied benchmark scripts from the checkout's legacy benchmark workspace", () => {
+    if (process.platform === "win32") {
+      return;
+    }
+
+    const root = mkdtempSync(join(tmpdir(), "ox-pr-benchmark-layout-"));
+    const source = join(root, "source");
+    const checkout = join(root, "checkout");
+    const bin = join(root, "bin");
+    const runtimeJson = join(root, "runtime.json");
+    const bundleJson = join(root, "bundle.json");
+    const artifactsJson = join(root, "artifacts.json");
+
+    mkdirSync(bin, { recursive: true });
+    writeExecutable(join(bin, "vp"), "#!/bin/sh\nexit 0\n");
+    writeExecutable(join(bin, "node"), `#!/bin/sh\nexec '${escapeShell(process.execPath)}' "$@"\n`);
+
+    writeFile(
+      join(source, "tools/benchmarks/bundle-size/parse-benchmark.mjs"),
+      writesInvokedScriptJson,
+    );
+    writeFile(join(source, "tools/benchmarks/bundle-size/measure.mjs"), writesInvokedScriptJson);
+    writeFile(
+      join(source, "tools/benchmarks/bundle-size/measure-artifacts.mjs"),
+      writesInvokedScriptJson,
+    );
+    writeFile(join(source, "tools/benchmarks/bundle-size/package.json"), '{"type":"module"}\n');
+
+    for (const file of [
+      "mizchi-markdown-native.mjs",
+      "mizchi-markdown-native-template.mjs",
+      "bundle-size/parse-benchmark-bun.mjs",
+      "native-competitors/Cargo.toml",
+      "native-competitors/Cargo.lock",
+      "native-competitors/src/bench.rs",
+      "native-competitors/src/cli.rs",
+      "native-competitors/src/conformance.rs",
+      "native-competitors/src/json.rs",
+      "native-competitors/src/main.rs",
+    ]) {
+      writeFile(join(source, "tools/benchmarks", file), "");
+    }
+
+    writeFile(join(checkout, "benchmarks/bundle-size/package.json"), '{"type":"module"}\n');
+
+    const result = spawnSync(
+      process.execPath,
+      [
+        script,
+        "--source",
+        source,
+        "--runtime-json",
+        runtimeJson,
+        "--bundle-json",
+        bundleJson,
+        "--artifacts-json",
+        artifactsJson,
+      ],
+      {
+        cwd: checkout,
+        encoding: "utf8",
+        env: {
+          ...process.env,
+          PATH: `${bin}${delimiter}${process.env.PATH ?? ""}`,
+        },
+      },
+    );
+
+    expect(result.status, result.stderr || result.stdout).toBe(0);
+    expectBenchmarkScript(runtimeJson, join("benchmarks", "bundle-size", "parse-benchmark.mjs"));
+    expectBenchmarkScript(bundleJson, join("benchmarks", "bundle-size", "measure.mjs"));
+    expectBenchmarkScript(
+      artifactsJson,
+      join("benchmarks", "bundle-size", "measure-artifacts.mjs"),
+    );
+  });
 });
+
+const writesInvokedScriptJson = `import { writeFileSync } from "node:fs";
+const jsonIndex = process.argv.indexOf("--json");
+writeFileSync(process.argv[jsonIndex + 1], JSON.stringify({ script: process.argv[1] }) + "\\n");
+`;
+
+const writeFile = (path: string, content: string) => {
+  mkdirSync(dirname(path), { recursive: true });
+  writeFileSync(path, content);
+};
+
+const writeExecutable = (path: string, content: string) => {
+  writeFile(path, content);
+  chmodSync(path, 0o755);
+};
+
+const escapeShell = (value: string) => value.replaceAll("'", "'\\''");
+
+const expectBenchmarkScript = (path: string, expectedSuffix: string) => {
+  const { script } = JSON.parse(readFileSync(path, "utf8")) as { script: string };
+  expect(script).toContain(expectedSuffix);
+  expect(script).not.toContain(join("tools", "benchmarks"));
+};
