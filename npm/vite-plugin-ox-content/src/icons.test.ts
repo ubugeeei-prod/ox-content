@@ -92,11 +92,26 @@ describe("icon name parsing", () => {
     expect(parseIconName("https://example.com/x.svg")).toBeUndefined();
   });
 
-  it("collects used names from source text", () => {
+  it("collects icon classes from source text", () => {
     const names = collectIconNamesFromText(
-      `span.icon-[ox--mark] plus ox:mark and https://api.iconify.design/ox/unused.svg`,
+      `span.icon-[ox--mark] plus ox:unused and https://api.iconify.design/ox/unused.svg`,
     );
     expect([...names]).toEqual(["ox:mark"]);
+  });
+
+  it("ignores non-icon colon syntax in source text", () => {
+    const names = collectIconNamesFromText(`
+      import path from "node:path";
+
+      const classes = "dark:opacity-20 hover:scale-110 md:grid-cols-2";
+      const metadata = { "og:image": "/social.png" };
+
+      p:first-of-type {
+        color: var(--accent);
+      }
+    `);
+
+    expect([...names]).toEqual([]);
   });
 
   it("collects frontmatter icon fields only", () => {
@@ -159,6 +174,32 @@ describe("writeSelfHostedIcons", () => {
     expect(result.names).toEqual(["ox:mark"]);
     const css = await fs.readFile(result.files[0]!, "utf8");
     expect(css).not.toContain("ox--unused");
+  });
+
+  it("scans icon classes from include globs without colon false positives", async () => {
+    const root = await tempDir("ox-icons-glob-");
+    const outDir = path.join(root, "dist");
+    await writeFixtureCollection(root);
+    await fs.mkdir(path.join(root, "src"), { recursive: true });
+    await fs.writeFile(
+      path.join(root, "src", "page.ts"),
+      [
+        'import path from "node:path";',
+        'const classes = "dark:opacity-20 hover:scale-110 md:grid-cols-2 icon-[ox--mark]";',
+        'const selectors = "p:first-of-type h2:hover";',
+        'const metadata = { "og:image": "/social.png" };',
+        'const url = "https://example.com/a:b";',
+      ].join("\n"),
+    );
+
+    const result = await writeSelfHostedIcons({
+      options: enabledIcons({ include: ["src/**/*.{ts,tsx,md,css,json}"] }),
+      outDir,
+      root,
+    });
+
+    expect(result.errors).toEqual([]);
+    expect(result.names).toEqual(["ox:mark"]);
   });
 
   it("diagnoses a missing collection and icon name", async () => {

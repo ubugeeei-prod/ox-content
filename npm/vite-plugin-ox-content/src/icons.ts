@@ -34,7 +34,6 @@ const URL_SCHEMES = new Set([
   "blob",
 ]);
 
-const COLON_ICON = /(?<![A-Za-z0-9_-])([a-z][a-z0-9-]*):([a-z0-9][a-z0-9-]*)/gi;
 const CLASS_ICON = /icon-\[([a-z][a-z0-9-]*)--([a-z0-9][a-z0-9-]*)\]/gi;
 const ICON_FIELD = /(?:^|[\s,{])icon\s*:\s*["']([^"']+)["']/g;
 
@@ -95,10 +94,6 @@ function tokenPair(prefix: string, name: string): ParsedIconName | undefined {
 }
 
 export function collectIconNamesFromText(text: string, into: Set<string> = new Set()): Set<string> {
-  COLON_ICON.lastIndex = 0;
-  for (const match of text.matchAll(COLON_ICON)) {
-    addParsed(into, match[1], match[2]);
-  }
   CLASS_ICON.lastIndex = 0;
   for (const match of text.matchAll(CLASS_ICON)) {
     addParsed(into, match[1], match[2]);
