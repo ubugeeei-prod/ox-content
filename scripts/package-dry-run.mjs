@@ -34,7 +34,10 @@ const packages = [
 ];
 const packDir = mkdtempSync(join(tmpdir(), "ox-content-pack-"));
 const failures = [];
-const publicVitePeerRange = "^0.2.8 || ^8.0.0";
+const publicVitePeerRanges = new Map([
+  ["@ox-content/vite-plugin-solid", "^8.0.0 || ^9.0.0"],
+]);
+const defaultPublicVitePeerRange = "^0.2.8 || ^8.0.0";
 
 try {
   for (const packageDir of packages) {
@@ -122,9 +125,10 @@ function checkVitePeerDependency(pkg) {
     return;
   }
 
-  if (pkg.peerDependencies.vite !== publicVitePeerRange) {
+  const expectedRange = publicVitePeerRanges.get(pkg.name) ?? defaultPublicVitePeerRange;
+  if (pkg.peerDependencies.vite !== expectedRange) {
     failures.push(
-      `${pkg.name} publishes vite peer ${pkg.peerDependencies.vite}; expected ${publicVitePeerRange}`,
+      `${pkg.name} publishes vite peer ${pkg.peerDependencies.vite}; expected ${expectedRange}`,
     );
   }
 }
