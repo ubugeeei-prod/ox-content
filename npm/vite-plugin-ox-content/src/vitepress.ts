@@ -1,5 +1,11 @@
 import { importNapiModuleSync } from "./napi";
-import { defineTheme, mergeThemes, type ThemeConfig } from "./theme";
+import {
+  defineTheme,
+  mergeThemes,
+  type LegacySocialLinks,
+  type SocialLink,
+  type ThemeConfig,
+} from "./theme";
 import type { OxContentOptions, SsgNavigationGroup, SsgNavigationItem } from "./types";
 
 export interface VitePressLogo {
@@ -9,8 +15,10 @@ export interface VitePressLogo {
   alt?: string;
 }
 
+export type VitePressSocialLinkIcon = string | { svg: string };
+
 export interface VitePressSocialLink {
-  icon: string;
+  icon: VitePressSocialLinkIcon;
   link: string;
   ariaLabel?: string;
 }
@@ -248,7 +256,7 @@ function resolveLogoSrc(logo: string | VitePressLogo | undefined): string | unde
   return logo.light ?? logo.dark ?? logo.src;
 }
 
-function normalizeSocialIcon(icon: string): "github" | "twitter" | "discord" | undefined {
+function normalizeLegacySocialIcon(icon: string): keyof LegacySocialLinks | undefined {
   const normalized = icon.trim().toLowerCase();
 
   if (normalized === "github") return "github";
@@ -260,20 +268,76 @@ function normalizeSocialIcon(icon: string): "github" | "twitter" | "discord" | u
   return undefined;
 }
 
+function toArraySocialLink(link: VitePressSocialLink): SocialLink | undefined {
+  if (typeof link.icon === "string") {
+    const icon = link.icon.trim();
+    return icon
+      ? {
+          icon,
+          link: link.link,
+          ...(link.ariaLabel !== undefined ? { ariaLabel: link.ariaLabel } : {}),
+        }
+      : undefined;
+  }
+
+  if (isRecord(link.icon) && typeof link.icon.svg === "string" && link.icon.svg.trim()) {
+    return {
+      icon: { svg: link.icon.svg },
+      link: link.link,
+      ...(link.ariaLabel !== undefined ? { ariaLabel: link.ariaLabel } : {}),
+    };
+  }
+
+  return undefined;
+}
+
+function socialLinkNeedsArrayForm(link: VitePressSocialLink): boolean {
+  return (
+    typeof link.icon !== "string" ||
+    normalizeLegacySocialIcon(link.icon) === undefined ||
+    link.ariaLabel !== undefined
+  );
+}
+
+function convertSocialLinks(links: VitePressSocialLink[] | undefined): ThemeConfig["socialLinks"] {
+  if (!links?.length) {
+    return undefined;
+  }
+
+  if (!links.some(socialLinkNeedsArrayForm)) {
+    const legacy: LegacySocialLinks = {};
+    for (const link of links) {
+      if (typeof link.icon !== "string") {
+        continue;
+      }
+      const key = normalizeLegacySocialIcon(link.icon);
+      if (key) {
+        legacy[key] = link.link;
+      }
+    }
+    return Object.keys(legacy).length > 0 ? legacy : undefined;
+  }
+
+  const socialLinks = links
+    .map((link) => toArraySocialLink(link))
+    .filter((link): link is SocialLink => link !== undefined);
+
+  return socialLinks.length > 0 ? socialLinks : undefined;
+}
+
+function hasSocialLinks(socialLinks: ThemeConfig["socialLinks"]): boolean {
+  return Array.isArray(socialLinks)
+    ? socialLinks.length > 0
+    : Object.keys(socialLinks ?? {}).length > 0;
+}
+
 function toThemeConfig(themeConfig: VitePressThemeConfig | undefined): ThemeConfig | undefined {
   if (!themeConfig) {
     return undefined;
   }
 
   const logo = resolveLogoSrc(themeConfig.logo);
-  const socialLinks = Object.fromEntries(
-    (themeConfig.socialLinks ?? [])
-      .map((link) => {
-        const key = normalizeSocialIcon(link.icon);
-        return key ? [key, link.link] : null;
-      })
-      .filter((entry): entry is [string, string] => entry !== null),
-  );
+  const socialLinks = convertSocialLinks(themeConfig.socialLinks);
 
   const theme: ThemeConfig = {
     ...(logo
@@ -291,16 +355,14 @@ function toThemeConfig(themeConfig: VitePressThemeConfig | undefined): ThemeConf
           },
         }
       : {}),
-    ...(Object.keys(socialLinks).length > 0
+    ...(hasSocialLinks(socialLinks)
       ? {
           socialLinks,
         }
       : {}),
   };
 
-  return logo || Object.keys(socialLinks).length > 0 || themeConfig.footer
-    ? defineTheme(theme)
-    : undefined;
+  return logo || hasSocialLinks(socialLinks) || themeConfig.footer ? defineTheme(theme) : undefined;
 }
 
 function resolveSiteName(config: VitePressConfig): string | undefined {
