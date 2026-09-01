@@ -1,6 +1,6 @@
 {
   "name": "@ox-content/theme-editorial",
-  "version": "3.0.0-beta.4",
+  "version": "3.0.0-beta.5",
   "description": "Magazine typography with drop caps, hairline rules and column reveals — an Ox Content skin that composes with any @ox-content/theme-color-* scheme",
   "keywords": [
     "documentation",

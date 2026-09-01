@@ -1,5 +1,17 @@
 # Changelog
 
+## [3.0.0-beta.5] - 2026-09-01
+
+### Bug Fixes
+
+- avoid broken favicon candidates
+- decode syndication text entities
+- avoid colon syntax source scan matches
+
+### Documentation
+
+- prefer vp package-manager tabs
+
 ## [3.0.0-beta.4] - 2026-09-01
 
 ### Bug Fixes
