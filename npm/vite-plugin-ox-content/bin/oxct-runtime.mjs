@@ -4,6 +4,7 @@ import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { runLinkCheck, runMdcCheck } from "./oxct-checkers.mjs";
 import { runI18n } from "./oxct-i18n.mjs";
+import { loadNapi } from "./oxct-napi.mjs";
 import { runOgPreview } from "./oxct-og-preview.mjs";
 
 const here = dirname(fileURLToPath(import.meta.url));
@@ -48,10 +49,21 @@ export function main(args) {
 }
 
 function runLsp(args) {
-  if (isHelp(args)) {
+  if (isExplicitHelp(args)) {
     printLspHelp();
     return;
   }
+
+  if (args.length > 0) {
+    throw new Error(`Unknown lsp option: ${args[0]}`);
+  }
+
+  const napi = tryLoadNapi();
+  if (typeof napi?.runLspStdio === "function") {
+    napi.runLspStdio();
+    return;
+  }
+
   runRustCli({
     binary: "ox-content-lsp",
     crate: "ox_content_lsp",
@@ -103,6 +115,14 @@ function runCommand(command, args, options) {
   setExitCodeFromCommand(spawnSync(command, args, options), command);
 }
 
+function tryLoadNapi() {
+  try {
+    return loadNapi();
+  } catch {
+    return undefined;
+  }
+}
+
 function setExitCodeFromCommand(result, command) {
   if (result.error) {
     throw new Error(`Failed to run ${command}: ${result.error.message}`);
@@ -133,7 +153,11 @@ function findCargoWorkspaceRoot(start) {
 }
 
 function isHelp(args) {
-  return args.length === 0 || args[0] === "--help" || args[0] === "-h";
+  return args.length === 0 || isExplicitHelp(args);
+}
+
+function isExplicitHelp(args) {
+  return args[0] === "--help" || args[0] === "-h";
 }
 
 function printHelp() {
@@ -157,7 +181,7 @@ function printLspHelp() {
 Usage:
   oxct lsp
 
-Runs ox-content-lsp over stdio. oxct uses an ox-content-lsp binary from PATH, or Cargo when run inside the ox-content repository.`);
+Runs the bundled Ox Content language server over stdio. Source checkouts can fall back to an ox-content-lsp binary from PATH or Cargo when the native binding is unavailable.`);
 }
 
 function printMigrateHelp() {

@@ -250,6 +250,7 @@ module.exports.validateMf2 = binding.validateMf2;
 module.exports.checkI18n = binding.checkI18n;
 module.exports.checkI18nProject = binding.checkI18nProject;
 module.exports.checkLinks = binding.checkLinks;
+module.exports.runLspStdio = binding.runLspStdio;
 module.exports.checkMdc = binding.checkMdc;
 module.exports.extractTranslationKeys = binding.extractTranslationKeys;
 module.exports.renderFrameworkComponentCode = binding.renderFrameworkComponentCode;

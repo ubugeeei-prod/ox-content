@@ -3318,6 +3318,8 @@ export declare function resolveSsgPageRoutes(pages: Array<JsSsgRoutePageInput>, 
 /** Resolves all output and public route paths for an SSG page. */
 export declare function resolveSsgRoutePaths(inputPath: string, srcDir: string, outDir: string, base: string, extension: string, siteUrl?: string | undefined | null): JsSsgRoutePaths
 
+export declare function runLspStdio(): void
+
 /** Sanitize an HTML string with safe defaults or an explicit allow-list. */
 export declare function sanitizeHtml(html: string, options?: JsSanitizeOptions | undefined | null): string
 
