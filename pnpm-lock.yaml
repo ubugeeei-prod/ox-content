@@ -176,6 +176,9 @@ importers:
 
   .:
     devDependencies:
+      '@ox-content/vite-plugin':
+        specifier: workspace:*
+        version: link:npm/vite-plugin-ox-content
       typescript:
         specifier: 'catalog:'
         version: 7.0.2

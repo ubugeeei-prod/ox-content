@@ -4,7 +4,7 @@ Voltage — Oversized display type with charged gradient edges and a live electr
 
 **Form only.** Geometry, texture, typography and motion, written entirely
 against `--octc-*` custom properties. It names no colors, so it pairs with any
-`@ox-content/theme-color-*` scheme. About 10.3 kB of CSS, zero JavaScript, zero
+`@ox-content/theme-color-*` scheme. About 10.3 kB of CSS and generated JavaScript, zero
 runtime dependencies.
 
 ```bash

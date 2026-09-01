@@ -1,4 +1,5 @@
 use super::*;
+use std::time::{SystemTime, UNIX_EPOCH};
 
 #[test]
 fn prepare_source_returns_object_shaped_frontmatter_and_origin() {
@@ -28,6 +29,8 @@ fn javascript_wrapper_and_declarations_cover_expected_exports() {
         "buildExportGraph",
         "checkI18n",
         "checkI18nProject",
+        "checkLinks",
+        "checkMdc",
         "classifyPublishState",
         "collectDocsSourceFiles",
         "collectSearchMarkdownFiles",
@@ -177,6 +180,40 @@ fn transform_passes_toc_depth_to_inline_toc() {
     );
 
     insta::assert_snapshot!(result.html);
+}
+
+#[test]
+fn check_links_reports_missing_file() {
+    let dir = create_runtime_feature_temp_dir("links");
+    let file = dir.join("page.md");
+    fs::write(&file, "[missing](missing.md)\n").unwrap();
+
+    let result = crate::check_links(vec![file.to_string_lossy().into_owned()], None);
+
+    fs::remove_dir_all(dir).unwrap();
+    assert_eq!(result.error_count, 1);
+    assert_eq!(result.warning_count, 0);
+    assert_eq!(result.reports[0].diagnostics[0].code, "link-missing-file");
+}
+
+#[test]
+fn check_mdc_reports_component_syntax() {
+    let dir = create_runtime_feature_temp_dir("mdc");
+    let file = dir.join("page.mdc");
+    fs::write(&file, "<Alert>\n").unwrap();
+
+    let result = crate::check_mdc(vec![file.to_string_lossy().into_owned()]);
+
+    fs::remove_dir_all(dir).unwrap();
+    assert_eq!(result.error_count, 1);
+    assert_eq!(result.reports[0].diagnostics[0].code, "mdc-unclosed-tag");
+}
+
+fn create_runtime_feature_temp_dir(name: &str) -> std::path::PathBuf {
+    let nanos = SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_nanos();
+    let dir = std::env::temp_dir().join(format!("ox-content-napi-{name}-{nanos}"));
+    fs::create_dir_all(&dir).unwrap();
+    dir
 }
 
 #[test]

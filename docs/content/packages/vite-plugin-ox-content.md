@@ -31,24 +31,16 @@ export default defineConfig({
 If you already have a VitePress site, generate an editable ox-content options object:
 
 ```bash
-ox-content-migrate-vitepress .vitepress/config.ts \
+vpx oxct migrate vitepress .vitepress/config.ts \
   --src-dir docs \
   --out-dir dist \
   --out ox-content.config.ts
 ```
 
-The CLI can run on Node.js, Deno, or Bun:
+The CLI runs through the `oxct` binary installed by `@ox-content/vite-plugin`:
 
 ```bash
-# Node.js, after installing @ox-content/vite-plugin
-ox-content-migrate-vitepress .vitepress/config.ts --out ox-content.config.ts
-
-# Deno
-deno run -A npm:@ox-content/vite-plugin/vitepress-migrate .vitepress/config.ts \
-  --out ox-content.config.ts
-
-# Bun
-bunx --bun @ox-content/vite-plugin .vitepress/config.ts --out ox-content.config.ts
+vpx oxct migrate vitepress .vitepress/config.ts --out ox-content.config.ts
 ```
 
 The generated `ox-content.config.ts` maps these settings into ox-content:

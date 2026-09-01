@@ -1618,8 +1618,10 @@ dependencies = [
  "ox_content_i18n",
  "ox_content_i18n_checker",
  "ox_content_incremental",
+ "ox_content_link_checker",
  "ox_content_markdown_lint",
  "ox_content_mdast",
+ "ox_content_mdc_checker",
  "ox_content_mermaid",
  "ox_content_og_image",
  "ox_content_parser",
@@ -1724,6 +1726,15 @@ dependencies = [
  "serde",
  "serde_json",
  "sha2",
+]
+
+[[package]]
+name = "ox_content_theme_generator"
+version = "3.0.0-beta.2"
+dependencies = [
+ "regex",
+ "serde",
+ "serde_json",
 ]
 
 [[package]]

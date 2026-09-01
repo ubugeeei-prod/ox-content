@@ -16,7 +16,7 @@ must not depend on a later one in the list.
    translate LSP capabilities into editor-native UI.
 2. **Every feature ships a CLI counterpart.** If a check or generator only
    exists inside the LSP, it cannot run in CI. The minimum bar is one binary
-   per feature (`ox-content-link-check`, `ox-content-textlint`, …) returning
+   per feature (`vpx oxct link-check`, a configured textlint command, …) returning
    non-zero on failure with a stable text/JSON output.
 3. **Native dependencies stay native.** Type-aware features that need
    TypeScript talk to `typescript-go` via the `corsa_client` Rust crate, not
@@ -34,11 +34,11 @@ must not depend on a later one in the list.
 | #   | Feature                                         | LSP                      | CLI                          | VS Code                  | Neovim                      | Status           |
 | --- | ----------------------------------------------- | ------------------------ | ---------------------------- | ------------------------ | --------------------------- | ---------------- |
 | 1   | Markdown preview (HMR)                          | push channel             | none                         | subscribed webview       | external browser, on-demand | needs CLI + nvim |
-| 2   | i18n preview / completion                       | present                  | `ox-content-i18n`            | present                  | present                     | shipped          |
-| 3   | MDC completion + type check                     | completion + diagnostics | `ox-content-mdc-check`       | completion + diagnostics | completion + diagnostics    | shipped          |
+| 2   | i18n preview / completion                       | present                  | `vpx oxct i18n`              | present                  | present                     | shipped          |
+| 3   | MDC completion + type check                     | completion + diagnostics | `vpx oxct mdc-check`         | completion + diagnostics | completion + diagnostics    | shipped          |
 | 4   | Vue / React props completion + jump + typecheck | crate scaffold           | planned                      | planned                  | planned                     | scaffold landed  |
 | 5   | Asset path completion + diagnostics             | completion provider      | via link checker             | completion + diagnostics | completion + diagnostics    | shipped          |
-| 6   | Dead link checker                               | diagnostics              | `ox-content-link-check`      | diagnostics              | diagnostics                 | local: shipped   |
+| 6   | Dead link checker                               | diagnostics              | `vpx oxct link-check`        | diagnostics              | diagnostics                 | local: shipped   |
 | 7   | textlint integration                            | diagnostics + quickfix   | via configured command       | enabled per setting      | enabled per setting         | shipped (opt-in) |
 | 8   | Frontmatter schema completion + diagnostics     | present                  | none (validated through LSP) | present                  | present                     | built-in meta    |
 | 9   | Document structure (outline + folding)          | symbols + folding ranges | none (unit-tested headless)  | outline + folding        | outline + folding           | shipped          |
@@ -86,7 +86,7 @@ Replace the polling refresh path with an explicit push channel.
 - ✅ VS Code webview subscribes on open, unsubscribes on dispose, and
   listens for `oxContent/previewDidChange` instead of debouncing on
   `onDidChangeTextDocument`.
-- Pending follow-up: CLI `ox-content-preview` that hosts an SSE endpoint
+- Pending follow-up: CLI `vpx oxct preview` that hosts an SSE endpoint
   backed by the same renderer (useful for `--watch` workflows and for the
   Neovim browser preview). Tracked as a separate PR so this one stays
   focused on the LSP push channel.
@@ -99,7 +99,7 @@ Replace the polling refresh path with an explicit push channel.
   resolution (relative paths, self-anchors, image targets). Offline-only
   by design; ships with 11 unit tests covering every link form documented
   in the crate README.
-- ✅ CLI `ox-content-link-check [paths…] [--src-dir DIR] [--ignore PATTERN]
+- ✅ CLI `vpx oxct link-check [paths…] [--src-dir DIR] [--ignore PATTERN]
 [--format text|json]` with exit-code-1-on-error semantics for CI.
 - ✅ LSP diagnostics under `source: "ox-content-link"`, wired into the
   per-document diagnostic publish path so they appear alongside parse,

@@ -99,6 +99,12 @@ export declare function checkI18n(dictDir: string, usedKeys: Array<string>): I18
  */
 export declare function checkI18nProject(dictDir: string, srcDirs: Array<string>, functionNames: Array<string>, defaultLocale: string): I18NCheckResult
 
+/** Checks Markdown/MDC local links from Node.js. */
+export declare function checkLinks(files: Array<string>, options?: JsLinkCheckOptions | undefined | null): JsLinkCheckResult
+
+/** Checks MDC component syntax from Node.js. */
+export declare function checkMdc(files: Array<string>): JsMdcCheckResult
+
 /** Classifies already-parsed frontmatter JSON against publish-state options. */
 export declare function classifyPublishState(frontmatterJson: string, options?: JsPublishStateOptions | undefined | null): JsPublishDecision
 
@@ -1418,6 +1424,37 @@ export interface JsKeyboardKeysOptions {
   style?: string
 }
 
+export interface JsLinkCheckOptions {
+  srcDir?: string
+  publicDir?: string
+  siteDir?: string
+  base?: string
+  ignore?: Array<string>
+}
+
+export interface JsLinkCheckResult {
+  reports: Array<JsLinkFileReport>
+  errorCount: number
+  warningCount: number
+}
+
+export interface JsLinkDiagnostic {
+  severity: string
+  code: string
+  message: string
+  line: number
+  column: number
+  endLine: number
+  endColumn: number
+  kind: string
+  target: string
+}
+
+export interface JsLinkFileReport {
+  file: string
+  diagnostics: Array<JsLinkDiagnostic>
+}
+
 /** Locale information for the locale switcher. */
 export interface JsLocaleInfo {
   /** BCP 47 locale tag. */
@@ -1551,6 +1588,27 @@ export interface JsMdastTransformResult {
   frontmatter: string
   /** Preprocessing and parse errors collected so far. */
   errors: Array<string>
+}
+
+export interface JsMdcCheckResult {
+  reports: Array<JsMdcFileReport>
+  errorCount: number
+}
+
+export interface JsMdcDiagnostic {
+  severity: string
+  code: string
+  message: string
+  line: number
+  column: number
+  endLine: number
+  endColumn: number
+  component?: string
+}
+
+export interface JsMdcFileReport {
+  file: string
+  diagnostics: Array<JsMdcDiagnostic>
 }
 
 /** Built-in media embed transform switches. */
