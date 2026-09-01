@@ -16,6 +16,7 @@ import {
   getUrlPath,
   resolveNavigationGroups,
   resolveSsgOptions,
+  resolveSsgTransformConcurrency,
   shouldGenerateOgImages,
 } from "./ssg";
 import { applyContributorOptions, filterGitContributors, gravatarAvatar } from "./contributors";
@@ -24,8 +25,10 @@ import type { ResolvedOptions } from "./types";
 import { createDocsResolvedOptions } from "../test/fixtures/docs-fixture";
 
 const tempDirs: string[] = [];
+const originalFetch = globalThis.fetch;
 
 afterEach(async () => {
+  globalThis.fetch = originalFetch;
   await Promise.all(tempDirs.splice(0).map((dir) => fs.rm(dir, { recursive: true, force: true })));
 });
 
@@ -234,6 +237,15 @@ describe("resolveSsgOptions", () => {
   it("rejects path-escape routePrefix values", () => {
     expect(resolveSsgOptions({ routePrefix: "../secret" }).routePrefix).toBeUndefined();
     expect(resolveSsgOptions({ routePrefix: "//evil.example" }).routePrefix).toBeUndefined();
+  });
+
+  it("bounds Markdown transform concurrency", () => {
+    expect(resolveSsgOptions(undefined).transformConcurrency).toBe(8);
+    expect(resolveSsgOptions({ transformConcurrency: 2 }).transformConcurrency).toBe(2);
+    expect(resolveSsgTransformConcurrency(0)).toBe(1);
+    expect(resolveSsgTransformConcurrency(2.8)).toBe(2);
+    expect(resolveSsgTransformConcurrency(100)).toBe(32);
+    expect(resolveSsgTransformConcurrency(Number.NaN)).toBe(8);
   });
 });
 
@@ -684,6 +696,60 @@ describe("SSG routePrefix", () => {
     );
     expect(built.files.some((file) => file.includes(path.join("blog", "first-post")))).toBe(false);
     expect(built.errors).toEqual([]);
+  });
+
+  it("overlaps independent Markdown transforms without exceeding the SSG bound", async () => {
+    const root = await makeSite({
+      "a.md": '# A\n\n<OgCard url="https://example.com/a"></OgCard>\n',
+      "b.md": '# B\n\n<OgCard url="https://example.com/b"></OgCard>\n',
+      "c.md": '# C\n\n<OgCard url="https://example.com/c"></OgCard>\n',
+      "d.md": '# D\n\n<OgCard url="https://example.com/d"></OgCard>\n',
+    });
+    let active = 0;
+    let maxActive = 0;
+    const requested: string[] = [];
+    globalThis.fetch = async (input) => {
+      const url =
+        typeof input === "string"
+          ? input
+          : input instanceof URL
+            ? input.href
+            : "url" in input
+              ? input.url
+              : String(input);
+      active += 1;
+      maxActive = Math.max(maxActive, active);
+      requested.push(url);
+      await new Promise((resolve) => setTimeout(resolve, 25));
+      active -= 1;
+      return {
+        ok: true,
+        status: 200,
+        text: async () =>
+          `<html><head><meta property="og:title" content="${path.basename(url)}"></head></html>`,
+      } as Response;
+    };
+
+    const base = createDocsResolvedOptions();
+    const built = await buildSsg(
+      createDocsResolvedOptions({
+        highlight: false,
+        search: { ...base.search, enabled: false },
+        ssg: { ...base.ssg, bare: true, transformConcurrency: 2 },
+        embeds: { ...base.embeds, openGraph: { cache: false, timeout: 1_000 } },
+      }),
+      root,
+    );
+
+    expect(built.errors).toEqual([]);
+    expect(requested).toHaveLength(4);
+    expect(maxActive).toBe(2);
+    await expect(
+      fs.readFile(path.join(root, "dist", "a", "index.html"), "utf-8"),
+    ).resolves.toContain("A");
+    await expect(
+      fs.readFile(path.join(root, "dist", "d", "index.html"), "utf-8"),
+    ).resolves.toContain("D");
   });
 });
 

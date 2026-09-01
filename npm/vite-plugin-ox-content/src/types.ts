@@ -231,6 +231,17 @@ export interface SsgOptions {
   routePrefix?: string;
 
   /**
+   * Maximum number of Markdown pages transformed at once during SSG.
+   *
+   * This overlaps independent page work such as build-time embed fetches while
+   * keeping network, memory, and file descriptor use bounded. Page rendering
+   * and writes still run through the deterministic output stages.
+   *
+   * @default 8
+   */
+  transformConcurrency?: number;
+
+  /**
    * Remove previously generated files from the output directory before writing
    * the new SSG result.
    *
@@ -646,6 +657,7 @@ export interface ResolvedSsgOptions {
    * Present after `resolveSsgOptions`. Omitted / empty means off.
    */
   routePrefix?: string;
+  transformConcurrency?: number;
   clean: boolean;
   bare: boolean;
   render?: ThemeComponent;
