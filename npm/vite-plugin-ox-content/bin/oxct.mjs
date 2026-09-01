@@ -8,7 +8,7 @@ try {
   main(process.argv.slice(2));
 } catch (error) {
   console.error(error instanceof Error ? error.message : String(error));
-  process.exit(1);
+  process.exitCode = 1;
 }
 
 function main(args) {
@@ -133,7 +133,7 @@ function runI18nCheck(options) {
   }
 
   if (result.errorCount > 0) {
-    process.exit(1);
+    process.exitCode = 1;
   }
 }
 
