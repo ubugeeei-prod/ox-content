@@ -49,6 +49,12 @@ overrides:
   nanoid@3: "3.3.18"
   # GHSA-5p4m-2wfm-xmqj: js-yaml, patched in 4.3.1.
   js-yaml@4: "4.3.1"
+  # GHSA-5c6j-r48x-rmvq, GHSA-8vm4-qpp2-4pmw: serialize-javascript, patched in 7.0.5.
+  serialize-javascript@6: "7.0.5"
+  # GHSA-fx2h-pf6j-xcff: Vite Windows path bypass, patched in 8.0.16.
+  vite@8: "8.0.16"
+  # GHSA-r28c-9q8g-f849, GHSA-fxqj-8p7j-g6m6: postcss, patched in 8.5.23.
+  postcss@8: "8.5.26"
 peerDependencyRules:
   allowAny:
     - vite
