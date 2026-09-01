@@ -34,9 +34,7 @@ const packages = [
 ];
 const packDir = mkdtempSync(join(tmpdir(), "ox-content-pack-"));
 const failures = [];
-const publicVitePeerRanges = new Map([
-  ["@ox-content/vite-plugin-solid", "^8.0.0 || ^9.0.0"],
-]);
+const publicVitePeerRanges = new Map([["@ox-content/vite-plugin-solid", "^8.0.0 || ^9.0.0"]]);
 const defaultPublicVitePeerRange = "^0.2.8 || ^8.0.0";
 
 try {
