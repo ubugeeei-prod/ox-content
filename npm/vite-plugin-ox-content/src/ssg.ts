@@ -177,7 +177,7 @@ interface SsgRoutePaths {
   ogImageUrl: string;
 }
 
-const DEFAULT_SSG_TRANSFORM_CONCURRENCY = 8;
+const DEFAULT_SSG_TRANSFORM_CONCURRENCY = 1;
 const MAX_SSG_TRANSFORM_CONCURRENCY = 32;
 
 /**

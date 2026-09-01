@@ -240,12 +240,12 @@ describe("resolveSsgOptions", () => {
   });
 
   it("bounds Markdown transform concurrency", () => {
-    expect(resolveSsgOptions(undefined).transformConcurrency).toBe(8);
+    expect(resolveSsgOptions(undefined).transformConcurrency).toBe(1);
     expect(resolveSsgOptions({ transformConcurrency: 2 }).transformConcurrency).toBe(2);
     expect(resolveSsgTransformConcurrency(0)).toBe(1);
     expect(resolveSsgTransformConcurrency(2.8)).toBe(2);
     expect(resolveSsgTransformConcurrency(100)).toBe(32);
-    expect(resolveSsgTransformConcurrency(Number.NaN)).toBe(8);
+    expect(resolveSsgTransformConcurrency(Number.NaN)).toBe(1);
   });
 });
 

@@ -59,7 +59,7 @@ export default defineConfig({
 | `enabled`              | `true`         | Set `ssg: false` to keep only `.md` modules. Import [component styles](./component-styles.md) in the host. |
 | `extension`            | `".html"`      | Generated page extension.                                                                                  |
 | `routePrefix`          | —              | Mount page routes under a path without changing `base` or `outDir`.                                        |
-| `transformConcurrency` | `8`            | Markdown pages transformed at once before deterministic render/write stages.                               |
+| `transformConcurrency` | `1`            | Markdown pages transformed at once before deterministic render/write stages.                               |
 | `clean`                | `false`        | Remove generated output before writing.                                                                    |
 | `bare`                 | `false`        | Emit unthemed HTML without navigation.                                                                     |
 | `render`               | —              | JSX component that owns the whole document.                                                                |
@@ -90,9 +90,10 @@ export default defineConfig({
 | `navigation`           | derived        | Explicit navigation groups instead of the file tree.                                                       |
 
 `transformConcurrency` overlaps independent Markdown transforms, including
-build-time embed fetches. It is clamped to `1..32`; set it to `1` when a custom
-transformer or embed provider must stay serial. Custom `ssg.render` themes still
-run after collection in the deterministic page-render stage.
+build-time embed fetches. Values are truncated and then clamped to `1..32`;
+set it above `1` to opt into concurrency when custom transformers and embed
+providers are safe to run concurrently. Custom `ssg.render` themes still run
+after collection in the deterministic page-render stage.
 
 `ssg.routePrefix` mounts Markdown page routes under a path such as `/blog`
 without changing the deployment `base` or moving root host files. `blog`,
