@@ -226,16 +226,11 @@ fn did_save_publishes_textlint_diagnostics_when_enabled() {
     let _ = server.await_notification("textDocument/publishDiagnostics");
     server.notify("textDocument/didSave", json!({ "textDocument": { "uri": uri } }));
 
-    let params = server.await_notification("textDocument/publishDiagnostics");
-    assert_eq!(params["uri"].as_str(), Some(uri.as_str()));
-    let diagnostics = params["diagnostics"].as_array().expect("diagnostics array");
+    let diagnostic = await_textlint_diagnostic(&mut server, &uri);
     assert!(
-        diagnostics.iter().any(|diag| {
-            diag["source"].as_str() == Some("textlint")
-                && diag["code"].as_str() == Some("fixture/no-textlint")
-                && diag["message"].as_str() == Some("fixture textlint diagnostic")
-        }),
-        "expected a textlint diagnostic, got {diagnostics:?}"
+        diagnostic["code"].as_str() == Some("fixture/no-textlint")
+            && diagnostic["message"].as_str() == Some("fixture textlint diagnostic"),
+        "expected a textlint diagnostic, got {diagnostic:?}"
     );
 
     server.shutdown();
@@ -259,14 +254,7 @@ fn code_action_returns_textlint_quickfix() {
 
     let _ = server.await_notification("textDocument/publishDiagnostics");
     server.notify("textDocument/didSave", json!({ "textDocument": { "uri": uri } }));
-    let params = server.await_notification("textDocument/publishDiagnostics");
-    let diagnostic = params["diagnostics"]
-        .as_array()
-        .expect("diagnostics array")
-        .iter()
-        .find(|diag| diag["source"].as_str() == Some("textlint"))
-        .cloned()
-        .expect("textlint diagnostic");
+    let diagnostic = await_textlint_diagnostic(&mut server, &uri);
 
     let id = server.request(
         "textDocument/codeAction",
@@ -292,11 +280,31 @@ fn code_action_returns_textlint_quickfix() {
 }
 
 #[cfg(unix)]
+fn await_textlint_diagnostic(server: &mut Server, uri: &str) -> Value {
+    loop {
+        let params = server.await_notification("textDocument/publishDiagnostics");
+        if params["uri"].as_str() != Some(uri) {
+            continue;
+        }
+        let diagnostics = params["diagnostics"].as_array().expect("diagnostics array");
+        if let Some(diagnostic) =
+            diagnostics.iter().find(|diag| diag["source"].as_str() == Some("textlint"))
+        {
+            return diagnostic.clone();
+        }
+    }
+}
+
+#[cfg(unix)]
 fn write_fake_textlint_command(name: &str) -> String {
     use std::os::unix::fs::PermissionsExt;
 
     let mut path = std::env::temp_dir();
-    path.push("ox-content-lsp-e2e");
+    let nanos = std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .expect("current time")
+        .as_nanos();
+    path.push(format!("ox-content-lsp-e2e-{}-{nanos}", std::process::id()));
     std::fs::create_dir_all(&path).expect("create temp dir");
     path.push(format!("{name}.sh"));
     std::fs::write(

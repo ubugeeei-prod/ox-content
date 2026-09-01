@@ -168,7 +168,7 @@ export default defineConfig({
         "test:editor-publish-scripts",
       ]),
       "test:vite-plugin": task("vp exec --filter @ox-content/vite-plugin -- vp test src", {
-        dependsOn: ["build:napi"],
+        dependsOn: ["build:vite-plugin"],
       }),
       "test:code-play": task("vp exec --filter @ox-content/code-play -- vp test src"),
       "test:publish-targets": task(`vp test ${scriptPath("verify-publish-targets.test.ts")}`),
@@ -220,12 +220,12 @@ export default defineConfig({
       "build:lsp": task("cargo build --release -p ox_content_lsp --bin ox-content-lsp"),
       "vscode:build": task("vp exec --filter vscode-ox-content -- tsc -p tsconfig.json"),
       "test:vrt": uncachedTask("vp exec --filter @ox-content/vite-plugin -- playwright test", {
-        dependsOn: ["build:napi"],
+        dependsOn: ["build:vite-plugin"],
       }),
       "test:vrt:update": uncachedTask(
         "vp exec --filter @ox-content/vite-plugin -- playwright test --update-snapshots",
         {
-          dependsOn: ["build:napi"],
+          dependsOn: ["build:vite-plugin"],
         },
       ),
 

@@ -71,13 +71,52 @@ fn check_tree(source: &str) {
     assert_spans_inside(&document.children, source.len() as u32, source);
 }
 
-fn time_parse(source: &str) -> Duration {
+fn parse_once(source: &str) {
     let allocator = Allocator::new();
-    let start = Instant::now();
     let parsed = Parser::with_options(&allocator, source, ParserOptions::gfm()).parse();
-    let elapsed = start.elapsed();
     assert!(parsed.is_ok(), "source should parse");
-    elapsed
+}
+
+fn time_parse_batch(source: &str, runs: usize) -> Duration {
+    let start = Instant::now();
+    for _ in 0..runs {
+        parse_once(source);
+    }
+    start.elapsed()
+}
+
+#[derive(Clone, Copy)]
+struct TimingSample {
+    small_batch: Duration,
+    large: Duration,
+}
+
+fn fastest_equal_emphasis_sample(small_source: &str, large_source: &str) -> TimingSample {
+    parse_once(small_source);
+    parse_once(large_source);
+
+    let mut best = TimingSample { small_batch: Duration::MAX, large: Duration::MAX };
+    let mut best_ratio = f64::INFINITY;
+
+    for round in 0..5 {
+        let sample = if round % 2 == 0 {
+            let small_batch = time_parse_batch(small_source, 4);
+            let large = time_parse_batch(large_source, 1);
+            TimingSample { small_batch, large }
+        } else {
+            let large = time_parse_batch(large_source, 1);
+            let small_batch = time_parse_batch(small_source, 4);
+            TimingSample { small_batch, large }
+        };
+        let ratio = sample.large.as_secs_f64()
+            / sample.small_batch.max(Duration::from_micros(1)).as_secs_f64();
+        if ratio < best_ratio {
+            best = sample;
+            best_ratio = ratio;
+        }
+    }
+
+    best
 }
 
 const NESTING_CASES: [(&str, &str); 12] = [
@@ -153,14 +192,22 @@ fn a_long_sequence_of_unpairable_delimiters_stays_literal() {
 
 #[test]
 fn emphasis_pairing_costs_linear_time() {
-    // Four times the delimiters used to cost sixteen times the work, both
-    // when they pair and when they cannot. Anything under eight proves the
-    // per-pairing vector walk is gone without pinning an absolute time.
+    // Compare equal bytes of work: four smaller parses against one 4x input.
+    // Quadratic pairing makes the large input cost about four times the batch;
+    // a linear parser stays close to one without pinning an absolute time.
     let builds: [fn(usize) -> String; 3] =
         [|n| "**bold** and *ital* ".repeat(n), |n| "x * ".repeat(n), |n| "*_".repeat(n) + "a"];
     for build in builds {
-        let small = time_parse(&build(1_000)).max(Duration::from_micros(1));
-        let large = time_parse(&build(4_000));
-        assert!(large < small * 8, "4x the delimiters took {large:?} against {small:?}");
+        let small_source = build(1_000);
+        let large_source = build(4_000);
+        let sample = fastest_equal_emphasis_sample(&small_source, &large_source);
+        let ratio = sample.large.as_secs_f64()
+            / sample.small_batch.max(Duration::from_micros(1)).as_secs_f64();
+        assert!(
+            ratio < 2.5,
+            "4x the delimiters took {large:?} against {small:?} for four smaller parses (x{ratio:.1})",
+            large = sample.large,
+            small = sample.small_batch
+        );
     }
 }
