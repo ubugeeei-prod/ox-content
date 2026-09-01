@@ -1,6 +1,6 @@
 {
   "name": "@ox-content/theme-terminal",
-  "version": "3.0.0-beta.3",
+  "version": "3.0.0-beta.4",
   "description": "CRT phosphor with scanlines, a blinking block caret and prompt gutters — an Ox Content skin that composes with any @ox-content/theme-color-* scheme",
   "keywords": [
     "console",

@@ -1,6 +1,6 @@
 {
   "name": "@ox-content/theme-aurora",
-  "version": "3.0.0-beta.3",
+  "version": "3.0.0-beta.4",
   "description": "Slow conic light curtains drifting behind translucent panels — an Ox Content skin that composes with any @ox-content/theme-color-* scheme",
   "keywords": [
     "ambient",

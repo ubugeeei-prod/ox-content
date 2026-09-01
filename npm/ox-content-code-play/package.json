@@ -1,6 +1,6 @@
 {
   "name": "@ox-content/code-play",
-  "version": "3.0.0-beta.3",
+  "version": "3.0.0-beta.4",
   "description": "Opt-in Code Play plugin for on-demand documentation sample execution",
   "keywords": [
     "code-play",

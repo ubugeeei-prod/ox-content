@@ -1,5 +1,16 @@
 # Changelog
 
+## [3.0.0-beta.4] - 2026-09-01
+
+### Bug Fixes
+
+- polish preset chrome and code spacing
+- preserve VitePress object social icons
+
+### Documentation
+
+- add Rust and Go playground samples
+
 ## [3.0.0-beta.3] - 2026-09-01
 
 ### Features
