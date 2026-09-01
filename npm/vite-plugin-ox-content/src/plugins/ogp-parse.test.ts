@@ -76,6 +76,46 @@ describe("Open Graph metadata parsing", () => {
     }
   });
 
+  it("skips a known-broken GitHub favicon URL", () => {
+    const githubPage =
+      "https://github.com/ryoppippi/zig-tflite-mnist/blob/main/notebook/MNIST_TFLite.ipynb";
+    const data = parseOgpFromHtml(
+      meta(
+        `<meta property="og:title" content="MNIST TFLite">`,
+        `<meta property="og:description" content="Notebook preview">`,
+        `<meta property="og:image" content="https://opengraph.githubassets.com/card.png">`,
+        `<link rel="icon" href="https://github.githubassets.com/favicons/favicon">`,
+      ),
+      githubPage,
+    );
+
+    expect(data.title).toBe("MNIST TFLite");
+    expect(data.description).toBe("Notebook preview");
+    expect(data.image).toBe("https://opengraph.githubassets.com/card.png");
+    expect(data.favicon).toBe("https://github.com/favicon.ico");
+  });
+
+  it("chooses the first usable icon from multiple rel variants", () => {
+    const data = parseOgpFromHtml(
+      meta(
+        `<link rel="shortcut icon" href="javascript:alert(1)">`,
+        `<link rel="icon" href="https://github.githubassets.com/favicons/favicon">`,
+        `<link href="/assets/icon-180.png" rel="apple-touch-icon">`,
+      ),
+      PAGE,
+    );
+
+    expect(data.favicon).toBe("https://example.com/assets/icon-180.png");
+  });
+
+  it("omits the favicon when no usable icon or fallback can be resolved", () => {
+    const data = parseOgpFromHtml(
+      meta(`<link rel="icon" href="javascript:alert(1)">`),
+      "not a url",
+    );
+    expect(data.favicon).toBeUndefined();
+  });
+
   it("falls back to the host name when the page names no title", () => {
     const data = parseOgpFromHtml(meta(""), PAGE);
     expect(data.title).toBe("example.com");
