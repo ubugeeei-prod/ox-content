@@ -1619,6 +1619,7 @@ dependencies = [
  "ox_content_i18n_checker",
  "ox_content_incremental",
  "ox_content_link_checker",
+ "ox_content_lsp",
  "ox_content_markdown_lint",
  "ox_content_mdast",
  "ox_content_mdc_checker",
@@ -1632,6 +1633,7 @@ dependencies = [
  "oxc_span 0.147.0",
  "rustc-hash",
  "serde_json",
+ "tokio",
 ]
 
 [[package]]

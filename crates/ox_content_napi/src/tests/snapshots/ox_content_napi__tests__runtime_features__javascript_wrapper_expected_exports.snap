@@ -82,6 +82,7 @@ renderFrameworkComponentCode
 renderHead
 renderRedirectHtml
 renderSsgSectionIndex
+runLsp
 resolveSsgNavigationGroups
 resolveSsgPageRoutes
 resolveSsgRoutePaths

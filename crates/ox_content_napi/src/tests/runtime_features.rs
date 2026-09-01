@@ -101,6 +101,7 @@ fn javascript_wrapper_and_declarations_cover_expected_exports() {
         "renderHead",
         "renderRedirectHtml",
         "renderSsgSectionIndex",
+        "runLsp",
         "resolveSsgNavigationGroups",
         "resolveSsgPageRoutes",
         "resolveSsgRoutePaths",

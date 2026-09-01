@@ -5,6 +5,7 @@ import { fileURLToPath } from "node:url";
 import { runLinkCheck, runMdcCheck } from "./oxct-checkers.mjs";
 import { runI18n } from "./oxct-i18n.mjs";
 import { runOgPreview } from "./oxct-og-preview.mjs";
+import { loadNapi } from "./oxct-napi.mjs";
 
 const here = dirname(fileURLToPath(import.meta.url));
 
@@ -52,11 +53,10 @@ function runLsp(args) {
     printLspHelp();
     return;
   }
-  runRustCli({
-    binary: "ox-content-lsp",
-    crate: "ox_content_lsp",
-    args,
-  });
+  if (args.length > 0) {
+    throw new Error(`Unknown lsp option: ${args[0]}`);
+  }
+  loadNapi().runLsp();
 }
 
 function runMigrate(args) {
@@ -157,7 +157,7 @@ function printLspHelp() {
 Usage:
   oxct lsp
 
-Runs ox-content-lsp over stdio. oxct uses an ox-content-lsp binary from PATH, or Cargo when run inside the ox-content repository.`);
+Runs the bundled Ox Content language server over stdio.`);
 }
 
 function printMigrateHelp() {

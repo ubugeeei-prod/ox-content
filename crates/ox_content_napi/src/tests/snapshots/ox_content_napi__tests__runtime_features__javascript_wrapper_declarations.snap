@@ -109,6 +109,9 @@ export declare function checkLinks(files: Array<string>, options?: JsLinkCheckOp
 /** Checks MDC component syntax from Node.js. */
 export declare function checkMdc(files: Array<string>): JsMdcCheckResult
 
+/** Runs the Ox Content language server over standard input and output. */
+export declare function runLsp(): void
+
 /** Classifies already-parsed frontmatter JSON against publish-state options. */
 export declare function classifyPublishState(frontmatterJson: string, options?: JsPublishStateOptions | undefined | null): JsPublishDecision
 
