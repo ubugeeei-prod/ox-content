@@ -93,6 +93,7 @@ ox_content_markdown_lint = { version = "3.0.0-beta.2", path = "crates/ox_content
 ox_content_mdc_checker = { version = "3.0.0-beta.2", path = "crates/ox_content_mdc_checker" }
 ox_content_mermaid = { version = "3.0.0-beta.2", path = "crates/ox_content_mermaid" }
 ox_content_link_checker = { version = "3.0.0-beta.2", path = "crates/ox_content_link_checker" }
+ox_content_lsp = { version = "3.0.0-beta.2", path = "crates/ox_content_lsp" }
 ox_content_component_resolver = { version = "3.0.0-beta.2", path = "crates/ox_content_component_resolver" }
 ox_content_profiler = { version = "3.0.0-beta.2", path = "crates/ox_content_profiler" }
 ox_jsdoc = "0.0.19"
