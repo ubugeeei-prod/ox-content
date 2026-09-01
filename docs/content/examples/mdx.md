@@ -14,11 +14,33 @@ This example does **not** set `mdx: true`. `.mdx` files parse JSX, ESM, and
 
 ## Run it
 
-```bash
-corepack pnpm --filter ./examples/mdx dev
-corepack pnpm --filter ./examples/mdx typecheck
-corepack pnpm --filter ./examples/mdx build
-```
+<tabs>
+  <tab title="vp">
+    <pre><code>vp run --filter ./examples/mdx dev
+vp run --filter ./examples/mdx typecheck
+vp run --filter ./examples/mdx build</code></pre>
+  </tab>
+  <tab title="pnpm">
+    <pre><code>pnpm --filter ./examples/mdx dev
+pnpm --filter ./examples/mdx typecheck
+pnpm --filter ./examples/mdx build</code></pre>
+  </tab>
+  <tab title="bun">
+    <pre><code>bun --filter ./examples/mdx dev
+bun --filter ./examples/mdx typecheck
+bun --filter ./examples/mdx build</code></pre>
+  </tab>
+  <tab title="npm">
+    <pre><code>npm --workspace ./examples/mdx run dev
+npm --workspace ./examples/mdx run typecheck
+npm --workspace ./examples/mdx run build</code></pre>
+  </tab>
+  <tab title="yarn">
+    <pre><code>yarn workspace ox-content-mdx-example dev
+yarn workspace ox-content-mdx-example typecheck
+yarn workspace ox-content-mdx-example build</code></pre>
+  </tab>
+</tabs>
 
 ## What the pages show
 

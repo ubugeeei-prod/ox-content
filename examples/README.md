@@ -45,14 +45,27 @@ This directory contains runnable projects and small source examples.
 
 ## Running
 
-Most examples are workspace packages. Run them from the repository root:
+Most examples are workspace packages. Install dependencies once, then run them
+from the repository root. Vite+ is the preferred local workflow:
 
 ```bash
-corepack pnpm --filter ./examples/integ-vue dev
-corepack pnpm --filter ./examples/ssg-vite build
-corepack pnpm --filter ./examples/mdx dev
-corepack pnpm --filter ./examples/plugin-markdown-it start
+vp install
+vp run integ-vue
+vp run ssg-vite
+vp run mdx
+vp run plugin-markdown-it
+vp run --filter ./examples/code-play dev
 ```
+
+Package-manager equivalents use the same root scripts:
+
+| Tool | Example command |
+| ---- | --------------- |
+| vp   | `vp run mdx`    |
+| pnpm | `pnpm run mdx`  |
+| bun  | `bun run mdx`   |
+| npm  | `npm run mdx`   |
+| yarn | `yarn mdx`      |
 
 `builtin-features` is a source catalog instead of a standalone app. Copy the
 Markdown or config file you want into `ssg-vite` or a framework integration.

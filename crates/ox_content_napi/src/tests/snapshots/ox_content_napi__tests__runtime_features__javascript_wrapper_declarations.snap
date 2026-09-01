@@ -3396,7 +3396,7 @@ export declare function transformMediaEmbedsWithDiagnostics(html: string, option
 export declare function transformMermaid(html: string, mmdcPath: string): MermaidTransformResult
 
 /**
- * Expand `<pm>` blocks in rendered HTML into npm/pnpm/yarn/bun install tabs.
+ * Expand `<pm>` blocks in rendered HTML into vp/pnpm/bun/npm/yarn install tabs.
  *
  * The single npm-style command inside each `<pm>` element is converted to the
  * equivalent command for every package manager and rendered into the shared

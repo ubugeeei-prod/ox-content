@@ -46,14 +46,11 @@ export default defineConfig({
 ## Usage
 
 ```bash
-# Install dependencies
-npm install
-
 # Start development server
-npm run dev
+vp run --filter ./examples/gen-source-docs dev
 
 # Build for production
-npm run build
+vp run --filter ./examples/gen-source-docs build
 ```
 
 ## How It Works

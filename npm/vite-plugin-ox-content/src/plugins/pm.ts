@@ -2,7 +2,7 @@
  * Package Manager Tabs Plugin
  *
  * Transforms <pm>npm install …</pm> blocks into a tab group with one tab per
- * package manager (npm/pnpm/yarn/bun). The single npm-style command is converted
+ * package manager (vp/pnpm/bun/npm/yarn). The single npm-style command is converted
  * to each package manager's equivalent natively in Rust (`transformPmEmbeds` in
  * @ox-content/napi), and the result reuses the same `ox-tabs` widget markup as
  * the generic `<tabs>` plugin so styling and keyboard navigation are consistent.

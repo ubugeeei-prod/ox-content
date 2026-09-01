@@ -97,7 +97,7 @@ oxContent({
 
 ### [Package Manager Tabs](./package-manager-tabs.md)
 
-Opt in to package-manager tabs, then author one npm command and render it as npm/pnpm/yarn/bun install tabs.
+Opt in to package-manager tabs, then author one npm command and render it as vp/pnpm/bun/npm/yarn install tabs.
 
 ```md
 <pm>npm install -D vite</pm>
@@ -172,18 +172,51 @@ file stays GFM. Runnable app:
 
 ## Running Examples
 
+Clone the repository and install dependencies:
+
 ```bash
-# Clone the repository
 git clone https://github.com/ubugeeei-prod/ox-content.git
 cd ox-content
-
-# Install dependencies
-npm install
-
-# Run an example
-cd examples/integ-vue
-npm run dev
-
-# Code Play (JS / TS widgets)
-corepack pnpm --filter ./examples/code-play dev
 ```
+
+<pm>npm install</pm>
+
+Run examples from the repository root:
+
+<tabs>
+  <tab title="vp">
+    <pre><code>vp run integ-vue
+vp run ssg-vite
+vp run mdx
+vp run plugin-markdown-it
+vp run --filter ./examples/code-play dev</code></pre>
+  </tab>
+  <tab title="pnpm">
+    <pre><code>pnpm run integ-vue
+pnpm run ssg-vite
+pnpm run mdx
+pnpm run plugin-markdown-it
+pnpm --filter ./examples/code-play dev</code></pre>
+  </tab>
+  <tab title="bun">
+    <pre><code>bun run integ-vue
+bun run ssg-vite
+bun run mdx
+bun run plugin-markdown-it
+bun --filter ./examples/code-play dev</code></pre>
+  </tab>
+  <tab title="npm">
+    <pre><code>npm run integ-vue
+npm run ssg-vite
+npm run mdx
+npm run plugin-markdown-it
+npm --workspace ./examples/code-play run dev</code></pre>
+  </tab>
+  <tab title="yarn">
+    <pre><code>yarn integ-vue
+yarn ssg-vite
+yarn mdx
+yarn plugin-markdown-it
+yarn workspace ox-content-code-play-example dev</code></pre>
+  </tab>
+</tabs>

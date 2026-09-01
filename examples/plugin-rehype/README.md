@@ -2,16 +2,10 @@
 
 This example demonstrates how to use Ox Content with the unified/rehype ecosystem.
 
-## Installation
+## Running
 
 ```bash
-npm install
-```
-
-## Usage
-
-```bash
-npm start
+vp run --filter ./examples/plugin-rehype start
 ```
 
 ## How It Works

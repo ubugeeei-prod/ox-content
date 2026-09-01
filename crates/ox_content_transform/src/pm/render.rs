@@ -4,7 +4,7 @@ use super::commands::convert_command;
 use super::{PM_GROUP_KEY, PmOptions};
 
 /// The package managers we expand to, in display order.
-const PACKAGE_MANAGERS: [&str; 5] = ["npm", "pnpm", "yarn", "bun", "vp"];
+const PACKAGE_MANAGERS: [&str; 5] = ["vp", "pnpm", "bun", "npm", "yarn"];
 
 /// Pull the bare npm command out of a `<pm>` element's inner HTML.
 ///

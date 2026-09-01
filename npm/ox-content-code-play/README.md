@@ -128,7 +128,7 @@ visitor-supplied snippets as `play`.
 A runnable Vite site lives in [`examples/code-play`](../../examples/code-play):
 
 ```bash
-corepack pnpm --filter ./examples/code-play dev
+vp run --filter ./examples/code-play dev
 ```
 
 The docs site also dogfoods JavaScript, TypeScript, Rust, and Go widgets on

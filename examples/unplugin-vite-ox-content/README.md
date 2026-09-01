@@ -11,9 +11,7 @@ It combines three stages in one pipeline:
 ## Run
 
 ```bash
-cd examples/unplugin-vite-ox-content
-npm install
-npm run dev
+vp run --filter ./examples/unplugin-vite-ox-content dev
 ```
 
 ## What to look for
