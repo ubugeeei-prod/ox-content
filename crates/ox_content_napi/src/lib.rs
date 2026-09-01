@@ -32,6 +32,7 @@ mod incremental;
 mod incremental_result;
 mod incremental_types;
 mod lint;
+mod lsp_bindings;
 mod mermaid_bindings;
 mod og_image_bindings;
 mod parse_bindings;
@@ -72,6 +73,7 @@ pub use incremental_types::{
     JsIncrementalRenderOptions,
 };
 pub use lint::*;
+pub use lsp_bindings::*;
 pub use mermaid_bindings::*;
 pub use og_image_bindings::*;
 pub use parse_bindings::*;
