@@ -1,6 +1,6 @@
 {
   "name": "@ox-content/theme-voltage",
-  "version": "3.0.0-beta.2",
+  "version": "3.0.0-beta.3",
   "description": "Oversized display type with charged gradient edges and a live electric field — an Ox Content skin that composes with any @ox-content/theme-color-* scheme",
   "keywords": [
     "bold",

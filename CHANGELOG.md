@@ -1,5 +1,17 @@
 # Changelog
 
+## [3.0.0-beta.3] - 2026-09-01
+
+### Features
+
+- add oxct toolchain and typed theme generators (#1249)
+
+### Bug Fixes
+
+- run oxct lsp from bundled native binding (#1251)
+- correct moved benchmark workspace links
+- run PR benchmarks from legacy checkout roots (#1247)
+
 ## [3.0.0-beta.2] - 2026-09-01
 
 ### Features

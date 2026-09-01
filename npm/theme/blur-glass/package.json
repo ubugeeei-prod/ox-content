@@ -1,6 +1,6 @@
 {
   "name": "@ox-content/theme-blur-glass",
-  "version": "3.0.0-beta.2",
+  "version": "3.0.0-beta.3",
   "description": "Frosted backdrop-blur layers that resolve out of a soft haze — an Ox Content skin that composes with any @ox-content/theme-color-* scheme",
   "keywords": [
     "blur",
