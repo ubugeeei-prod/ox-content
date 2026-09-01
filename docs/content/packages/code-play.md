@@ -11,14 +11,14 @@ nothing until you list languages.
 
 The [docs example](../examples/code-play.md) on this site and the standalone
 [`examples/code-play`](https://github.com/ubugeeei-prod/ox-content/tree/main/examples/code-play)
-app demonstrate the browser UI. The docs site keeps JavaScript and TypeScript
-enabled; the standalone app also enables Rust and Go, and renders Python with
-an explicit Piston-compatible endpoint when one is configured. Rust, Go, and
-remote languages stay off unless you opt in.
+app demonstrate the browser UI. Both enable JavaScript, TypeScript, Rust, and
+Go; the standalone app also renders Python with an explicit Piston-compatible
+endpoint when one is configured. Rust, Go, and remote languages stay off unless
+you opt in.
 
 ## Install
 
-<pm>npm install @ox-content/code-play@alpha</pm>
+<pm>npm install @ox-content/code-play@beta</pm>
 
 ```ts
 import { oxContent } from "@ox-content/vite-plugin";
@@ -83,7 +83,7 @@ fn main() {
 }
 ```
 
-```go play typecheck play-title="Go vet off" play-withVet=false
+```go play typecheck play-title="Go vet on"
 package main
 
 import "fmt"
@@ -231,9 +231,9 @@ reachable `endpoints.typecheck`. The Vite proxy path is used only during
 `vite dev`.
 
 Rust and Go on a published page call `endpoints.rust` / `endpoints.go`
-directly from the browser. Official playgrounds may reject that as CORS;
-keep the Vite proxy for local docs, or point `endpoints` at an executor you
-control.
+directly from the browser. The official playgrounds are the defaults; point
+`endpoints` at an executor you control when you need stricter isolation,
+auditing, or a fallback if an upstream playground changes its browser policy.
 
 During `vite dev`, Code Play payloads use `/__ox-code-play/rust` and
 `/__ox-code-play/go` by default when `proxy` is enabled. Explicit

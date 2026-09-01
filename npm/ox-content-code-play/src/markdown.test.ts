@@ -1,3 +1,4 @@
+import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vite-plus/test";
 import { enhanceGeneratedModule, enhancePlayHtml } from "./html";
 import { parseCodePlayTags, parsePlayFences, rewritePlayFences, stripPlayMeta } from "./markdown";
@@ -78,6 +79,41 @@ describe("markdown and viewers", () => {
     expect(payload.project?.files).toEqual([
       { path: "src/main.ts", code: "console.log('project');" },
     ]);
+  });
+
+  it("keeps the standalone Rust and Go samples as live playground payloads", () => {
+    const source = readFileSync(
+      new URL("../../../examples/code-play/content/index.md", import.meta.url),
+      "utf8",
+    );
+    const fences = parsePlayFences(source);
+    const rust = fences.find(
+      (fence) => fence.language === "rust" && fence.title === "Rust heading slugs",
+    );
+    const go = fences.find(
+      (fence) => fence.language === "go" && fence.title === "Go fence summary",
+    );
+    if (!rust || !go) {
+      throw new Error("expected live Rust and Go Code Play samples in examples/code-play");
+    }
+
+    expect(rust.typecheck).toBe(true);
+    expect(rust.config).toMatchObject({ edition: 2024, mode: "release" });
+    expect(rust.code).toContain("collect_headings");
+    expect(go.typecheck).toBe(true);
+    expect(go.config).toEqual({});
+    expect(go.code).toContain("collectFences");
+
+    const options = resolveCodePlayOptions({ languages: { rust: true, go: true } });
+    const rustPayload = payloadFromFence(rust, options);
+    const goPayload = payloadFromFence(go, options);
+
+    expect(rustPayload.capabilities).toEqual({ execute: true, typecheck: true });
+    expect(rustPayload.endpoints?.rust).toBe("https://play.rust-lang.org/execute");
+    expect(rustPayload.config).toMatchObject({ crateType: "auto", mode: "release" });
+    expect(goPayload.capabilities).toEqual({ execute: true, typecheck: true });
+    expect(goPayload.endpoints?.go).toBe("https://play.golang.org/compile");
+    expect(goPayload.config.withVet).toBe(true);
   });
 
   it("rewrites play fences to comments and parses CodePlay tags", () => {

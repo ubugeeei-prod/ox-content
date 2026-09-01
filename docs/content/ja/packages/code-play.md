@@ -11,12 +11,12 @@ Code Play は、ドキュメントのサンプルをオンデマンドで実行�
 
 このサイトの [ドキュメント例](/examples/code-play.md) とスタンドアロンの
 [`examples/code-play`](https://github.com/ubugeeei-prod/ox-content/tree/main/examples/code-play)
-アプリは、JavaScript と TypeScript だけを有効にしています。Rust、Go、リモート言語は
-オプトインするまでオフです。
+アプリは、JavaScript、TypeScript、Rust、Go を有効にしています。Rust、Go、
+リモート言語はオプトインするまでオフです。
 
 ## インストール
 
-<pm>npm install @ox-content/code-play</pm>
+<pm>npm install @ox-content/code-play@beta</pm>
 
 ```ts
 import { oxContent } from "@ox-content/vite-plugin";
@@ -29,6 +29,8 @@ export default {
       languages: {
         typescript: { execute: true, typecheck: true },
         javascript: true,
+        rust: true,
+        go: true,
       },
       ui: "default",
       viewers: { config: true, stdio: true, stderr: true, provenance: true, timing: true },
@@ -74,6 +76,16 @@ console.log(n);
 ```rust play typecheck play-title="Release-mode Rust" play-mode=release
 fn main() {
     println!("ok");
+}
+```
+
+```go play typecheck play-title="Go vet on"
+package main
+
+import "fmt"
+
+func main() {
+    fmt.Println("ok")
 }
 ```
 ````
@@ -206,8 +218,9 @@ dev ミドルウェアが不要なら `proxy: false` にしてください。
 **Typecheck** ボタンは省かれます。Vite プロキシ経路は `vite dev` のあいだだけ使います。
 
 公開ページ上の Rust と Go は、ブラウザから直接 `endpoints.rust` / `endpoints.go`
-を呼びます。公式プレイグラウンドは CORS で拒否することがあります。
-ローカル docs では Vite プロキシを使い続けるか、`endpoints` を自分で制御する実行器へ向けてください。
+を呼びます。公式プレイグラウンドが既定です。より厳密な分離、監査、または上流の
+ブラウザポリシー変更への fallback が必要な場合は、`endpoints` を自分で制御する
+実行器へ向けてください。
 
 ## セキュリティ
 
