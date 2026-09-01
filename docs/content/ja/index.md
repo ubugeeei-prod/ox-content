@@ -21,7 +21,7 @@ hero:
   actions:
     - theme: brand
       text: はじめる
-      link: getting-started.md
+      link: /ja/getting-started.md
     - theme: alt
       text: GitHub
       link: https://github.com/ubugeeei-prod/ox-content
