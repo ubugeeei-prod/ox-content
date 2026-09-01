@@ -90,8 +90,9 @@ export default defineConfig({
 | `navigation`           | derived        | Explicit navigation groups instead of the file tree.                                                       |
 
 `transformConcurrency` overlaps independent Markdown transforms, including
-build-time embed fetches. Values are truncated and then clamped to `1..32`;
-set it above `1` to opt into concurrency when custom transformers and embed
+build-time embed fetches. Finite values are truncated and then clamped to
+`1..32`; omitted or non-finite values use the default `1`. Set it above `1` to
+opt into concurrency when custom transformers and embed
 providers are safe to run concurrently. Custom `ssg.render` themes still run
 after collection in the deterministic page-render stage.
 
