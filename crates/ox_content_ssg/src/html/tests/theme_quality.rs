@@ -7,6 +7,9 @@ const QUALITY_TOKENS: &[&str] = &[
     "--octc-color-warning:",
     "--octc-color-danger:",
     "--octc-color-success:",
+    "--octc-toc-width:",
+    "--octc-toc-gap:",
+    "--octc-toc-pad-inline:",
     "--octc-focus-ring:",
     "--octc-focus-offset:",
     "--octc-motion-base:",
@@ -65,6 +68,15 @@ fn code_table_and_mobile_nav_share_spacing_tokens() {
         "code frames, titles, and line gutters must stay on one pad contract"
     );
     assert!(
+        SSG_CSS.contains("--octc-code-pad-block: 1.1rem;")
+            && SSG_CSS.contains("--octc-code-pad-inline: 1.15rem;")
+            && SSG_CSS.contains("--octc-code-pad-block: 0.95rem;")
+            && SSG_CSS.contains("--octc-code-pad-inline: 1rem;")
+            && SSG_CSS.contains("--octc-code-pad-block: 0.9rem;")
+            && SSG_CSS.contains("--octc-code-pad-inline: 0.95rem;"),
+        "code blocks need readable padding on desktop and mobile"
+    );
+    assert!(
         SSG_CSS.contains(
             "padding: var(--octc-table-cell-pad-block) var(--octc-table-cell-pad-inline);"
         ),
@@ -79,6 +91,33 @@ fn code_table_and_mobile_nav_share_spacing_tokens() {
             && !SSG_CSS.contains("padding: 0.78rem 0.85rem;")
             && !SSG_CSS.contains("padding: 0.375rem 0.5rem;"),
         "mobile breakpoints must retune tokens instead of restating pad literals"
+    );
+}
+
+#[test]
+fn right_toc_reserves_enough_width_for_its_rule_and_links() {
+    assert!(
+        SSG_CSS.contains("--octc-toc-width: 17rem;")
+            && SSG_CSS.contains("--octc-toc-gap: 2.5rem;")
+            && SSG_CSS.contains("--octc-toc-pad-inline: 1.25rem;"),
+        "right-side outline width must be tokenized"
+    );
+    assert!(
+        SSG_CSS.contains("width: var(--octc-toc-width);")
+            && SSG_CSS.contains("calc(var(--octc-toc-pad-inline) + 0.25rem);")
+            && SSG_CSS.contains(
+                "border-left: 1px solid color-mix(in srgb, var(--octc-color-border) 58%, transparent);"
+            )
+            && SSG_CSS.contains("overflow-wrap: anywhere;"),
+        "TOC rule must sit outside readable link padding"
+    );
+    assert!(
+        SSG_CSS.contains("@media (min-width: 1480px)")
+            && SSG_CSS
+                .contains("padding-right: calc(var(--octc-toc-width) + var(--octc-toc-gap));")
+            && !SSG_CSS.contains("width: 15rem;")
+            && !SSG_CSS.contains("padding-right: 17rem;"),
+        "TOC must only appear when enough right rail space is reserved"
     );
 }
 

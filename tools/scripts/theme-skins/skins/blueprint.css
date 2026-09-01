@@ -45,7 +45,6 @@ body {
 .header {
   border-bottom: 1px solid var(--octc-bp-line-strong);
   background: color-mix(in srgb, var(--octc-color-bg) 88%, transparent);
-  backdrop-filter: blur(3px);
 }
 .header-title {
   letter-spacing: 0.08em;

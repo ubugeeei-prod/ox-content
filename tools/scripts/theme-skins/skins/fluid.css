@@ -26,7 +26,6 @@
 .header {
   border-radius: 0 0 var(--octc-fl-radius) var(--octc-fl-radius);
   background: color-mix(in srgb, var(--octc-color-bg) 90%, transparent);
-  backdrop-filter: blur(16px);
   border-bottom: 1px solid color-mix(in srgb, var(--octc-color-border) 40%, transparent);
 }
 .sidebar {

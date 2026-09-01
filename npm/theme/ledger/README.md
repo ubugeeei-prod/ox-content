@@ -4,7 +4,7 @@ Ledger — A bound accounting book — text set on real ruled lines, tabular fig
 
 **Form only.** Geometry, texture, typography and motion, written entirely
 against `--octc-*` custom properties. It names no colors, so it pairs with any
-`@ox-content/theme-color-*` scheme. About 8.7 kB of CSS, zero JavaScript, zero
+`@ox-content/theme-color-*` scheme. About 8.3 kB of CSS, zero JavaScript, zero
 runtime dependencies.
 
 ```bash

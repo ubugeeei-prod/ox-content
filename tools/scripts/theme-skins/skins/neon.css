@@ -30,7 +30,6 @@
   border-radius: 0;
   position: fixed;
   background: color-mix(in srgb, var(--octc-color-bg) 88%, transparent);
-  backdrop-filter: blur(14px);
   border-bottom: 1px solid color-mix(in srgb, var(--octc-ne-a) 45%, transparent);
   box-shadow: 0 0 24px -4px color-mix(in srgb, var(--octc-ne-a) 40%, transparent);
   overflow: hidden;

@@ -140,11 +140,16 @@ async fn run_returns_empty_when_command_is_missing() {
 #[tokio::test]
 async fn run_parses_stdout_from_configured_command_even_when_it_exits_one() {
     use std::os::unix::fs::PermissionsExt;
+    use std::time::{SystemTime, UNIX_EPOCH};
 
-    let mut script = std::env::temp_dir();
-    script.push("ox-content-textlint-tests");
-    std::fs::create_dir_all(&script).expect("create temp dir");
-    script.push("fake-textlint.sh");
+    let nanos = SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .expect("system clock should be after unix epoch")
+        .as_nanos();
+    let directory = std::env::temp_dir()
+        .join(format!("ox-content-textlint-tests-{}-{nanos}", std::process::id()));
+    std::fs::create_dir_all(&directory).expect("create temp dir");
+    let script = directory.join("fake-textlint.sh");
     std::fs::write(
         &script,
         r#"#!/bin/sh
@@ -168,4 +173,6 @@ exit 1
     assert_eq!(diagnostics[0].range.start.line, 1);
     assert_eq!(diagnostics[0].range.start.character, 3);
     assert_eq!(diagnostics[0].severity, Some(DiagnosticSeverity::ERROR));
+
+    std::fs::remove_dir_all(directory).expect("remove temp dir");
 }

@@ -99,18 +99,54 @@ fn repeat_to(unit: &str, bytes: usize) -> String {
     out
 }
 
-/// Best of three, so one scheduling stall on a busy runner cannot fail the
-/// build. A complexity regression shows up in every run.
-fn fastest(transformer: &MarkdownTransformer, source: &str) -> f64 {
-    (0..3)
-        .map(|_| {
-            let started = Instant::now();
-            let result = transformer.transform(source);
-            let elapsed = started.elapsed().as_secs_f64();
-            std::hint::black_box(result.html.len());
-            elapsed
-        })
-        .fold(f64::INFINITY, f64::min)
+#[derive(Clone, Copy)]
+struct Sample {
+    small_batch: f64,
+    large: f64,
+}
+
+fn elapsed_batch(transformer: &MarkdownTransformer, source: &str, runs: usize) -> f64 {
+    let started = Instant::now();
+    for _ in 0..runs {
+        let result = transformer.transform(source);
+        std::hint::black_box(result.html.len());
+    }
+    started.elapsed().as_secs_f64()
+}
+
+/// Compare equal bytes of work: four 16 KiB inputs against one 64 KiB input.
+/// Best paired sample wins, so a short scheduler stall in either direction does
+/// not decide the test. A quadratic regression still makes the large input cost
+/// around four times the equal-byte small-input batch.
+fn fastest_equal_byte_sample(
+    transformer: &MarkdownTransformer,
+    small_source: &str,
+    large_source: &str,
+) -> Sample {
+    std::hint::black_box(transformer.transform(small_source).html.len());
+    std::hint::black_box(transformer.transform(large_source).html.len());
+
+    let mut best = Sample { small_batch: f64::INFINITY, large: f64::INFINITY };
+    let mut best_ratio = f64::INFINITY;
+
+    for round in 0..5 {
+        let sample = if round % 2 == 0 {
+            let small_batch = elapsed_batch(transformer, small_source, 4);
+            let large = elapsed_batch(transformer, large_source, 1);
+            Sample { small_batch, large }
+        } else {
+            let large = elapsed_batch(transformer, large_source, 1);
+            let small_batch = elapsed_batch(transformer, small_source, 4);
+            Sample { small_batch, large }
+        };
+        let ratio = sample.large / sample.small_batch.max(1e-9);
+        if ratio < best_ratio {
+            best = sample;
+            best_ratio = ratio;
+        }
+    }
+
+    best
 }
 
 #[test]
@@ -119,17 +155,20 @@ fn no_shape_costs_quadratic_time() {
     let mut failures = Vec::new();
 
     for (name, unit) in SHAPES {
-        let small = fastest(&transformer, &repeat_to(unit, 16 * 1024));
-        let large = fastest(&transformer, &repeat_to(unit, 64 * 1024));
+        let small_source = repeat_to(unit, 16 * 1024);
+        let large_source = repeat_to(unit, 64 * 1024);
+        let sample = fastest_equal_byte_sample(&transformer, &small_source, &large_source);
 
-        if large < MEASURABLE {
+        if sample.large < MEASURABLE {
             continue;
         }
-        let ratio = large / small.max(1e-9);
-        if ratio >= 8.0 {
+        let ratio = sample.large / sample.small_batch.max(1e-9);
+        if ratio >= 2.2 {
             failures.push(format!(
-                "{name} ({unit:?}): 64 KiB took {large:.4}s against {small:.4}s for 16 KiB \
-                 (x{ratio:.1}); linear is about x4, quadratic about x16"
+                "{name} ({unit:?}): 64 KiB took {large:.4}s against {small:.4}s for four 16 KiB \
+                 runs (x{ratio:.1}); linear is about x1, quadratic about x4",
+                large = sample.large,
+                small = sample.small_batch
             ));
         }
     }

@@ -216,7 +216,6 @@ body:not(.entry-page) .layout {
 /* The rim trick needs mask compositing; without it the ring would fill the whole
  * shape and wash the panel out, so fall back to a plain hairline edge. */
 @supports not ((mask-composite: exclude) or (-webkit-mask-composite: xor)) {
-  .header::before,
   .search-modal::before,
   .feature-card::before,
   .hero-action::before,
@@ -224,7 +223,6 @@ body:not(.entry-page) .layout {
   .theme-toggle::before,
   .social-link::before,
   .nav-link.active::before,
-  .header::after,
   .search-modal::after,
   .feature-card::after,
   .hero-action::after,
@@ -234,7 +232,6 @@ body:not(.entry-page) .layout {
   .nav-link.active::after {
     display: none;
   }
-  .header,
   .search-modal,
   .feature-card,
   .hero-action,

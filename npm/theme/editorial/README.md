@@ -4,7 +4,7 @@ Editorial — Magazine typography with drop caps, hairline rules and column reve
 
 **Form only.** Geometry, texture, typography and motion, written entirely
 against `--octc-*` custom properties. It names no colors, so it pairs with any
-`@ox-content/theme-color-*` scheme. About 9.6 kB of CSS, zero JavaScript, zero
+`@ox-content/theme-color-*` scheme. About 9.2 kB of CSS, zero JavaScript, zero
 runtime dependencies.
 
 ```bash

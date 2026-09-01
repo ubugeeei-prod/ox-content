@@ -57,6 +57,14 @@
   );
 }
 
+/* Hover should never swap a link into an italic face. The width change is
+ * especially obvious in nav rails and makes menu text jump under the pointer. */
+:root:root .nav-link:hover,
+:root:root .toc-link:hover,
+:root:root .content a:hover {
+  font-style: inherit;
+}
+
 /* --- No rule under the header --------------------------------------------- */
 
 /* A hairline under the header draws exactly the line the design was trying not
@@ -93,8 +101,8 @@
  * widget laid on top of it. Skins that want the block to read as a distinct
  * surface have its own fill and border to do that with.
  *
- * Inset shadows survive — those describe the block's own depth rather than
- * lifting it off the page. */
+ * Inset shadows are also cleared here: code blocks should read as text frames,
+ * not pressed or floating panels. */
 .content pre {
-  box-shadow: none;
+  box-shadow: none !important;
 }

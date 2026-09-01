@@ -4,7 +4,7 @@ Neon — Sunset-grid glow with humming tube outlines and a scanline sweep — fo
 
 **Form only.** Geometry, texture, typography and motion, written entirely
 against `--octc-*` custom properties. It names no colors, so it pairs with any
-`@ox-content/theme-color-*` scheme. About 10.6 kB of CSS, zero JavaScript, zero
+`@ox-content/theme-color-*` scheme. About 10.2 kB of CSS, zero JavaScript, zero
 runtime dependencies.
 
 ```bash

@@ -134,7 +134,6 @@
   border-top: 1px dashed var(--octc-rc-tear);
   border-bottom: 1px dashed var(--octc-rc-tear);
   font-size: 0.74rem;
-  padding-inline: 0;
   /* Long lines wrap rather than scroll. On a strip this narrow a horizontal
    * scrollbar is a trap: it is easy to miss, and the code runs off the paper
    * either way. A thermal printer wraps too. */

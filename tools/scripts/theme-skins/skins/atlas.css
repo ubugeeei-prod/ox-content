@@ -40,7 +40,6 @@ body {
 
 .header {
   background: color-mix(in srgb, var(--octc-color-bg) 88%, transparent);
-  backdrop-filter: blur(6px);
   border-bottom: 1px solid var(--octc-at-hair);
 }
 .header-title {

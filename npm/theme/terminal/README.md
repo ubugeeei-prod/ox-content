@@ -4,7 +4,7 @@ Terminal — CRT phosphor with scanlines, a blinking block caret and prompt gutt
 
 **Form only.** Geometry, texture, typography and motion, written entirely
 against `--octc-*` custom properties. It names no colors, so it pairs with any
-`@ox-content/theme-color-*` scheme. About 10.5 kB of CSS, zero JavaScript, zero
+`@ox-content/theme-color-*` scheme. About 10.1 kB of CSS, zero JavaScript, zero
 runtime dependencies.
 
 ```bash
