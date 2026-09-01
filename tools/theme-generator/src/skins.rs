@@ -50,10 +50,8 @@ pub(crate) fn generate(workspace: &Workspace) -> Result<()> {
         )?;
         workspace.write_json(directory.join("tsconfig.json"), &tsconfig_json())?;
         workspace.write(directory.join("vite.config.ts"), VITE_CONFIG)?;
-        workspace.write(
-            directory.join("README.md"),
-            readme(skin, &export_name, &bytes, js.is_some()),
-        )?;
+        workspace
+            .write(directory.join("README.md"), readme(skin, &export_name, &bytes, js.is_some()))?;
         print_line(&format!("  {:<14} {:>8}", skin.id, bytes));
     }
 
