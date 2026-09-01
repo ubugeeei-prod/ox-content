@@ -15,7 +15,7 @@ corepack pnpm --filter ./examples/integ-solid dev
 ```ts
 // vite.config.ts
 import { defineConfig } from "vite";
-import solid from "vite-plugin-solid";
+import solid from "@solidjs/vite-plugin";
 import { oxContentSolid } from "@ox-content/vite-plugin-solid";
 
 export default defineConfig({
@@ -25,14 +25,14 @@ export default defineConfig({
       // Auto-discover all Solid components
       components: "./src/components/*.tsx",
     }),
-    solid({ extensions: [".md", ".markdown", ".mdx"] }),
+    solid({ extensions: [".md", ".markdown", ".mdx"], compiler: "native" }),
   ],
 });
 ```
 
 Solid's JSX is compile-time only, so `oxContentSolid()` has to run first (it
 produces the JSX) and `solid()` has to be told about the Markdown extensions
-(it compiles the JSX). See
+while using Solid 2's native compiler. See
 [the package reference](../packages/vite-plugin-ox-content-solid.md#plugin-order-and-extensions).
 
 ## Components

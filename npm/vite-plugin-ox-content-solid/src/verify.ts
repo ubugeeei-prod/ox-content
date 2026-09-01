@@ -1,5 +1,5 @@
 /**
- * Guards against the two ways `vite-plugin-solid` can fail to compile the
+ * Guards against the two ways the Solid Vite plugin can fail to compile the
  * Markdown modules this plugin emits.
  *
  * Both are configuration mistakes with silent-until-cryptic failure modes, so
@@ -14,6 +14,7 @@ import type { ResolvedConfig } from "vite";
 export const TRANSFORM_PLUGIN_NAME = "ox-content:solid-transform";
 
 const SOLID_PLUGIN_NAME = "solid";
+const SOLID_PLUGIN_PACKAGE = "@solidjs/vite-plugin";
 
 /**
  * Emitted by both generated module shapes. Solid's JSX has no runtime factory,
@@ -24,27 +25,36 @@ export const UNCOMPILED_JSX_MARKER = "innerHTML={rawHtml}";
 
 export function formatSolidPluginError(reason: "missing" | "ordering" | "extensions"): string {
   const example = [
+    "  import solid from '@solidjs/vite-plugin';",
+    "",
     "  plugins: [",
     "    oxContentSolid({ srcDir: 'docs' }),",
-    "    solid({ extensions: ['.md', '.markdown', '.mdx'] }),",
+    "    solid({ extensions: ['.md', '.markdown', '.mdx'], compiler: 'native' }),",
     "  ]",
   ].join("\n");
 
   const detail = {
-    missing:
-      "vite-plugin-solid was not found in the Vite config. Markdown files are emitted as Solid JSX, which only runs after babel-preset-solid compiles it.",
-    ordering:
-      "vite-plugin-solid runs before oxContentSolid(), so it sees raw Markdown instead of the generated JSX. Both plugins are `enforce: 'pre'`, so their order follows the `plugins` array.",
-    extensions:
-      "vite-plugin-solid did not compile the generated Markdown module. Its `extensions` option must list the Markdown extensions; by default it only looks at .jsx/.tsx files.",
-  }[reason];
+    missing: [
+      `${SOLID_PLUGIN_PACKAGE} was not found in the Vite config.`,
+      "Markdown files are emitted as Solid JSX and must be compiled by Solid's Vite plugin.",
+    ],
+    ordering: [
+      `${SOLID_PLUGIN_PACKAGE} runs before oxContentSolid(), so it sees raw Markdown instead of the generated JSX.`,
+      "Both plugins are `enforce: 'pre'`, so their order follows the `plugins` array.",
+    ],
+    extensions: [
+      `${SOLID_PLUGIN_PACKAGE} did not compile the generated Markdown module.`,
+      "Its `extensions` option must list .md, .markdown, and .mdx.",
+      "The documented Solid 2 path uses `compiler: 'native'`.",
+    ],
+  }[reason].join(" ");
 
   return `[ox-content:solid] ${detail}\n\n${example}\n`;
 }
 
 /**
- * Throws when `vite-plugin-solid` is absent, or placed where it would see raw
- * Markdown instead of the JSX this plugin generates.
+ * Throws when the Solid Vite plugin is absent, or placed where it would see
+ * raw Markdown instead of the JSX this plugin generates.
  */
 export function verifySolidPluginOrder(config: ResolvedConfig): void {
   const names = config.plugins.map((plugin) => plugin.name);

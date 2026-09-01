@@ -44,17 +44,19 @@
     "@ox-content/vite-plugin": "workspace:*"
   },
   "devDependencies": {
+    "@solidjs/vite-plugin": "catalog:",
+    "@solidjs/web": "catalog:",
     "@types/node": "catalog:",
     "@typescript/native-preview": "catalog:",
     "solid-js": "catalog:",
     "typescript": "catalog:",
     "vite": "catalog:",
-    "vite-plugin-solid": "catalog:",
     "vite-plus": "catalog:"
   },
   "peerDependencies": {
-    "solid-js": "catalog:",
-    "vite": "^0.2.8 || ^8.0.0",
-    "vite-plugin-solid": "catalog:"
+    "@solidjs/vite-plugin": "^3.0.0-next.36",
+    "@solidjs/web": "^2.0.0-rc.4",
+    "solid-js": "^2.0.0-rc.4",
+    "vite": "^8.0.0 || ^9.0.0"
   }
 }

@@ -35,16 +35,16 @@ export type {
  * Creates the Ox Content Solid integration plugin.
  *
  * Unlike the React and Svelte integrations, this plugin must be listed **before**
- * `vite-plugin-solid`, and that plugin must be told about the Markdown
+ * `@solidjs/vite-plugin`, and that plugin must be told about the Markdown
  * extensions. Markdown is turned into Solid JSX here, and Solid's JSX is
- * compile-time only — `vite-plugin-solid` is what turns it into DOM or SSR
- * instructions.
+ * compile-time only — the Solid 2 Vite plugin is what turns it into DOM or SSR
+ * instructions through its native compiler.
  *
  * @example
  * ```ts
  * // vite.config.ts
  * import { defineConfig } from 'vite';
- * import solid from 'vite-plugin-solid';
+ * import solid from '@solidjs/vite-plugin';
  * import { oxContentSolid } from '@ox-content/vite-plugin-solid';
  *
  * export default defineConfig({
@@ -55,7 +55,7 @@ export type {
  *         Counter: './src/components/Counter.tsx',
  *       },
  *     }),
- *     solid({ extensions: ['.md', '.markdown', '.mdx'] }),
+ *     solid({ extensions: ['.md', '.markdown', '.mdx'], compiler: 'native' }),
  *   ],
  * });
  * ```
@@ -106,7 +106,7 @@ export function oxContentSolid(options: SolidIntegrationOptions = {}): PluginOpt
     },
   };
 
-  // `post` so every `pre`/normal plugin — vite-plugin-solid included — has
+  // `post` so every `pre`/normal plugin — @solidjs/vite-plugin included — has
   // already had its turn at the module.
   const solidVerifyPlugin: Plugin = {
     name: "ox-content:solid-verify",

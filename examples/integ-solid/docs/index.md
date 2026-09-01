@@ -28,7 +28,7 @@ Components work seamlessly!
 ```ts
 // vite.config.ts
 import { defineConfig } from "vite-plus";
-import solid from "vite-plugin-solid";
+import solid from "@solidjs/vite-plugin";
 import { oxContentSolid } from "@ox-content/vite-plugin-solid";
 
 export default defineConfig({
@@ -41,7 +41,7 @@ export default defineConfig({
     }),
     // Solid's JSX is compile-time only, so Markdown extensions must be listed
     // here, and this plugin must come after oxContentSolid().
-    solid({ extensions: [".md", ".markdown", ".mdx"] }),
+    solid({ extensions: [".md", ".markdown", ".mdx"], compiler: "native" }),
   ],
 });
 ```

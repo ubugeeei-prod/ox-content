@@ -2,8 +2,8 @@
  * Generates the Solid module a Markdown file compiles to.
  *
  * The output is JSX on purpose. Solid has no runtime element factory to target
- * — `vite-plugin-solid` compiles this into DOM or SSR instructions — so unlike
- * the React and Vue integrations there is no factory-call form to emit.
+ * — the Solid Vite plugin compiles this into DOM or SSR instructions — so
+ * unlike the React and Vue integrations there is no factory-call form to emit.
  */
 
 import {
@@ -48,8 +48,8 @@ export default function MarkdownContent() {
   const componentMap = usedComponents.map((name) => `  ${name},`).join("\n");
 
   return `
-import { onCleanup, onMount } from 'solid-js';
-import { render } from 'solid-js/web';
+import { createEffect, onCleanup } from 'solid-js';
+import { render } from '@solidjs/web';
 import { initIslands, readIslandSlotHtml } from '@ox-content/islands';
 ${imports}
 
@@ -86,7 +86,7 @@ function createSolidHydrate() {
 export default function MarkdownContent() {
   let container;
 
-  onMount(() => {
+  createEffect(() => {
     if (!container) return;
     const controller = initIslands(createSolidHydrate(), {
       selector: '.ox-content [data-ox-island]',

@@ -127,8 +127,8 @@ describe("transformMarkdownWithSolid", () => {
     );
 
     // Solid has no runtime JSX factory: the generated module stays JSX and is
-    // compiled by vite-plugin-solid. The `class` (not `className`) attribute is
-    // part of that contract.
+    // compiled by @solidjs/vite-plugin. The `class` (not `className`) attribute
+    // is part of that contract.
     expect(result.code).toContain('<div class="ox-content" innerHTML={rawHtml} />');
     expect(result.code).not.toContain("createElement");
   });
@@ -147,15 +147,15 @@ describe("transformMarkdownWithSolid", () => {
     expect(result.code).toContain("title: Solid Guide");
   });
 
-  it("mounts islands through solid-js/web render", async () => {
+  it("mounts islands through @solidjs/web render", async () => {
     const result = await transformMarkdownWithSolid(
       '<Alert tone="info">Body</Alert>',
       "/repo/docs/island.md",
       createOptions(),
     );
 
-    expect(result.code).toContain(`import { render } from 'solid-js/web';`);
-    expect(result.code).toContain(`import { onCleanup, onMount } from 'solid-js';`);
+    expect(result.code).toContain(`import { render } from '@solidjs/web';`);
+    expect(result.code).toContain(`import { createEffect, onCleanup } from 'solid-js';`);
     expect(result.code).toContain("initIslands(createSolidHydrate()");
   });
 });
