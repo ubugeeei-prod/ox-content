@@ -21,6 +21,13 @@ const NAMED_ENTITIES: Record<string, string> = {
   rdquo: "”",
 };
 
+const ICON_REL_TOKENS = new Set([
+  "icon",
+  "apple-touch-icon",
+  "apple-touch-icon-precomposed",
+  "mask-icon",
+]);
+
 /**
  * Expand the character references that show up in `<meta>` content.
  *
@@ -89,10 +96,46 @@ function metaContent(
 }
 
 function declaredIcon(html: string, pageUrl: string): string | undefined {
-  const match =
-    html.match(/<link[^>]*rel=["'](?:shortcut )?icon["'][^>]*href=["']([^"']+)["']/i) ??
-    html.match(/<link[^>]*href=["']([^"']+)["'][^>]*rel=["'](?:shortcut )?icon["']/i);
-  return match ? resolveMetaUrl(match[1], pageUrl) : undefined;
+  for (const tag of html.matchAll(/<link\b[^>]*>/gi)) {
+    const attributes = linkAttributes(tag[0]);
+    if (!isIconRel(attributes.rel) || !attributes.href) continue;
+
+    const resolved = resolveMetaUrl(attributes.href, pageUrl);
+    if (resolved && isUsableFaviconUrl(resolved)) return resolved;
+  }
+}
+
+function linkAttributes(tag: string): Record<string, string> {
+  const attributes: Record<string, string> = {};
+  for (const match of tag.matchAll(
+    /([^\s"'<>/=]+)(?:\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s"'=<>`]+)))?/g,
+  )) {
+    const name = match[1].toLowerCase();
+    if (name === "link") continue;
+    attributes[name] = decodeHtmlEntities(match[2] ?? match[3] ?? match[4] ?? "");
+  }
+  return attributes;
+}
+
+function isIconRel(value: string | undefined): boolean {
+  return Boolean(
+    value
+      ?.toLowerCase()
+      .split(/\s+/)
+      .some((token) => ICON_REL_TOKENS.has(token)),
+  );
+}
+
+function isUsableFaviconUrl(value: string): boolean {
+  try {
+    const url = new URL(value);
+    return !(
+      url.hostname.toLowerCase() === "github.githubassets.com" &&
+      url.pathname === "/favicons/favicon"
+    );
+  } catch {
+    return false;
+  }
 }
 
 /**
