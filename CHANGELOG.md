@@ -1,5 +1,24 @@
 # Changelog
 
+## [3.0.0-beta.2] - 2026-09-01
+
+### Features
+
+- support Solid 2 native compiler (#1245)
+- expose self-hosted asset contract (#1240)
+
+### Bug Fixes
+
+- repair the editor extension publish under pnpm 12 (#1237)
+
+### Performance
+
+- bound concurrent page transforms (#1243)
+
+### Documentation
+
+- fix ja/index.md link (#1242)
+
 ## [3.0.0-beta.1] - 2026-08-31
 
 ### Bug Fixes
