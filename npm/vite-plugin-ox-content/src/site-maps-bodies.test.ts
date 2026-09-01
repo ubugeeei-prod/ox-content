@@ -8,9 +8,8 @@ import type { SiteMapPageInput } from "./site-maps";
  *
  * `site-maps.ts` used to hold a second implementation of
  * `ox_content_ssg::site_maps`, and nothing checked that the two agreed — the
- * audit in `.plans/060-typescript-rust-migration-audit.md` listed the pair as
- * unverified. They were proven byte-identical on this corpus, then the
- * TypeScript copy was deleted.
+ * migration audit listed the pair as unverified. They were proven
+ * byte-identical on this corpus, then the TypeScript copy was deleted.
  *
  * The corpus stays. It leans on what the renderer escapes and how it orders,
  * which is where a silent change would live.

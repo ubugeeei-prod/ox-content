@@ -27,10 +27,12 @@ export default defineConfig(({ mode }) => {
       {
         name: "ox-content-docs:theme-gallery",
         buildStart() {
-          const script = fileURLToPath(new URL("../scripts/theme-gallery.mjs", import.meta.url));
+          const script = fileURLToPath(
+            new URL("../tools/scripts/theme-gallery.mjs", import.meta.url),
+          );
           const result = spawnSync("node", [script], { stdio: "inherit" });
           if (result.status !== 0) {
-            throw new Error("scripts/theme-gallery.mjs failed");
+            throw new Error("tools/scripts/theme-gallery.mjs failed");
           }
         },
       },

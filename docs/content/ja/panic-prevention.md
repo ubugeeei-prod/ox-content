@@ -10,7 +10,7 @@
 
 ```bash
 # 棚卸し + allowlist ゲート（crates/ 配下の非テスト Rust）
-node scripts/check-panic-constructs.mjs
+node tools/scripts/check-panic-constructs.mjs
 
 # このスライス向けの回帰テスト
 cargo test -p ox_content_parser --test input_panics
@@ -49,19 +49,19 @@ CI は `.github/workflows/ci.yml` の `Panic constructs` ジョブでゲート�
 
 ## CI ゲートと allowlist
 
-`scripts/check-panic-constructs.mjs` は `crates/**/*.rs` を歩き、`tests/`、`benches/`、`examples/`、`tests.rs`、`#[cfg(test)]` モジュールを除いて次を数えます。
+`tools/scripts/check-panic-constructs.mjs` は `crates/**/*.rs` を歩き、`tests/`、`benches/`、`examples/`、`tests.rs`、`#[cfg(test)]` モジュールを除いて次を数えます。
 
 `unwrap`、`unwrap_err`、`unwrap_unchecked`、`expect`、`panic!`、`unreachable!`、`todo!`、`unimplemented!`
 
-件数は `config/panic-allowlist.json` と比較します。新規ヒットは失敗です。実件数が下がった場合も、allowlist を減らすまで失敗します。ワークスペース全体の `allow(clippy::unwrap_used)` ではありません。
+件数は `tools/config/panic-allowlist.json` と比較します。新規ヒットは失敗です。実件数が下がった場合も、allowlist を減らすまで失敗します。ワークスペース全体の `allow(clippy::unwrap_used)` ではありません。
 
 対象 5 crate は、非テストビルドで `clippy::unwrap_used`、`expect_used`、`panic`、`todo`、`unimplemented` を `deny` します。これらの crate でレビュー済みの例外は、`ox_content_transform` のコンパイル時 YouTube 正規表現だけです。
 
 ## 残作業（後続 PR）
 
 - 残りのワークスペースを終える: `ox_content_docs`、`ox_content_lsp`、`ox_content_i18n`、`ox_content_search`、`ox_content_highlight`、`ox_content_wasm`、Vite バインディング、エディタ crate。
-- 有界な fuzz レーンを transform パイプライン以外にも広げる。`cargo test -p ox_content_transform --test pipeline_fuzz` は通常のテストジョブで動き、トークンの寄せ集めと実際のブロックテンプレートの 2 通りで文書を生成して全機能を同時に通します（上記の `{.class}` と定義リストの abort はこれで見つかりました）。SSG・docs・エディタ側にはまだ同等のものがなく、`fuzz/` ターゲットは依然として nightly が必要で必須 CI ジョブではありません。
+- 有界な fuzz レーンを transform パイプライン以外にも広げる。`cargo test -p ox_content_transform --test pipeline_fuzz` は通常のテストジョブで動き、トークンの寄せ集めと実際のブロックテンプレートの 2 通りで文書を生成して全機能を同時に通します（上記の `{.class}` と定義リストの abort はこれで見つかりました）。SSG・docs・エディタ側にはまだ同等のものがなく、`tools/fuzz/` ターゲットは依然として nightly が必要で必須 CI ジョブではありません。
 - 公開成果物の FFI 境界で `panic = "abort"` ではなく unwind を使えるかを決める。
-- 残サイトを証明または書き換えるたびに `config/panic-allowlist.json` を縮める。
+- 残サイトを証明または書き換えるたびに `tools/config/panic-allowlist.json` を縮める。
 
 これらが終わるまで #774 は閉じません。

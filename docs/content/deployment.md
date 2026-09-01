@@ -22,7 +22,7 @@ whatever is already published to the registry.
 
 ## What the Task Runs
 
-`vp run deploy#docs` executes `scripts/deploy-docs-to-void.mjs`, which runs:
+`vp run deploy#docs` executes `tools/scripts/deploy-docs-to-void.mjs`, which runs:
 
 1. `cargo build --workspace`
 2. `napi build --release` in `crates/ox_content_napi`
@@ -49,7 +49,7 @@ that override still uses the GitHub Pages base configured in `docs/vite.config.t
 ## GitHub Actions OIDC
 
 The tokenless deploy workflow lives at `.github/workflows/void-deploy.yml`.
-It grants `id-token: write` and runs `scripts/deploy-docs-to-void.mjs`
+It grants `id-token: write` and runs `tools/scripts/deploy-docs-to-void.mjs`
 directly from the GitHub Actions shell step, which lets `void deploy` exchange
 GitHub OIDC for a short-lived Void deploy token at run time.
 

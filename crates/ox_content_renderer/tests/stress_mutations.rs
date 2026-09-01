@@ -8,7 +8,7 @@
 //!
 //! Nothing about the output is asserted — the contract is only that the
 //! pipeline terminates without panicking. That is worth a dedicated test
-//! because the `fuzz/` targets need a nightly toolchain and are never run
+//! because the `tools/fuzz/` targets need a nightly toolchain and are never run
 //! in CI, so an infinite loop like the whitespace-only-input hang (a
 //! two-byte document that spun forever) had no automated guard.
 //!

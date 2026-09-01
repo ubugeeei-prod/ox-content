@@ -3,7 +3,7 @@
 Ox Content ships a built-in profiler — `ox_content_profiler` — for chasing down
 allocations and time in the Markdown engine. It is intentionally tuned for
 "how much is this code actually doing?" rather than wall-clock benchmarking,
-which is what `criterion` and the JS benchmark harness in `benchmarks/` cover.
+which is what `criterion` and the JS benchmark harness in `tools/benchmarks/` cover.
 
 Use the profiler when you want to answer questions like:
 

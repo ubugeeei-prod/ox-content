@@ -17,7 +17,7 @@ vp run deploy#docs
 
 ## タスクが実行すること
 
-`vp run deploy#docs` は `scripts/deploy-docs-to-void.mjs` を実行し、次を回します。
+`vp run deploy#docs` は `tools/scripts/deploy-docs-to-void.mjs` を実行し、次を回します。
 
 1. `cargo build --workspace`
 2. `crates/ox_content_napi` で `napi build --release`
@@ -41,7 +41,7 @@ Void は `https://ox-content.void.app` をルートパスでホストするの�
 ## GitHub Actions OIDC
 
 トークンなしデプロイのワークフローは `.github/workflows/void-deploy.yml` にあります。
-`id-token: write` を付与し、GitHub Actions のシェルステップから `scripts/deploy-docs-to-void.mjs` を直接実行します。これにより `void deploy` は実行時に GitHub OIDC を短寿命の Void デプロイトークンへ交換できます。
+`id-token: write` を付与し、GitHub Actions のシェルステップから `tools/scripts/deploy-docs-to-void.mjs` を直接実行します。これにより `void deploy` は実行時に GitHub OIDC を短寿命の Void デプロイトークンへ交換できます。
 
 リポジトリは一度 Void プロジェクトへ接続する必要があります。
 

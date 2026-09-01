@@ -19,7 +19,7 @@ Ox Content には性能の面が 4 つあり、どれも pull request で報告�
 - `index.html` と、ローカルのクリティカルパスアセットの初期リクエスト数。
 
 実行時は CLI、開発サーバ、エディタ連携、バッチビルドで効きます。出力の重さはドキュメントサイトで効きます。生成 HTML、CSS、JS が、遷移のたびに利用者が取るものだからです。絶対上限は
-[`benchmarks/perf-budgets.json`](https://github.com/ubugeeei-prod/ox-content/blob/main/benchmarks/perf-budgets.json)
+[`tools/benchmarks/perf-budgets.json`](https://github.com/ubugeeei-prod/ox-content/blob/main/tools/benchmarks/perf-budgets.json)
 にあります。base / head の相対差は、これまでどおり PR Benchmark コメントです。
 
 ### 対象外
@@ -40,11 +40,11 @@ Ox Content は文書生成器でもあり、高性能 Markdown ツールキッ�
 
 <!-- benchmark:tables:start -->
 
-_2026-08-17 生成のベンチマーク掃引（7 回の中央値）。数字はホスト機に追従します。エンジン間の相対順位が安定した信号です。`scripts/render-benchmark-tables.mjs` で再生成します。_
+_2026-08-17 生成のベンチマーク掃引（7 回の中央値）。数字はホスト機に追従します。エンジン間の相対順位が安定した信号です。`tools/scripts/render-benchmark-tables.mjs` で再生成します。_
 
 _環境: runner `blacksmith-32vcpu-ubuntu-2404`、Node `v24.19.0`、Bun `1.3.14`、CPU `Intel(R) Xeon(R) Processor`、論理コア 32。_
 
-_CommonMark 列: エンジンが正しく描画する CommonMark 0.31.2 仕様例 652 件の割合。`benchmarks/commonmark-conformance/run.mjs` で測ります。各エンジンは、出すいちばん仕様に忠実な設定で走り、比較の両側は適合スイートの HTML 正規化器を通るので、マークアップの綴りではなく挙動で順位が付きます。_
+_CommonMark 列: エンジンが正しく描画する CommonMark 0.31.2 仕様例 652 件の割合。`tools/benchmarks/commonmark-conformance/run.mjs` で測ります。各エンジンは、出すいちばん仕様に忠実な設定で走り、比較の両側は適合スイートの HTML 正規化器を通るので、マークアップの綴りではなく挙動で順位が付きます。_
 
 ### パースのみ (48.7 KB)
 
@@ -146,7 +146,7 @@ CommonMark を超える拡張 — GFM 表、タスクリスト、取り消し線
 
 ### CommonMark 列の読み方
 
-各エンジンの横の率は、主張ではなく測定です。`benchmarks/commonmark-conformance/run.mjs` は表のすべてのエンジンで仕様例 652 件を描画し、出力を仕様と比較します。
+各エンジンの横の率は、主張ではなく測定です。`tools/benchmarks/commonmark-conformance/run.mjs` は表のすべてのエンジンで仕様例 652 件を描画し、出力を仕様と比較します。
 
 比較を公平にする選択が 2 つあり、数字を読むときどちらも効きます。
 
@@ -160,7 +160,7 @@ CommonMark を超える拡張 — GFM 表、タスクリスト、取り消し線
 結果を再生成するには次です。
 
 ```bash
-node benchmarks/commonmark-conformance/run.mjs --json benchmarks/commonmark-conformance/results.json
+node tools/benchmarks/commonmark-conformance/run.mjs --json tools/benchmarks/commonmark-conformance/results.json
 ```
 
 ### CJK 強調
@@ -216,7 +216,7 @@ Pull request は、`blacksmith-32vcpu-ubuntu-2404` 上で base コミットと h
 競争スナップショットはゲートではありません。同じ大きな入力コーパスで、head コミットの対象パッケージを次に速い比較パッケージと並べます。
 
 バンドル行は、成功した各ベンチマークアプリの gzip 出力を比較します。gzip サイズが 5% 超増えると検査は失敗します。head の測定が
-[`benchmarks/perf-budgets.json`](https://github.com/ubugeeei-prod/ox-content/blob/main/benchmarks/perf-budgets.json)
+[`tools/benchmarks/perf-budgets.json`](https://github.com/ubugeeei-prod/ox-content/blob/main/tools/benchmarks/perf-budgets.json)
 を超えても失敗します。どちらの失敗も、メンテナは `benchmark-regression-accepted` PR ラベルで意図して受け入れられます。
 
 ## 領域の監査
@@ -238,7 +238,7 @@ Pull request は、`blacksmith-32vcpu-ubuntu-2404` 上で base コミットと h
 リポジトリルートから JavaScript ベンチマークハーネスを走らせます。
 
 ```bash
-node benchmarks/bundle-size/parse-benchmark.mjs
+node tools/benchmarks/bundle-size/parse-benchmark.mjs
 ```
 
 ベンチマークは既定で `@tanstack/markdown`、`markdown-it-ts`、`md4w (md4c)`、`md4x (napi)` を含み、`bun` があれば `Bun.markdown.html` を自動で足します。
@@ -246,21 +246,21 @@ node benchmarks/bundle-size/parse-benchmark.mjs
 リポジトリルートからバンドルサイズベンチマークを走らせます。
 
 ```bash
-node benchmarks/bundle-size/measure.mjs
+node tools/benchmarks/bundle-size/measure.mjs
 ```
 
 依存を入れたあとの速い再実行は次です。
 
 ```bash
-node benchmarks/bundle-size/measure.mjs --skip-install
+node tools/benchmarks/bundle-size/measure.mjs --skip-install
 ```
 
 予算検査向けに JSON を書き、任意で専用のビルド時間掃引もリポジトリルートから走らせます。
 
 ```bash
-node benchmarks/bundle-size/measure.mjs --json /tmp/bundle.json
-node benchmarks/bundle-size/build-time-benchmark.mjs --json /tmp/build.json
-node benchmarks/bundle-size/check-budgets.mjs --bundle /tmp/bundle.json --build /tmp/build.json
+node tools/benchmarks/bundle-size/measure.mjs --json /tmp/bundle.json
+node tools/benchmarks/bundle-size/build-time-benchmark.mjs --json /tmp/build.json
+node tools/benchmarks/bundle-size/check-budgets.mjs --bundle /tmp/bundle.json --build /tmp/build.json
 ```
 
 Rust 側のパーサベンチマークは次です。
@@ -272,7 +272,7 @@ cargo bench -p ox_content_parser
 実世界の Markdown コーパスベンチマークでは、まず任意コーパスを用意します。
 
 ```bash
-node scripts/fetch-bench-corpus.mjs
+node tools/scripts/fetch-bench-corpus.mjs
 cargo bench -p ox_content_parser --bench corpus
 ```
 

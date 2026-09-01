@@ -154,6 +154,9 @@ jobs:
         run: |
           set -euo pipefail
           if gh release view "$GH_REF_NAME" >/dev/null 2>&1; then
+            if [[ "$GH_REF_NAME" == *-* ]]; then
+              gh release edit "$GH_REF_NAME" --prerelease
+            fi
             echo "Release $GH_REF_NAME already exists; skipping."
             exit 0
           fi

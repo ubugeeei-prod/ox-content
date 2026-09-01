@@ -30,4 +30,4 @@ jobs:
           run-install: false
 
       - name: Check changed source file line counts
-        run: node scripts/check-file-lines.ts
+        run: node tools/scripts/check-file-lines.ts

@@ -1,8 +1,8 @@
 //! Real-world Markdown corpus benchmarks.
 //!
-//! Walks `<repo-root>/benchmarks/corpus/<project>/` for `.md` files and runs
+//! Walks `<repo-root>/tools/benchmarks/corpus/<project>/` for `.md` files and runs
 //! parse + parse-then-render against each project as one Criterion benchmark
-//! group. The corpus is populated by `node scripts/fetch-bench-corpus.mjs`
+//! group. The corpus is populated by `node tools/scripts/fetch-bench-corpus.mjs`
 //! and is `.gitignore`'d, so this benchmark gracefully degrades when the
 //! corpus is missing — it prints a hint and runs no measurements rather
 //! than failing the build.
@@ -18,12 +18,12 @@ use ox_content_renderer::HtmlRenderer;
 
 fn corpus_root() -> PathBuf {
     // CARGO_MANIFEST_DIR is `crates/ox_content_parser` — climb to the
-    // workspace root and join `benchmarks/corpus`.
+    // workspace root and join `tools/benchmarks/corpus`.
     let manifest_dir = Path::new(env!("CARGO_MANIFEST_DIR"));
     manifest_dir
         .ancestors()
         .nth(2)
-        .map(|root| root.join("benchmarks").join("corpus"))
+        .map(|root| root.join("tools").join("benchmarks").join("corpus"))
         .expect("workspace root should be two levels above ox_content_parser")
 }
 
@@ -97,7 +97,7 @@ fn bench_corpus_parse(c: &mut Criterion) {
         {
             eprintln!(
                 "corpus benchmark: no markdown found under {}. \
-                 Run `node scripts/fetch-bench-corpus.mjs` to populate it.",
+                 Run `node tools/scripts/fetch-bench-corpus.mjs` to populate it.",
                 root.display()
             );
         }

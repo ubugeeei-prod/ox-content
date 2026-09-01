@@ -38,7 +38,7 @@ type PaletteCatalog = {
 type ThemeModule = Record<string, ThemeConfig>;
 
 const catalog = JSON.parse(
-  readFileSync(join(repoRoot, "scripts/theme-colors/palettes.json"), "utf8"),
+  readFileSync(join(repoRoot, "tools/scripts/theme-colors/palettes.json"), "utf8"),
 ) as PaletteCatalog;
 
 const migrationExports = catalog.palettes.flatMap((palette) =>

@@ -11,7 +11,7 @@
  *
  * Each assertion needs a running `ox-content-lsp`. The integration runner
  * points the extension at a freshly built binary via `OX_CONTENT_LSP_PATH`
- * (see `scripts/run-vscode-tests.mjs`); when it isn't available the test
+ * (see `tools/scripts/run-vscode-tests.mjs`); when it isn't available the test
  * skips rather than fails, matching the rest of the suite.
  */
 

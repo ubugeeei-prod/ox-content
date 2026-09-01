@@ -43,7 +43,7 @@ jobs:
           persist-credentials: false
 
       - name: Reject new production panic-prone constructs
-        run: node scripts/check-panic-constructs.mjs
+        run: node tools/scripts/check-panic-constructs.mjs
 
   clippy:
     name: Clippy
@@ -154,7 +154,7 @@ jobs:
       - name: Run VS Code integration tests (xvfb)
         # `vscode-test` launches a real Electron process, which needs an
         # X server on Linux. xvfb-run -a allocates one on the fly.
-        run: xvfb-run -a node scripts/run-vscode-tests.mjs
+        run: xvfb-run -a node tools/scripts/run-vscode-tests.mjs
 
   zed-extension:
     name: Zed extension build
@@ -206,10 +206,10 @@ jobs:
         run: cargo deny check licenses
 
       - name: Check npm advisories
-        run: node scripts/check-npm-advisories.mjs
+        run: node tools/scripts/check-npm-advisories.mjs
 
       - name: Check npm licenses
-        run: node scripts/check-npm-licenses.mjs
+        run: node tools/scripts/check-npm-licenses.mjs
 
   package-dry-run:
     name: Package dry-run
@@ -243,7 +243,7 @@ jobs:
         run: git diff --exit-code -- crates/ox_content_napi/index.d.ts
 
       - name: Pack and inspect publishable packages
-        run: node scripts/package-dry-run.mjs
+        run: node tools/scripts/package-dry-run.mjs
 
   napi-smoke:
     name: NAPI smoke - ${{ matrix.os }}

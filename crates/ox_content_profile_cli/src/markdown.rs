@@ -10,7 +10,7 @@ use crate::output::{emit_report, push_fmt};
 
 /// Built-in corpus reused when the user doesn't pass a file. Kept reasonably
 /// large so the per-iteration timing isn't dominated by Instant overhead.
-const EMBEDDED_CORPUS: &str = include_str!("../../../benchmarks/bundle-size/content/api.md");
+const EMBEDDED_CORPUS: &str = include_str!("../../../tools/benchmarks/bundle-size/content/api.md");
 
 fn load_input(file: Option<&PathBuf>) -> std::io::Result<(String, String)> {
     match file {

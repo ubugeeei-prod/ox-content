@@ -6,8 +6,8 @@ import type { ThemeConfig } from "@ox-content/vite-plugin";
  * Color only: no layout, no texture, no typography. Compose it under any
  * `@ox-content/theme-*` skin, or use it on its own over the default theme.
  *
- * Generated from `scripts/theme-colors/palettes.json`; edit that file and run
- * `node scripts/theme-colors/generate.mjs` rather than editing this by hand.
+ * Generated from `tools/scripts/theme-colors/palettes.json`; edit that file and run
+ * `node tools/scripts/theme-colors/generate.mjs` rather than editing this by hand.
  */
 export const materialOcean: ThemeConfig = {
   name: "material-ocean",

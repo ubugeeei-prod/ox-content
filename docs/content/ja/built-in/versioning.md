@@ -66,7 +66,7 @@ export default {
 git タグからスナップショットを作り直すには次です。
 
 ```bash
-node scripts/snapshot-docs-version.mjs --tag v2.90.0 --prefix 2.90
+node tools/scripts/snapshot-docs-version.mjs --tag v2.90.0 --prefix 2.90
 ```
 
 ## 関連
