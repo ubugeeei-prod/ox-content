@@ -34,6 +34,8 @@ ox_content_ssg = { workspace = true }
 ox_content_transform = { workspace = true }
 ox_content_i18n = { workspace = true }
 ox_content_i18n_checker = { workspace = true }
+ox_content_link_checker = { workspace = true }
+ox_content_mdc_checker = { workspace = true }
 memchr = { workspace = true }
 oxc_span = { workspace = true }
 napi = { workspace = true }

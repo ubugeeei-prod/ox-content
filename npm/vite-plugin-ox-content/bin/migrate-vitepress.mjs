@@ -17,7 +17,7 @@ const entry = resolve(here, "..", "dist", "vitepress-cli.mjs");
 
 if (!existsSync(entry)) {
   process.stderr.write(
-    "ox-content-migrate-vitepress: dist/vitepress-cli.mjs is missing.\n" +
+    "oxct migrate vitepress: dist/vitepress-cli.mjs is missing.\n" +
       "Run `pnpm --filter @ox-content/vite-plugin build` (or your package's\n" +
       "build script) first.\n",
   );

@@ -1,21 +1,21 @@
 ---
 title: Checker and Language Server
-description: Shared diagnostics between ox-content-lsp and the CLI checkers, including capabilities and known gaps.
+description: Shared diagnostics between vpx oxct lsp and the CLI checkers, including capabilities and known gaps.
 ---
 
 # Checker and Language Server
 
-`ox-content-lsp` and the CLI checkers share the same diagnostic cases for
+`vpx oxct lsp` and the CLI checkers share the same diagnostic cases for
 Markdown, MDC, and local links. Editors receive those findings through
 `textDocument/publishDiagnostics`. CI can run the same codes, ranges, and
-messages from the checker binaries.
+messages from the `oxct` checker commands.
 
 ## Shared diagnostic cases
 
 | Source               | CLI                            | Codes                                                                                   |
 | -------------------- | ------------------------------ | --------------------------------------------------------------------------------------- |
-| `ox-content-mdc`     | `ox-content-mdc-check`         | `mdc-unquoted-prop`, `mdc-mismatched-tag`, `mdc-orphan-close`, `mdc-unclosed-tag`       |
-| `ox-content-link`    | `ox-content-link-check`        | `link-missing-file`, `link-missing-anchor`, `link-cross-file-anchor`, `link-unresolved` |
+| `ox-content-mdc`     | `vpx oxct mdc-check`           | `mdc-unquoted-prop`, `mdc-mismatched-tag`, `mdc-orphan-close`, `mdc-unclosed-tag`       |
+| `ox-content-link`    | `vpx oxct link-check`          | `link-missing-file`, `link-missing-anchor`, `link-cross-file-anchor`, `link-unresolved` |
 | `ox-content`         | none (frontmatter is LSP-only) | `frontmatter-unknown`, `frontmatter-type`, `frontmatter-enum`, `frontmatter-required`   |
 | `ox-content-spacing` | none (spacing is LSP-only)     | `space-between-half-and-full-width`, `require-space-between-half-and-full-width`        |
 | `textlint`           | configured `textlint` command  | rule ids from the sidecar                                                               |
@@ -24,9 +24,9 @@ MDC CLI checks skip YAML frontmatter so tag diagnostics line up with the
 language server. Link checks run on the full document in both surfaces.
 
 ```bash
-ox-content-mdc-check --format json docs/page.mdc
-ox-content-link-check --format json docs/page.md
-cargo run -p ox_content_lsp --bin ox-content-lsp
+vpx oxct mdc-check --format json docs/page.mdc
+vpx oxct link-check --format json docs/page.md
+vpx oxct lsp
 ```
 
 ## Language server behavior

@@ -31,10 +31,10 @@ Knobs:
 ## CLI
 
 ```bash
-ox-content-link-check docs/**/*.md
-ox-content-link-check --src-dir docs --format json docs/index.md
-ox-content-link-check --ignore "intentionally-broken" docs/**/*.md
-ox-content-link-check --site-dir docs/dist/docs --base /ox-content/
+vpx oxct link-check docs/**/*.md
+vpx oxct link-check --src-dir docs --format json docs/index.md
+vpx oxct link-check --ignore "intentionally-broken" docs/**/*.md
+vpx oxct link-check --site-dir docs/dist/docs --base /ox-content/
 ```
 
 Exit code is `1` when any error-severity diagnostic was emitted (or any

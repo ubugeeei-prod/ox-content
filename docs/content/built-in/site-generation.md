@@ -248,6 +248,13 @@ generated image looks like this:
 
 ![Generated Open Graph image for this page](/screenshots/og-image-example.png)
 
+To preview the built-in template without running a site build, generate an SVG
+from the `oxct` CLI:
+
+```bash
+vpx oxct og-preview --title "My Docs" --description "Fast content tooling" --out og.svg
+```
+
 | `ogImageOptions`            | Default      | Purpose                                                               |
 | --------------------------- | ------------ | --------------------------------------------------------------------- |
 | `renderer`                  | `"chromium"` | `"chromium"` for full browser CSS, `"satori"` for fast SVG rendering. |

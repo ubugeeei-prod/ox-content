@@ -206,6 +206,13 @@ oxContent({
 
 ![このページの生成 Open Graph 画像](/screenshots/og-image-example.png)
 
+サイトビルドなしで組み込みテンプレートだけ確認したいときは、`oxct` CLI から SVG
+を生成できます。
+
+```bash
+vpx oxct og-preview --title "My Docs" --description "Fast content tooling" --out og.svg
+```
+
 | `ogImageOptions`            | 既定         | 目的                                                             |
 | --------------------------- | ------------ | ---------------------------------------------------------------- |
 | `renderer`                  | `"chromium"` | `"chromium"` はブラウザ CSS 互換、`"satori"` は高速な SVG 描画。 |

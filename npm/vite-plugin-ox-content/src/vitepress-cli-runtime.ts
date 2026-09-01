@@ -286,7 +286,7 @@ function resolvePath(cwd: string, value: string): string {
 }
 
 function helpText(): string {
-  return `ox-content-migrate-vitepress [config]
+  return `oxct migrate vitepress [config]
 
 Generate an editable ox-content options object from a VitePress config.
 

@@ -84,24 +84,16 @@ export default defineConfig({
 ### Migrate from VitePress
 
 ```bash
-ox-content-migrate-vitepress .vitepress/config.ts \
+vpx oxct migrate vitepress .vitepress/config.ts \
   --src-dir docs \
   --out-dir dist \
   --out ox-content.config.ts
 ```
 
-The same migration runner is available across JavaScript runtimes:
+The same migration runner is available through the unified `oxct` CLI:
 
 ```bash
-# Node.js, after installing @ox-content/vite-plugin
-ox-content-migrate-vitepress .vitepress/config.ts --out ox-content.config.ts
-
-# Deno
-deno run -A npm:@ox-content/vite-plugin/vitepress-migrate .vitepress/config.ts \
-  --out ox-content.config.ts
-
-# Bun
-bunx --bun @ox-content/vite-plugin .vitepress/config.ts --out ox-content.config.ts
+vpx oxct migrate vitepress .vitepress/config.ts --out ox-content.config.ts
 ```
 
 The generated `ox-content.config.ts` contains an editable `OxContentOptions` object built from
@@ -159,13 +151,13 @@ vpx oxct i18n validate "Hello {$name}"
 
 ```bash
 # Check every link in a tree, exit non-zero on broken targets
-ox-content-link-check docs/**/*.md
+vpx oxct link-check docs/**/*.md
 
 # Treat `/foo.md` as workspace-rooted under docs/
-ox-content-link-check --src-dir docs docs/**/*.md
+vpx oxct link-check --src-dir docs docs/**/*.md
 
 # Suppress known intentionally-broken targets
-ox-content-link-check --ignore "intentionally-broken" docs/**/*.md
+vpx oxct link-check --ignore "intentionally-broken" docs/**/*.md
 ```
 
 Offline-only by design — `http://` and `https://` links pass through
@@ -177,7 +169,7 @@ without timeouts, retries, or rate limits.
 Ox Content now ships a unified authoring and i18n language server:
 
 ```bash
-cargo run -p ox_content_lsp --bin ox-content-lsp
+vpx oxct lsp
 ```
 
 You can wire it into:
@@ -203,7 +195,13 @@ Supported features include:
 For CI or editor-independent checks, run:
 
 ```bash
-cargo run -p ox_content_mdc_checker --bin ox-content-mdc-check -- docs/page.mdc
+vpx oxct mdc-check docs/page.mdc
+```
+
+To preview a generated Open Graph image as SVG:
+
+```bash
+vpx oxct og-preview --title "My Docs" --description "Fast content tooling" --out og.svg
 ```
 
 **[Read the full documentation →](https://ubugeeei-prod.github.io/ox-content/)**

@@ -23,13 +23,13 @@ for (name, _component) in registry.complete_components("Al") {
 ## CLI
 
 ```bash
-ox-content-mdc-check docs/**/*.mdc
-ox-content-mdc-check --format json docs/page.mdc
+vpx oxct mdc-check docs/**/*.mdc
+vpx oxct mdc-check --format json docs/page.mdc
 ```
 
 Exit code is `1` when any diagnostic was emitted or any file failed to read.
 
-`ox-content-mdc-check` skips YAML frontmatter so CLI and `ox-content-lsp`
+`vpx oxct mdc-check` skips YAML frontmatter so CLI and `vpx oxct lsp`
 report the same codes, 1-based ranges, and messages. JSON output includes
 `code` values such as `mdc-unquoted-prop`, `mdc-mismatched-tag`,
 `mdc-orphan-close`, and `mdc-unclosed-tag`.
