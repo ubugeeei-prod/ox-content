@@ -1,13 +1,7 @@
 #!/usr/bin/env node
 
 import { spawnSync } from "node:child_process";
-import {
-  copyFileSync,
-  existsSync,
-  mkdirSync,
-  symlinkSync,
-  writeFileSync,
-} from "node:fs";
+import { copyFileSync, existsSync, mkdirSync, symlinkSync, writeFileSync } from "node:fs";
 import { cpus, totalmem } from "node:os";
 import { dirname, join, resolve } from "node:path";
 
@@ -199,10 +193,7 @@ function requiredEnv(name) {
 }
 
 function linkLegacyBenchmarkDependencies() {
-  const benchmarkNodeModules = join(
-    checkoutRoot,
-    "tools/benchmarks/bundle-size/node_modules",
-  );
+  const benchmarkNodeModules = join(checkoutRoot, "tools/benchmarks/bundle-size/node_modules");
   const legacyNodeModules = join(checkoutRoot, "benchmarks/bundle-size/node_modules");
 
   if (!existsSync(benchmarkNodeModules) && existsSync(legacyNodeModules)) {
