@@ -2,9 +2,9 @@ use crate::skins::Skin;
 
 pub(crate) fn readme(skin: &Skin, export_name: &str, bytes: &str, has_js: bool) -> String {
     let assets = if has_js {
-        format!("About {bytes} of CSS and generated JavaScript, with zero")
+        format!("About {bytes} of CSS and generated JavaScript, zero\nruntime dependencies.")
     } else {
-        format!("About {bytes} of CSS, zero JavaScript and zero")
+        format!("About {bytes} of CSS, zero JavaScript, zero\nruntime dependencies.")
     };
 
     format!(
@@ -14,7 +14,7 @@ pub(crate) fn readme(skin: &Skin, export_name: &str, bytes: &str, has_js: bool) 
 
 **Form only.** Geometry, texture, typography and motion, written entirely
 against `--octc-*` custom properties. It names no colors, so it pairs with any
-`@ox-content/theme-color-*` scheme. {assets} runtime dependencies.
+`@ox-content/theme-color-*` scheme. {assets}
 
 ```bash
 npm install @ox-content/theme-{id} @ox-content/theme-color-tokyo-night
