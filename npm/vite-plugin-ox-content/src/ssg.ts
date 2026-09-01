@@ -177,6 +177,9 @@ interface SsgRoutePaths {
   ogImageUrl: string;
 }
 
+const DEFAULT_SSG_TRANSFORM_CONCURRENCY = 1;
+const MAX_SSG_TRANSFORM_CONCURRENCY = 32;
+
 /**
  * Deprecated compatibility export for consumers that imported the former
  * TypeScript SSG template. HTML generation is Rust-backed now.
@@ -214,6 +217,13 @@ export function normalizeRoutePrefix(value?: string): string | undefined {
 function resolvedRoutePrefix(value?: string): { routePrefix: string } | Record<string, never> {
   const prefix = normalizeRoutePrefix(value);
   return prefix ? { routePrefix: prefix } : {};
+}
+
+export function resolveSsgTransformConcurrency(value?: number): number {
+  if (value === undefined || !Number.isFinite(value)) {
+    return DEFAULT_SSG_TRANSFORM_CONCURRENCY;
+  }
+  return Math.min(MAX_SSG_TRANSFORM_CONCURRENCY, Math.max(1, Math.trunc(value)));
 }
 
 function applyUrlPrefix(urlPath: string, routePrefix?: string): string {
@@ -309,6 +319,7 @@ export function resolveSsgOptions(ssg: SsgOptions | boolean | undefined): Resolv
     return {
       enabled: false,
       extension: ".html",
+      transformConcurrency: resolveSsgTransformConcurrency(undefined),
       clean: false,
       bare: false,
       generateOgImage: false,
@@ -334,6 +345,7 @@ export function resolveSsgOptions(ssg: SsgOptions | boolean | undefined): Resolv
     return {
       enabled: true,
       extension: ".html",
+      transformConcurrency: resolveSsgTransformConcurrency(undefined),
       clean: false,
       bare: false,
       generateOgImage: false,
@@ -360,6 +372,7 @@ export function resolveSsgOptions(ssg: SsgOptions | boolean | undefined): Resolv
     enabled: ssg.enabled ?? true,
     extension: ssg.extension ?? ".html",
     ...resolvedRoutePrefix(ssg.routePrefix),
+    transformConcurrency: resolveSsgTransformConcurrency(ssg.transformConcurrency),
     clean: ssg.clean ?? false,
     bare: ssg.bare ?? false,
     render: ssg.render,
@@ -1055,6 +1068,12 @@ interface CollectedPageResults {
   errors: string[];
 }
 
+interface CollectedPageSlot {
+  inputPath: string;
+  pageResult?: PageProcessResult;
+  error?: string;
+}
+
 /** Result of an SSG build. */
 export interface SsgBuildResult {
   /** Every file written, HTML pages and generated OG images alike. */
@@ -1349,6 +1368,8 @@ async function collectPageResults(
   context: BuildSsgContext,
   markdownFiles: string[],
 ): Promise<CollectedPageResults> {
+  await warmNapiBeforeConcurrentTransforms();
+
   const collected: CollectedPageResults = {
     pageResults: [],
     ogImageEntries: [],
@@ -1357,18 +1378,73 @@ async function collectPageResults(
     errors: [],
   };
 
-  for (const inputPath of markdownFiles) {
-    try {
-      const pageResult = await transformSsgPage(context, inputPath);
+  const slots = await mapWithConcurrency(
+    markdownFiles,
+    resolveSsgTransformConcurrency(context.ssgOptions.transformConcurrency),
+    async (inputPath): Promise<CollectedPageSlot> => {
+      try {
+        return {
+          inputPath,
+          pageResult: await transformSsgPage(context, inputPath),
+        };
+      } catch (err) {
+        const errorMessage = err instanceof Error ? err.message : String(err);
+        return {
+          inputPath,
+          error: `Failed to process ${inputPath}: ${errorMessage}`,
+        };
+      }
+    },
+  );
+
+  for (const slot of slots) {
+    if (slot.pageResult) {
+      const pageResult = slot.pageResult;
       collected.pageResults.push(pageResult);
       collectOgImageEntry(context, pageResult, collected);
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : String(err);
-      collected.errors.push(`Failed to process ${inputPath}: ${errorMessage}`);
+    } else if (slot.error) {
+      collected.errors.push(slot.error);
     }
   }
 
   return collected;
+}
+
+async function warmNapiBeforeConcurrentTransforms(): Promise<void> {
+  try {
+    await importNapiModule();
+  } catch {
+    // `transformMarkdown()` reports the same per-page binding error as before.
+  }
+}
+
+async function mapWithConcurrency<T, R>(
+  items: readonly T[],
+  concurrency: number,
+  run: (item: T, index: number) => Promise<R>,
+): Promise<R[]> {
+  const results = Array.from({ length: items.length }, () => undefined as R);
+  let next = 0;
+
+  async function worker(): Promise<void> {
+    for (;;) {
+      const index = next;
+      next += 1;
+      if (index >= items.length) {
+        return;
+      }
+      results[index] = await run(items[index] as T, index);
+    }
+  }
+
+  await Promise.all(
+    Array.from(
+      { length: Math.min(resolveSsgTransformConcurrency(concurrency), items.length) },
+      () => worker(),
+    ),
+  );
+
+  return results;
 }
 
 function applyPublishState(
