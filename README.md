@@ -148,11 +148,11 @@ npm install @ox-content/vite-plugin-solid solid-js@next @solidjs/web@next @solid
 ### i18n Static Checker (CLI)
 
 ```bash
-# Check for missing/unused translation keys
-ox-content-i18n check --dict-dir content/i18n --src src
+# Check for missing/unused translation keys after installing @ox-content/vite-plugin
+vpx oxct i18n check --dict-dir content/i18n --src src
 
 # Validate an ICU MessageFormat 2 message
-ox-content-i18n validate "Hello {$name}"
+vpx oxct i18n validate "Hello {$name}"
 ```
 
 ### Dead Link Checker (CLI)

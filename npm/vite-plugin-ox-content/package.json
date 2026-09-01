@@ -18,7 +18,8 @@
     "directory": "npm/vite-plugin-ox-content"
   },
   "bin": {
-    "ox-content-migrate-vitepress": "./bin/migrate-vitepress.mjs"
+    "ox-content-migrate-vitepress": "./bin/migrate-vitepress.mjs",
+    "oxct": "./bin/oxct.mjs"
   },
   "files": [
     "bin",

@@ -1727,6 +1727,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "ox_content_theme_generator"
+version = "3.0.0-beta.2"
+dependencies = [
+ "regex",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
 name = "ox_content_transform"
 version = "3.0.0-beta.2"
 dependencies = [

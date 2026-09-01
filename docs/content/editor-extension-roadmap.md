@@ -34,7 +34,7 @@ must not depend on a later one in the list.
 | #   | Feature                                         | LSP                      | CLI                          | VS Code                  | Neovim                      | Status           |
 | --- | ----------------------------------------------- | ------------------------ | ---------------------------- | ------------------------ | --------------------------- | ---------------- |
 | 1   | Markdown preview (HMR)                          | push channel             | none                         | subscribed webview       | external browser, on-demand | needs CLI + nvim |
-| 2   | i18n preview / completion                       | present                  | `ox-content-i18n`            | present                  | present                     | shipped          |
+| 2   | i18n preview / completion                       | present                  | `vpx oxct i18n`              | present                  | present                     | shipped          |
 | 3   | MDC completion + type check                     | completion + diagnostics | `ox-content-mdc-check`       | completion + diagnostics | completion + diagnostics    | shipped          |
 | 4   | Vue / React props completion + jump + typecheck | crate scaffold           | planned                      | planned                  | planned                     | scaffold landed  |
 | 5   | Asset path completion + diagnostics             | completion provider      | via link checker             | completion + diagnostics | completion + diagnostics    | shipped          |
