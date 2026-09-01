@@ -146,7 +146,7 @@ pub fn transform_tabs_embeds(html: String, start_group: u32) -> JsTabsTransformR
     JsTabsTransformResult { html: result.html, group_count: result.group_count }
 }
 
-/// Expand `<pm>` blocks in rendered HTML into npm/pnpm/yarn/bun install tabs.
+/// Expand `<pm>` blocks in rendered HTML into vp/pnpm/bun/npm/yarn install tabs.
 ///
 /// The single npm-style command inside each `<pm>` element is converted to the
 /// equivalent command for every package manager and rendered into the shared

@@ -12,13 +12,13 @@ Vite + `@ox-content/vite-plugin` SSG app with real `.mdx` pages.
 From the repository root:
 
 ```bash
-corepack pnpm --filter ./examples/mdx dev
+vp run --filter ./examples/mdx dev
 ```
 
 ```bash
-corepack pnpm --filter ./examples/mdx typecheck
-corepack pnpm --filter ./examples/mdx build
-corepack pnpm --filter ./examples/mdx preview
+vp run --filter ./examples/mdx typecheck
+vp run --filter ./examples/mdx build
+vp run --filter ./examples/mdx preview
 ```
 
 ## Pages

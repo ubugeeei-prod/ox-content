@@ -222,7 +222,7 @@ left untouched.
 ## Package Manager Tabs
 
 `embeds.pm` expands one npm-style command into an accessible tab group for
-npm, pnpm, yarn, bun, and vp (Vite+):
+vp (Vite+), pnpm, bun, npm, and yarn:
 
 ```ts
 oxContent({
@@ -239,7 +239,7 @@ oxContent({
 <pm>npm install -D @ox-content/vite-plugin @ox-content/theme-swiss</pm>
 
 The command is converted natively in Rust — `npm install -D` becomes
-`pnpm add -D`, `yarn add -D`, `bun add -D`, and `vp install -D`, while
+`vp install -D`, `pnpm add -D`, `bun add -D`, and `yarn add -D`, while
 `npx <bin>` becomes `vp exec -- <bin>`. The tabs work without client-side
 JavaScript; selection uses CSS `:has()`. Opt in to `pm: { sync: true }` to
 synchronize the selected package manager across every block on the page via

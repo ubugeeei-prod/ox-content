@@ -8,7 +8,7 @@
 //!
 //! and the post-render transform expands it into the same accessible, no-JS tab
 //! widget produced by [`crate::tabs`], with one tab per package manager
-//! (npm/pnpm/yarn/bun, in that order). Each tab body is a code block containing
+//! (vp/pnpm/bun/npm/yarn, in that order). Each tab body is a code block containing
 //! the command converted to that package manager's equivalent.
 //!
 //! The conversion is implemented natively here (no shell-out, no JS). It covers

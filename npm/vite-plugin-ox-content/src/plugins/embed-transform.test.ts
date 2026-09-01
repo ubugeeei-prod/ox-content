@@ -135,7 +135,7 @@ describe("transformTabs output", () => {
 });
 
 describe("transformPm output", () => {
-  it("expands <pm> into npm/pnpm/yarn/bun install tabs", async () => {
+  it("expands <pm> into vp/pnpm/bun/npm/yarn install tabs", async () => {
     resetTabGroupCounter();
     const html = await transformPm(`<pm>npm install -D vite</pm>`);
     expect(html).toMatchSnapshot();

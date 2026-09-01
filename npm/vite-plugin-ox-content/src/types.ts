@@ -2385,7 +2385,7 @@ export interface BuiltinEmbedOptions {
   openGraph?: boolean | OgpOptions;
 
   /**
-   * Expand `<pm>npm install …</pm>` blocks into npm/pnpm/yarn/bun install tabs.
+   * Expand `<pm>npm install …</pm>` blocks into vp/pnpm/bun/npm/yarn install tabs.
    *
    * Accepts a boolean to toggle the feature, or an options object to opt in to
    * synced tab groups. Synced groups are OFF by default; when enabled with

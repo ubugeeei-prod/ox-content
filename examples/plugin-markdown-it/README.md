@@ -2,16 +2,10 @@
 
 This example demonstrates how to use Ox Content with markdown-it.
 
-## Installation
+## Running
 
 ```bash
-npm install
-```
-
-## Usage
-
-```bash
-npm start
+vp run --filter ./examples/plugin-markdown-it start
 ```
 
 ## How It Works

@@ -4,11 +4,29 @@ Demonstrates embedding Solid components in Markdown.
 
 ## Setup
 
-```bash
-# The example depends on workspace packages, so install from the repository root
-corepack pnpm install
-corepack pnpm --filter ./examples/integ-solid dev
-```
+The example depends on workspace packages, so install from the repository root:
+
+<pm>npm install</pm>
+
+Then start the example:
+
+<tabs>
+  <tab title="vp">
+    <pre><code>vp run integ-solid</code></pre>
+  </tab>
+  <tab title="pnpm">
+    <pre><code>pnpm run integ-solid</code></pre>
+  </tab>
+  <tab title="bun">
+    <pre><code>bun run integ-solid</code></pre>
+  </tab>
+  <tab title="npm">
+    <pre><code>npm run integ-solid</code></pre>
+  </tab>
+  <tab title="yarn">
+    <pre><code>yarn integ-solid</code></pre>
+  </tab>
+</tabs>
 
 ## Configuration
 

@@ -6,7 +6,7 @@ JavaScript, TypeScript, Rust, Go, and Python.
 From the repository root:
 
 ```bash
-corepack pnpm --filter ./examples/code-play dev
+vp run --filter ./examples/code-play dev
 ```
 
 Then open the printed local URL. Click **Run** on a `play` fence. Rust and Go
@@ -15,12 +15,12 @@ Python renders as Code Play, but **Run** reports `unsupported` until you point
 it at a Piston-compatible executor:
 
 ```bash
-OX_CODE_PLAY_PYTHON_ENDPOINT=https://your-piston.example/api/v2/piston corepack pnpm --filter ./examples/code-play dev
+OX_CODE_PLAY_PYTHON_ENDPOINT=https://your-piston.example/api/v2/piston vp run --filter ./examples/code-play dev
 ```
 
 ```bash
-corepack pnpm --filter ./examples/code-play build
-corepack pnpm --filter ./examples/code-play preview
+vp run --filter ./examples/code-play build
+vp run --filter ./examples/code-play preview
 ```
 
 After `build`, `dist/plain.html` should not contain `ox-code-play.js`; only

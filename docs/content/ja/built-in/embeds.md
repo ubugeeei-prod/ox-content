@@ -177,7 +177,7 @@ favicon は対象ページ自身の `<link rel="icon">` から取り、無けれ
 
 ## パッケージマネージャタブ
 
-`embeds.pm` は 1 つの npm 風コマンドを、npm、pnpm、yarn、bun、vp（Vite+）向けのアクセシブルなタブグループへ展開します。
+`embeds.pm` は 1 つの npm 風コマンドを、vp（Vite+）、pnpm、bun、npm、yarn 向けのアクセシブルなタブグループへ展開します。
 
 ```ts
 oxContent({
@@ -193,7 +193,7 @@ oxContent({
 
 <pm>npm install -D @ox-content/vite-plugin @ox-content/theme-swiss</pm>
 
-コマンド変換は Rust ネイティブです。`npm install -D` は `pnpm add -D`、`yarn add -D`、`bun add -D`、`vp install -D` になり、`npx <bin>` は `vp exec -- <bin>` になります。タブはクライアント側 JavaScript なしで動きます。選択は CSS `:has()` です。`pm: { sync: true }` をオプトインすると、ページ上のすべてのブロックで選んだパッケージマネージャを `localStorage` 経由で同期します。変換表の全体は [Package Manager Tabs](/examples/package-manager-tabs.md) を見てください。
+コマンド変換は Rust ネイティブです。`npm install -D` は `vp install -D`、`pnpm add -D`、`bun add -D`、`yarn add -D` になり、`npx <bin>` は `vp exec -- <bin>` になります。タブはクライアント側 JavaScript なしで動きます。選択は CSS `:has()` です。`pm: { sync: true }` をオプトインすると、ページ上のすべてのブロックで選んだパッケージマネージャを `localStorage` 経由で同期します。変換表の全体は [Package Manager Tabs](/examples/package-manager-tabs.md) を見てください。
 
 ## タブ
 

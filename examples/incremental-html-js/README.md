@@ -8,8 +8,8 @@ server-sent events and applies them with the builtin
 `@ox-content/vite-plugin/incremental-dom` helper.
 
 ```bash
-corepack pnpm --dir npm/vite-plugin-ox-content build
-corepack pnpm --dir examples/incremental-html-js dev
+vp run --filter @ox-content/vite-plugin build
+vp run --filter ./examples/incremental-html-js dev
 ```
 
 Open http://localhost:4174.
