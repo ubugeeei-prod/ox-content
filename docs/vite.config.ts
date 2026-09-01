@@ -323,6 +323,8 @@ export default defineConfig(({ mode }) => {
         languages: {
           javascript: true,
           typescript: { execute: true, typecheck: true },
+          rust: true,
+          go: true,
         },
         srcDir: "content",
         outDir: "dist/docs",

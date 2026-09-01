@@ -23,6 +23,7 @@ export default {
       languages: {
         typescript: { execute: true, typecheck: true },
         rust: true,
+        go: true,
       },
       ui: "default",
       viewers: { config: true, stdio: true, stderr: true, provenance: true, timing: true },
@@ -42,6 +43,16 @@ console.log(n);
 ```rust play typecheck play-title="Release-mode Rust" play-mode=release
 fn main() {
     println!("ok");
+}
+```
+
+```go play typecheck play-title="Go vet on"
+package main
+
+import "fmt"
+
+func main() {
+    fmt.Println("ok")
 }
 ```
 ````
@@ -120,7 +131,7 @@ A runnable Vite site lives in [`examples/code-play`](../../examples/code-play):
 corepack pnpm --filter ./examples/code-play dev
 ```
 
-The docs site also dogfoods JavaScript and TypeScript widgets on
+The docs site also dogfoods JavaScript, TypeScript, Rust, and Go widgets on
 [Code Play](../../docs/content/examples/code-play.md).
 
 See [Code Play](../../docs/content/packages/code-play.md) in the docs site.
