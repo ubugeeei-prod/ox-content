@@ -1,7 +1,7 @@
 import { spawnSync } from "node:child_process";
 import { chmodSync, mkdirSync, mkdtempSync, readFileSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
-import { delimiter, dirname, join, resolve } from "node:path";
+import { delimiter, dirname, join, relative, resolve, sep } from "node:path";
 import { describe, expect, it } from "vite-plus/test";
 import {
   packageBuildConcurrencyEnvName,
@@ -138,6 +138,53 @@ describe("run-pr-benchmark", () => {
       join("benchmarks", "bundle-size", "measure-artifacts.mjs"),
     );
   });
+
+  it("keeps benchmark app workspace links relative to the moved benchmark root", () => {
+    const lockfile = readFileSync(resolve("pnpm-lock.yaml"), "utf8");
+
+    expectWorkspaceLink(
+      lockfile,
+      "tools/benchmarks/bundle-size",
+      "@ox-content/napi",
+      "crates/ox_content_napi",
+    );
+    expectWorkspaceLink(
+      lockfile,
+      "tools/benchmarks/bundle-size/apps/ox-content",
+      "@ox-content/vite-plugin",
+      "npm/vite-plugin-ox-content",
+    );
+    expectWorkspaceLink(
+      lockfile,
+      "tools/benchmarks/bundle-size/apps/ox-content-bare",
+      "@ox-content/vite-plugin",
+      "npm/vite-plugin-ox-content",
+    );
+    expectWorkspaceLink(
+      lockfile,
+      "tools/benchmarks/bundle-size/apps/ox-content-vue",
+      "@ox-content/vite-plugin",
+      "npm/vite-plugin-ox-content",
+    );
+    expectWorkspaceLink(
+      lockfile,
+      "tools/benchmarks/bundle-size/apps/ox-content-vue",
+      "@ox-content/vite-plugin-vue",
+      "npm/vite-plugin-ox-content-vue",
+    );
+    expectWorkspaceLink(
+      lockfile,
+      "tools/benchmarks/commonmark-conformance",
+      "@ox-content/napi",
+      "crates/ox_content_napi",
+    );
+    expectWorkspaceLink(
+      lockfile,
+      "tools/benchmarks/scale",
+      "@ox-content/vite-plugin",
+      "npm/vite-plugin-ox-content",
+    );
+  });
 });
 
 const writesInvokedScriptJson = `import { writeFileSync } from "node:fs";
@@ -161,4 +208,26 @@ const expectBenchmarkScript = (path: string, expectedSuffix: string) => {
   const { script } = JSON.parse(readFileSync(path, "utf8")) as { script: string };
   expect(script).toContain(expectedSuffix);
   expect(script).not.toContain(join("tools", "benchmarks"));
+};
+
+const expectWorkspaceLink = (
+  lockfile: string,
+  importer: string,
+  dependency: string,
+  target: string,
+) => {
+  const importerBlock = importerLockfileBlock(lockfile, importer);
+  const expected = relative(importer, target).split(sep).join("/");
+  expect(importerBlock).toContain(
+    `      '${dependency}':\n        specifier: workspace:*\n        version: link:${expected}`,
+  );
+};
+
+const importerLockfileBlock = (lockfile: string, importer: string) => {
+  const start = lockfile.indexOf(`  ${importer}:\n`);
+  expect(start).toBeGreaterThanOrEqual(0);
+
+  const rest = lockfile.slice(start + 1);
+  const next = rest.search(/\n  \S[^:\n]*:\n/);
+  return next === -1 ? rest : rest.slice(0, next);
 };

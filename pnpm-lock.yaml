@@ -189,8 +189,6 @@ importers:
         specifier: ^3.8.6
         version: 3.8.6(@emnapi/core@1.9.2)(@emnapi/runtime@1.9.2)(@types/node@26.2.0)
 
-  crates/ox_content_wasm/pkg: {}
-
   docs:
     devDependencies:
       '@ox-content/code-play':
@@ -2309,7 +2307,7 @@ importers:
         version: 0.8.3
       '@ox-content/napi':
         specifier: workspace:*
-        version: link:../../crates/ox_content_napi
+        version: link:../../../crates/ox_content_napi
       '@tanstack/markdown':
         specifier: ^0.0.13
         version: 0.0.13(react@19.2.8)
@@ -2373,7 +2371,7 @@ importers:
     dependencies:
       '@ox-content/vite-plugin':
         specifier: workspace:*
-        version: link:../../../../npm/vite-plugin-ox-content
+        version: link:../../../../../npm/vite-plugin-ox-content
     devDependencies:
       vite:
         specifier: npm:@voidzero-dev/vite-plus-core@0.2.8
@@ -2386,7 +2384,7 @@ importers:
     dependencies:
       '@ox-content/vite-plugin':
         specifier: workspace:*
-        version: link:../../../../npm/vite-plugin-ox-content
+        version: link:../../../../../npm/vite-plugin-ox-content
     devDependencies:
       vite:
         specifier: npm:@voidzero-dev/vite-plus-core@0.2.8
@@ -2399,10 +2397,10 @@ importers:
     dependencies:
       '@ox-content/vite-plugin':
         specifier: workspace:*
-        version: link:../../../../npm/vite-plugin-ox-content
+        version: link:../../../../../npm/vite-plugin-ox-content
       '@ox-content/vite-plugin-vue':
         specifier: workspace:*
-        version: link:../../../../npm/vite-plugin-ox-content-vue
+        version: link:../../../../../npm/vite-plugin-ox-content-vue
       vue:
         specifier: 'catalog:'
         version: 3.5.41(typescript@7.0.2)
@@ -2439,7 +2437,7 @@ importers:
         version: 0.8.3
       '@ox-content/napi':
         specifier: workspace:*
-        version: link:../../crates/ox_content_napi
+        version: link:../../../crates/ox_content_napi
       '@tanstack/markdown':
         specifier: ^0.0.13
         version: 0.0.13(react@19.2.8)
@@ -2478,7 +2476,7 @@ importers:
     dependencies:
       '@ox-content/vite-plugin':
         specifier: workspace:*
-        version: link:../../npm/vite-plugin-ox-content
+        version: link:../../../npm/vite-plugin-ox-content
     devDependencies:
       vite:
         specifier: npm:@voidzero-dev/vite-plus-core@0.2.8
