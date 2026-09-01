@@ -5,10 +5,10 @@ packages:
   - npm/theme/*
   - npm/theme-color/*
   - docs
-  - deploy
+  - tools/deploy
   - examples/*
-  - benchmarks/*
-  - benchmarks/bundle-size/apps/*
+  - tools/benchmarks/*
+  - tools/benchmarks/bundle-size/apps/*
 
 catalog:
   "@solidjs/vite-plugin": ^3.0.0-next.36

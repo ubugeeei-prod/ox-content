@@ -131,7 +131,7 @@ function configsIn(pkg: ThemePkg): string[] {
 const schemes = listPackages("npm/theme-color");
 const skins = listPackages("npm/theme");
 const paletteCatalog = JSON.parse(
-  readFileSync(join(repoRoot, "scripts/theme-colors/palettes.json"), "utf8"),
+  readFileSync(join(repoRoot, "tools/scripts/theme-colors/palettes.json"), "utf8"),
 ) as PaletteCatalog;
 
 describe("theme package contract", () => {

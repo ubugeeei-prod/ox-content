@@ -26,7 +26,7 @@ For a first-time npm package, stop before the tag so you can bootstrap it:
 
 ```bash
 vpr release 3.0.0-alpha.1 --prepare-only
-node scripts/bootstrap-npm-package.mjs npm/ox-content-code-play
+node tools/scripts/bootstrap-npm-package.mjs npm/ox-content-code-play
 ```
 
 The release script updates package versions, Cargo workspace versions, docs
@@ -52,7 +52,7 @@ safe to re-run a failed release after some packages were already published.
 Rust crates must be published in dependency order. Keep both of these lists in
 sync when adding a crate that should ship to crates.io:
 
-- `CARGO_PUBLISH_PACKAGES` in `scripts/release.ts`
+- `CARGO_PUBLISH_PACKAGES` in `tools/scripts/release.ts`
 - `publish_crate ...` calls in `.github/workflows/publish.yml`
 
 The release script verifies that every crate listed in
@@ -98,7 +98,7 @@ by a maintainer with local npm credentials, before the tag is pushed:
 
 ```bash
 # Generic new package, or @ox-content/code-play
-node scripts/bootstrap-npm-package.mjs npm/ox-content-code-play
+node tools/scripts/bootstrap-npm-package.mjs npm/ox-content-code-play
 ```
 
 The script packs the workspace package, publishes it from the laptop

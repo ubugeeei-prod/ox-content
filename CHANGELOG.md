@@ -152,7 +152,7 @@
 
 ### Refactoring
 
-- move the flake to flake-parts and split it into nix/ modules (#1116)
+- move the flake to flake-parts and split it into tools/nix/ modules (#1116)
 
 ## [3.0.0-alpha.12] - 2026-08-27
 

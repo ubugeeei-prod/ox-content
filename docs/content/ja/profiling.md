@@ -5,7 +5,7 @@ description: Markdown エンジンの割り当てと時間を追う、組み込�
 
 # プロファイリング
 
-Ox Content は、Markdown エンジンの割り当てと時間を追う組み込みプロファイラ — `ox_content_profiler` — を載せます。壁時計ベンチマークではなく、「このコードは実際にどれだけ仕事をしているか」向けに意図して調整しています。壁時計は `criterion` と `benchmarks/` の JS ベンチマークハーネスが担当します。
+Ox Content は、Markdown エンジンの割り当てと時間を追う組み込みプロファイラ — `ox_content_profiler` — を載せます。壁時計ベンチマークではなく、「このコードは実際にどれだけ仕事をしているか」向けに意図して調整しています。壁時計は `criterion` と `tools/benchmarks/` の JS ベンチマークハーネスが担当します。
 
 プロファイラは、次のような問いに答えたいときに使います。
 

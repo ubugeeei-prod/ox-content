@@ -116,7 +116,7 @@ type SyntaxName =
 type ThemeModule = Record<string, ThemeConfig>;
 
 const catalog = JSON.parse(
-  readFileSync(join(repoRoot, "scripts/theme-colors/palettes.json"), "utf8"),
+  readFileSync(join(repoRoot, "tools/scripts/theme-colors/palettes.json"), "utf8"),
 ) as PaletteCatalog;
 
 const shikiPalettes = catalog.palettes.filter((palette) => palette.shiki);
@@ -195,7 +195,7 @@ describe("Shiki migration theme-color presets", () => {
   });
 
   it("packs every migration family in the publish dry-run", () => {
-    const dryRunScript = readFileSync(join(repoRoot, "scripts/package-dry-run.mjs"), "utf8");
+    const dryRunScript = readFileSync(join(repoRoot, "tools/scripts/package-dry-run.mjs"), "utf8");
 
     for (const palette of shikiPalettes) {
       expect(dryRunScript, palette.id).toContain(`"npm/theme-color/${palette.id}"`);

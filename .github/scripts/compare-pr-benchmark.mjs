@@ -17,7 +17,7 @@ const artifactArgs =
     : [];
 
 const status = run("node", [
-  "benchmarks/bundle-size/compare-pr-benchmark.mjs",
+  "tools/benchmarks/bundle-size/compare-pr-benchmark.mjs",
   "--base",
   join(runnerTemp, "benchmark-base.json"),
   "--head",
@@ -36,9 +36,9 @@ const status = run("node", [
 ]);
 
 const budgetStatus = run("node", [
-  "benchmarks/bundle-size/check-budgets.mjs",
+  "tools/benchmarks/bundle-size/check-budgets.mjs",
   "--budgets",
-  "benchmarks/perf-budgets.json",
+  "tools/benchmarks/perf-budgets.json",
   "--bundle",
   join(runnerTemp, "bundle-head.json"),
   "--runtime",

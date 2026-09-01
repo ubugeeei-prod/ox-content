@@ -58,7 +58,7 @@ let
   ];
 
   externalAssets = [
-    "/benchmarks/bundle-size/content/api.md"
+    "/tools/benchmarks/bundle-size/content/api.md"
     "/npm/vite-plugin-ox-content/src/lint-dictionaries.json"
   ];
 
@@ -115,7 +115,7 @@ craneLib.buildPackage (
       '';
       inherit homepage mainProgram;
       license = lib.getLicenseFromSpdxId license;
-      platforms = import (root + /nix/systems.nix);
+      platforms = import (root + /tools/nix/systems.nix);
     };
   }
 )

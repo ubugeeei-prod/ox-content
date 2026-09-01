@@ -17,15 +17,19 @@ if (options.skipRuntime && options.skipBundle) {
 const sourceRoot = resolve(options.source ?? requiredEnv("GITHUB_WORKSPACE"));
 
 for (const file of [
-  "benchmarks/mizchi-markdown-native.mjs",
-  "benchmarks/mizchi-markdown-native-template.mjs",
-  "benchmarks/bundle-size/parse-benchmark.mjs",
-  "benchmarks/bundle-size/parse-benchmark-bun.mjs",
-  "benchmarks/bundle-size/measure.mjs",
-  "benchmarks/bundle-size/measure-artifacts.mjs",
-  "benchmarks/native-competitors/Cargo.toml",
-  "benchmarks/native-competitors/Cargo.lock",
-  "benchmarks/native-competitors/src/main.rs",
+  "tools/benchmarks/mizchi-markdown-native.mjs",
+  "tools/benchmarks/mizchi-markdown-native-template.mjs",
+  "tools/benchmarks/bundle-size/parse-benchmark.mjs",
+  "tools/benchmarks/bundle-size/parse-benchmark-bun.mjs",
+  "tools/benchmarks/bundle-size/measure.mjs",
+  "tools/benchmarks/bundle-size/measure-artifacts.mjs",
+  "tools/benchmarks/native-competitors/Cargo.toml",
+  "tools/benchmarks/native-competitors/Cargo.lock",
+  "tools/benchmarks/native-competitors/src/bench.rs",
+  "tools/benchmarks/native-competitors/src/cli.rs",
+  "tools/benchmarks/native-competitors/src/conformance.rs",
+  "tools/benchmarks/native-competitors/src/json.rs",
+  "tools/benchmarks/native-competitors/src/main.rs",
 ]) {
   const from = join(sourceRoot, file);
   const to = join(checkoutRoot, file);
@@ -39,7 +43,7 @@ if (options.skipRuntime) {
   writeSkippedRuntimeReport(options.runtimeJson);
 } else {
   run("node", [
-    "benchmarks/bundle-size/parse-benchmark.mjs",
+    "tools/benchmarks/bundle-size/parse-benchmark.mjs",
     "--runs",
     options.runs,
     "--json",
@@ -50,7 +54,7 @@ if (options.skipBundle) {
   writeSkippedBundleReport(options.bundleJson);
 } else {
   run("node", [
-    "benchmarks/bundle-size/measure.mjs",
+    "tools/benchmarks/bundle-size/measure.mjs",
     "--skip-install",
     "--json",
     options.bundleJson,
@@ -61,7 +65,11 @@ if (options.skipBundle) {
 // published JavaScript both exist to measure. Optional: a caller that does not
 // ask for it simply gets no artifact section in the report.
 if (options.artifactsJson) {
-  run("node", ["benchmarks/bundle-size/measure-artifacts.mjs", "--json", options.artifactsJson]);
+  run("node", [
+    "tools/benchmarks/bundle-size/measure-artifacts.mjs",
+    "--json",
+    options.artifactsJson,
+  ]);
 }
 
 /**

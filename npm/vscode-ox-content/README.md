@@ -104,12 +104,12 @@ every CI build and are part of `vp run test`.
 vp run build:lsp
 
 # Then run the integration suite (Linux needs xvfb-run prefix):
-node scripts/run-vscode-tests.mjs
+node tools/scripts/run-vscode-tests.mjs
 # or from the repo root:
 vp run test:vscode
 ```
 
-The driver script (`scripts/run-vscode-tests.mjs`) sets
+The driver script (`tools/scripts/run-vscode-tests.mjs`) sets
 `OX_CONTENT_LSP_PATH` to the absolute path of the freshly built
 `target/release/ox-content-lsp` so the test workspace does not need a
 `.vscode/settings.json`. Integration tests that depend on the LSP

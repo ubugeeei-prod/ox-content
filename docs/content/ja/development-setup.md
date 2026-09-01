@@ -95,7 +95,7 @@ vp run bench:bundle
 ox-content/
 ├── Cargo.toml              # Workspace configuration
 ├── flake.nix               # Nix flake wiring (inputs, systems, module list)
-├── nix/                    # Nix modules: dev shell, packages, vp wrapper, Blacksmith CLI
+├── tools/nix/              # Nix modules: dev shell, packages, vp wrapper, Blacksmith CLI
 ├── package.nix             # Nix build of the workspace binaries, via crane
 ├── rust-toolchain.toml     # Rust channel, components, and targets for Nix and rustup alike
 ├── .node-version           # Node.js version for CI / setup-node compatibility
@@ -186,11 +186,11 @@ vp run bench:parse
 vp run bench:bundle
 ```
 
-フィクスチャのバンドル gzip、描画 HTML gzip、ビルド時間、初期リクエスト、実行時下限の絶対天井は `benchmarks/perf-budgets.json` にあります。JSON 掃引のあとに次で確認します。
+フィクスチャのバンドル gzip、描画 HTML gzip、ビルド時間、初期リクエスト、実行時下限の絶対天井は `tools/benchmarks/perf-budgets.json` にあります。JSON 掃引のあとに次で確認します。
 
 ```bash
-node benchmarks/bundle-size/measure.mjs --json /tmp/bundle.json
-node benchmarks/bundle-size/check-budgets.mjs --bundle /tmp/bundle.json
+node tools/benchmarks/bundle-size/measure.mjs --json /tmp/bundle.json
+node tools/benchmarks/bundle-size/check-budgets.mjs --bundle /tmp/bundle.json
 ```
 
 PR Benchmark ジョブは head の測定に対してこの検査を走らせます。意図した増大は同じ PR で天井を上げるか、`benchmark-regression-accepted` ラベルを付けます。[パフォーマンス](./performance.md) を見てください。

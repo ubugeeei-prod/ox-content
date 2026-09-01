@@ -137,7 +137,7 @@ jobs:
         env:
           VSCE_PAT: ${{ secrets.VSCE_PAT }}
           PUBLISH_FROM_DISPATCH: ${{ inputs.publish }}
-        run: node scripts/publish-editor-extensions.ts vscode-marketplace
+        run: node tools/scripts/publish-editor-extensions.ts vscode-marketplace
 
   publish-open-vsx:
     name: Publish Open VSX
@@ -167,7 +167,7 @@ jobs:
         env:
           OVSX_PAT: ${{ secrets.OVSX_PAT }}
           PUBLISH_FROM_DISPATCH: ${{ inputs.publish }}
-        run: node scripts/publish-editor-extensions.ts open-vsx
+        run: node tools/scripts/publish-editor-extensions.ts open-vsx
 
   zed-extension:
     name: Validate Zed extension

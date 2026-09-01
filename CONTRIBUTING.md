@@ -67,7 +67,7 @@ cargo test --workspace
 cargo check --workspace --all-targets
 cargo clippy --workspace --all-targets -- -D warnings
 cargo fmt --all -- --check
-node scripts/check-panic-constructs.mjs
+node tools/scripts/check-panic-constructs.mjs
 ```
 
 ## Branches, Commits, and Pull Requests
@@ -106,7 +106,7 @@ Keep examples runnable and prefer existing patterns over introducing a new frame
 
 Use conventional commits because the release script groups changelog entries by commit type. When a change should be visible in release notes, make the commit message clear from a user perspective and mention migration or compatibility details in the PR description.
 
-The release task is defined in `vite.config.ts` as `vp run release` and delegates to `scripts/release.ts`. Do not run a release from a feature PR unless the maintainer explicitly asks for it.
+The release task is defined in `vite.config.ts` as `vp run release` and delegates to `tools/scripts/release.ts`. Do not run a release from a feature PR unless the maintainer explicitly asks for it.
 
 ## Security Issues
 

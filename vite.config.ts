@@ -1,15 +1,41 @@
 import { spawnSync } from "node:child_process";
 import { defineConfig } from "vite-plus";
-import { packageBuildConcurrencyFlag } from "./scripts/package-build-concurrency";
+import { packageBuildConcurrencyFlag } from "./tools/scripts/package-build-concurrency";
 
 const lifecycleEnvName = "OX_CONTENT_VP_LIFECYCLE";
 
-const lifecycleTasks: Record<string, string> = {
+type LifecycleCommand = "build" | "check" | "dev" | "fmt";
+type LifecycleTaskName = `workspace:${LifecycleCommand}`;
+
+type TaskOptions = {
+  cwd?: string;
+  dependsOn?: string[];
+  cache?: false;
+};
+
+type TaskDefinition = {
+  command: string;
+  cwd?: string;
+  dependsOn?: string[];
+  cache?: false;
+};
+
+const lifecycleCommands = [
+  "build",
+  "check",
+  "dev",
+  "fmt",
+] as const satisfies readonly LifecycleCommand[];
+
+const lifecycleTasks = {
   build: "workspace:build",
   check: "workspace:check",
   dev: "workspace:dev",
   fmt: "workspace:fmt",
-};
+} satisfies Record<LifecycleCommand, LifecycleTaskName>;
+
+const isLifecycleCommand = (command: string | undefined): command is LifecycleCommand =>
+  lifecycleCommands.includes(command as LifecycleCommand);
 
 // Vite+ direct commands bypass run.tasks, so root lifecycle commands delegate into the task graph.
 const delegateLifecycleCommand = () => {
@@ -18,7 +44,7 @@ const delegateLifecycleCommand = () => {
   }
 
   const [, , command, ...args] = process.argv;
-  const taskName = command ? lifecycleTasks[command] : undefined;
+  const taskName = isLifecycleCommand(command) ? lifecycleTasks[command] : undefined;
 
   if (!taskName || args.length > 0) {
     return;
@@ -38,45 +64,40 @@ const delegateLifecycleCommand = () => {
 
 delegateLifecycleCommand();
 
-const task = (
-  command: string,
-  options: {
-    cwd?: string;
-    dependsOn?: string[];
-    cache?: false;
-  } = {},
-) => ({
+const toolsScriptsDir = "tools/scripts";
+const toolsBenchmarksDir = "tools/benchmarks";
+
+const scriptPath = (path: string) => `${toolsScriptsDir}/${path}`;
+const benchmarkPath = (path: string) => `${toolsBenchmarksDir}/${path}`;
+const nodeScript = (path: string) => `node ${scriptPath(path)}`;
+
+const task = (command: string, options: TaskOptions = {}): TaskDefinition => ({
   command,
   ...options,
 });
 
-const noopTask = (
-  dependsOn?: string[],
-  options: {
-    cache?: false;
-  } = {},
-) => task('node -e ""', { dependsOn, ...options });
+const noopTask = (dependsOn?: string[], options: Pick<TaskOptions, "cache"> = {}) =>
+  task('node -e ""', { dependsOn, ...options });
 
-const uncachedTask = (
-  command: string,
-  options: {
-    cwd?: string;
-    dependsOn?: string[];
-  } = {},
-) => task(command, { ...options, cache: false });
+const uncachedTask = (command: string, options: Omit<TaskOptions, "cache"> = {}) =>
+  task(command, { ...options, cache: false });
 
 const vpBuiltin = (command: string) => `${lifecycleEnvName}=1 ${command}`;
 
 const benchmarkDocsCommand = [
   "set -eu",
   'bench_json="${RUNNER_TEMP:-/tmp}/ox-bench-result.json"',
-  'node benchmarks/bundle-size/parse-benchmark.mjs --runs "${OX_CONTENT_BENCHMARK_RUNS:-7}" --json "$bench_json"',
+  `node ${benchmarkPath(
+    "bundle-size/parse-benchmark.mjs",
+  )} --runs "\${OX_CONTENT_BENCHMARK_RUNS:-7}" --json "$bench_json"`,
   // Refresh the CommonMark column alongside the speed numbers: a sweep that
   // adds or drops an engine must not leave the two halves of a row disagreeing.
-  "node benchmarks/commonmark-conformance/run.mjs --json benchmarks/commonmark-conformance/results.json",
-  'node scripts/render-benchmark-tables.mjs "$bench_json"',
-  'node scripts/render-benchmark-charts.mjs "$bench_json" --size large',
-  'node scripts/render-benchmark-charts.mjs "$bench_json" --size huge',
+  `node ${benchmarkPath("commonmark-conformance/run.mjs")} --json ${benchmarkPath(
+    "commonmark-conformance/results.json",
+  )}`,
+  `node ${scriptPath("render-benchmark-tables.mjs")} "$bench_json"`,
+  `node ${scriptPath("render-benchmark-charts.mjs")} "$bench_json" --size large`,
+  `node ${scriptPath("render-benchmark-charts.mjs")} "$bench_json" --size huge`,
 ].join("\n");
 
 export default defineConfig({
@@ -123,7 +144,7 @@ export default defineConfig({
       "build:playground": task("vp run --filter ./examples/playground build", {
         dependsOn: ["build:npm"],
       }),
-      "build:wasm": task("node scripts/build-wasm-package.ts"),
+      "build:wasm": task(nodeScript("build-wasm-package.ts")),
 
       "workspace:test": noopTask(["test:rust", "test:ts"]),
       "test:rust": task("cargo test --workspace"),
@@ -150,11 +171,17 @@ export default defineConfig({
         dependsOn: ["build:napi"],
       }),
       "test:code-play": task("vp exec --filter @ox-content/code-play -- vp test src"),
-      "test:publish-targets": task("vp test scripts/verify-publish-targets.test.ts"),
+      "test:publish-targets": task(`vp test ${scriptPath("verify-publish-targets.test.ts")}`),
       "test:benchmark-scripts": task(
-        "vp test benchmarks/bundle-size/compare-pr-benchmark.test.ts benchmarks/bundle-size/pr-benchmark-scope.test.ts benchmarks/bundle-size/run-pr-benchmark.test.ts benchmarks/bundle-size/check-budgets.test.ts",
+        `vp test ${benchmarkPath("bundle-size/compare-pr-benchmark.test.ts")} ${benchmarkPath(
+          "bundle-size/pr-benchmark-scope.test.ts",
+        )} ${benchmarkPath("bundle-size/run-pr-benchmark.test.ts")} ${benchmarkPath(
+          "bundle-size/check-budgets.test.ts",
+        )}`,
       ),
-      "test:editor-publish-scripts": task("vp test scripts/publish-editor-extensions.test.ts"),
+      "test:editor-publish-scripts": task(
+        `vp test ${scriptPath("publish-editor-extensions.test.ts")}`,
+      ),
       "build:vite-plugin": task("vp run --filter @ox-content/vite-plugin build", {
         dependsOn: ["build:napi"],
       }),
@@ -187,7 +214,7 @@ export default defineConfig({
       }),
       "test:playground": task("vp run --filter ox-content-playground test"),
       "test:vscode-unit": task("vp exec --filter vscode-ox-content -- vp test src/test/unit"),
-      "test:vscode": uncachedTask("node scripts/run-vscode-tests.mjs", {
+      "test:vscode": uncachedTask(nodeScript("run-vscode-tests.mjs"), {
         dependsOn: ["build:lsp", "vscode:build"],
       }),
       "build:lsp": task("cargo build --release -p ox_content_lsp --bin ox-content-lsp"),
@@ -202,7 +229,7 @@ export default defineConfig({
         },
       ),
 
-      "check:panic-constructs": task("node scripts/check-panic-constructs.mjs"),
+      "check:panic-constructs": task(nodeScript("check-panic-constructs.mjs")),
       "workspace:check": noopTask([
         "fmt:rust-check",
         "lint:rust",
@@ -231,12 +258,12 @@ export default defineConfig({
 
       bench: noopTask(["bench:rust", "bench:parse", "bench:bundle"], { cache: false }),
       "bench:rust": uncachedTask("cargo bench --workspace"),
-      "bench:parse": uncachedTask("vp run --filter ./benchmarks/bundle-size benchmark:parse"),
+      "bench:parse": uncachedTask("vp run --filter ./tools/benchmarks/bundle-size benchmark:parse"),
       "bench:conformance": uncachedTask(
-        "vp run --filter ./benchmarks/commonmark-conformance conformance",
+        "vp run --filter ./tools/benchmarks/commonmark-conformance conformance",
         { dependsOn: ["build:napi"] },
       ),
-      "bench:bundle": uncachedTask("vp run --filter ./benchmarks/bundle-size benchmark"),
+      "bench:bundle": uncachedTask("vp run --filter ./tools/benchmarks/bundle-size benchmark"),
       "bench:docs": uncachedTask(benchmarkDocsCommand, {
         dependsOn: ["build:npm"],
       }),
@@ -244,10 +271,10 @@ export default defineConfig({
       // Wrapped rather than bare `cargo doc`: the script drops the previous
       // run's `target/doc` first, which is what keeps rustdoc's shared index
       // merge from re-reading a sticky disk's worth of stale documentation.
-      "doc:cargo": task("node scripts/cargo-doc.mjs", {
+      "doc:cargo": task(nodeScript("cargo-doc.mjs"), {
         dependsOn: ["build:napi"],
       }),
-      "doc:cargo-open": uncachedTask("node scripts/cargo-doc.mjs --open"),
+      "doc:cargo-open": uncachedTask(`${nodeScript("cargo-doc.mjs")} --open`),
       clean: uncachedTask("cargo clean"),
       "napi-prepublish": uncachedTask("napi prepublish", {
         cwd: "crates/ox_content_napi",
@@ -260,7 +287,6 @@ export default defineConfig({
         "check:ts",
         "workspace:test",
       ]),
-      actrun: uncachedTask("actrun workflow run .github/workflows/ci.yml --trust"),
       "testbox:warmup": uncachedTask(
         "blacksmith testbox warmup .github/workflows/testbox.yml --job testbox --idle-timeout 60",
       ),
@@ -293,7 +319,7 @@ export default defineConfig({
       "dev:docs": uncachedTask("vp run --filter ./docs dev", {
         dependsOn: ["build:npm"],
       }),
-      "docs:api": uncachedTask("node scripts/generate-api-docs.mjs --write", {
+      "docs:api": uncachedTask(`${nodeScript("generate-api-docs.mjs")} --write`, {
         dependsOn: ["build:napi"],
       }),
       "dev:playground": uncachedTask("vp run --filter ./examples/playground dev"),
@@ -312,8 +338,8 @@ export default defineConfig({
       "dev-preview": uncachedTask("vp run --filter ./docs preview"),
 
       install: uncachedTask("vp install"),
-      "workspace:release": uncachedTask("node scripts/release.ts"),
+      "workspace:release": uncachedTask(nodeScript("release.ts")),
       "examples-install": noopTask(["install"], { cache: false }),
-    },
+    } satisfies Record<string, TaskDefinition>,
   },
 });

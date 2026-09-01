@@ -10,7 +10,7 @@ Release binaries use `panic = "abort"`. A Rust panic in a published N-API artifa
 
 ```bash
 # Inventory + allowlist gate (non-test Rust under crates/)
-node scripts/check-panic-constructs.mjs
+node tools/scripts/check-panic-constructs.mjs
 
 # Targeted regression tests for this slice
 cargo test -p ox_content_parser --test input_panics
@@ -49,19 +49,19 @@ Test-only `unwrap` / `expect` / `panic!` are out of scope.
 
 ## CI gate and allowlist
 
-`scripts/check-panic-constructs.mjs` walks `crates/**/*.rs`, skips `tests/`, `benches/`, `examples/`, `tests.rs`, and `#[cfg(test)]` modules, then counts:
+`tools/scripts/check-panic-constructs.mjs` walks `crates/**/*.rs`, skips `tests/`, `benches/`, `examples/`, `tests.rs`, and `#[cfg(test)]` modules, then counts:
 
 `unwrap`, `unwrap_err`, `unwrap_unchecked`, `expect`, `panic!`, `unreachable!`, `todo!`, `unimplemented!`
 
-Counts are compared to `config/panic-allowlist.json`. New hits fail. Lower actual counts also fail until the allowlist is reduced. This is not a workspace-wide `allow(clippy::unwrap_used)`.
+Counts are compared to `tools/config/panic-allowlist.json`. New hits fail. Lower actual counts also fail until the allowlist is reduced. This is not a workspace-wide `allow(clippy::unwrap_used)`.
 
 The five focus crates also `deny` `clippy::unwrap_used`, `expect_used`, `panic`, `todo`, and `unimplemented` for non-test builds. The only reviewed exception in those crates is the compile-time YouTube regex in `ox_content_transform`.
 
 ## Remaining work (follow-up PRs)
 
 - Finish the rest of the workspace: `ox_content_docs`, `ox_content_lsp`, `ox_content_i18n`, `ox_content_search`, `ox_content_highlight`, `ox_content_wasm`, Vite bindings, and editor crates.
-- Extend the bounded fuzz lanes past the transform pipeline. `cargo test -p ox_content_transform --test pipeline_fuzz` runs in the ordinary test job and generates documents two ways — token soup and real block templates — against every feature at once; it found the `{.class}` and definition-list aborts listed above. The SSG, docs, and editor surfaces have no equivalent yet, and the `fuzz/` targets still need nightly and are not a required CI job.
+- Extend the bounded fuzz lanes past the transform pipeline. `cargo test -p ox_content_transform --test pipeline_fuzz` runs in the ordinary test job and generates documents two ways — token soup and real block templates — against every feature at once; it found the `{.class}` and definition-list aborts listed above. The SSG, docs, and editor surfaces have no equivalent yet, and the `tools/fuzz/` targets still need nightly and are not a required CI job.
 - Decide whether published artifacts can use unwind at FFI boundaries instead of `panic = "abort"`.
-- Keep shrinking `config/panic-allowlist.json` as each remaining site is proven or rewritten.
+- Keep shrinking `tools/config/panic-allowlist.json` as each remaining site is proven or rewritten.
 
 Do not close #774 until those items are done.

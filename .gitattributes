@@ -1,7 +1,7 @@
 # Keep GitHub language statistics focused on maintained source code.
 /docs/** linguist-documentation=true
 /examples/** linguist-documentation=true
-/benchmarks/** linguist-documentation=true
+/tools/benchmarks/** linguist-documentation=true
 
 # Generated API/reference artifacts.
 /docs/content/api/** linguist-generated=true

@@ -95,7 +95,7 @@ vp run bench:bundle
 ox-content/
 ├── Cargo.toml              # Workspace configuration
 ├── flake.nix               # Nix flake wiring (inputs, systems, module list)
-├── nix/                    # Nix modules: dev shell, packages, vp wrapper, Blacksmith CLI
+├── tools/nix/              # Nix modules: dev shell, packages, vp wrapper, Blacksmith CLI
 ├── package.nix             # Nix build of the workspace binaries, via crane
 ├── rust-toolchain.toml     # Rust channel, components, and targets for Nix and rustup alike
 ├── .node-version           # Node.js version for CI / setup-node compatibility
@@ -189,12 +189,12 @@ vp run bench:bundle
 ```
 
 Absolute ceilings for fixture bundle gzip, rendered HTML gzip, build time,
-initial requests, and runtime floors live in `benchmarks/perf-budgets.json`.
+initial requests, and runtime floors live in `tools/benchmarks/perf-budgets.json`.
 After a JSON sweep, check them with:
 
 ```bash
-node benchmarks/bundle-size/measure.mjs --json /tmp/bundle.json
-node benchmarks/bundle-size/check-budgets.mjs --bundle /tmp/bundle.json
+node tools/benchmarks/bundle-size/measure.mjs --json /tmp/bundle.json
+node tools/benchmarks/bundle-size/check-budgets.mjs --bundle /tmp/bundle.json
 ```
 
 The PR Benchmark job runs that checker on head measurements. Raise a ceiling
