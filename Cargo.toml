@@ -89,6 +89,7 @@ ox_content_ssg = { version = "3.0.0-beta.2", path = "crates/ox_content_ssg" }
 ox_content_transform = { version = "3.0.0-beta.2", path = "crates/ox_content_transform" }
 ox_content_i18n = { version = "3.0.0-beta.2", path = "crates/ox_content_i18n" }
 ox_content_i18n_checker = { version = "3.0.0-beta.2", path = "crates/ox_content_i18n_checker" }
+ox_content_lsp = { version = "3.0.0-beta.2", path = "crates/ox_content_lsp" }
 ox_content_markdown_lint = { version = "3.0.0-beta.2", path = "crates/ox_content_markdown_lint" }
 ox_content_mdc_checker = { version = "3.0.0-beta.2", path = "crates/ox_content_mdc_checker" }
 ox_content_mermaid = { version = "3.0.0-beta.2", path = "crates/ox_content_mermaid" }
