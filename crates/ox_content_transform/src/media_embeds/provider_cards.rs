@@ -1,3 +1,4 @@
+use super::card_icons::{metric_icon, network_logo};
 use super::html::{ComponentElement, attr};
 use super::render::{escape_attr, escape_text};
 
@@ -191,7 +192,16 @@ pub(super) fn render_card(card: Card<'_>) -> String {
     html.push_str("\"><a class=\"ox-provider-card__main\" href=\"");
     escape_attr(card.href, &mut html);
     html.push_str("\" target=\"_blank\" rel=\"noopener noreferrer\"><header class=\"ox-provider-card__header\"><span class=\"ox-provider-card__network\">");
-    escape_text(card.network, &mut html);
+    // A registry's own mark stands in for its name; the name stays for screen
+    // readers, which have nothing to go on once the text is gone.
+    if let Some(logo) = network_logo(card.modifier) {
+        html.push_str(logo);
+        html.push_str("<span class=\"ox-provider-card__sr\">");
+        escape_text(card.network, &mut html);
+        html.push_str("</span>");
+    } else {
+        escape_text(card.network, &mut html);
+    }
     html.push_str("</span>");
     if let Some(author) = card.author {
         html.push_str("<span class=\"ox-provider-card__author\">");
@@ -320,9 +330,20 @@ fn render_meta(html: &mut String, card: &Card<'_>) {
         let Some(value) = value.filter(|value| !value.trim().is_empty()) else {
             continue;
         };
-        html.push_str("<span class=\"ox-provider-card__metric\"><span>");
+        // Both shapes carry the label; the mark decides whether it is read or
+        // only heard.
+        if let Some(icon) = metric_icon(label) {
+            html.push_str(
+                "<span class=\"ox-provider-card__metric ox-provider-card__metric--icon\">",
+            );
+            html.push_str(icon);
+            html.push_str("<span class=\"ox-provider-card__sr\">");
+        } else {
+            html.push_str("<span class=\"ox-provider-card__metric\"><span>");
+        }
         escape_text(label, html);
-        html.push_str("</span> ");
+        html.push_str("</span>");
+        html.push(' ');
         escape_text(value, html);
         html.push_str("</span>");
     }

@@ -47,6 +47,8 @@
 }
 
 .ox-provider-card__network {
+  display: inline-flex;
+  align-items: center;
   letter-spacing: 0.06em;
   text-transform: uppercase;
 }
@@ -108,9 +110,45 @@
   font-size: 0.72rem;
 }
 
+.ox-provider-card__metric {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+
 .ox-provider-card__metric > span {
   font-weight: 600;
   color: var(--octc-color-text);
+}
+
+.ox-provider-card__logo {
+  display: block;
+  flex: 0 0 auto;
+  color: var(--octc-color-text);
+}
+
+/* With the label gone, the value is the whole of what the metric says, so it
+   takes the reading colour and the mark stays quiet beside it. */
+.ox-provider-card__metric--icon {
+  color: var(--octc-color-text);
+}
+
+.ox-provider-card__metric-icon {
+  flex: 0 0 auto;
+  color: var(--octc-color-text-muted);
+}
+
+/* The word a mark replaced: off the page, still on the accessibility tree. */
+.ox-provider-card__sr {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
 }
 
 .ox-provider-card__source {

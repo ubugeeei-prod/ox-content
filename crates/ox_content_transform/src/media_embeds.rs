@@ -1,4 +1,5 @@
 mod apple_music;
+mod card_icons;
 #[cfg(test)]
 mod catalog_tests;
 mod document_cards;

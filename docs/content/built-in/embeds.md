@@ -561,6 +561,10 @@ version and tag URLs where the provider exposes one. `version`, `license`,
 `repository`, `downloads` and `stars` render as metrics, and `downloads` also
 answers to `pulls` — which is what the Docker Hub card below passes:
 
+A registry card leads with the registry's own mark instead of its name, and
+each metric with a mark instead of its label. The words stay in the markup as
+visually hidden text, so a screen reader still reads "Downloads 31M/week".
+
 ```mdx
 <NpmPackage
   url="https://www.npmjs.com/package/vite"

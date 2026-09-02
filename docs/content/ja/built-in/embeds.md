@@ -448,6 +448,10 @@ fetch したサムネイルはカード画像になります。
 `stars` がメトリクスとして描画されます。`downloads` は `pulls` という綴りでも受け取り、
 下の Docker Hub カードはそちらを渡しています。
 
+レジストリカードは名前ではなくレジストリ自身のマークを、メトリクスはラベルではなく
+アイコンを先頭に置きます。語はスクリーンリーダー向けの不可視テキストとして markup に
+残るので、読み上げは "Downloads 31M/week" のままです。
+
 ```mdx
 <NpmPackage
   url="https://www.npmjs.com/package/vite"
