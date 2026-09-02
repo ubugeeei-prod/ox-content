@@ -1,6 +1,6 @@
 {
   "name": "@ox-content/theme-noir",
-  "version": "3.0.0-beta.6",
+  "version": "3.0.0-beta.7",
   "description": "One hard key light and a steep falloff — shapes picked out of the dark — an Ox Content skin that composes with any @ox-content/theme-color-* scheme",
   "keywords": [
     "chiaroscuro",

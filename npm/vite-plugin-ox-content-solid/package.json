@@ -1,6 +1,6 @@
 {
   "name": "@ox-content/vite-plugin-solid",
-  "version": "3.0.0-beta.6",
+  "version": "3.0.0-beta.7",
   "description": "Solid integration for Ox Content - Embed Solid components in Markdown",
   "keywords": [
     "markdown",

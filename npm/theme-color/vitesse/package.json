@@ -1,6 +1,6 @@
 {
   "name": "@ox-content/theme-color-vitesse",
-  "version": "3.0.0-beta.6",
+  "version": "3.0.0-beta.7",
   "description": "Anthony Fu's Vitesse light and dark — an Ox Content color scheme that composes with any @ox-content/theme-* skin",
   "keywords": [
     "color-scheme",

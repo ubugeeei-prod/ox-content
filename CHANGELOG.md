@@ -1,5 +1,12 @@
 # Changelog
 
+## [3.0.0-beta.7] - 2026-09-02
+
+### Bug Fixes
+
+- preserve currentColor for animated masks
+- keep block embeds out of their paragraph, and quiet the card header (#1267)
+
 ## [3.0.0-beta.6] - 2026-09-02
 
 ### Bug Fixes
