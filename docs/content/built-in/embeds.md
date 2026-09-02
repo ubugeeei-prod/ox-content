@@ -529,6 +529,12 @@ by default. With `fetch: false` — the setting this site builds with — the ca
 is assembled entirely from attributes, so the build stays offline and the
 numbers stay pinned to whatever you wrote:
 
+These three render as link-preview cards (`.ox-ogp-card`, modified with
+`.ox-ogp-card--qiita` and friends) rather than the provider frame, so an
+article sits beside an OGP card in one visual language. Author, date and the
+counts fall into the card's meta line, and a fetched thumbnail becomes the
+card image.
+
 ```mdx
 <Qiita
   url="https://qiita.com/ubugeeei/items/73a2416fd46cfe6311a8"

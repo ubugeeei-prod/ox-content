@@ -59,8 +59,8 @@ describe("provider-grade static embed cards", () => {
     );
 
     expect(html).toContain("ox-provider-card--google-maps");
-    expect(html).toContain("ox-provider-card--qiita");
-    expect(html).toContain("ox-provider-card--zenn");
+    expect(html).toContain("ox-ogp-card--qiita");
+    expect(html).toContain("ox-ogp-card--zenn");
     expect(html).toContain("ox-provider-card--npm");
     expect(html).toContain("ox-provider-card--crates-io");
     expect(html).toContain("ox-provider-card--pypi");
@@ -146,7 +146,7 @@ describe("provider-grade static embed cards", () => {
     expect(html).toContain("Qiita fetched title");
     expect(html).toContain("Fetched Qiita excerpt with code.");
     expect(html).toContain("Zenn fetched title");
-    expect(html).toContain("ox-provider-card__image");
+    expect(html).toContain("ox-ogp-image");
     await transformBuiltinEmbeds(input, {
       github: false,
       openGraph: false,
@@ -226,7 +226,7 @@ describe("provider-grade static embed cards", () => {
       },
     );
 
-    expect(result.html).toContain("ox-provider-card--qiita");
+    expect(result.html).toContain("ox-ogp-card--qiita");
     expect(result.html).not.toContain('data-ox-island="Qiita"');
   });
 });

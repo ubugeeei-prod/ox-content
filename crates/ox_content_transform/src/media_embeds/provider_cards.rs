@@ -40,7 +40,7 @@ pub(super) fn render_qiita(element: &ComponentElement<'_>) -> Option<String> {
         return None;
     }
 
-    Some(render_card(article_card(element, "qiita", "Qiita", href, "Qiita article")))
+    Some(render_link_preview_card(article_card(element, "qiita", "Qiita", href, "Qiita article")))
 }
 
 pub(super) fn render_zenn(element: &ComponentElement<'_>) -> Option<String> {
@@ -52,7 +52,7 @@ pub(super) fn render_zenn(element: &ComponentElement<'_>) -> Option<String> {
         return None;
     }
 
-    Some(render_card(article_card(element, "zenn", "Zenn", href, "Zenn article")))
+    Some(render_link_preview_card(article_card(element, "zenn", "Zenn", href, "Zenn article")))
 }
 
 pub(super) fn render_discord(element: &ComponentElement<'_>) -> Option<String> {
@@ -239,6 +239,78 @@ pub(super) fn render_card(card: Card<'_>) -> String {
         html.push_str("\" width=\"100%\" height=\"320\" loading=\"lazy\" referrerpolicy=\"strict-origin-when-cross-origin\" sandbox=\"allow-scripts allow-same-origin allow-popups\"></iframe>");
     }
     html.push_str("</article>");
+    html
+}
+
+/// Render an article embed with the OGP link-card chrome.
+///
+/// Qiita, Zenn and note carry exactly what a link preview carries — a title, a
+/// lead, an author and a source — and the provider frame stacked a network
+/// band above all of it, so the platform read louder than the article. These
+/// reuse `.ox-ogp-card` so a page has one link-preview shape; the SSG keys
+/// `ogp.css` off the `ox-ogp-card` marker, so a page built only from these
+/// still ships their styles. The `--<provider>` modifier rides along for sites
+/// that target one platform.
+pub(super) fn render_link_preview_card(card: Card<'_>) -> String {
+    let mut html = String::new();
+    html.push_str("<a class=\"ox-ogp-card ox-ogp-card--");
+    html.push_str(card.modifier);
+    html.push_str("\" href=\"");
+    escape_attr(card.href, &mut html);
+    html.push_str(
+        "\" target=\"_blank\" rel=\"noopener noreferrer\"><div class=\"ox-ogp-content\"><div class=\"ox-ogp-title\">",
+    );
+    escape_text(card.title, &mut html);
+    html.push_str("</div>");
+    if let Some(body) = card.body {
+        html.push_str("<div class=\"ox-ogp-description\">");
+        escape_text(body, &mut html);
+        html.push_str("</div>");
+    }
+    html.push_str("<div class=\"ox-ogp-meta\">");
+    if let Some(avatar) = card.avatar {
+        html.push_str("<img class=\"ox-ogp-favicon\" src=\"");
+        escape_attr(avatar, &mut html);
+        html.push_str("\" alt=\"\" loading=\"lazy\" decoding=\"async\">");
+    }
+    if let Some(parsed) = parse_https_url(card.href) {
+        html.push_str("<span class=\"ox-ogp-domain\">");
+        escape_text(&parsed.host, &mut html);
+        html.push_str("</span>");
+    }
+    if let Some(author) = card.author {
+        html.push_str("<span>");
+        escape_text(author, &mut html);
+        html.push_str("</span>");
+    }
+    if let Some(label) = card.date_label.or(card.date) {
+        html.push_str("<time");
+        if let Some(date) = card.date {
+            html.push_str(" datetime=\"");
+            escape_attr(date, &mut html);
+            html.push('"');
+        }
+        html.push('>');
+        escape_text(label, &mut html);
+        html.push_str("</time>");
+    }
+    for (label, value) in &card.meta {
+        let Some(value) = value.filter(|value| !value.trim().is_empty()) else {
+            continue;
+        };
+        html.push_str("<span>");
+        escape_text(label, &mut html);
+        html.push(' ');
+        escape_text(value, &mut html);
+        html.push_str("</span>");
+    }
+    html.push_str("</div></div>");
+    if let Some(image) = card.image {
+        html.push_str("<img class=\"ox-ogp-image\" src=\"");
+        escape_attr(image, &mut html);
+        html.push_str("\" alt=\"\" loading=\"lazy\" decoding=\"async\">");
+    }
+    html.push_str("</a>");
     html
 }
 
