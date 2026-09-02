@@ -79,7 +79,6 @@ jobs:
       - name: Setup Vite+
         uses: voidzero-dev/setup-vp@1b32467adbe183473499fd9d5d372c3ed9641754 # v1.18.0
         with:
-          node-version-file: ".node-version"
           cache: true
           run-install: true
 
@@ -97,7 +96,6 @@ jobs:
       - name: Setup Vite+
         uses: voidzero-dev/setup-vp@1b32467adbe183473499fd9d5d372c3ed9641754 # v1.18.0
         with:
-          node-version-file: ".node-version"
           cache: true
           run-install: true
 
@@ -128,7 +126,6 @@ jobs:
       - name: Setup Vite+
         uses: voidzero-dev/setup-vp@1b32467adbe183473499fd9d5d372c3ed9641754 # v1.18.0
         with:
-          node-version-file: ".node-version"
           cache: true
           run-install: true
 
@@ -183,7 +180,6 @@ jobs:
       - name: Setup Vite+
         uses: voidzero-dev/setup-vp@1b32467adbe183473499fd9d5d372c3ed9641754 # v1.18.0
         with:
-          node-version-file: ".node-version"
           cache: true
           run-install: true
 
@@ -222,7 +218,6 @@ jobs:
       - name: Setup Vite+
         uses: voidzero-dev/setup-vp@1b32467adbe183473499fd9d5d372c3ed9641754 # v1.18.0
         with:
-          node-version-file: ".node-version"
           cache: true
           run-install: true
 
@@ -263,7 +258,6 @@ jobs:
       - name: Setup Vite+
         uses: voidzero-dev/setup-vp@1b32467adbe183473499fd9d5d372c3ed9641754 # v1.18.0
         with:
-          node-version-file: ".node-version"
           cache: true
           run-install: true
 
@@ -317,7 +311,6 @@ jobs:
       - name: Setup Vite+
         uses: voidzero-dev/setup-vp@1b32467adbe183473499fd9d5d372c3ed9641754 # v1.18.0
         with:
-          node-version-file: ".node-version"
           cache: true
           run-install: true
 

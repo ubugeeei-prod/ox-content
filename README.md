@@ -345,7 +345,7 @@ vp run dev             # Start the docs and playground dev servers
 vp run build           # Build Rust, npm packages, docs, and playground
 ```
 
-The dev shell is pinned in `flake.nix`, the workspace task graph lives in `vite.config.ts`, and `.node-version` is kept for CI / non-Nix Node setup.
+The dev shell is pinned in `flake.nix`, the workspace task graph lives in `vite.config.ts`, and `package.json` declares the Node.js runtime through `devEngines.runtime`.
 
 See [CONTRIBUTING.md](./CONTRIBUTING.md) for branch, commit, PR, testing, and release-note guidance.
 

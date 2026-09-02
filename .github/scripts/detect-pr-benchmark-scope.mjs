@@ -12,7 +12,6 @@ const RUNTIME_AND_BUNDLE_PATTERNS = [
   /^package\.json$/,
   /^pnpm-lock\.yaml$/,
   /^vite\.config\.ts$/,
-  /^\.node-version$/,
 ];
 
 const RUNTIME_PATTERNS = [

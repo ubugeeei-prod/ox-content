@@ -14,7 +14,6 @@ const PACKAGE_PREVIEW_PATTERNS = [
   /^package\.json$/,
   /^pnpm-lock\.yaml$/,
   /^vite\.config\.ts$/,
-  /^\.node-version$/,
 ];
 
 const TEST_ONLY_PATTERNS = [

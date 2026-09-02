@@ -11,7 +11,7 @@
 | 要件          | バージョン | インストール                                                                                       |
 | ------------- | ---------- | -------------------------------------------------------------------------------------------------- |
 | **Rust**      | 1.95+      | `nix develop` が提供します（`rust-toolchain.toml` で固定）。または [rustup.rs](https://rustup.rs/) |
-| **Node.js**   | 26+        | `nix develop` が提供するか、`.node-version` で管理します                                           |
+| **Node.js**   | 26+        | `nix develop` が提供するか、`package.json` の `devEngines.runtime` で管理します                    |
 | **Vite+**     | 最新       | 開発シェル内では `vp` として使えます                                                               |
 | **wasm-pack** | 最新       | `nix develop` が提供します。`vp run build:wasm` を回すときに必要です                               |
 
@@ -98,7 +98,7 @@ ox-content/
 ├── tools/nix/              # Nix modules: dev shell, packages, vp wrapper, Blacksmith CLI
 ├── package.nix             # Nix build of the workspace binaries, via crane
 ├── rust-toolchain.toml     # Rust channel, components, and targets for Nix and rustup alike
-├── .node-version           # Node.js version for CI / setup-node compatibility
+├── package.json            # npm workspace metadata and devEngines runtime
 ├── vite.config.ts          # Vite+ workspace task graph
 ├── crates/                 # Rust crates
 │   ├── ox_content_allocator/   # Arena allocator
@@ -265,7 +265,7 @@ node -v
 vp run build:napi
 ```
 
-Nix の外で Node.js を管理している場合は、`.node-version` のバージョンに合わせてください。
+Nix の外で Node.js を管理している場合は、`package.json` の `devEngines.runtime` のバージョンに合わせてください。
 
 ### `wasm-pack: command not found`
 
