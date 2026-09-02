@@ -1,7 +1,7 @@
+use super::card_render::{Card, render_card};
 use super::html::{ComponentElement, attr};
 use super::provider_cards::{
-    Card, body_text, first_attr, host_in, is_safe_https_url, parse_https_url, path_segments,
-    provider_url, render_card,
+    body_text, first_attr, host_in, is_safe_https_url, parse_https_url, path_segments, provider_url,
 };
 
 pub(super) fn render_codepen(element: &ComponentElement<'_>) -> Option<String> {

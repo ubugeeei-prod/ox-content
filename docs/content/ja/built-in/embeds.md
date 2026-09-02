@@ -417,6 +417,11 @@ metadata の下に遅延読み込みの iframe が付き、リンクではなく
 fetch します。このサイトのように `fetch: false` にすると、カードは属性だけから
 組み立てられます。ビルドはオフラインのままで、数値も書いた値に固定されます。
 
+この3つはプロバイダカードの枠ではなくリンクプレビューカード（`.ox-ogp-card`、
+修飾子は `.ox-ogp-card--qiita` など）として描画されます。OGP カードと並べても
+見た目の言語が1つに揃います。著者・日付・カウントはカードの meta 行に入り、
+fetch したサムネイルはカード画像になります。
+
 ```mdx
 <Qiita
   url="https://qiita.com/ubugeeei/items/73a2416fd46cfe6311a8"
@@ -442,6 +447,10 @@ fetch します。このサイトのように `fetch: false` にすると、カ�
 持つ version / tag URL も扱えます。`version`、`license`、`repository`、`downloads`、
 `stars` がメトリクスとして描画されます。`downloads` は `pulls` という綴りでも受け取り、
 下の Docker Hub カードはそちらを渡しています。
+
+レジストリカードは名前ではなくレジストリ自身のマークを、メトリクスはラベルではなく
+アイコンを先頭に置きます。語はスクリーンリーダー向けの不可視テキストとして markup に
+残るので、読み上げは "Downloads 31M/week" のままです。
 
 ```mdx
 <NpmPackage

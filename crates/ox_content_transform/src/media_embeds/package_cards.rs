@@ -1,6 +1,7 @@
+use super::card_render::{Card, render_card};
 use super::html::{ComponentElement, attr};
 use super::provider_cards::{
-    Card, body_text, first_attr, host_in, parse_https_url, path_segments, provider_url, render_card,
+    body_text, first_attr, host_in, parse_https_url, path_segments, provider_url,
 };
 
 pub(super) fn render_npm_package(element: &ComponentElement<'_>) -> Option<String> {

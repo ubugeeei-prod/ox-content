@@ -529,6 +529,12 @@ by default. With `fetch: false` — the setting this site builds with — the ca
 is assembled entirely from attributes, so the build stays offline and the
 numbers stay pinned to whatever you wrote:
 
+These three render as link-preview cards (`.ox-ogp-card`, modified with
+`.ox-ogp-card--qiita` and friends) rather than the provider frame, so an
+article sits beside an OGP card in one visual language. Author, date and the
+counts fall into the card's meta line, and a fetched thumbnail becomes the
+card image.
+
 ```mdx
 <Qiita
   url="https://qiita.com/ubugeeei/items/73a2416fd46cfe6311a8"
@@ -554,6 +560,10 @@ numbers stay pinned to whatever you wrote:
 version and tag URLs where the provider exposes one. `version`, `license`,
 `repository`, `downloads` and `stars` render as metrics, and `downloads` also
 answers to `pulls` — which is what the Docker Hub card below passes:
+
+A registry card leads with the registry's own mark instead of its name, and
+each metric with a mark instead of its label. The words stay in the markup as
+visually hidden text, so a screen reader still reads "Downloads 31M/week".
 
 ```mdx
 <NpmPackage

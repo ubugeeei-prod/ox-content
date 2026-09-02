@@ -105,8 +105,10 @@ test("static provider cards render from attributes alone", async ({ page }) => {
   await page.setViewportSize({ width: 720, height: 1400 });
   await page.setContent(html, { waitUntil: "domcontentloaded" });
 
-  // Every provider produced a card, not a leftover tag.
-  await expect(page.locator(".ox-provider-card")).toHaveCount(23);
+  // Every provider produced a card, not a leftover tag. Qiita, Zenn and note
+  // render as link previews rather than provider frames.
+  await expect(page.locator(".ox-provider-card")).toHaveCount(20);
+  await expect(page.locator(".ox-ogp-card")).toHaveCount(3);
   await expect(page.locator("body")).not.toContainText("<Qiita");
 
   // The bug this guards is the stylesheet never shipping on a provider-only
@@ -163,4 +165,10 @@ async function expectCardStylesApplied(page: Page): Promise<void> {
   await expect(card).toHaveCSS("display", /block|flex|grid/);
   const radius = await card.evaluate((node) => getComputedStyle(node).borderRadius);
   expect(radius).not.toBe("0px");
+
+  // The link previews pull a second stylesheet, keyed off their own marker.
+  // The same shipping bug applies: a page whose only embeds are articles has
+  // no other reason to carry `ogp.css`.
+  const preview = page.locator(".ox-ogp-card").first();
+  await expect(preview).toHaveCSS("display", "flex");
 }

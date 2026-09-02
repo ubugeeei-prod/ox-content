@@ -23,21 +23,21 @@ fn render_catalog(html: &str) -> String {
 #[test]
 fn note_article_renders_a_card() {
     let out = render_catalog(r#"<note url="https://note.com/someone/n/nabc123"></note>"#);
-    assert!(out.contains("ox-provider-card--note"), "{out}");
+    assert!(out.contains("ox-ogp-card--note"), "{out}");
     assert!(out.contains("note"), "{out}");
 }
 
 #[test]
 fn note_magazine_renders_a_card() {
     let out = render_catalog(r#"<note url="https://note.com/someone/m/mabc123"></note>"#);
-    assert!(out.contains("ox-provider-card--note"), "{out}");
+    assert!(out.contains("ox-ogp-card--note"), "{out}");
 }
 
 #[test]
 fn a_note_profile_is_not_an_article() {
     // No `/n/` or `/m/` segment, so there is nothing to card.
     let out = render_catalog(r#"<note url="https://note.com/someone"></note>"#);
-    assert!(!out.contains("ox-provider-card--note"), "{out}");
+    assert!(!out.contains("ox-ogp-card--note"), "{out}");
 }
 
 #[test]

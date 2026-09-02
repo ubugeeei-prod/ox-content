@@ -3,7 +3,7 @@
 .ox-tabs {
   margin: 1.25rem 0;
   border: 1px solid var(--octc-color-border);
-  border-radius: 6px;
+  border-radius: 4px;
   overflow: hidden;
   background: var(--octc-color-bg);
 }
@@ -11,9 +11,9 @@
 .ox-tabs-header {
   display: flex;
   align-items: center;
-  gap: 0.2rem;
-  padding: 0.35rem;
-  background: var(--octc-color-bg-alt);
+  gap: 1rem;
+  padding: 0 0.9rem;
+  background: transparent;
   border-bottom: 1px solid var(--octc-color-border);
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
@@ -44,32 +44,28 @@
   justify-content: center;
   flex: 0 0 auto;
   min-width: 0;
-  min-height: 2.1rem;
-  padding: 0.42rem 0.7rem;
+  min-height: 2.4rem;
+  padding: 0.55rem 0;
   cursor: pointer;
   font-size: 0.8125rem;
   font-weight: 600;
   color: var(--octc-color-text-muted);
-  border: 1px solid transparent;
+  border: 0;
   border-bottom: 2px solid transparent;
-  border-radius: 5px;
+  border-radius: 0;
   white-space: nowrap;
   transition:
-    background-color 0.2s ease,
     color 0.2s ease,
     border-color 0.2s ease;
 }
 
 .ox-tabs label:hover {
   color: var(--octc-color-text);
-  background: color-mix(in srgb, var(--octc-color-bg) 72%, transparent);
 }
 
 /* Checked tab label */
 .ox-tabs input[type="radio"]:checked + label {
   color: var(--octc-color-primary);
-  background: var(--octc-color-bg);
-  border-color: var(--octc-color-border);
   border-bottom-color: var(--octc-color-primary);
 }
 
@@ -123,13 +119,17 @@
   }
 
   .ox-tab-panel:has(> pre:only-child),
-  .ox-tabs-fallback .ox-tabs-fallback-content:has(> pre:only-child) {
+  .ox-tab-panel:has(> .ox-code:only-child),
+  .ox-tabs-fallback .ox-tabs-fallback-content:has(> pre:only-child),
+  .ox-tabs-fallback .ox-tabs-fallback-content:has(> .ox-code:only-child) {
     padding: 0;
     background: var(--octc-color-code-bg);
   }
 
   .ox-tab-panel:has(> pre:only-child) > pre,
-  .ox-tabs-fallback .ox-tabs-fallback-content:has(> pre:only-child) > pre {
+  .ox-tab-panel:has(> .ox-code:only-child) > .ox-code > pre,
+  .ox-tabs-fallback .ox-tabs-fallback-content:has(> pre:only-child) > pre,
+  .ox-tabs-fallback .ox-tabs-fallback-content:has(> .ox-code:only-child) > .ox-code > pre {
     margin: 0;
     border: 0;
     border-radius: 0;
