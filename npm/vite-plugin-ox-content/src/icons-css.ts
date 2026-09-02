@@ -107,8 +107,50 @@ export function lookupIcon(
   };
 }
 
+const SVG_TAG = /<\s*(\/)?\s*([A-Za-z][\w:.-]*)([^<>]*?)(\/?)\s*>/g;
+const SVG_ATTRIBUTE = /([A-Za-z_:][\w:.-]*)\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s"'=<>`]+))/g;
+const PAINT_ATTRIBUTES = new Set(["fill", "stroke"]);
+const ANIMATION_ELEMENTS = new Set([
+  "animate",
+  "animatecolor",
+  "animatemotion",
+  "animatetransform",
+  "set",
+]);
+const SMIL_FILL_VALUES = new Set(["freeze", "remove"]);
+
+interface SvgTag {
+  name: string;
+  attrs: string;
+  closing: boolean;
+  selfClosing: boolean;
+}
+
+interface SvgAttribute {
+  name: string;
+  value: string;
+}
+
 export function isMulticolorIcon(body: string): boolean {
-  return /(?:fill|stroke)=["'](?!currentColor|none)[^"']+["']/i.test(body);
+  let maskDepth = 0;
+  for (const tag of svgTags(body)) {
+    if (tag.closing) {
+      if (tag.name === "mask" && maskDepth > 0) {
+        maskDepth -= 1;
+      }
+      continue;
+    }
+
+    const inMask = maskDepth > 0 || tag.name === "mask";
+    if (!inMask && tagHasFixedVisiblePaint(tag.name, tag.attrs)) {
+      return true;
+    }
+
+    if (tag.name === "mask" && !tag.selfClosing) {
+      maskDepth += 1;
+    }
+  }
+  return false;
 }
 
 export function renderIconsCss(icons: ResolvedIcon[]): string {
@@ -139,4 +181,103 @@ function svgToDataUrl(svg: string): string {
     .replace(/>/g, "%3E")
     .replace(/\s+/g, " ");
   return `url("data:image/svg+xml,${encoded}")`;
+}
+
+function* svgTags(body: string): Iterable<SvgTag> {
+  SVG_TAG.lastIndex = 0;
+  for (const match of body.matchAll(SVG_TAG)) {
+    const source = match[0]!;
+    if (/^<\s*[!?]/.test(source)) {
+      continue;
+    }
+    yield {
+      name: localName(match[2]!),
+      attrs: match[3] ?? "",
+      closing: Boolean(match[1]),
+      selfClosing: Boolean(match[4]) || /\/\s*>$/.test(source),
+    };
+  }
+}
+
+function tagHasFixedVisiblePaint(name: string, attrsSource: string): boolean {
+  const attrs = svgAttributes(attrsSource);
+  const isAnimation = ANIMATION_ELEMENTS.has(name);
+  for (const attr of attrs) {
+    if (attr.name === "style" && !isAnimation && styleHasFixedPaint(attr.value)) {
+      return true;
+    }
+    if (!PAINT_ATTRIBUTES.has(attr.name)) {
+      continue;
+    }
+    if (isAnimation && attr.name === "fill" && isSmilTimingFill(attr.value)) {
+      continue;
+    }
+    if (isFixedPaintValue(attr.value)) {
+      return true;
+    }
+  }
+  return isAnimation && animationTargetsFixedPaint(attrs);
+}
+
+function svgAttributes(source: string): SvgAttribute[] {
+  const attrs: SvgAttribute[] = [];
+  SVG_ATTRIBUTE.lastIndex = 0;
+  for (const match of source.matchAll(SVG_ATTRIBUTE)) {
+    attrs.push({
+      name: localName(match[1]!),
+      value: match[2] ?? match[3] ?? match[4] ?? "",
+    });
+  }
+  return attrs;
+}
+
+function styleHasFixedPaint(style: string): boolean {
+  for (const declaration of style.split(";")) {
+    const separator = declaration.indexOf(":");
+    if (separator <= 0) {
+      continue;
+    }
+    const property = localName(declaration.slice(0, separator).trim());
+    if (PAINT_ATTRIBUTES.has(property) && isFixedPaintValue(declaration.slice(separator + 1))) {
+      return true;
+    }
+  }
+  return false;
+}
+
+function animationTargetsFixedPaint(attrs: SvgAttribute[]): boolean {
+  const attributeName = attrs.find((attr) => attr.name === "attributename")?.value.trim();
+  if (!attributeName || !PAINT_ATTRIBUTES.has(localName(attributeName))) {
+    return false;
+  }
+  return attrs.some(
+    (attr) =>
+      (attr.name === "from" ||
+        attr.name === "to" ||
+        attr.name === "by" ||
+        attr.name === "values") &&
+      attr.value.split(";").some(isFixedPaintValue),
+  );
+}
+
+function isSmilTimingFill(value: string): boolean {
+  return SMIL_FILL_VALUES.has(cleanPaintValue(value));
+}
+
+function isFixedPaintValue(value: string): boolean {
+  const normalized = cleanPaintValue(value);
+  return normalized !== "" && normalized !== "currentcolor" && normalized !== "none";
+}
+
+function cleanPaintValue(value: string): string {
+  return value
+    .trim()
+    .replace(/\s*!important\s*$/i, "")
+    .toLowerCase();
+}
+
+function localName(name: string): string {
+  const normalized = name.toLowerCase();
+  const separator = normalized.lastIndexOf(":");
+  return separator === -1 ? normalized : normalized.slice(separator + 1);
 }
