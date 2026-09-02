@@ -816,7 +816,6 @@ a:hover {
   margin: 0 auto;
   overflow-wrap: break-word;
   word-wrap: break-word;
-  word-break: break-word;
 }
 .last-updated {
   max-width: var(--octc-max-content-width);
@@ -1025,7 +1024,7 @@ a:hover {
   display: block;
   padding: 1rem 1.15rem;
   border: 1px solid var(--octc-color-border);
-  border-radius: 8px;
+  border-radius: 4px;
   background: var(--octc-color-bg-alt);
   text-decoration: none;
   color: inherit;
@@ -1049,12 +1048,12 @@ a:hover {
 .content .ox-link-card > :last-child {
   margin-bottom: 0;
 }
+/* No panel around the list: a step sequence is body copy with numbers, and a
+   framed box around it stacks a second border around every code block or
+   callout an author nests inside a step. The rail below carries the grouping
+   the box used to. */
 .content .ox-steps {
-  margin: 1.25rem 0 1.5rem;
-  padding: 0.85rem 0.9rem;
-  border: 1px solid var(--octc-color-border);
-  border-radius: 6px;
-  background: color-mix(in srgb, var(--octc-color-bg-alt) 34%, transparent);
+  margin: 1.5rem 0;
 }
 .content .ox-steps__list {
   list-style: none;
@@ -1064,25 +1063,42 @@ a:hover {
 }
 .content .ox-steps__item {
   position: relative;
-  margin: 0 0 0.85rem;
-  padding-left: 2.2rem;
+  margin: 0;
+  padding: 0 0 1.15rem 2.15rem;
   counter-increment: ox-steps;
+}
+.content .ox-steps__item:last-child {
+  padding-bottom: 0;
 }
 .content .ox-steps__item::before {
   content: counter(ox-steps);
   position: absolute;
   left: 0;
-  top: 0.12rem;
+  top: 0.08rem;
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 1.45rem;
-  height: 1.45rem;
+  width: 1.4rem;
+  height: 1.4rem;
   border-radius: 999px;
   background: var(--octc-color-primary);
-  color: var(--octc-color-bg);
+  color: var(--octc-color-on-primary);
   font-size: 0.75rem;
   font-weight: 700;
+}
+/* The rail is per item, not on the list, so it stops at the last number
+   instead of trailing past the final line of text. */
+.content .ox-steps__item::after {
+  content: "";
+  position: absolute;
+  left: calc(0.7rem - 0.5px);
+  top: 1.68rem;
+  bottom: 0.3rem;
+  width: 1px;
+  background: var(--octc-color-border);
+}
+.content .ox-steps__item:last-child::after {
+  content: none;
 }
 .content .ox-steps__item > :first-child {
   margin-top: 0;
@@ -1190,10 +1206,10 @@ a:hover {
   font-size: 0.875em;
   background: color-mix(in srgb, var(--octc-color-bg-alt) 90%, var(--octc-color-bg));
   border: 1px solid color-mix(in srgb, var(--octc-color-border) 72%, transparent);
-  padding: 0.2em 0.4em;
+  padding: 0.3em 0.5em;
   border-radius: 4px;
   word-break: normal;
-  overflow-wrap: anywhere;
+  overflow-wrap: break-word;
 }
 .content pre {
   background: var(--octc-color-code-bg) !important;
@@ -1336,6 +1352,15 @@ a:hover {
 .content table[data-ox-table-scrollable]:focus-visible {
   outline: var(--octc-focus-ring);
   outline-offset: var(--octc-focus-offset);
+}
+.content table > caption {
+  padding: var(--octc-table-cell-pad-block) var(--octc-table-cell-pad-inline);
+  border-bottom: 1px solid var(--octc-color-border);
+  background: var(--octc-color-bg-alt);
+  color: var(--octc-color-text-muted);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  text-align: start;
 }
 .content th,
 .content td {
