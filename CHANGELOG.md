@@ -1,5 +1,12 @@
 # Changelog
 
+## [3.0.0-beta.6] - 2026-09-02
+
+### Bug Fixes
+
+- quiet the component chrome (#1265)
+- preserve entity ranges after decoding HTML entities (#1266)
+
 ## [3.0.0-beta.5] - 2026-09-01
 
 ### Bug Fixes

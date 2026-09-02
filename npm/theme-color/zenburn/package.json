@@ -1,6 +1,6 @@
 {
   "name": "@ox-content/theme-color-zenburn",
-  "version": "3.0.0-beta.5",
+  "version": "3.0.0-beta.6",
   "description": "The classic low-contrast scheme for long sessions — an Ox Content color scheme that composes with any @ox-content/theme-* skin",
   "keywords": [
     "color-scheme",

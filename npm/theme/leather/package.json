@@ -1,6 +1,6 @@
 {
   "name": "@ox-content/theme-leather",
-  "version": "3.0.0-beta.5",
+  "version": "3.0.0-beta.6",
   "description": "Embossed grain and saddle stitching that presses in when touched — an Ox Content skin that composes with any @ox-content/theme-color-* scheme",
   "keywords": [
     "craft",

@@ -1,6 +1,6 @@
 {
   "name": "@ox-content/theme-color-voltage",
-  "version": "3.0.0-beta.5",
+  "version": "3.0.0-beta.6",
   "description": "High-voltage accents over a near-black canvas — an Ox Content color scheme that composes with any @ox-content/theme-* skin",
   "keywords": [
     "color-scheme",
