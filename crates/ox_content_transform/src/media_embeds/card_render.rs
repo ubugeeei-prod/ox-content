@@ -93,7 +93,13 @@ pub(super) fn render_card(card: Card<'_>) -> String {
         escape_text(label, &mut html);
         html.push_str("</time>");
     }
-    html.push_str("</header><div class=\"ox-provider-card__body-wrap\">");
+    // The source sits at the far end of the network line rather than on a
+    // footer row of its own. A card whose provider reports no counts -- a map,
+    // a Figma file -- spent a whole row on two words with the rest of the line
+    // empty, and the chrome ran taller than the place it introduced.
+    html.push_str("<span class=\"ox-provider-card__source\">");
+    escape_text(card.source_label, &mut html);
+    html.push_str("</span></header><div class=\"ox-provider-card__body-wrap\">");
     if let Some(avatar) = card.avatar {
         html.push_str("<img class=\"ox-provider-card__avatar\" src=\"");
         escape_attr(avatar, &mut html);
@@ -198,8 +204,12 @@ pub(super) fn render_link_preview_card(card: Card<'_>) -> String {
     html
 }
 
+/// The metrics row, or nothing when the provider reported none.
+///
+/// The source label moved up to the header, so a card with no counts has an
+/// empty footer to render -- and an empty footer is still a row of padding.
 fn render_meta(html: &mut String, card: &Card<'_>) {
-    html.push_str("<footer class=\"ox-provider-card__meta\">");
+    let mut metrics = String::new();
     for (label, value) in &card.meta {
         let Some(value) = value.filter(|value| !value.trim().is_empty()) else {
             continue;
@@ -207,21 +217,25 @@ fn render_meta(html: &mut String, card: &Card<'_>) {
         // Both shapes carry the label; the mark decides whether it is read or
         // only heard.
         if let Some(icon) = metric_icon(label) {
-            html.push_str(
+            metrics.push_str(
                 "<span class=\"ox-provider-card__metric ox-provider-card__metric--icon\">",
             );
-            html.push_str(icon);
-            html.push_str("<span class=\"ox-provider-card__sr\">");
+            metrics.push_str(icon);
+            metrics.push_str("<span class=\"ox-provider-card__sr\">");
         } else {
-            html.push_str("<span class=\"ox-provider-card__metric\"><span>");
+            metrics.push_str("<span class=\"ox-provider-card__metric\"><span>");
         }
-        escape_text(label, html);
-        html.push_str("</span>");
-        html.push(' ');
-        escape_text(value, html);
-        html.push_str("</span>");
+        escape_text(label, &mut metrics);
+        metrics.push_str("</span>");
+        metrics.push(' ');
+        escape_text(value, &mut metrics);
+        metrics.push_str("</span>");
     }
-    html.push_str("<span class=\"ox-provider-card__source\">");
-    escape_text(card.source_label, html);
-    html.push_str("</span></footer>");
+
+    if metrics.is_empty() {
+        return;
+    }
+    html.push_str("<footer class=\"ox-provider-card__meta\">");
+    html.push_str(&metrics);
+    html.push_str("</footer>");
 }
