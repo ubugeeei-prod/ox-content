@@ -1,10 +1,10 @@
 //! Providers whose subject is a document rather than a post or a video:
 //! note.com articles, Figma files, and Google Slides decks.
 
+use super::card_render::{Card, article_card, render_card, render_link_preview_card};
 use super::html::{ComponentElement, attr};
 use super::provider_cards::{
-    Card, article_card, body_text, first_attr, host_in, is_safe_https_url, parse_https_url,
-    path_segments, provider_url, render_card, render_link_preview_card,
+    body_text, first_attr, host_in, is_safe_https_url, parse_https_url, path_segments, provider_url,
 };
 
 /// note.com long-form posts: `/{user}/n/{id}`, and the magazine form

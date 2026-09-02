@@ -15,11 +15,13 @@ describe("the media marker pre-scan", () => {
   });
 
   it("recognises each provider added to the catalog", async () => {
-    const cases: [string, string, MediaEmbedOptions][] = [
+    // The fourth field is the class that proves the tag rendered. It defaults
+    // to the provider frame; the article platforms render as link previews.
+    const cases: [string, string, MediaEmbedOptions, string?][] = [
       ["loom", "https://www.loom.com/share/abcdef1234567890", { loom: true }],
       ["asciinema", "https://asciinema.org/a/569727", { asciinema: true }],
       ["figma", "https://www.figma.com/design/AbC123xyz/Design", { figma: true }],
-      ["note", "https://note.com/someone/n/nabcdef123456", { note: true }],
+      ["note", "https://note.com/someone/n/nabcdef123456", { note: true }, "ox-ogp-card--note"],
       [
         "googleslides",
         "https://docs.google.com/presentation/d/1AbC_defGHI/edit",
@@ -27,9 +29,9 @@ describe("the media marker pre-scan", () => {
       ],
       ["replit", "https://replit.com/@someone/my-repl", { playgrounds: true }],
     ];
-    for (const [tag, url, options] of cases) {
+    for (const [tag, url, options, marker = `ox-provider-card--${tag}`] of cases) {
       const out = await transformMediaEmbeds(`<${tag} url="${url}"></${tag}>`, options);
-      expect(out, `${tag} did not render`).toContain(`ox-provider-card--${tag}`);
+      expect(out, `${tag} did not render`).toContain(marker);
     }
   });
 

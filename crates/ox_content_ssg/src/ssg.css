@@ -1014,12 +1014,19 @@ a:hover {
 .content .ox-link-card > :last-child {
   margin-bottom: 0;
 }
-/* No panel around the list: a step sequence is body copy with numbers, and a
-   framed box around it stacks a second border around every code block or
-   callout an author nests inside a step. The rail below carries the grouping
-   the box used to. */
+/* A band, not a panel. The rounded filled box this replaces stacked a second
+   border around every code block or callout nested in a step, but it was not
+   decoration: a steps preview is often followed by the fence showing its own
+   source, and without a boundary the two ran together (#939). Rules above and
+   below with a whisper of fill keep that boundary while the list itself reads
+   as body copy. */
 .content .ox-steps {
-  margin: 1.5rem 0;
+  margin: 1.75rem 0 2rem;
+  padding: 1.15rem 0;
+  border: 0;
+  border-block: 1px solid color-mix(in srgb, var(--octc-color-border) 68%, transparent);
+  border-radius: 0;
+  background: color-mix(in srgb, var(--octc-color-bg-alt) 22%, transparent);
 }
 .content .ox-steps__list {
   list-style: none;
