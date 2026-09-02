@@ -11,7 +11,7 @@ Before you begin, ensure you have the following installed:
 | Requirement   | Version | Installation                                                                                   |
 | ------------- | ------- | ---------------------------------------------------------------------------------------------- |
 | **Rust**      | 1.95+   | Provided by `nix develop` (pinned in `rust-toolchain.toml`) or [rustup.rs](https://rustup.rs/) |
-| **Node.js**   | 26+     | Provided by `nix develop` or managed via `.node-version`                                       |
+| **Node.js**   | 26+     | Provided by `nix develop` or managed via `devEngines.runtime` in `package.json`                |
 | **Vite+**     | Latest  | Available as `vp` inside the dev shell                                                         |
 | **wasm-pack** | Latest  | Provided by `nix develop`; needed when you run `vp run build:wasm`                             |
 
@@ -98,7 +98,7 @@ ox-content/
 ├── tools/nix/              # Nix modules: dev shell, packages, vp wrapper, Blacksmith CLI
 ├── package.nix             # Nix build of the workspace binaries, via crane
 ├── rust-toolchain.toml     # Rust channel, components, and targets for Nix and rustup alike
-├── .node-version           # Node.js version for CI / setup-node compatibility
+├── package.json            # npm workspace metadata and devEngines runtime
 ├── vite.config.ts          # Vite+ workspace task graph
 ├── crates/                 # Rust crates
 │   ├── ox_content_allocator/   # Arena allocator
@@ -274,7 +274,7 @@ node -v
 vp run build:napi
 ```
 
-If you manage Node.js outside Nix, match the version in `.node-version`.
+If you manage Node.js outside Nix, match the `devEngines.runtime` version in `package.json`.
 
 ### `wasm-pack: command not found`
 

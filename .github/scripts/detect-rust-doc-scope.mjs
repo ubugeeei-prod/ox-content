@@ -30,7 +30,6 @@ const RUST_DOC_NEUTRAL_PATTERNS = [
   /^CHENGELOG\.md$/,
   /^LICENSE$/,
   /^AGENTS\.md$/,
-  /^\.node-version$/,
   /\.(?:md|mdx|png|jpe?g|gif|webp|svg|avif)$/i,
 ];
 

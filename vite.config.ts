@@ -171,7 +171,9 @@ export default defineConfig({
         dependsOn: ["build:vite-plugin"],
       }),
       "test:code-play": task("vp exec --filter @ox-content/code-play -- vp test src"),
-      "test:publish-targets": task(`vp test ${scriptPath("verify-publish-targets.test.ts")}`),
+      "test:publish-targets": task(
+        `vp test ${scriptPath("verify-publish-targets.test.ts")} ${scriptPath("check-npm-licenses.test.mjs")} --exclude '.claude/**'`,
+      ),
       "test:benchmark-scripts": task(
         `vp test ${benchmarkPath("bundle-size/compare-pr-benchmark.test.ts")} ${benchmarkPath(
           "bundle-size/pr-benchmark-scope.test.ts",

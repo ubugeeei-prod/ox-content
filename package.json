@@ -22,6 +22,13 @@
     "typescript": "catalog:",
     "vite-plus": "catalog:"
   },
+  "devEngines": {
+    "runtime": {
+      "name": "node",
+      "version": "26",
+      "onFail": "download"
+    }
+  },
   "engines": {
     "node": ">=26",
     "pnpm": ">=12"

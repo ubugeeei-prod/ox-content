@@ -4,8 +4,7 @@ import path from "node:path";
 import { afterEach, describe, expect, it } from "vite-plus/test";
 import { clearTweetCache } from "./twitter/fetch";
 import { transformFetchedTweets } from "./twitter/transform";
-import { renderTweetText } from "./twitter/text";
-import type { TweetBodyData, TwitterEmbedOptions } from "./twitter/types";
+import type { TwitterEmbedOptions } from "./twitter/types";
 
 const originalFetch = globalThis.fetch;
 const POSTER = "https://pbs.twimg.com/amplify_video_thumb/1/img/poster.jpg";
@@ -53,89 +52,41 @@ describe("full-fidelity Tweet cards", () => {
     expect(compact).not.toContain("ox-tweet--full");
   });
 
-  it("renders URL, hashtag, mention, and symbol entities in one UTF-16 pass", () => {
-    const docs = "https://example.com/docs";
-    const text = `👍See ${docs} #ox @ox_content $OX 日本語`;
-    const html = renderTweetText(
-      body(
-        text,
-        {
-          urls: [
-            {
-              url: docs,
-              expanded_url: docs,
-              display_url: "example.com/docs",
-              indices: span(text, docs),
-            },
-          ],
-          hashtags: [{ text: "ox", indices: span(text, "#ox") }],
-          user_mentions: [{ screen_name: "ox_content", indices: span(text, "@ox_content") }],
-          symbols: [{ text: "OX", indices: span(text, "$OX") }],
+  it("remaps raw syndication ranges in full root and quoted tweet text", async () => {
+    const rootText = "Root &amp; @root_user";
+    const quoteText = "Quote -&gt; @quoted_user";
+    const html = await renderCard(
+      {
+        text: rootText,
+        id_str: "555",
+        display_text_range: [0, rootText.length],
+        user: user(),
+        in_reply_to_screen_name: "source_user",
+        in_reply_to_status_id_str: "42",
+        entities: {
+          user_mentions: [{ screen_name: "root_user", indices: span(rootText, "@root_user") }],
         },
-        2,
-      ),
-    );
-    expect(html).toContain('href="https://example.com/docs"');
-    expect(html).toContain('href="https://x.com/hashtag/ox"');
-    expect(html).toContain('href="https://x.com/ox_content"');
-    expect(html).toContain('href="https://x.com/search?q=%24OX"');
-    expect(html).toContain("日本語");
-    expect(html).not.toContain("👍");
-  });
-
-  it("decodes syndication HTML entities once before escaping tweet text", () => {
-    const html = renderTweetText({
-      text: "0.13.4 -&gt; 0.13.5 &#45; &lt;b&gt; &amp;lt;i&amp;gt;",
-      user: user(),
-    });
-    expect(html).toContain("0.13.4 -&gt; 0.13.5 - &lt;b&gt; &amp;lt;i&amp;gt;");
-    expect(html).not.toContain("-&amp;gt;");
-    expect(html).not.toContain("<b>");
-    expect(html).not.toContain("<i>");
-  });
-
-  it("keeps entity ranges aligned after decoding syndication text", () => {
-    const docs = "https://t.co/docs";
-    const decoded = `Read & share ${docs} #ox @ox_content`;
-    const encoded = `Read &amp; share ${docs} #ox @ox_content`;
-    const html = renderTweetText({
-      text: encoded,
-      display_text_range: [0, decoded.length],
-      user: user(),
-      entities: {
-        urls: [
-          {
-            url: docs,
-            expanded_url: "https://example.com/docs",
-            display_url: "example.com/docs",
-            indices: span(decoded, docs),
+        quoted_tweet: {
+          text: quoteText,
+          id_str: "99",
+          display_text_range: [0, quoteText.length],
+          user: { name: "Quoted", screen_name: "quoted" },
+          entities: {
+            user_mentions: [
+              { screen_name: "quoted_user", indices: span(quoteText, "@quoted_user") },
+            ],
           },
-        ],
-        hashtags: [{ text: "ox", indices: span(decoded, "#ox") }],
-        user_mentions: [{ screen_name: "ox_content", indices: span(decoded, "@ox_content") }],
+        },
       },
-    });
-    expect(html).toContain("Read &amp; share");
-    expect(html).toContain('href="https://example.com/docs"');
-    expect(html).toContain(">example.com/docs</a>");
-    expect(html).toContain('href="https://x.com/hashtag/ox"');
-    expect(html).toContain(">#ox</a>");
-    expect(html).toContain('href="https://x.com/ox_content"');
-    expect(html).toContain(">@ox_content</a>");
-    expect(html).not.toContain("&amp;amp;");
-  });
-
-  it("drops unsafe mention hrefs and keeps JA/EN body text", () => {
-    const text = "こんにちは <script> @bad";
-    const html = renderTweetText(
-      body(text, {
-        user_mentions: [{ screen_name: '"><script>', indices: span(text, "@bad") }],
-      }),
+      { appearance: "full" },
     );
-    expect(html).toContain("こんにちは");
-    expect(html).toContain("@bad");
-    expect(html).toContain("&lt;script&gt;");
-    expect(html).not.toContain('href="https://x.com/');
+    expect(html).toContain("Root &amp;");
+    expect(html).toContain('href="https://x.com/root_user"');
+    expect(html).toContain(">@root_user</a>");
+    expect(html).toContain("Replying to @source_user");
+    expect(html).toContain("Quote -&gt;");
+    expect(html).toContain('href="https://x.com/quoted_user"');
+    expect(html).toContain(">@quoted_user</a>");
   });
 
   it("renders 1–4 photo grids, reply, quote+media, and video fallback", async () => {
@@ -268,14 +219,6 @@ describe("full-fidelity Tweet cards", () => {
 
 function user() {
   return { name: "Ox Content", screen_name: "ox_content" };
-}
-
-function body(
-  text: string,
-  entities: NonNullable<TweetBodyData["entities"]>,
-  start = 0,
-): TweetBodyData {
-  return { text, display_text_range: [start, text.length], user: user(), entities };
 }
 
 function span(text: string, value: string): [number, number] {

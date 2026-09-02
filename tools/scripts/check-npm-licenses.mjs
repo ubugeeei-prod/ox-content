@@ -2,50 +2,78 @@
 
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
+import { fileURLToPath } from "node:url";
 import { runPnpm } from "./pnpm-command.mjs";
 
-const policy = JSON.parse(readFileSync(resolve("tools/config/dependency-policy.json"), "utf8"));
-const allowedLicenses = new Set(policy.licenses?.allowed ?? []);
-const exceptions = new Set(
-  (policy.licenses?.exceptions ?? []).map((item) => `${item.name}\0${item.license}`),
-);
-const report = runLicenseList();
-const violations = [];
-const licenseGroups = collectLicenseGroups(report);
+const runtimePackageNames = new Set(["node", "deno", "bun"]);
 
-for (const { license, packages } of licenseGroups) {
-  for (const pkg of packages) {
-    const key = `${pkg.name}\0${license}`;
-    if (allowedLicenses.has(license) || exceptions.has(key)) {
-      continue;
-    }
-
-    violations.push(`${pkg.name}@${(pkg.versions ?? []).join(",")} uses ${license}`);
-  }
+if (process.argv[1] && fileURLToPath(import.meta.url) === resolve(process.argv[1])) {
+  main();
 }
 
-if (licenseGroups.length === 0) {
-  if (report.error) {
-    throw new Error(`pnpm licenses failed: ${JSON.stringify(report.error)}`);
+function main() {
+  const policy = JSON.parse(readFileSync(resolve("tools/config/dependency-policy.json"), "utf8"));
+  const report = runLicenseList();
+  const { licenseGroups, violations } = checkLicensePolicy(report, policy);
+
+  if (licenseGroups.length === 0) {
+    if (report.error) {
+      throw new Error(`pnpm licenses failed: ${JSON.stringify(report.error)}`);
+    }
+    throw new Error(
+      `pnpm licenses output did not contain any license package groups. Top-level keys: ${Object.keys(
+        report,
+      )
+        .slice(0, 10)
+        .join(", ")}`,
+    );
   }
-  throw new Error(
-    `pnpm licenses output did not contain any license package groups. Top-level keys: ${Object.keys(
-      report,
-    )
-      .slice(0, 10)
-      .join(", ")}`,
+
+  if (violations.length > 0) {
+    console.error("Blocked npm packages with unapproved licenses:");
+    for (const violation of violations.sort()) {
+      console.error(`  - ${violation}`);
+    }
+    process.exit(1);
+  }
+
+  console.log("All npm dependency licenses match tools/config/dependency-policy.json.");
+}
+
+export function checkLicensePolicy(report, policy) {
+  const allowedLicenses = new Set(policy.licenses?.allowed ?? []);
+  const exceptions = new Set(
+    (policy.licenses?.exceptions ?? []).map((item) => `${item.name}\0${item.license}`),
+  );
+  const violations = [];
+  const licenseGroups = collectLicenseGroups(report);
+
+  for (const { license, packages } of licenseGroups) {
+    for (const pkg of packages) {
+      const key = `${pkg.name}\0${license}`;
+      if (isPnpmRuntimePackage(pkg) || allowedLicenses.has(license) || exceptions.has(key)) {
+        continue;
+      }
+
+      violations.push(`${pkg.name}@${(pkg.versions ?? []).join(",")} uses ${license}`);
+    }
+  }
+
+  return { licenseGroups, violations };
+}
+
+export function isPnpmRuntimePackage(pkg) {
+  const name = typeof pkg?.name === "string" ? pkg.name : "";
+  if (!runtimePackageNames.has(name) || !Array.isArray(pkg.paths)) {
+    return false;
+  }
+
+  return pkg.paths.some(
+    (pkgPath) =>
+      typeof pkgPath === "string" &&
+      pkgPath.replaceAll("\\", "/").includes(`node_modules/.pnpm/${name}@runtime+`),
   );
 }
-
-if (violations.length > 0) {
-  console.error("Blocked npm packages with unapproved licenses:");
-  for (const violation of violations.sort()) {
-    console.error(`  - ${violation}`);
-  }
-  process.exit(1);
-}
-
-console.log("All npm dependency licenses match tools/config/dependency-policy.json.");
 
 function runLicenseList() {
   const report = readLicenseReport();
