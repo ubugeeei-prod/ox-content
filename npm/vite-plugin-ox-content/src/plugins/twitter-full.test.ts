@@ -94,6 +94,92 @@ describe("full-fidelity Tweet cards", () => {
     expect(html).not.toContain("<i>");
   });
 
+  it("remaps raw syndication entity ranges after decoding tweet text", () => {
+    const url = "https://t.co/docs";
+    const raw =
+      "0.13.4 -&gt; 0.13.5 @sanxiaozhizi @boshen_c @TheAlexLichter " +
+      `${url} #ox $OX 😀 &amp; @after_emoji`;
+    const html = renderTweetText({
+      text: raw,
+      display_text_range: [0, raw.length],
+      user: user(),
+      entities: {
+        urls: [
+          {
+            url,
+            expanded_url: "https://example.com/docs",
+            display_url: "example.com/docs",
+            indices: span(raw, url),
+          },
+        ],
+        hashtags: [{ text: "ox", indices: span(raw, "#ox") }],
+        user_mentions: [
+          { screen_name: "sanxiaozhizi", indices: span(raw, "@sanxiaozhizi") },
+          { screen_name: "boshen_c", indices: span(raw, "@boshen_c") },
+          { screen_name: "TheAlexLichter", indices: span(raw, "@TheAlexLichter") },
+          { screen_name: "after_emoji", indices: span(raw, "@after_emoji") },
+        ],
+        symbols: [{ text: "OX", indices: span(raw, "$OX") }],
+      },
+    });
+
+    expect(html).toContain("0.13.4 -&gt; 0.13.5");
+    expect(html).not.toContain("-&amp;gt;");
+    expect(html).toContain('href="https://example.com/docs"');
+    expect(html).toContain(">example.com/docs</a>");
+    expect(html).toContain('href="https://x.com/hashtag/ox"');
+    expect(html).toContain(">#ox</a>");
+    expect(html).toContain('href="https://x.com/search?q=%24OX"');
+    expect(html).toContain(">$OX</a>");
+    expect(html).toContain('href="https://x.com/sanxiaozhizi"');
+    expect(html).toContain(">@sanxiaozhizi</a>");
+    expect(html).toContain('href="https://x.com/boshen_c"');
+    expect(html).toContain(">@boshen_c</a>");
+    expect(html).toContain('href="https://x.com/TheAlexLichter"');
+    expect(html).toContain(">@TheAlexLichter</a>");
+    expect(html).toContain('href="https://x.com/after_emoji"');
+    expect(html).toContain(">@after_emoji</a>");
+    expect(html).not.toContain("nxiaozhizi @b");
+    expect(html).not.toContain("shen_c @T");
+  });
+
+  it("remaps raw syndication ranges in full root and quoted tweet text", async () => {
+    const rootText = "Root &amp; @root_user";
+    const quoteText = "Quote -&gt; @quoted_user";
+    const html = await renderCard(
+      {
+        text: rootText,
+        id_str: "555",
+        display_text_range: [0, rootText.length],
+        user: user(),
+        in_reply_to_screen_name: "source_user",
+        in_reply_to_status_id_str: "42",
+        entities: {
+          user_mentions: [{ screen_name: "root_user", indices: span(rootText, "@root_user") }],
+        },
+        quoted_tweet: {
+          text: quoteText,
+          id_str: "99",
+          display_text_range: [0, quoteText.length],
+          user: { name: "Quoted", screen_name: "quoted" },
+          entities: {
+            user_mentions: [
+              { screen_name: "quoted_user", indices: span(quoteText, "@quoted_user") },
+            ],
+          },
+        },
+      },
+      { appearance: "full" },
+    );
+    expect(html).toContain("Root &amp;");
+    expect(html).toContain('href="https://x.com/root_user"');
+    expect(html).toContain(">@root_user</a>");
+    expect(html).toContain("Replying to @source_user");
+    expect(html).toContain("Quote -&gt;");
+    expect(html).toContain('href="https://x.com/quoted_user"');
+    expect(html).toContain(">@quoted_user</a>");
+  });
+
   it("keeps entity ranges aligned after decoding syndication text", () => {
     const docs = "https://t.co/docs";
     const decoded = `Read & share ${docs} #ox @ox_content`;
