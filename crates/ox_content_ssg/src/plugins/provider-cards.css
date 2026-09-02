@@ -37,7 +37,7 @@
 }
 
 .ox-provider-card__header {
-  padding: 0.8rem 0.9rem 0;
+  padding: 0.7rem 0.9rem 0;
   font-size: 0.72rem;
 }
 
@@ -68,6 +68,12 @@
   border-radius: 50%;
   object-fit: cover;
   background: var(--octc-color-bg-alt);
+}
+
+/* No counts means no footer, so the copy closes the card and carries the
+   bottom padding the footer used to. */
+.ox-provider-card__body-wrap:last-child {
+  padding-bottom: 0.8rem;
 }
 
 .ox-provider-card__copy {
@@ -151,7 +157,12 @@
   border: 0;
 }
 
+/* The source ends the network line rather than owning a row of its own. The
+   header was a short phrase with the whole right of the line empty, and under
+   it sat a footer saying two more words; a card whose provider reports no
+   counts spent two rows of chrome on that. */
 .ox-provider-card__source {
+  margin-left: auto;
   color: var(--octc-color-text-muted);
 }
 

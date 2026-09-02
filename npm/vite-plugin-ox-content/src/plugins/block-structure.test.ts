@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vite-plus/test";
+import { importNapiModule } from "../napi";
 import { normalizeBlockEmbedParagraphs } from "./block-structure";
 
 describe("block embed paragraph normalization", () => {
@@ -41,5 +42,31 @@ describe("block embed paragraph normalization", () => {
     const html = `<p>before <a class="ox-ogp-simple" href="/">card</a> after</p>`;
     const once = await normalizeBlockEmbedParagraphs(html);
     expect(await normalizeBlockEmbedParagraphs(once)).toBe(once);
+  });
+
+  /**
+   * The tag list used to be kept here by hand and had drifted: `note` and the
+   * five providers shipped alongside it were missing, so a `<Note>` stayed
+   * inside its paragraph. That is fatal for a card whose outer element is an
+   * anchor around `<div>`s -- the parser ends the paragraph at the first
+   * `<div>` and reopens the anchor around each block it held, so the card came
+   * out as three underlined links with no card chrome.
+   */
+  it("lifts a note article out of its paragraph before the card is built", async () => {
+    const html = `<p><note url="https://note.com/someone/n/nabcdef123456">Lead</note></p>`;
+    const normalized = await normalizeBlockEmbedParagraphs(html);
+    expect(normalized).toBe(`<note url="https://note.com/someone/n/nabcdef123456">Lead</note>`);
+  });
+
+  it("lifts every tag the provider registry names", async () => {
+    const mod = (await importNapiModule()) as unknown as {
+      mediaEmbedTags(): { name: string }[];
+    };
+
+    for (const { name } of mod.mediaEmbedTags()) {
+      const tag = name.toLowerCase();
+      const normalized = await normalizeBlockEmbedParagraphs(`<p><${tag}>x</${tag}></p>`);
+      expect(normalized, `<${tag}> stayed inside its paragraph`).not.toContain("<p>");
+    }
   });
 });
