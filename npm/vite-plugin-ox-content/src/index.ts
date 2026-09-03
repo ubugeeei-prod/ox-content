@@ -933,6 +933,17 @@ export { resolveTaxonomiesOptions } from "./taxonomies";
 export { resolveVersionsOptions } from "./versions";
 export { resolveResourcesOptions, PageResourceError } from "./resources";
 export {
+  createCollectionAssetsMiddleware,
+  planCollectionAssets,
+  writeCollectionAssets,
+  type CollectionAssetInput,
+  type CollectionAssetManifest,
+  type CollectionAssetManifestEntry,
+  type PlanCollectionAssetsInput,
+  type WriteCollectionAssetsInput,
+  type WriteCollectionAssetsResult,
+} from "./collection-assets";
+export {
   resolveSelfHostedAssetManifest,
   writeSelfHostedAssets,
   type OxContentAssetManifest,

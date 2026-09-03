@@ -68,18 +68,54 @@ await writeSiteMapFiles(plan.siteMaps);
 `lastUpdated`, and `siteUrl`. Use `ssg: { enabled: false, ... }` when those
 fields should still resolve.
 
+## Collection assets with custom aliases
+
+`planCollectionAssets()` handles files that do not belong to a Markdown page's
+resource flow. Give it explicit collection source paths and the public aliases
+your host owns. It hashes and deduplicates the content target, URL-encodes
+aliases safely, and keeps the same manifest for production and development.
+
+```ts
+import {
+  createCollectionAssetsMiddleware,
+  planCollectionAssets,
+  writeCollectionAssets,
+} from "@ox-content/vite-plugin";
+
+const collectionAssets = await planCollectionAssets({
+  root,
+  assets: [
+    {
+      sourcePath: "src/content/showcase/project-cover.jpg",
+      publicPath: ["/works/showcase/assets/project-cover.jpg", "/works/showcase/cover.jpg"],
+    },
+  ],
+});
+
+await writeCollectionAssets({ manifest: collectionAssets, outDir });
+viteServer.middlewares.use(createCollectionAssetsMiddleware(collectionAssets));
+```
+
+`writeCollectionAssets()` writes each distinct content hash below `contentDir`
+(`"/assets/content"` by default) once, then hard-links aliases with a copy
+fallback. `sourcePath` must stay beneath `root`; malformed URL encoding, path
+traversal, and aliases outside the output directory are rejected.
+
 ## API
 
-| Function                  | Role                                                                                    |
-| ------------------------- | --------------------------------------------------------------------------------------- |
-| `planSsgOutputs`          | Build writer inputs from host pages and the same option objects `buildSsg()` reads.     |
-| `writeResourceFiles`      | Fingerprint page-bundle assets and rewrite host HTML URLs.                              |
-| `writeSelfHostedAssets`   | Write self-hosted `__ox_icons__` and `__ox_fonts__` files for a custom host.            |
-| `writeMarkdownCompanions` | Write original Markdown beside host-rendered pages. Reuses the copy-as-markdown writer. |
-| `renderFeedFiles`         | Render RSS / Atom / JSON feed files without filesystem writes.                          |
-| `writeFeedFiles`          | Write RSS / Atom / JSON feeds, including [named feeds](./feeds.md).                     |
-| `writeSiteMapFiles`       | Write `sitemap.xml`, `robots.txt`, and `llms.txt`.                                      |
-| `resolveGitLastmod`       | Return a file's latest git commit time in milliseconds, or `undefined`.                 |
+| Function                           | Role                                                                                    |
+| ---------------------------------- | --------------------------------------------------------------------------------------- |
+| `planSsgOutputs`                   | Build writer inputs from host pages and the same option objects `buildSsg()` reads.     |
+| `writeResourceFiles`               | Fingerprint page-bundle assets and rewrite host HTML URLs.                              |
+| `writeSelfHostedAssets`            | Write self-hosted `__ox_icons__` and `__ox_fonts__` files for a custom host.            |
+| `planCollectionAssets`             | Plan content-addressed targets from explicit collection source-to-public mappings.      |
+| `writeCollectionAssets`            | Write deduplicated collection targets and public hard-link/copy aliases.                |
+| `createCollectionAssetsMiddleware` | Serve the planned aliases and content targets in a development host.                    |
+| `writeMarkdownCompanions`          | Write original Markdown beside host-rendered pages. Reuses the copy-as-markdown writer. |
+| `renderFeedFiles`                  | Render RSS / Atom / JSON feed files without filesystem writes.                          |
+| `writeFeedFiles`                   | Write RSS / Atom / JSON feeds, including [named feeds](./feeds.md).                     |
+| `writeSiteMapFiles`                | Write `sitemap.xml`, `robots.txt`, and `llms.txt`.                                      |
+| `resolveGitLastmod`                | Return a file's latest git commit time in milliseconds, or `undefined`.                 |
 
 `lastUpdated` on a page is used as-is. When it is omitted and `ssg.lastUpdated`
 or `siteMaps` is on, the planner calls `resolveGitLastmod(inputPath, root)`.

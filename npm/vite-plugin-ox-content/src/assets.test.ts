@@ -8,6 +8,11 @@ import { afterEach, describe, expect, it } from "vite-plus/test";
 import { build as viteBuild, createServer, type InlineConfig, type ViteDevServer } from "vite";
 import { oxContent, type OxContentOptions } from ".";
 import { resolveSelfHostedAssetManifest, writeSelfHostedAssets } from "./assets";
+import {
+  createCollectionAssetsMiddleware,
+  planCollectionAssets,
+  writeCollectionAssets,
+} from "./collection-assets";
 import { resolveOptions } from "./resolve-options";
 
 const fixtureFont = path.join(
@@ -102,6 +107,85 @@ describe("self-hosted asset contract", () => {
     expect(distFont.length).toBeGreaterThan(0);
     expect(builtClient).toContain("__ox_icons__/icons.css");
     expect(builtClient).toContain("headTags");
+  });
+});
+
+describe("collection asset contract", () => {
+  it("plans, deduplicates, writes, and serves arbitrary collection aliases", async () => {
+    const root = await createProject("ox-collection-assets-");
+    const showcase = path.join(root, "src", "content", "showcase");
+    await fs.mkdir(showcase, { recursive: true });
+    await fs.writeFile(path.join(showcase, "project-cover.jpg"), "cover");
+    await fs.writeFile(path.join(showcase, "project-copy.jpg"), "cover");
+
+    const manifest = await planCollectionAssets({
+      root,
+      assets: [
+        {
+          sourcePath: "src/content/showcase/project-cover.jpg",
+          publicPath: ["/works/showcase/assets/project cover.jpg", "/works/showcase/cover.jpg"],
+        },
+        {
+          sourcePath: "src/content/showcase/project-copy.jpg",
+          publicPath: "/works/showcase/copy.jpg",
+        },
+      ],
+    });
+
+    expect(manifest.assets).toHaveLength(2);
+    expect(manifest.assets[0]).toMatchObject({
+      publicPaths: ["/works/showcase/assets/project%20cover.jpg", "/works/showcase/cover.jpg"],
+      contentPath: expect.stringMatching(/^\/assets\/content\/[a-f0-9]{64}\.jpg$/),
+    });
+    expect(manifest.assets[1]?.contentPath).toBe(manifest.assets[0]?.contentPath);
+
+    const outDir = path.join(root, "dist");
+    const result = await writeCollectionAssets({ manifest, outDir });
+    expect(result.files).toHaveLength(4);
+    await expect(
+      fs.readFile(path.join(outDir, "works", "showcase", "assets", "project cover.jpg"), "utf8"),
+    ).resolves.toBe("cover");
+    await expect(
+      fs.readFile(path.join(outDir, "works", "showcase", "copy.jpg"), "utf8"),
+    ).resolves.toBe("cover");
+
+    const middleware = createCollectionAssetsMiddleware(manifest);
+    const server = http.createServer((req, res) => middleware(req, res, () => res.end("missing")));
+    activeListeners.push(server);
+    await new Promise<void>((resolve) => server.listen(0, "127.0.0.1", resolve));
+    const address = server.address() as AddressInfo;
+    const response = await readDevAsset(address.port, "/works/showcase/assets/project%20cover.jpg");
+    expect(response.text).toBe("cover");
+    expect(response.bytes.length).toBe(5);
+  });
+
+  it("rejects unsafe aliases and source paths", async () => {
+    const root = await createProject("ox-collection-asset-safety-");
+    await fs.mkdir(path.join(root, "src", "content"), { recursive: true });
+    await fs.writeFile(path.join(root, "src", "content", "cover.jpg"), "cover");
+    await fs.writeFile(path.join(root, "src", "content", "other.jpg"), "other");
+
+    await expect(
+      planCollectionAssets({
+        root,
+        assets: [{ sourcePath: "src/content/cover.jpg", publicPath: "/works/%2e%2e/cover.jpg" }],
+      }),
+    ).rejects.toThrow("unsafe");
+    await expect(
+      planCollectionAssets({
+        root,
+        assets: [{ sourcePath: "../outside.jpg", publicPath: "/works/cover.jpg" }],
+      }),
+    ).rejects.toThrow("must stay within root");
+    await expect(
+      planCollectionAssets({
+        root,
+        assets: [
+          { sourcePath: "src/content/cover.jpg", publicPath: "/works/cover.jpg" },
+          { sourcePath: "src/content/other.jpg", publicPath: "/works/COVER.jpg" },
+        ],
+      }),
+    ).rejects.toThrow("case-insensitive filesystems");
   });
 });
 
