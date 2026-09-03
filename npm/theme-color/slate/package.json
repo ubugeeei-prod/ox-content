@@ -1,6 +1,6 @@
 {
   "name": "@ox-content/theme-color-slate",
-  "version": "3.0.0-beta.7",
+  "version": "3.0.0-beta.8",
   "description": "Cool grey with an electric lime edge — an Ox Content color scheme that composes with any @ox-content/theme-* skin",
   "keywords": [
     "color-scheme",

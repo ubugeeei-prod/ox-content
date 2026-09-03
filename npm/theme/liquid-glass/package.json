@@ -1,6 +1,6 @@
 {
   "name": "@ox-content/theme-liquid-glass",
-  "version": "3.0.0-beta.7",
+  "version": "3.0.0-beta.8",
   "description": "Refractive glass panels with specular edges and a light sweep on hover — an Ox Content skin that composes with any @ox-content/theme-color-* scheme",
   "keywords": [
     "documentation",

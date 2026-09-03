@@ -1,6 +1,6 @@
 {
   "name": "@ox-content/theme-color-arctic",
-  "version": "3.0.0-beta.7",
+  "version": "3.0.0-beta.8",
   "description": "Cold white with glacier cyan — an Ox Content color scheme that composes with any @ox-content/theme-* skin",
   "keywords": [
     "arctic",

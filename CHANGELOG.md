@@ -1,5 +1,15 @@
 # Changelog
 
+## [3.0.0-beta.8] - 2026-09-03
+
+### Features
+
+- support collection asset aliases
+
+### Bug Fixes
+
+- update fast-uri security override
+
 ## [3.0.0-beta.7] - 2026-09-02
 
 ### Bug Fixes
