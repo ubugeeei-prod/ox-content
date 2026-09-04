@@ -35,7 +35,9 @@ describe("jsx runtime packaging", () => {
     const name = subpath.slice(2);
 
     it(`declares ${subpath} in package exports`, () => {
-      const exported = (packageJson.exports as Record<string, Record<string, string>>)[subpath];
+      const exported = (packageJson.exports as unknown as Record<string, Record<string, string>>)[
+        subpath
+      ];
       expect(exported).toBeDefined();
       expect(exported.import).toBe(`./dist/${name}.mjs`);
       expect(exported.require).toBe(`./dist/${name}.cjs`);

@@ -173,6 +173,83 @@ import してください。crate の CSS をアプリにコピーしないで�
 sitemap、git lastmod を再利用できます。
 [SSG 出力プリミティブ](../built-in/ssg-output.md) を見てください。
 
+### Environment API の runtime 解決
+
+`oxContent()` は Vite の Environment API で Markdown environment を設定します。
+Vite が Deno または Bun 上で動いているときは、対応する `deno` / `bun`
+resolve condition を追加し、build target は runtime neutral にします。既存の
+environment condition は残すので、アプリ側の conditional exports と併用できます。
+
+```ts
+import { createMarkdownEnvironment } from "@ox-content/vite-plugin";
+
+export default defineConfig({
+  environments: {
+    markdown: createMarkdownEnvironment(resolvedOxContentOptions),
+  },
+});
+```
+
+### Fetch router と middleware
+
+Vite dev server なしで Markdown ページを描画したいホストでは、
+`@ox-content/vite-plugin/router` を使えます。router は標準 Fetch の
+`Request` / `Response` API ベースなので、同じ handler を Deno、Bun、
+Workers 風ホスト、Node adapter で使えます。
+
+```ts
+// deno.ts
+import { createOxContentFetchHandler } from "@ox-content/vite-plugin/router";
+
+Deno.serve(
+  createOxContentFetchHandler(
+    {
+      srcDir: "content",
+      ssg: { routePrefix: "blog" },
+    },
+    Deno.cwd(),
+  ),
+);
+```
+
+```ts
+// bun.ts
+import { createOxContentFetchHandler } from "@ox-content/vite-plugin/router";
+
+const fetch = createOxContentFetchHandler(
+  {
+    srcDir: "content",
+    base: "/docs/",
+    ssg: { routePrefix: "blog" },
+  },
+  import.meta.dir,
+);
+
+Bun.serve({ fetch });
+```
+
+framework adapter や独自 server では、組み込み renderer の前後に middleware
+を合成できます。
+
+```ts
+import { createOxContentMiddleware } from "@ox-content/vite-plugin/router";
+
+const oxContentPages = createOxContentMiddleware({ srcDir: "content" }, projectRoot, {
+  middleware: [
+    async (context, next) => {
+      if (context.match.routePathname.startsWith("/drafts/")) {
+        return new Response("Not Found", { status: 404 });
+      }
+      const response = await next();
+      if (!response) return undefined;
+      const headers = new Headers(response.headers);
+      headers.set("x-ox-route", context.match.routePathname);
+      return new Response(response.body, { headers, status: response.status });
+    },
+  ],
+});
+```
+
 ### gfm
 
 - 型: `boolean`

@@ -32,7 +32,10 @@ afterEach(() => {
 
 describe("reader chrome public API", () => {
   it("declares build-time, client, and stylesheet package subpaths", () => {
-    const exportsField = packageJson.exports as Record<string, PackageConditionalExport | string>;
+    const exportsField = packageJson.exports as unknown as Record<
+      string,
+      PackageConditionalExport | string
+    >;
     expect(exportsField["./styles/reader-chrome.css"]).toBe("./dist/styles/reader-chrome.css");
 
     const server = exportsField["./reader-chrome"] as PackageConditionalExport;

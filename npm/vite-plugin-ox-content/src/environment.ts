@@ -9,6 +9,40 @@ import type { EnvironmentOptions } from "vite";
 import type { ResolvedOptions } from "./types";
 import { isMarkdownFilePath } from "./markdown";
 
+export type OxContentJavaScriptRuntime = "node" | "deno" | "bun" | "unknown";
+
+/** Detects the runtime that is executing Vite. */
+export function detectJavaScriptRuntime(): OxContentJavaScriptRuntime {
+  const runtime = globalThis as {
+    Bun?: unknown;
+    Deno?: unknown;
+    process?: { versions?: { node?: string; bun?: string } };
+  };
+  if (runtime.Bun || runtime.process?.versions?.bun) {
+    return "bun";
+  }
+  if (runtime.Deno) {
+    return "deno";
+  }
+  if (runtime.process?.versions?.node) {
+    return "node";
+  }
+  return "unknown";
+}
+
+export function createRuntimeResolveConditions(
+  runtime: OxContentJavaScriptRuntime = detectJavaScriptRuntime(),
+): string[] {
+  return runtime === "unknown" || runtime === "node" ? [] : [runtime];
+}
+
+export function mergeResolveConditions(
+  first: readonly string[] = [],
+  second: readonly string[] = [],
+): string[] {
+  return [...new Set([...first, ...second])];
+}
+
 /**
  * Creates the Markdown processing environment configuration.
  *
@@ -30,7 +64,11 @@ import { isMarkdownFilePath } from "./markdown";
  * });
  * ```
  */
-export function createMarkdownEnvironment(options: ResolvedOptions): EnvironmentOptions {
+export function createMarkdownEnvironment(
+  options: ResolvedOptions,
+  runtime: OxContentJavaScriptRuntime = detectJavaScriptRuntime(),
+): EnvironmentOptions {
+  const runtimeConditions = createRuntimeResolveConditions(runtime);
   return {
     // Consumer type for this environment
     consumer: "server",
@@ -45,6 +83,8 @@ export function createMarkdownEnvironment(options: ResolvedOptions): Environment
 
       // Create manifest for asset tracking
       manifest: true,
+
+      target: runtime === "node" ? "node18" : "esnext",
 
       // SSR-like externalization
       rollupOptions: {
@@ -63,7 +103,7 @@ export function createMarkdownEnvironment(options: ResolvedOptions): Environment
       extensions: options.extensions,
 
       // Conditions for module resolution
-      conditions: ["markdown", "node", "import"],
+      conditions: ["markdown", ...runtimeConditions, "node", "import"],
 
       // Don't dedupe - each environment gets its own modules
       dedupe: [],

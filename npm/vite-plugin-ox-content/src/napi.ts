@@ -23,7 +23,18 @@ function normalizeNapiModule(mod: NapiModule): NapiModule {
 }
 
 export async function importNapiModule(): Promise<NapiModule> {
-  return normalizeNapiModule((await import("@ox-content/napi")) as NapiModule);
+  try {
+    return normalizeNapiModule((await import("@ox-content/napi")) as NapiModule);
+  } catch (importError) {
+    try {
+      return normalizeNapiModule(requireNapi("@ox-content/napi") as NapiModule);
+    } catch (requireError) {
+      throw new AggregateError(
+        [importError, requireError],
+        "[ox-content] Failed to load @ox-content/napi.",
+      );
+    }
+  }
 }
 
 let syncNapiModule: NapiModule | null | undefined;

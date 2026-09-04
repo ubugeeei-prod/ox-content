@@ -10,7 +10,10 @@ type PackageConditionalExport = {
 
 describe("theme transition public API", () => {
   it("declares the client and stylesheet subpaths", () => {
-    const exportsField = packageJson.exports as Record<string, PackageConditionalExport | string>;
+    const exportsField = packageJson.exports as unknown as Record<
+      string,
+      PackageConditionalExport | string
+    >;
 
     expect(exportsField["./styles/theme-transition.css"]).toBe(
       "./dist/styles/theme-transition.css",

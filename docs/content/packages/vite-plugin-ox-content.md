@@ -179,6 +179,84 @@ Custom hosts can also reuse resource fingerprinting, Markdown companions,
 feeds, sitemaps, and git lastmod without `buildSsg()`. See
 [SSG output primitives](../built-in/ssg-output.md).
 
+### Environment API runtime resolution
+
+`oxContent()` configures the Markdown environment through Vite's Environment API.
+When Vite is running on Deno or Bun, ox-content adds the matching `deno` or
+`bun` resolve condition and keeps the build target runtime-neutral. Existing
+environment conditions are preserved, so apps can still add their own
+conditional exports.
+
+```ts
+import { createMarkdownEnvironment } from "@ox-content/vite-plugin";
+
+export default defineConfig({
+  environments: {
+    markdown: createMarkdownEnvironment(resolvedOxContentOptions),
+  },
+});
+```
+
+### Fetch router and middleware
+
+Use `@ox-content/vite-plugin/router` when the host wants rendered Markdown pages
+without a Vite dev server. The router is based on the standard Fetch
+`Request`/`Response` API, so the same handler works with Deno, Bun, Workers-like
+hosts, and Node adapters.
+
+```ts
+// deno.ts
+import { createOxContentFetchHandler } from "@ox-content/vite-plugin/router";
+
+Deno.serve(
+  createOxContentFetchHandler(
+    {
+      srcDir: "content",
+      ssg: { routePrefix: "blog" },
+    },
+    Deno.cwd(),
+  ),
+);
+```
+
+```ts
+// bun.ts
+import { createOxContentFetchHandler } from "@ox-content/vite-plugin/router";
+
+const fetch = createOxContentFetchHandler(
+  {
+    srcDir: "content",
+    base: "/docs/",
+    ssg: { routePrefix: "blog" },
+  },
+  import.meta.dir,
+);
+
+Bun.serve({ fetch });
+```
+
+For framework adapters or custom servers, compose middleware around the built-in
+renderer:
+
+```ts
+import { createOxContentMiddleware } from "@ox-content/vite-plugin/router";
+
+const oxContentPages = createOxContentMiddleware({ srcDir: "content" }, projectRoot, {
+  middleware: [
+    async (context, next) => {
+      if (context.match.routePathname.startsWith("/drafts/")) {
+        return new Response("Not Found", { status: 404 });
+      }
+      const response = await next();
+      if (!response) return undefined;
+      const headers = new Headers(response.headers);
+      headers.set("x-ox-route", context.match.routePathname);
+      return new Response(response.body, { headers, status: response.status });
+    },
+  ],
+});
+```
+
 ### gfm
 
 - Type: `boolean`

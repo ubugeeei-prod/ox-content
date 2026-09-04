@@ -13,7 +13,7 @@ const SCROLLABLE_FOCUS_SELECTOR = `.content table[${SCROLLABLE_ATTR}]:focus-visi
 
 describe("markdown table browser entry packaging", () => {
   it("declares a browser-only package subpath", () => {
-    const exported = (packageJson.exports as Record<string, PackageConditionalExport>)[
+    const exported = (packageJson.exports as unknown as Record<string, PackageConditionalExport>)[
       "./markdown-tables"
     ];
     expect(exported).toBeDefined();
