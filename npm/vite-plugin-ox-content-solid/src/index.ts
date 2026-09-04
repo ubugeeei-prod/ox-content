@@ -4,10 +4,15 @@
  * Uses Vite's Environment API to enable embedding Solid components in Markdown.
  */
 
-import type { Plugin, PluginOption, ResolvedConfig } from "vite";
+import type { Plugin, PluginOption, ResolvedConfig, ViteDevServer } from "vite";
 import { oxContent } from "@ox-content/vite-plugin";
 import { resolveComponentsGlob } from "./components";
-import { createSolidMarkdownEnvironment } from "./environment";
+import {
+  createSolidMarkdownEnvironment,
+  createSolidRuntimeResolveConditions,
+  detectSolidMarkdownRuntime,
+  mergeSolidResolveConditions,
+} from "./environment";
 import { isMarkdownFilePath, resolveSolidOptions } from "./options";
 import { transformMarkdownWithSolid } from "./transform";
 import {
@@ -137,6 +142,26 @@ export function oxContentSolid(options: SolidIntegrationOptions = {}): PluginOpt
       };
     },
 
+    configEnvironment(name, environmentOptions) {
+      if (name !== "oxcontent_ssr" && name !== "oxcontent_client") {
+        return;
+      }
+      const runtime = detectSolidMarkdownRuntime();
+      const conditions =
+        name === "oxcontent_ssr"
+          ? ["solid", ...createSolidRuntimeResolveConditions(runtime), "node", "import"]
+          : ["solid", "browser", "import"];
+      return {
+        resolve: {
+          ...environmentOptions.resolve,
+          conditions: mergeSolidResolveConditions(
+            environmentOptions.resolve?.conditions,
+            conditions,
+          ),
+        },
+      };
+    },
+
     resolveId(id) {
       if (id === "virtual:ox-content-solid/components") {
         return "\0virtual:ox-content-solid/components";
@@ -160,12 +185,33 @@ export function oxContentSolid(options: SolidIntegrationOptions = {}): PluginOpt
     name: "ox-content:solid-hmr",
     apply: "serve",
 
-    handleHotUpdate({ file, server, modules }) {
-      const isComponent = Array.from(componentMap.values()).some((path) =>
-        file.endsWith(path.replace(/^\.\//, "")),
-      );
+    hotUpdate({ file, modules }) {
+      if (!isRegisteredComponentFile(componentMap, file)) {
+        return modules;
+      }
 
-      if (isComponent) {
+      const mdModules = markdownModulesFromMap(
+        this.environment.moduleGraph.idToModuleMap,
+        resolved.extensions,
+      );
+      if (mdModules.length > 0) {
+        this.environment.hot.send({
+          type: "custom",
+          event: "ox-content:solid-update",
+          data: { file },
+        });
+        return [...modules, ...mdModules];
+      }
+
+      return modules;
+    },
+
+    handleHotUpdate({ file, server, modules }) {
+      if (hasEnvironmentApiServer(server)) {
+        return;
+      }
+
+      if (isRegisteredComponentFile(componentMap, file)) {
         const mdModules = Array.from(server.moduleGraph.idToModuleMap.values()).filter(
           (mod) => mod.file && isMarkdownFilePath(mod.file, resolved.extensions),
         );
@@ -220,6 +266,28 @@ ${exports.join("\n")}
 
 export default components;
 `;
+}
+
+function isRegisteredComponentFile(
+  componentMap: ReadonlyMap<string, string>,
+  file: string,
+): boolean {
+  return Array.from(componentMap.values()).some((componentPath) =>
+    file.endsWith(componentPath.replace(/^\.\//, "")),
+  );
+}
+
+function markdownModulesFromMap<T extends { file?: string | null }>(
+  moduleMap: ReadonlyMap<string, T>,
+  extensions: readonly string[],
+): T[] {
+  return Array.from(moduleMap.values()).filter(
+    (mod) => mod.file && isMarkdownFilePath(mod.file, extensions),
+  );
+}
+
+function hasEnvironmentApiServer(server: ViteDevServer): boolean {
+  return Boolean((server as { environments?: unknown }).environments);
 }
 
 export { oxContent } from "@ox-content/vite-plugin";

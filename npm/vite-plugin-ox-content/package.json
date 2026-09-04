@@ -39,6 +39,16 @@
       "require": "./dist/incremental-dom.cjs",
       "types": "./dist/incremental-dom.d.mts"
     },
+    "./router": {
+      "import": {
+        "types": "./dist/router.d.mts",
+        "default": "./dist/router.mjs"
+      },
+      "require": {
+        "types": "./dist/router.d.cts",
+        "default": "./dist/router.cjs"
+      }
+    },
     "./markdown-tables": {
       "import": {
         "types": "./dist/markdown-tables.d.mts",

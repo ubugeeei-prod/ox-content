@@ -15,7 +15,7 @@ const IMPORT_STATEMENT = /^\s*(?:import\s|export\s[^\n]*\sfrom\s|[^\n]*\brequire
 
 describe("theme token entry packaging", () => {
   it("declares a build-tool-neutral package subpath", () => {
-    const exported = (packageJson.exports as Record<string, PackageConditionalExport>)[
+    const exported = (packageJson.exports as unknown as Record<string, PackageConditionalExport>)[
       "./theme-tokens"
     ];
     expect(exported).toBeDefined();

@@ -9,6 +9,7 @@ const minimumSeverity = policy.npmAudit?.minimumSeverity ?? "high";
 const allowlist = new Map(
   (policy.npmAudit?.advisoryAllowlist ?? []).map((item) => [item.id, item]),
 );
+applyPnpmAuditNetworkDefaults();
 const audit = runAudit();
 const advisories = Object.values(audit.advisories ?? {});
 const failures = [];
@@ -73,6 +74,19 @@ function runAudit() {
 
 function readPolicy() {
   return JSON.parse(readFileSync(resolve("tools/config/dependency-policy.json"), "utf8"));
+}
+
+function applyPnpmAuditNetworkDefaults() {
+  const defaults = {
+    PNPM_CONFIG_FETCH_RETRIES: "3",
+    PNPM_CONFIG_FETCH_RETRY_MINTIMEOUT: "20000",
+    PNPM_CONFIG_FETCH_RETRY_MAXTIMEOUT: "120000",
+    PNPM_CONFIG_FETCH_TIMEOUT: "600000",
+  };
+
+  for (const [name, value] of Object.entries(defaults)) {
+    process.env[name] ??= value;
+  }
 }
 
 function isExpired(expires) {

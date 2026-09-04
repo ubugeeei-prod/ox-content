@@ -8,6 +8,7 @@ export default defineConfig({
   pack: definePackConfig({
     entry: [
       "src/index.ts",
+      "src/router.ts",
       "src/vitepress-cli.ts",
       "src/incremental-dom.ts",
       "src/markdown-tables.ts",

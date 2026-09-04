@@ -6,6 +6,8 @@ import solid from "@solidjs/vite-plugin";
 import { describe, expect, it } from "vite-plus/test";
 import { build, type Plugin, type ResolvedConfig } from "vite";
 import { oxContentSolid } from "./index";
+import { createSolidMarkdownEnvironment } from "./environment";
+import { resolveSolidOptions } from "./options";
 import type { SolidIntegrationOptions } from "./types";
 import { formatSolidPluginError } from "./verify";
 
@@ -78,6 +80,38 @@ describe("oxContentSolid", () => {
     expect(message).toContain("@solidjs/vite-plugin");
     expect(message).toContain("compiler: 'native'");
     expect(message).not.toContain("babel-preset-solid");
+  });
+
+  it("keeps Solid SSR environments runtime-aware for Deno and Bun", () => {
+    const deno = createSolidMarkdownEnvironment("ssr", resolveSolidOptionsForTest(), "deno");
+    const bun = createSolidMarkdownEnvironment("ssr", resolveSolidOptionsForTest(), "bun");
+    const client = createSolidMarkdownEnvironment("client", resolveSolidOptionsForTest(), "bun");
+
+    expect(deno.resolve?.conditions).toEqual(["solid", "deno", "node", "import"]);
+    expect(bun.resolve?.conditions).toEqual(["solid", "bun", "node", "import"]);
+    expect(deno.build?.target).toBe("esnext");
+    expect(bun.build?.target).toBe("esnext");
+    expect(client.resolve?.conditions).toEqual(["solid", "browser", "import"]);
+  });
+
+  it("configures Solid markdown environments without dropping user conditions", async () => {
+    const environment = findPlugin(oxContentSolid(), "ox-content:solid-environment");
+    if (!environment.configEnvironment) {
+      throw new Error("Solid environment plugin should expose configEnvironment");
+    }
+
+    const result = await (
+      environment.configEnvironment as (
+        name: string,
+        config: { resolve?: { conditions?: string[] } },
+      ) => unknown
+    )("oxcontent_ssr", { resolve: { conditions: ["custom", "node"] } });
+
+    expect(result).toEqual({
+      resolve: {
+        conditions: ["custom", "node", "solid", "import"],
+      },
+    });
   });
 
   it("builds Markdown and MDX modules with Solid 2's native compiler", async () => {
@@ -217,6 +251,46 @@ describe("oxContentSolid", () => {
       },
     ]);
   });
+
+  it("uses the current Vite environment graph for Solid component HMR", () => {
+    const hmr = findPlugin(
+      oxContentSolid({ components: { Alert: "./src/components/Alert.tsx" } }),
+      "ox-content:solid-hmr",
+    );
+    if (!hmr.hotUpdate) {
+      throw new Error("Solid HMR plugin should expose hotUpdate");
+    }
+    const changedModule = { file: "/repo/src/components/Alert.tsx" };
+    const markdownModule = { file: "/repo/docs/index.md" };
+    const messages: unknown[] = [];
+
+    const result = (
+      hmr.hotUpdate as (this: unknown, context: { file: string; modules: unknown[] }) => unknown
+    ).call(
+      {
+        environment: {
+          moduleGraph: {
+            idToModuleMap: new Map([["/repo/docs/index.md", markdownModule]]),
+          },
+          hot: {
+            send(message: unknown) {
+              messages.push(message);
+            },
+          },
+        },
+      },
+      { file: "/repo/src/components/Alert.tsx", modules: [changedModule] },
+    );
+
+    expect(result).toEqual([changedModule, markdownModule]);
+    expect(messages).toEqual([
+      {
+        type: "custom",
+        event: "ox-content:solid-update",
+        data: { file: "/repo/src/components/Alert.tsx" },
+      },
+    ]);
+  });
 });
 
 function pluginNames(plugins: ReturnType<typeof oxContentSolid>): string[] {
@@ -245,4 +319,11 @@ async function resolveConfigWith(
 
   const hook = transform.configResolved as (config: ResolvedConfig) => void | Promise<void>;
   await hook.call(transform, config);
+}
+
+function resolveSolidOptionsForTest() {
+  return {
+    ...resolveSolidOptions({}),
+    components: {},
+  };
 }

@@ -8,7 +8,12 @@
 import * as path from "path";
 import type { Plugin, ViteDevServer, ResolvedConfig } from "vite";
 import "./virtual";
-import { createMarkdownEnvironment } from "./environment";
+import {
+  createMarkdownEnvironment,
+  createRuntimeResolveConditions,
+  detectJavaScriptRuntime,
+  mergeResolveConditions,
+} from "./environment";
 import { transformMarkdown } from "./transform";
 import { extractDocs, generateMarkdown, generateOpenApiDocs, writeDocs } from "./docs";
 import { buildSsg } from "./ssg";
@@ -32,13 +37,7 @@ import type { OxContentOptions, ResolvedOptions } from "./types";
 import { resolveOptions } from "./resolve-options";
 
 export type { OxContentOptions } from "./types";
-export type {
-  GraphvizFailureMode,
-  GraphvizOptions,
-  RedditEmbedOptions,
-  ResolvedGraphvizOptions,
-  TwitterEmbedOptions,
-} from "./plugins";
+export type { TwitterEmbedOptions } from "./plugins";
 export type {
   CrossReferenceEntry,
   CrossReferenceFailureMode,
@@ -340,8 +339,25 @@ function createMainPlugin(
       };
     },
 
+    hotUpdate({ file, modules }) {
+      if (!isMarkdownFilePath(file, resolvedOptions.extensions)) {
+        return;
+      }
+
+      this.environment.hot.send({
+        type: "custom",
+        event: "ox-content:update",
+        data: { file },
+      });
+
+      return modules;
+    },
+
     async handleHotUpdate({ file, server }) {
       if (!isMarkdownFilePath(file, resolvedOptions.extensions)) {
+        return;
+      }
+      if (hasEnvironmentApiServer(server)) {
         return;
       }
 
@@ -355,6 +371,10 @@ function createMainPlugin(
       return modules ? Array.from(modules) : [];
     },
   };
+}
+
+function hasEnvironmentApiServer(server: ViteDevServer): boolean {
+  return Boolean((server as { environments?: unknown }).environments);
 }
 
 function createCollectionsPlugin(resolvedOptions: ResolvedOptions, getRoot: () => string): Plugin {
@@ -409,6 +429,27 @@ function createEnvironmentPlugin(resolvedOptions: ResolvedOptions): Plugin {
       return {
         environments: {
           markdown: createMarkdownEnvironment(resolvedOptions),
+        },
+      };
+    },
+
+    configEnvironment(name, environmentOptions) {
+      if (name !== "markdown") {
+        return;
+      }
+      const runtimeConditions = [
+        "markdown",
+        ...createRuntimeResolveConditions(detectJavaScriptRuntime()),
+        "node",
+        "import",
+      ];
+      return {
+        resolve: {
+          ...environmentOptions.resolve,
+          conditions: mergeResolveConditions(
+            environmentOptions.resolve?.conditions,
+            runtimeConditions,
+          ),
         },
       };
     },
@@ -770,7 +811,31 @@ function normalizeRuntimeBase(base: string): string {
 }
 
 // Re-export types and utilities
-export { createMarkdownEnvironment } from "./environment";
+export {
+  createMarkdownEnvironment,
+  createRuntimeResolveConditions,
+  detectJavaScriptRuntime,
+  mergeResolveConditions,
+  type OxContentJavaScriptRuntime,
+} from "./environment";
+export {
+  createDevServerCache,
+  createDevServerMiddleware,
+  createOxContentFetchHandler,
+  createOxContentMiddleware,
+  createOxContentRouter,
+  invalidateNavCache,
+  invalidatePageCache,
+  resolveOxContentRoute,
+  type OxContentFetchMiddleware,
+  type OxContentRouteMatch,
+  type OxContentRouter,
+  type OxContentRouterContext,
+  type OxContentRouterErrorHandler,
+  type OxContentRouterInit,
+  type OxContentRouterMiddleware,
+  type OxContentRouterNext,
+} from "./dev-server";
 export {
   IncrementalMarkdownParser,
   IncrementalMarkdownRenderer,

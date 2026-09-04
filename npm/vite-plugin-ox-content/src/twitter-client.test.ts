@@ -8,7 +8,10 @@ const packageRoot = dirname(fileURLToPath(new URL("../package.json", import.meta
 
 describe("twitter client public API", () => {
   it("declares the client subpath and generated runtime entry", () => {
-    const exportsField = packageJson.exports as Record<string, PackageConditionalExport | string>;
+    const exportsField = packageJson.exports as unknown as Record<
+      string,
+      PackageConditionalExport | string
+    >;
     const client = exportsField["./twitter/client"] as PackageConditionalExport;
 
     expect(client.import.types).toBe("./dist/twitter-client.d.mts");
