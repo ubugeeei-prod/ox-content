@@ -35,6 +35,37 @@ export type {
   SolidTransformResult,
   ComponentIsland,
 } from "./types";
+export type {
+  MdxImport,
+  MdxImportSpecifier,
+  MdxImportSpecifierKind,
+} from "@ox-content/vite-plugin";
+export {
+  createSolidHtmlHostHydrate,
+  renderSolidHtmlHost,
+  type CreateSolidHtmlHostHydrateInput,
+  type RenderSolidHtmlHostInput,
+  type RenderSolidHtmlHostResult,
+  type SolidClientModuleResolver,
+  type SolidHostHydrateRenderer,
+  type SolidHtmlComponentRenderer,
+  type SolidHtmlHostClientModule,
+  type SolidHtmlHostDiagnostic,
+  type SolidHtmlHostDiagnosticCode,
+  type SolidHtmlHostModule,
+  type SolidServerModuleLoader,
+} from "./html-host";
+export {
+  resolveSolidIslandStylesheets,
+  type ResolveSolidIslandStylesheetsInput,
+  type ResolveSolidIslandStylesheetsResult,
+  type SolidDevModuleGraph,
+  type SolidDevModuleNode,
+  type SolidIslandStylesheet,
+  type SolidIslandStylesheetDiagnostic,
+  type SolidStylesheetManifest,
+  type SolidStylesheetManifestChunk,
+} from "./stylesheets";
 
 /**
  * Creates the Ox Content Solid integration plugin.

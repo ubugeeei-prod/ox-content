@@ -5,6 +5,7 @@ import { fileURLToPath } from "node:url";
 import solid from "@solidjs/vite-plugin";
 import { describe, expect, it } from "vite-plus/test";
 import { build, type Plugin, type ResolvedConfig } from "vite";
+import * as solidApi from "./index";
 import { oxContentSolid } from "./index";
 import { createSolidMarkdownEnvironment } from "./environment";
 import { resolveSolidOptions } from "./options";
@@ -21,6 +22,12 @@ describe("oxContentSolid", () => {
     expect(names).toContain("ox-content:solid-verify");
     expect(names).toContain("ox-content:solid-environment");
     expect(names).toContain("ox-content:solid-hmr");
+  });
+
+  it("keeps custom-host helpers on the package entrypoint", () => {
+    expect(solidApi).toHaveProperty("createSolidHtmlHostHydrate");
+    expect(solidApi).toHaveProperty("renderSolidHtmlHost");
+    expect(solidApi).toHaveProperty("resolveSolidIslandStylesheets");
   });
 
   it("accepts a config where @solidjs/vite-plugin runs after it", async () => {

@@ -215,6 +215,9 @@ export type {
   BuiltinEmbedOptions,
   ResolvedBuiltinEmbedOptions,
   BuiltinPmOptions,
+  MdxImport,
+  MdxImportSpecifier,
+  MdxImportSpecifierKind,
 } from "./types";
 
 /**
