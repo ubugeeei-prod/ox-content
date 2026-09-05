@@ -3,6 +3,7 @@ import { mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
+import { rolldown } from "rolldown";
 
 const packageRoot = dirname(fileURLToPath(new URL("../package.json", import.meta.url)));
 const distDir = join(packageRoot, "dist");
@@ -17,7 +18,12 @@ const tscBin = join(
  * or Node. `vp pack` routes them through a shared runtime chunk that pulls in
  * `node:fs`, so they are recompiled here as self-contained modules instead.
  */
-const STANDALONE_ENTRIES = ["markdown-tables", "theme-tokens"];
+const STANDALONE_ENTRIES = [
+  "markdown-tables",
+  "theme-tokens",
+  "theme-bootstrap",
+  "document-assets",
+];
 
 const forbiddenIdentifiers = /(?:node:|@ox-content\/napi|@resvg|playwright|puppeteer|fsevents)/;
 // Anchored to the start of a line so a documentation example inside a JSDoc
@@ -40,38 +46,26 @@ try {
 async function compileStandalone(entry, module, directoryName, extension) {
   const sourceFile = join(packageRoot, `src/${entry}.ts`);
   const outDir = join(tempRoot, entry, directoryName);
-  await runTsc([
-    sourceFile,
-    "--ignoreConfig",
-    "--target",
-    "ES2022",
-    "--module",
-    module,
-    "--lib",
-    "ES2022,DOM",
-    "--strict",
-    "--skipLibCheck",
-    "--sourceMap",
-    "--inlineSources",
-    "--declaration",
-    "false",
-    "--outDir",
-    outDir,
-    "--pretty",
-    "false",
-  ]);
-
   const jsFile = `${entry}.${extension}`;
   const mapFile = `${jsFile}.map`;
-  const compiledJs = join(outDir, `${entry}.js`);
-  const compiledMap = join(outDir, `${entry}.js.map`);
+  const compiledJs = join(outDir, jsFile);
+  const compiledMap = join(outDir, mapFile);
   const outputJs = join(distDir, jsFile);
   const outputMap = join(distDir, mapFile);
 
-  const js = (await readFile(compiledJs, "utf8")).replace(
-    `sourceMappingURL=${entry}.js.map`,
-    `sourceMappingURL=${mapFile}`,
-  );
+  await mkdir(outDir, { recursive: true });
+  const bundle = await rolldown({
+    input: sourceFile,
+    external: (id) => isBareSpecifier(id),
+  });
+  await bundle.write({
+    file: compiledJs,
+    format: module === "CommonJS" ? "cjs" : "esm",
+    sourcemap: true,
+  });
+  await bundle.close();
+
+  const js = await readFile(compiledJs, "utf8");
   if (forbiddenIdentifiers.test(js) || forbiddenStatements.test(js)) {
     throw new Error(`Refusing to publish ${jsFile}: server/runtime import found`);
   }
@@ -126,6 +120,13 @@ async function compileStandaloneDeclarations(entry) {
     await writeFile(join(distDir, declarationFile), declarationOutput);
     await writeFile(join(distDir, mapFile), `${JSON.stringify(map)}\n`);
   }
+}
+
+function isBareSpecifier(id) {
+  if (id.startsWith(".") || id.startsWith("/") || id.startsWith("\0")) {
+    return false;
+  }
+  return !/^[a-zA-Z]:[\\/]/.test(id);
 }
 
 async function runTsc(args) {

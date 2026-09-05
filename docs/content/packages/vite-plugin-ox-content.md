@@ -175,8 +175,16 @@ Markdown tables, import `styles/markdown-tables.css` and
 `@ox-content/vite-plugin/markdown-tables` instead of the package root plus
 `styles/core.css`.
 
-Custom hosts can also reuse resource fingerprinting, Markdown companions,
-feeds, sitemaps, and git lastmod without `buildSsg()`. See
+Custom hosts can now hand the Vite lifecycle to Ox Content with
+`oxContentCustomHost()`. It SSR-loads the host module in dev/build, owns route
+dispatch, response caching, dependency invalidation, manifest-aware document
+asset tags, self-hosted assets, redirects, Markdown companions, and coordinated
+writers. See [Custom host lifecycle](../built-in/custom-host.md) and
+[Document assets](../built-in/document-assets.md).
+
+If a framework integration already owns the Vite plugin, it can still reuse the
+lower-level resource fingerprinting, Markdown companions, feeds, sitemaps, and
+git lastmod helpers without `buildSsg()`. See
 [SSG output primitives](../built-in/ssg-output.md).
 
 ### Environment API runtime resolution

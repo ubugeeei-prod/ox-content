@@ -214,6 +214,8 @@ custom renderer needs the matching stylesheet and preload tags for `<head>`.
 
 ## Related
 
+- [Custom host lifecycle](./custom-host.md)
+- [Document assets](./document-assets.md)
 - [Page resources](./resources.md)
 - [Markdown source companions](./markdown-source.md)
 - [RSS / Atom / JSON feeds](./feeds.md)

@@ -213,6 +213,8 @@ path、`base`、任意の CI env を受け取ります。出力は `html`、`pro
 
 ## 関連
 
+- [独自ホスト lifecycle](./custom-host.md)
+- [Document assets](./document-assets.md)
 - [ページリソース](./resources.md)
 - [Markdown ソースの併記](./markdown-source.md)
 - [RSS / Atom / JSON フィード](./feeds.md)

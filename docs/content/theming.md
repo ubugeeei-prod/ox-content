@@ -367,6 +367,39 @@ defineTheme({
 `darkColors` follows the same key-by-key fallback as `colors`: any key you leave
 out inherits the default dark palette.
 
+## First-paint Theme Bootstrap
+
+Custom HTML hosts can use the same initial light/dark contract as the built-in
+theme without adopting the default header toggle:
+
+```ts
+import {
+  applyThemeBootstrap,
+  createThemeBootstrapScript,
+  renderThemeBootstrapScript,
+  setThemeBootstrapPreference,
+} from "@ox-content/vite-plugin/theme-bootstrap";
+
+const bootstrap = renderThemeBootstrapScript({
+  storageKey: "theme",
+  defaultPreference: "system",
+  darkClass: "dark",
+  themeAttribute: "data-theme",
+});
+```
+
+The bootstrap safely reads `localStorage`, accepts stored `light`, `dark`, or
+`system`, falls back to the configured default when storage is missing or
+throws, and applies the root class plus `data-theme` before stylesheet-driven
+first paint. It does not mark JavaScript as enabled; keep that host concern
+separate unless your document contract wants to own it.
+
+For CSP, use `renderThemeBootstrapScript(options, { nonce })` when the host has
+a nonce. Static hosts that use hashes can call `createThemeBootstrapScript()` to
+get the exact inline body to hash. A later toggle can call
+`setThemeBootstrapPreference()` inside `applyThemeTransition({ apply })` so the
+animation and the initial bootstrap share one root/storage contract.
+
 ## Theme Tokens in a Bare or Custom Host
 
 `ssg.bare: true` and custom hosts render their own document, so Ox Content emits

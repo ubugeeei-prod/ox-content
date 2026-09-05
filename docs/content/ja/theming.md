@@ -319,6 +319,39 @@ defineTheme({
 
 `darkColors` も `colors` と同じキー単位のフォールバックです。省略したキーは既定のダークパレットを継承します。
 
+## first-paint theme bootstrap
+
+独自 HTML ホストは、既定 header toggle を採用しなくても、組み込みテーマと同じ初期
+light / dark 契約を使えます。
+
+```ts
+import {
+  applyThemeBootstrap,
+  createThemeBootstrapScript,
+  renderThemeBootstrapScript,
+  setThemeBootstrapPreference,
+} from "@ox-content/vite-plugin/theme-bootstrap";
+
+const bootstrap = renderThemeBootstrapScript({
+  storageKey: "theme",
+  defaultPreference: "system",
+  darkClass: "dark",
+  themeAttribute: "data-theme",
+});
+```
+
+bootstrap は `localStorage` を安全に読み、保存済みの `light`、`dark`、`system` を
+受け付けます。storage が空、無効、または throw する場合は設定した fallback に従い、
+stylesheet による first paint より前に root class と `data-theme` を揃えます。
+JavaScript 有効化 class はここでは付けません。document contract として明示的に
+持ちたい場合を除き、ホスト側の別 concern として扱ってください。
+
+CSP nonce があるホストは `renderThemeBootstrapScript(options, { nonce })` を使います。
+hash を使う静的ホストは `createThemeBootstrapScript()` から exact inline body を取得して
+hash できます。後続の toggle は `applyThemeTransition({ apply })` の中で
+`setThemeBootstrapPreference()` を呼ぶと、初期 bootstrap と animation が同じ
+root/storage contract を共有できます。
+
 ## bare / 独自ホストでのテーマトークン
 
 `ssg.bare: true` と独自ホストは自分で document を組み立てるので、Ox Content はテーマのスタイルシートを出しません。`renderThemeTokenCss()` は組み込み SSG が書くはずだった `--octc-*` 宣言をそのまま返します。Vite プラグインも SSG も、ネイティブバインディングもファイルシステム API も引き込まないサブパスから import できます。

@@ -69,6 +69,36 @@
         "default": "./dist/theme-tokens.cjs"
       }
     },
+    "./theme-bootstrap": {
+      "import": {
+        "types": "./dist/theme-bootstrap.d.mts",
+        "default": "./dist/theme-bootstrap.mjs"
+      },
+      "require": {
+        "types": "./dist/theme-bootstrap.d.cts",
+        "default": "./dist/theme-bootstrap.cjs"
+      }
+    },
+    "./document-assets": {
+      "import": {
+        "types": "./dist/document-assets.d.mts",
+        "default": "./dist/document-assets.mjs"
+      },
+      "require": {
+        "types": "./dist/document-assets.d.cts",
+        "default": "./dist/document-assets.cjs"
+      }
+    },
+    "./custom-host": {
+      "import": {
+        "types": "./dist/custom-host.d.mts",
+        "default": "./dist/custom-host.mjs"
+      },
+      "require": {
+        "types": "./dist/custom-host.d.cts",
+        "default": "./dist/custom-host.cjs"
+      }
+    },
     "./reader-chrome": {
       "import": {
         "types": "./dist/reader-chrome.d.mts",
