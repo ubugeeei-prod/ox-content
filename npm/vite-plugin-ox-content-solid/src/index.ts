@@ -75,6 +75,18 @@ export {
   type SolidHtmlHostModuleIdResolver,
 } from "./html-host-client";
 export {
+  SOLID_HTML_HOST_MODULES_VIRTUAL_ID,
+  createSolidHtmlHostIslandRegistry,
+  resolveSolidHtmlHostIslandRegistry,
+  toSolidHtmlHostClientModuleId,
+  type CreateSolidHtmlHostIslandRegistryInput,
+  type ResolvedSolidHtmlHostIslandRegistry,
+  type SolidHtmlHostIslandDocument,
+  type SolidHtmlHostIslandEntry,
+  type SolidHtmlHostIslandRegistry,
+  type SolidHtmlHostIslandRegistryContext,
+} from "./html-host-registry";
+export {
   resolveSolidIslandStylesheets,
   type ResolveSolidIslandStylesheetsInput,
   type ResolveSolidIslandStylesheetsResult,
@@ -86,35 +98,7 @@ export {
   type SolidStylesheetManifestChunk,
 } from "./stylesheets";
 
-/**
- * Creates the Ox Content Solid integration plugin.
- *
- * Unlike the React and Svelte integrations, this plugin must be listed **before**
- * `@solidjs/vite-plugin`, and that plugin must be told about the Markdown
- * extensions. Markdown is turned into Solid JSX here, and Solid's JSX is
- * compile-time only — the Solid 2 Vite plugin is what turns it into DOM or SSR
- * instructions through its native compiler.
- *
- * @example
- * ```ts
- * // vite.config.ts
- * import { defineConfig } from 'vite';
- * import solid from '@solidjs/vite-plugin';
- * import { oxContentSolid } from '@ox-content/vite-plugin-solid';
- *
- * export default defineConfig({
- *   plugins: [
- *     oxContentSolid({
- *       srcDir: 'docs',
- *       components: {
- *         Counter: './src/components/Counter.tsx',
- *       },
- *     }),
- *     solid({ extensions: ['.md', '.markdown', '.mdx'], compiler: 'native' }),
- *   ],
- * });
- * ```
- */
+/** Creates the Ox Content Solid integration plugin. */
 export function oxContentSolid(options: SolidIntegrationOptions = {}): PluginOption[] {
   const resolved = resolveSolidOptions(options);
   let componentMap = new Map<string, string>();

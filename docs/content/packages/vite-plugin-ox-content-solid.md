@@ -224,12 +224,80 @@ slot HTML, clears the target, and lets the caller mount with `@solidjs/web`.
 When SSR produced HTML for a self-closing island, that rendered output is not
 passed back as children.
 
+For production custom hosts, generate the module map from the same
+site-selected document set instead of a broad source-directory glob. Keep the
+publication rule in your site code and share that selected list with both the
+custom host routes and the registry plugin.
+
+```ts
+// vite.config.ts
+import { defineConfig } from "vite";
+import solid from "@solidjs/vite-plugin";
+import { oxContentCustomHost } from "@ox-content/vite-plugin";
+import { createSolidHtmlHostIslandRegistry } from "@ox-content/vite-plugin-solid";
+import { selectedDocuments } from "./src/site-content";
+
+const solidIslands = createSolidHtmlHostIslandRegistry({
+  documents: async () =>
+    (await selectedDocuments()).map((document) => ({
+      documentPath: document.file,
+      source: document.source,
+    })),
+});
+
+export default defineConfig({
+  appType: "custom",
+  plugins: [
+    solidIslands.plugin,
+    oxContentCustomHost({ host: "./src/site-host.ts" }),
+    solid({ compiler: "native" }),
+  ],
+});
+```
+
+```ts
+// src/site-host.ts
+import { renderMarkdown, type MdxImport } from "@ox-content/vite-plugin";
+import { renderSolidHtmlHost, toSolidHtmlHostClientModuleId } from "@ox-content/vite-plugin-solid";
+import { selectedDocuments } from "./site-content";
+
+export default {
+  async routes() {
+    return (await selectedDocuments()).map((document) => ({
+      path: document.url,
+      inputPath: document.file,
+      source: document.source,
+      async render(ctx) {
+        const markdown = await renderMarkdown(document.source, document.file, {
+          srcDir: "content",
+        });
+        const rendered = await renderSolidHtmlHost({
+          html: markdown.html,
+          imports: markdown.imports as MdxImport[],
+          documentPath: document.file,
+          root: ctx.root,
+          srcDir: "content",
+          loadModule: ctx.loadModule,
+          resolveClientModule: (module) =>
+            toSolidHtmlHostClientModuleId(module.serverModuleId, ctx.root),
+        });
+        return { html: rendered.html, source: document.source };
+      },
+    }));
+  },
+};
+```
+
+The browser imports the generated virtual module. Its static dynamic-import
+roots are the selected island modules only, so Vite does not create entry chunks
+for unpublished documents that were omitted by your site policy. Dependencies
+reachable from those selected modules are still bundled normally.
+
 ```tsx
 import { initIslands } from "@ox-content/islands";
 import { render } from "@solidjs/web";
 import { initSolidHtmlHost } from "@ox-content/vite-plugin-solid/html-host/client";
-
-const modules = import.meta.glob("./{docs,components}/**/*.tsx");
+import modules from "virtual:ox-content-solid/html-host/modules";
 
 initSolidHtmlHost({
   initIslands,
@@ -273,7 +341,7 @@ URLs from either a Vite build manifest or a development module graph.
 import { resolveSolidIslandStylesheets } from "@ox-content/vite-plugin-solid";
 
 const styles = resolveSolidIslandStylesheets({
-  modules: rendered.modules.map((module) => module.serverModuleId),
+  modules: rendered.clientModules.map((module) => module.moduleId),
   manifest: viteManifest,
   base: "/docs/",
 });
@@ -287,10 +355,12 @@ Build resolution walks static `imports`, deduplicates CSS, keeps imported chunk
 CSS before the importing island, and respects `base` plus emitted hashed file
 names. Development resolution accepts a Vite-like module graph with
 `getModuleById()` and optional `getModulesByFile()`, preserving CSS query
-parameters so HMR URLs remain loadable. A valid island with no CSS returns no
-stylesheet and no diagnostic; missing manifest/module-graph entries report a
-`missing-module` diagnostic. If neither resolver is supplied, each requested
-module reports `missing-resolver`.
+parameters so HMR URLs remain loadable. The resolver accepts the registry's
+root-relative module ids, even when Vite's manifest stores the same source
+without a leading slash. A valid island with no CSS returns no stylesheet and no
+diagnostic; missing manifest/module-graph entries report a `missing-module`
+diagnostic. If neither resolver is supplied, each requested module reports
+`missing-resolver`.
 
 ## HMR
 

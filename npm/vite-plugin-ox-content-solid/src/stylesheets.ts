@@ -169,12 +169,33 @@ function visitDevModule(
 }
 
 function manifestKey(manifest: SolidStylesheetManifest, moduleId: string): string | undefined {
-  if (manifest[moduleId]) {
-    return moduleId;
+  for (const candidate of manifestKeyCandidates(moduleId)) {
+    if (manifest[candidate]) {
+      return candidate;
+    }
   }
+  const candidates = new Set(manifestKeyCandidates(moduleId));
   return Object.entries(manifest).find(
-    ([key, chunk]) => key === moduleId || chunk.src === moduleId,
+    ([key, chunk]) => candidates.has(key) || (chunk.src ? candidates.has(chunk.src) : false),
   )?.[0];
+}
+
+function manifestKeyCandidates(moduleId: string): string[] {
+  const [pathname, suffix = ""] = splitModuleSuffix(moduleId);
+  const normalized = pathname.replace(/\\/g, "/");
+  const withoutLeading = normalized.replace(/^\/+/, "");
+  return [
+    moduleId,
+    `${normalized}${suffix}`,
+    `${withoutLeading}${suffix}`,
+    normalized,
+    withoutLeading,
+  ].filter((candidate, index, values) => candidate && values.indexOf(candidate) === index);
+}
+
+function splitModuleSuffix(moduleId: string): [string, string?] {
+  const match = /[?#]/u.exec(moduleId);
+  return match ? [moduleId.slice(0, match.index), moduleId.slice(match.index)] : [moduleId];
 }
 
 function devCssHref(node: SolidDevModuleNode, base: string | undefined): string | undefined {
