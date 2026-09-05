@@ -213,8 +213,9 @@ fn inline_magic_links_css(template: &str) -> String {
         template.contains(MAGIC_LINKS_INCLUDE_MARK),
         "ssg.css must include the magic-links marker so SSG and published CSS stay aligned"
     );
-    let marker_start =
-        template.find(MAGIC_LINKS_INCLUDE_MARK).expect("marker presence was checked above");
+    let Some(marker_start) = template.find(MAGIC_LINKS_INCLUDE_MARK) else {
+        return template.to_string();
+    };
     let marker_end = marker_start + MAGIC_LINKS_INCLUDE_MARK.len();
     let newline_end = if template[marker_end..].starts_with("\r\n") {
         marker_end + 2
