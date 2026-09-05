@@ -169,9 +169,16 @@ import してください。crate の CSS をアプリにコピーしないで�
 `styles/markdown-tables.css` と
 `@ox-content/vite-plugin/markdown-tables` を使ってください。
 
-独自ホストは `buildSsg()` なしでも、リソース指紋、Markdown 併記、フィード、
-sitemap、git lastmod を再利用できます。
-[SSG 出力プリミティブ](../built-in/ssg-output.md) を見てください。
+独自ホストは `oxContentCustomHost()` で Vite lifecycle を Ox Content に任せられます。
+dev/build で host module を SSR load し、route dispatch、response cache、
+dependency invalidation、manifest 対応の document asset tag、self-hosted asset、
+redirect、Markdown 併記、協調 writer を持ちます。
+[独自ホスト lifecycle](../built-in/custom-host.md) と
+[Document assets](../built-in/document-assets.md) を見てください。
+
+framework integration がすでに Vite plugin を持っている場合も、`buildSsg()` なしで
+低レベルのリソース指紋、Markdown 併記、フィード、sitemap、git lastmod helper を
+再利用できます。[SSG 出力プリミティブ](../built-in/ssg-output.md) を見てください。
 
 ### Environment API の runtime 解決
 

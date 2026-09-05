@@ -35,6 +35,11 @@ import { isMarkdownFilePath } from "./markdown";
 import { generateCollectionsVirtualModule } from "./collections";
 import type { OxContentOptions, ResolvedOptions } from "./types";
 import { resolveOptions } from "./resolve-options";
+import {
+  createOxContentCustomHostPlugin,
+  customHostOxContentOptions,
+  type OxContentCustomHostOptions,
+} from "./custom-host";
 
 export type { OxContentOptions } from "./types";
 export type { TwitterEmbedOptions } from "./plugins";
@@ -270,6 +275,17 @@ export function oxContent(options: OxContentOptions = {}): Plugin[] {
   }
 
   return plugins;
+}
+
+export function oxContentCustomHost(options: OxContentCustomHostOptions): Plugin[] {
+  const oxOptions = customHostOxContentOptions(options.oxContent);
+  return [
+    ...oxContent(oxOptions),
+    createOxContentCustomHostPlugin({
+      ...options,
+      oxContent: oxOptions,
+    }),
+  ];
 }
 
 async function regenerateDocs(resolvedOptions: ResolvedOptions, root: string): Promise<number> {
@@ -968,6 +984,56 @@ export type {
   RenderedHead,
   SiteHead,
 } from "./page-head";
+export { renderDocumentAssetTag, renderDocumentAssets } from "./document-assets";
+export type {
+  DocumentAssetAttributes,
+  DocumentAssetDescriptor,
+  DocumentAssetManifest,
+  DocumentAssetManifestChunk,
+  DocumentAssetNoncePolicy,
+  DocumentCrossOrigin,
+  DocumentLinkDescriptor,
+  DocumentLinkInput,
+  DocumentScriptDescriptor,
+  DocumentScriptInput,
+  DocumentSelfHostedAssets,
+  DocumentStyleDescriptor,
+  DocumentStylesheetInput,
+  RenderDocumentAssetsInput,
+  RenderDocumentAssetsResult,
+} from "./document-assets";
+export {
+  applyThemeBootstrap,
+  createThemeBootstrapScript,
+  renderThemeBootstrapScript,
+  resolveThemeBootstrapOptions,
+  resolveThemeBootstrapState,
+  setThemeBootstrapPreference,
+} from "./theme-bootstrap";
+export type {
+  RenderThemeBootstrapScriptOptions,
+  ResolvedThemeBootstrapOptions,
+  ThemeBootstrapOptions,
+  ThemeBootstrapPreference,
+  ThemeBootstrapResolvedTheme,
+  ThemeBootstrapSource,
+  ThemeBootstrapState,
+} from "./theme-bootstrap";
+export { createOxContentCustomHostPlugin, customHostOxContentOptions } from "./custom-host";
+export type {
+  OxContentCustomHostAssetsContext,
+  OxContentCustomHostBaseContext,
+  OxContentCustomHostBuildOptions,
+  OxContentCustomHostDevOptions,
+  OxContentCustomHostModule,
+  OxContentCustomHostNotFoundContext,
+  OxContentCustomHostOptions,
+  OxContentCustomHostRenderContext,
+  OxContentCustomHostRenderResult,
+  OxContentCustomHostRoute,
+  OxContentCustomHostRoutesContext,
+  OxContentCustomHostThemeTokensOptions,
+} from "./custom-host";
 export { resolveNotFoundOptions } from "./not-found";
 export { resolveSiteMapsOptions } from "./site-maps";
 export { resolveMarkdownSourceOptions } from "./markdown-source";

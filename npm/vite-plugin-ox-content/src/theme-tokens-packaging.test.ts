@@ -44,7 +44,10 @@ describe("theme token entry packaging", () => {
     // `node:fs`, which is exactly what a bare host must not load.
     const script = readFileSync(join(packageRoot, "scripts/build-standalone-entries.mjs"), "utf8");
 
-    expect(script).toContain('const STANDALONE_ENTRIES = ["markdown-tables", "theme-tokens"];');
+    expect(script).toContain('"markdown-tables"');
+    expect(script).toContain('"theme-tokens"');
+    expect(script).toContain('"theme-bootstrap"');
+    expect(script).toContain('"document-assets"');
     expect(packageJson.scripts.build).toContain("node scripts/build-standalone-entries.mjs");
   });
 

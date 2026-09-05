@@ -64,6 +64,8 @@ Markdown 属性とリッチなソーシャル埋め込みの見た目の同等�
   stylesheet resolver を要望しました。
 - Solid HTML-string host 向けに、cancellable island lifecycle と document-scoped
   module identity を持つ browser-only lazy client contract が必要だと報告しました。
+- first-paint theme bootstrap、typed document asset renderer、downstream の plugin
+  orchestration を外す framework-owned custom-host Vite lifecycle を要望しました。
 
 ### bulebrainbrand
 

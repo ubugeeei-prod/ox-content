@@ -68,6 +68,9 @@ Contribution summary:
 - Reported that Solid HTML-string hosts needed a browser-only lazy client
   contract with cancellable island lifecycle and document-scoped module
   identities.
+- Requested the first-paint theme bootstrap, typed document asset renderer, and
+  framework-owned custom-host Vite lifecycle that removes downstream plugin
+  orchestration.
 
 ### bulebrainbrand
 
