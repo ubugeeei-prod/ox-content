@@ -45,7 +45,7 @@
     "provenance": true
   },
   "scripts": {
-    "build": "vp pack",
+    "build": "vp pack && node ../../tools/scripts/stabilize-public-declaration-exports.mjs @ox-content/vite-plugin-solid",
     "dev": "vp pack --watch",
     "typecheck": "tsgo --noEmit"
   },

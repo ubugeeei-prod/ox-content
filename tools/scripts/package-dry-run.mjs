@@ -5,6 +5,7 @@ import { mkdtempSync, rmSync, readFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join, relative } from "node:path";
 import { checkReaderChromeDeclarations } from "./package-dry-run-reader-chrome.mjs";
+import { checkPublicDeclarationExports } from "./package-dry-run-public-declarations.mjs";
 import { checkTwitterClientDeclarations } from "./package-dry-run-twitter-client.mjs";
 import { checkVitePluginDeclarations } from "./package-dry-run-vite-plugin.mjs";
 
@@ -34,6 +35,7 @@ const packages = [
 ];
 const packDir = mkdtempSync(join(tmpdir(), "ox-content-pack-"));
 const failures = [];
+const packedPackages = new Map();
 const publicVitePeerRanges = new Map([["@ox-content/vite-plugin-solid", "^8.0.0 || ^9.0.0"]]);
 const defaultPublicVitePeerRange = "^0.2.8 || ^8.0.0";
 
@@ -61,6 +63,8 @@ function checkPackage(packageDir) {
   const packedPkg = readPackedPackageJson(packed.filename);
   /** @type {Set<string>} */
   const files = new Set(packed.files.map((file) => String(file.path)));
+  const packedPackage = { pkg, packedPkg, tarball: packed.filename, files };
+  packedPackages.set(pkg.name, packedPackage);
 
   console.log(`\n${pkg.name}@${pkg.version}`);
   for (const file of [...files].sort((a, b) => a.localeCompare(b))) {
@@ -96,6 +100,14 @@ function checkPackage(packageDir) {
       readPackedFile,
     });
   }
+  checkPublicDeclarationExports({
+    pkg,
+    tarball: packed.filename,
+    packDir,
+    failures,
+    readPackedFile,
+    packedPackages,
+  });
 }
 
 function readPackedPackageJson(filename) {
