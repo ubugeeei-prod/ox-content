@@ -334,33 +334,32 @@ and render failures are reported to `onError`.
 ## Island stylesheets for custom hosts
 
 Server-rendered islands often need their CSS before the client module mounts.
-`resolveSolidIslandStylesheets()` maps island module identities to stylesheet
-URLs from either a Vite build manifest or a development module graph.
+When you use `oxContentCustomHost()`, prefer the public host assets context so
+the host never touches a Vite manifest or development module graph directly.
 
 ```ts
-import { resolveSolidIslandStylesheets } from "@ox-content/vite-plugin-solid";
-
-const styles = resolveSolidIslandStylesheets({
+const styles = ctx.assets.stylesheets({
   modules: rendered.clientModules.map((module) => module.moduleId),
-  manifest: viteManifest,
-  base: "/docs/",
 });
 
-for (const stylesheet of styles.stylesheets) {
-  head.push(`<link rel="stylesheet" href="${escapeHtml(stylesheet.href)}">`);
-}
+const assets = ctx.assets.document({
+  islandStyles: styles.stylesheets,
+  clientEntries: ["src/main.ts"],
+});
+
+return {
+  html: `<!doctype html><html><head>${assets.headHtml}</head><body>${rendered.html}</body></html>`,
+  dependencies: styles.dependencies,
+};
 ```
 
-Build resolution walks static `imports`, deduplicates CSS, keeps imported chunk
-CSS before the importing island, and respects `base` plus emitted hashed file
-names. Development resolution accepts a Vite-like module graph with
-`getModuleById()` and optional `getModulesByFile()`, preserving CSS query
-parameters so HMR URLs remain loadable. The resolver accepts the registry's
-root-relative module ids, even when Vite's manifest stores the same source
-without a leading slash. A valid island with no CSS returns no stylesheet and no
-diagnostic; missing manifest/module-graph entries report a `missing-module`
-diagnostic. If neither resolver is supplied, each requested module reports
-`missing-resolver`.
+The assets context resolves direct and transitive island CSS before the client
+module script, deduplicates through `ctx.assets.document()`, preserves dev CSS
+query strings, and returns dependency paths that keep cached custom-host routes
+fresh after stylesheet edits. Build mode uses the Vite manifest behind the same
+method and returns emitted hashed hrefs for the same module identities. The
+lower-level `resolveSolidIslandStylesheets()` helper remains available for
+non-custom hosts that intentionally own the manifest or module graph.
 
 ## HMR
 

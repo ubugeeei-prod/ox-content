@@ -20,6 +20,10 @@ export type {
   OxContentCustomHostRenderResult,
   OxContentCustomHostRoute,
   OxContentCustomHostRoutesContext,
+  OxContentCustomHostStylesheet,
+  OxContentCustomHostStylesheetDiagnostic,
+  OxContentCustomHostStylesheetsInput,
+  OxContentCustomHostStylesheetsResult,
   OxContentCustomHostThemeTokensOptions,
 } from "./custom-host-types";
 

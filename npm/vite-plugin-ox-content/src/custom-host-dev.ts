@@ -41,7 +41,14 @@ export function configureDevServer(
 ): void {
   const root = server.config.root;
   const outDir = resolveOutDir(server.config, options, root);
-  const assets = createAssetsContext(options, outDir, undefined, themeTokens);
+  const assets = createAssetsContext(
+    options,
+    outDir,
+    undefined,
+    themeTokens,
+    server.moduleGraph,
+    root,
+  );
   let ssrVersion = 0;
   const loadModule = (moduleId: string) =>
     server.ssrLoadModule(versionedModuleId(moduleId, ssrVersion));
