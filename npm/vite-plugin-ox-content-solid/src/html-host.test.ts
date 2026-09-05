@@ -48,10 +48,12 @@ describe("renderSolidHtmlHost", () => {
       },
     ]);
     expect(result.clientModules).toEqual([
-      { name: "Chart", moduleId: "/assets/Chart.js" },
-      { name: "Badge", moduleId: "/assets/Badge.js" },
+      { name: "Chart", moduleId: "/assets/Chart.js", exportName: "default" },
+      { name: "Badge", moduleId: "/assets/Badge.js", exportName: "default" },
     ]);
     expect(result.html).toContain('data-ox-ssr="true"');
+    expect(result.html).toContain('data-ox-module="/assets/Chart.js"');
+    expect(result.html).toContain('data-ox-export="default"');
     expect(result.html).toContain("data-ox-content='&lt;p&gt;slot&lt;/p&gt;'");
     expect(result.html).toContain(
       '<strong data-component="Chart">chart-component:Revenue:<p>slot</p></strong>',
@@ -80,12 +82,20 @@ describe("renderSolidHtmlHost", () => {
           specifiers: [{ imported: "Chart", local: "Plot", kind: "named" }],
         },
       ],
+      resolveClientModule: () => "./Chart.tsx",
       loadModule: async () => ({ Chart: "named-chart" }),
       renderComponent: (component) => `<strong>${component as string}</strong>`,
     });
 
     expect(result.diagnostics).toEqual([]);
     expect(result.modules[0]).toMatchObject({ name: "Plot", exportName: "Chart" });
+    expect(result.clientModules[0]).toEqual({
+      name: "Plot",
+      moduleId: "./Chart.tsx",
+      exportName: "Chart",
+    });
+    expect(result.html).toContain('data-ox-module="./Chart.tsx"');
+    expect(result.html).toContain('data-ox-export="Chart"');
     expect(result.html).toContain("<strong>named-chart</strong>");
   });
 

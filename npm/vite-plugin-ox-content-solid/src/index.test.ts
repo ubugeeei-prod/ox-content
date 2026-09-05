@@ -26,6 +26,8 @@ describe("oxContentSolid", () => {
 
   it("keeps custom-host helpers on the package entrypoint", () => {
     expect(solidApi).toHaveProperty("createSolidHtmlHostHydrate");
+    expect(solidApi).toHaveProperty("createSolidHtmlHostLazyHydrate");
+    expect(solidApi).toHaveProperty("initSolidHtmlHost");
     expect(solidApi).toHaveProperty("renderSolidHtmlHost");
     expect(solidApi).toHaveProperty("resolveSolidIslandStylesheets");
   });

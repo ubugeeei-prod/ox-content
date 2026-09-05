@@ -56,6 +56,25 @@ export {
   type SolidServerModuleLoader,
 } from "./html-host";
 export {
+  createSolidHtmlHostLazyHydrate,
+  initSolidHtmlHost,
+  readSolidHtmlHostSlot,
+  type CreateSolidHtmlHostLazyHydrateInput,
+  type InitSolidHtmlHostInput,
+  type SolidHtmlHostClientComponentValue,
+  type SolidHtmlHostClientContext,
+  type SolidHtmlHostClientDiagnosticCode,
+  type SolidHtmlHostClientError,
+  type SolidHtmlHostClientModuleLoader,
+  type SolidHtmlHostClientModules,
+  type SolidHtmlHostClientModuleValue,
+  type SolidHtmlHostClientRenderer,
+  type SolidHtmlHostClientRuntimeLoader,
+  type SolidHtmlHostExportNameResolver,
+  type SolidHtmlHostInitIslands,
+  type SolidHtmlHostModuleIdResolver,
+} from "./html-host-client";
+export {
   resolveSolidIslandStylesheets,
   type ResolveSolidIslandStylesheetsInput,
   type ResolveSolidIslandStylesheetsResult,

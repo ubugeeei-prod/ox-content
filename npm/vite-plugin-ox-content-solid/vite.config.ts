@@ -6,7 +6,7 @@ export default defineConfig({
     ignorePatterns: ["dist/**"],
   },
   pack: definePackConfig({
-    entry: ["src/index.ts"],
+    entry: ["src/index.ts", "src/html-host-client.ts"],
     format: ["esm", "cjs"],
     dts: true,
     clean: true,

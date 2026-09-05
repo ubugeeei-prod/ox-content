@@ -22,6 +22,7 @@ export interface SolidHtmlHostModule {
 export interface SolidHtmlHostClientModule {
   name: string;
   moduleId: string;
+  exportName: string;
 }
 
 export type SolidHtmlHostDiagnosticCode =
@@ -134,10 +135,12 @@ export async function renderSolidHtmlHost(
   );
 
   return {
-    html,
+    html: markClientModules(html, modules),
     modules,
     clientModules: modules.flatMap((module) =>
-      module.clientModuleId ? [{ name: module.name, moduleId: module.clientModuleId }] : [],
+      module.clientModuleId
+        ? [{ name: module.name, moduleId: module.clientModuleId, exportName: module.exportName }]
+        : [],
     ),
     diagnostics,
   };
@@ -277,7 +280,54 @@ function isReadonlyMap(
 
 function readIslandSlotHtml(element: Pick<HTMLElement, "dataset" | "innerHTML">): string {
   const fromAttr = element.dataset.oxContent;
-  return fromAttr || element.innerHTML.replace(ISLAND_JSON_SCRIPT, "");
+  if (fromAttr) return fromAttr;
+  if (element.dataset.oxSsr === "true") return "";
+  return element.innerHTML.replace(ISLAND_JSON_SCRIPT, "");
+}
+
+function markClientModules(html: string, modules: readonly SolidHtmlHostModule[]): string {
+  const clientModules = new Map(
+    modules.filter((module) => module.clientModuleId).map((module) => [module.name, module]),
+  );
+  if (clientModules.size === 0) return html;
+
+  return html.replace(
+    /<(div|span)\b([^>]*\bdata-ox-island="([^"]+)"[^>]*)>/gi,
+    (openTag: string, _tag: string, _attrs: string, encodedName: string) => {
+      const module = clientModules.get(decodeHtmlAttr(encodedName));
+      if (!module?.clientModuleId) return openTag;
+
+      const attrs: string[] = [];
+      if (!hasAttr(openTag, "data-ox-module")) {
+        attrs.push(`data-ox-module="${escapeDoubleQuotedAttr(module.clientModuleId)}"`);
+      }
+      if (!hasAttr(openTag, "data-ox-export")) {
+        attrs.push(`data-ox-export="${escapeDoubleQuotedAttr(module.exportName)}"`);
+      }
+      return attrs.length === 0 ? openTag : openTag.replace(/>$/, ` ${attrs.join(" ")}>`);
+    },
+  );
+}
+
+function escapeDoubleQuotedAttr(value: string): string {
+  return value
+    .replaceAll("&", "&amp;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;");
+}
+
+function decodeHtmlAttr(value: string): string {
+  return value
+    .replaceAll("&quot;", '"')
+    .replaceAll("&#39;", "'")
+    .replaceAll("&lt;", "<")
+    .replaceAll("&gt;", ">")
+    .replaceAll("&amp;", "&");
+}
+
+function hasAttr(openTag: string, name: string): boolean {
+  return new RegExp(`\\s${name}(?:\\s*=|\\s|>|$)`, "i").test(openTag);
 }
 
 async function defaultRenderComponent(
