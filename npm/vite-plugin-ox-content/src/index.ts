@@ -975,6 +975,16 @@ export {
 } from "./publish-state";
 export { resolvePermalinksOptions, resolveCascadeOptions } from "./permalinks";
 export { resolveRedirectsOptions } from "./redirects";
+export {
+  planRedirectOutputs,
+  writeRedirectOutputs,
+  type CustomHostRedirectRoute,
+  type PlanRedirectOutputsInput,
+  type PlannedRedirectOutput,
+  type RedirectOutputsPlan,
+  type WriteRedirectOutputsInput,
+  type WriteRedirectOutputsResult,
+} from "./redirect-outputs";
 export { enhanceMarkdownTables, markdownTableScrollLabel } from "./markdown-tables";
 export type { MarkdownTableEnhancementOptions } from "./markdown-tables";
 export { generateFeeds, renderFeedFiles, resolveFeedsOptions } from "./feeds";
