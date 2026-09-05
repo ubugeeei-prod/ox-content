@@ -199,34 +199,42 @@ const rendered = await renderSolidHtmlHost({
   imports,
   components: { Badge: "./src/components/Badge.tsx" },
   loadModule: (moduleId) => viteDevServer.ssrLoadModule(moduleId),
-  resolveClientModule: (module) => `/assets/islands/${module.name}.js`,
+  resolveClientModule: (module) =>
+    module.source === "document" ? `./docs/${module.name}.tsx` : `./components/${module.name}.tsx`,
 });
 ```
 
 The module cache is scoped to one render call, so development edits should
-trigger a fresh call after the host invalidates its page state. `modules` is
-server-side metadata for this render; serialize only `clientModules` or your own
-resolver output when sending island module identities to the browser.
+trigger a fresh call after the host invalidates its page state.
+`resolveClientModule()` writes the returned identity to each island as
+`data-ox-module`, along with `data-ox-export`. Use the same keys in the browser
+loader map so two documents can reuse a local component name without downstream
+HTML replacement.
 
 Diagnostics report missing components, module load failures, missing exports,
 SSR errors, and unsupported document-local import forms with document/component
 context. The supported document-local forms are the same ones the Markdown-module
 adapter understands: default imports and named imports with local bindings.
 
-The client helper is a fresh-mount bridge, not Solid hydration. It reads the
-existing Ox Content island payload and slot HTML, clears the target, and lets the
-caller mount with `@solidjs/web`. Use it with `initIslands()` so load strategies,
-disposal, and cancellation stay owned by the shared island runtime.
+The browser client lives on a separate subpath so custom hosts can bundle it
+without importing Vite, Node helpers, or native optional dependencies:
+`@ox-content/vite-plugin-solid/html-host/client`. It is a fresh-mount bridge,
+not Solid hydration. It reads the existing Ox Content island payload and authored
+slot HTML, clears the target, and lets the caller mount with `@solidjs/web`.
+When SSR produced HTML for a self-closing island, that rendered output is not
+passed back as children.
 
 ```tsx
 import { initIslands } from "@ox-content/islands";
 import { render } from "@solidjs/web";
-import { createSolidHtmlHostHydrate } from "@ox-content/vite-plugin-solid";
-import * as components from "./generated-island-client-modules";
+import { initSolidHtmlHost } from "@ox-content/vite-plugin-solid/html-host/client";
 
-const hydrate = createSolidHtmlHostHydrate({
-  components,
-  render(Component, props, element, slotHtml) {
+const modules = import.meta.glob("./{docs,components}/**/*.tsx");
+
+initSolidHtmlHost({
+  initIslands,
+  modules,
+  render({ component: Component, props, element, slotHtml }) {
     const dispose = render(
       () =>
         slotHtml ? (
@@ -240,10 +248,20 @@ const hydrate = createSolidHtmlHostHydrate({
     );
     return dispose;
   },
+  onError(error) {
+    console.error(error.message);
+  },
+  options: { selector: ".ox-content [data-ox-island]" },
 });
-
-initIslands(hydrate, { selector: ".ox-content [data-ox-island]" });
 ```
+
+`initSolidHtmlHost()` calls the `initIslands()` function supplied by the host and
+returns its controller. If you already manage the island runtime yourself, use
+`createSolidHtmlHostLazyHydrate()` from the same subpath and pass the returned
+synchronous hydrate function to `initIslands()`. The adapter keeps pending lazy
+imports cancellable: disposal before a module resolves prevents stale mount,
+mounted cleanup runs exactly once, and unknown module, loader, runtime, export,
+and render failures are reported to `onError`.
 
 ## Island stylesheets for custom hosts
 

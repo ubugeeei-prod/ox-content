@@ -65,6 +65,9 @@ Contribution summary:
 - Requested the collection asset URL rewriter, public external-feed ingestion,
   redirect-output planner/writer, Solid HTML-string host adapter, and Solid
   island stylesheet resolver used by custom hosts.
+- Reported that Solid HTML-string hosts needed a browser-only lazy client
+  contract with cancellable island lifecycle and document-scoped module
+  identities.
 
 ### bulebrainbrand
 

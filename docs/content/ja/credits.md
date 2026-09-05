@@ -62,6 +62,8 @@ Markdown 属性とリッチなソーシャル埋め込みの見た目の同等�
 - 独自ホスト向けに、collection asset URL rewriter、公開 external-feed ingestion、
   redirect-output planner/writer、Solid HTML-string host adapter、Solid island
   stylesheet resolver を要望しました。
+- Solid HTML-string host 向けに、cancellable island lifecycle と document-scoped
+  module identity を持つ browser-only lazy client contract が必要だと報告しました。
 
 ### bulebrainbrand
 

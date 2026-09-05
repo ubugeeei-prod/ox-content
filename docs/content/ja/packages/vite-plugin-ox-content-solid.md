@@ -96,35 +96,40 @@ const rendered = await renderSolidHtmlHost({
   imports,
   components: { Badge: "./src/components/Badge.tsx" },
   loadModule: (moduleId) => viteDevServer.ssrLoadModule(moduleId),
-  resolveClientModule: (module) => `/assets/islands/${module.name}.js`,
+  resolveClientModule: (module) =>
+    module.source === "document" ? `./docs/${module.name}.tsx` : `./components/${module.name}.tsx`,
 });
 ```
 
 module cache は 1 回の render call に閉じます。development edit 後は host 側で page
-state を invalidation し、改めて呼び直してください。`modules` はその render の
-server-side metadata です。browser に渡す JSON には `clientModules` か host の
-resolver が返した公開 identity だけを serialize し、absolute filesystem path を
-混ぜないでください。
+state を invalidation し、改めて呼び直してください。`resolveClientModule()` が返した
+identity は各 island の `data-ox-module` に書かれ、`data-ox-export` も一緒に出力されます。
+browser 側の loader map でも同じ key を使ってください。これにより、2 つの document が同じ
+local component 名を使っても、downstream の HTML replacement なしで別 module を読めます。
 
 diagnostics は missing component、module load failure、missing export、SSR error、
 unsupported document-local import form を document/component context 付きで返します。
 対応する document-local form は Markdown-module adapter と同じで、default import と
 local binding 付き named import です。
 
-client helper は Solid hydration ではなく fresh mount の bridge です。既存の
-Ox Content island payload と slot HTML を読み、target を空にしてから caller の
-`@solidjs/web` renderer に渡します。load strategy、dispose、cancellation を共有
-runtime に任せるため、`initIslands()` と組み合わせます。
+browser client は別 subpath にあります:
+`@ox-content/vite-plugin-solid/html-host/client`。custom host が Vite、Node helper、native
+optional dependency を巻き込まずに bundle できる browser-only entry です。これは Solid
+hydration ではなく fresh mount の bridge です。既存の Ox Content island payload と
+authoring 時の slot HTML を読み、target を空にしてから caller の `@solidjs/web` renderer に
+渡します。SSR 済み self-closing island の rendered HTML は children として渡しません。
 
 ```tsx
 import { initIslands } from "@ox-content/islands";
 import { render } from "@solidjs/web";
-import { createSolidHtmlHostHydrate } from "@ox-content/vite-plugin-solid";
-import * as components from "./generated-island-client-modules";
+import { initSolidHtmlHost } from "@ox-content/vite-plugin-solid/html-host/client";
 
-const hydrate = createSolidHtmlHostHydrate({
-  components,
-  render(Component, props, element, slotHtml) {
+const modules = import.meta.glob("./{docs,components}/**/*.tsx");
+
+initSolidHtmlHost({
+  initIslands,
+  modules,
+  render({ component: Component, props, element, slotHtml }) {
     const dispose = render(
       () =>
         slotHtml ? (
@@ -138,10 +143,19 @@ const hydrate = createSolidHtmlHostHydrate({
     );
     return dispose;
   },
+  onError(error) {
+    console.error(error.message);
+  },
+  options: { selector: ".ox-content [data-ox-island]" },
 });
-
-initIslands(hydrate, { selector: ".ox-content [data-ox-island]" });
 ```
+
+`initSolidHtmlHost()` は host が渡した `initIslands()` を呼び、その controller を返します。
+island runtime を host 側で直接管理している場合は、同じ subpath の
+`createSolidHtmlHostLazyHydrate()` を使い、返ってきた同期 hydrate function を
+`initIslands()` に渡してください。adapter は pending lazy import を cancellation 可能にします。
+module 解決前に dispose された island は stale mount せず、mounted cleanup は 1 回だけ走り、
+unknown module、loader、runtime、export、render の失敗は `onError` に通知されます。
 
 ## 独自ホストの island stylesheet
 
