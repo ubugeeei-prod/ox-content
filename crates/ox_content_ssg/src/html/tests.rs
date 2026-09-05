@@ -78,11 +78,11 @@ fn magic_links_include_marker_tolerates_windows_line_endings() {
     let lf = "a\n/* @include magic-links.css */\nb\n";
     let crlf = lf.replace('\n', "\r\n");
 
-    for template in [lf.to_string(), crlf] {
-        let css = super::inline_magic_links_css(&template);
-        assert!(css.contains(super::MAGIC_LINKS_CSS));
-        assert!(!css.contains("/* @include magic-links.css */"));
-    }
+    assert_eq!(super::inline_magic_links_css(lf), format!("a\n{}b\n", super::MAGIC_LINKS_CSS));
+    assert_eq!(
+        super::inline_magic_links_css(&crlf),
+        format!("a\r\n{}b\r\n", super::MAGIC_LINKS_CSS)
+    );
 }
 
 #[test]

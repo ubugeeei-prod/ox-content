@@ -213,7 +213,23 @@ fn inline_magic_links_css(template: &str) -> String {
         template.contains(MAGIC_LINKS_INCLUDE_MARK),
         "ssg.css must include the magic-links marker so SSG and published CSS stay aligned"
     );
-    template.replacen(MAGIC_LINKS_INCLUDE_MARK, MAGIC_LINKS_CSS, 1)
+    let marker_start =
+        template.find(MAGIC_LINKS_INCLUDE_MARK).expect("marker presence was checked above");
+    let marker_end = marker_start + MAGIC_LINKS_INCLUDE_MARK.len();
+    let newline_end = if template[marker_end..].starts_with("\r\n") {
+        marker_end + 2
+    } else if template[marker_end..].starts_with('\n') {
+        marker_end + 1
+    } else {
+        marker_end
+    };
+    let mut css = String::with_capacity(
+        template.len() - (newline_end - marker_start) + MAGIC_LINKS_CSS.len(),
+    );
+    css.push_str(&template[..marker_start]);
+    css.push_str(MAGIC_LINKS_CSS);
+    css.push_str(&template[newline_end..]);
+    css
 }
 
 /// CSS styles for Entry pages (hero, features).
