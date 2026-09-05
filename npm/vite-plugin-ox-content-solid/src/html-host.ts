@@ -7,8 +7,9 @@ import {
   type DocumentImportDiagnostic,
   type MdxImport,
 } from "@ox-content/vite-plugin";
-import { readIslandSlotHtml } from "@ox-content/islands";
 import type { ComponentsMap } from "./types";
+
+const ISLAND_JSON_SCRIPT = /^\s*<script type="application\/json">[\s\S]*?<\/script>/;
 
 export interface SolidHtmlHostModule {
   name: string;
@@ -272,6 +273,11 @@ function isReadonlyMap(
   value: CreateSolidHtmlHostHydrateInput["components"],
 ): value is ReadonlyMap<string, unknown> {
   return typeof (value as ReadonlyMap<string, unknown>).get === "function";
+}
+
+function readIslandSlotHtml(element: Pick<HTMLElement, "dataset" | "innerHTML">): string {
+  const fromAttr = element.dataset.oxContent;
+  return fromAttr || element.innerHTML.replace(ISLAND_JSON_SCRIPT, "");
 }
 
 async function defaultRenderComponent(
