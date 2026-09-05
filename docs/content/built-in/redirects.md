@@ -140,6 +140,31 @@ oxContent({
 That map writes both rules to `_redirects` and no HTML redirect pages. Remove
 `html: false` to also write an HTML page for `/old-guide`.
 
+## Custom host output
+
+Custom hosts that disable built-in SSG can still reuse redirect planning and
+serialization:
+
+```ts
+import { planRedirectOutputs, writeRedirectOutputs } from "@ox-content/vite-plugin";
+
+const input = {
+  redirects: { provider: "cloudflare", html: false, map: { "/old": "/guide" } },
+  routes: [{ path: "/guide", aliases: ["/legacy"] }],
+  occupiedPaths: ["/guide"],
+} as const;
+
+const plan = planRedirectOutputs(input);
+await writeRedirectOutputs({ outDir, ...input });
+```
+
+Planning returns `html`, `provider`, `headers`, and `json` outputs without
+writing files. Writing emits those outputs explicitly. HTML redirect pages never
+replace an existing file, so a host-rendered page keeps ownership of its path.
+Root host files (`_redirects`, `_headers`, `redirects.json`) are overwritten by
+the writer when present; merge them first if another part of your build owns the
+same file.
+
 ## Migrating from 2.x
 
 `redirects.netlify` is removed in 3.0. Replace `netlify: true` with

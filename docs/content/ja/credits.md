@@ -59,6 +59,19 @@ Markdown 属性とリッチなソーシャル埋め込みの見た目の同等�
   reference contract に合わせました。
 - ryoppippi.com integration で、独自ホストの reader-chrome copy sizing 要件を
   報告しました。
+- 独自ホスト向けに、collection asset URL rewriter、公開 external-feed ingestion、
+  redirect-output planner/writer、Solid HTML-string host adapter、Solid island
+  stylesheet resolver を要望しました。
+
+### bulebrainbrand
+
+Vite plugin の Windows SSG panic を報告してくれた
+[bulebrainbrand](https://github.com/bulebrainbrand) に感謝します。
+
+貢献の要約:
+
+- Windows の改行により、Vite development server でページを開く前に共有 `ssg.css`
+  magic-link marker check が panic することを報告しました。
 
 ## 第三者の帰属
 

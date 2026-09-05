@@ -111,6 +111,29 @@ oxContent({
 
 このマップは両方の規則を `_redirects` に書き、HTML リダイレクトページは出しません。`html: false` を外すと、`/old-guide` 向けの HTML ページも書きます。
 
+## 独自ホストでの出力
+
+組み込み SSG を無効にする独自ホストでも、redirect の計画と serialization を再利用できます。
+
+```ts
+import { planRedirectOutputs, writeRedirectOutputs } from "@ox-content/vite-plugin";
+
+const input = {
+  redirects: { provider: "cloudflare", html: false, map: { "/old": "/guide" } },
+  routes: [{ path: "/guide", aliases: ["/legacy"] }],
+  occupiedPaths: ["/guide"],
+} as const;
+
+const plan = planRedirectOutputs(input);
+await writeRedirectOutputs({ outDir, ...input });
+```
+
+計画は file を書かず、`html`、`provider`、`headers`、`json` の output を返します。
+書き出しはそれらの output を明示的に emit します。HTML redirect page は既存 file を
+置き換えないので、host-rendered page がその path の owner のままです。host root の
+`_redirects`、`_headers`、`redirects.json` は存在すると writer が上書きします。
+build の別工程が同じ file を持つ場合は、先に merge してください。
+
 ## 2.x からの移行
 
 3.0 では `redirects.netlify` を削除しました。`netlify: true` は `provider: "netlify"` に置き換えるか、CI 環境にホストを選ばせるなら `provider` を省略してください。

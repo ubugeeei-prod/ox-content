@@ -79,6 +79,7 @@ aliases safely, and keeps the same manifest for production and development.
 import {
   createCollectionAssetsMiddleware,
   planCollectionAssets,
+  rewriteCollectionAssetUrls,
   writeCollectionAssets,
 } from "@ox-content/vite-plugin";
 
@@ -94,12 +95,92 @@ const collectionAssets = await planCollectionAssets({
 
 await writeCollectionAssets({ manifest: collectionAssets, outDir });
 viteServer.middlewares.use(createCollectionAssetsMiddleware(collectionAssets));
+
+const rewritten = rewriteCollectionAssetUrls({
+  html: hostRenderedHtml,
+  pagePath: "/works/showcase/",
+  manifest: collectionAssets,
+});
 ```
 
 `writeCollectionAssets()` writes each distinct content hash below `contentDir`
 (`"/assets/content"` by default) once, then hard-links aliases with a copy
 fallback. `sourcePath` must stay beneath `root`; malformed URL encoding, path
 traversal, and aliases outside the output directory are rejected.
+
+`rewriteCollectionAssetUrls()` is the pure HTML step for custom renderers. It
+parses an HTML fragment by default, resolves `href`, `src`, and `poster`
+against the supplied page path, and rewrites known aliases to the manifest's
+content-addressed target. Query strings and fragments are kept. Unknown aliases,
+external origins, fragment-only links, non-HTTP schemes such as `data:`,
+`mailto:`, and `javascript:`, and malformed attributes are left unchanged. Pass
+`origin` to treat same-origin absolute URLs like root-relative paths; rewritten
+values are still emitted as URL paths. Pass `document: true` when the input is a
+full HTML document.
+
+## External feeds in a custom host
+
+The built-in blog renderer and a custom blog index can share the same RSS/Atom
+loader without building pages. `loadBlogFeedEntries()` accepts the public blog
+feed configuration, keeps the existing timeout, redirect, size, and safe-network
+checks, and returns normalized external entries plus warning/fatal diagnostics.
+
+```ts
+import { loadBlogFeedEntries, mergeBlogFeedEntries } from "@ox-content/vite-plugin";
+
+const external = await loadBlogFeedEntries({
+  sources: [
+    { url: "https://example.com/feed.xml", language: "en", author: "Ada" },
+    { url: "https://example.jp/atom.xml", language: "ja", onError: "warn" },
+  ],
+});
+
+if (external.fatals.length) {
+  throw new Error(external.fatals.join("\n"));
+}
+
+const entries = mergeBlogFeedEntries(localEntries, external.entries);
+```
+
+Entries include `title`, `url`, stable `id`, optional `canonical`, `date`,
+`language`, `author`, `summary`, `external`, and `sourceUrl`. Empty sources make
+no network request, repeated source URLs are fetched once per call, and warning
+sources do not discard unrelated successful sources. Merge order matches the
+built-in blog: local entries win on duplicate canonical URL or stable id, then
+items sort newest first.
+
+## Redirect outputs without built-in pages
+
+Custom hosts can plan and explicitly write redirect outputs with the same
+configuration the built-in SSG uses. Planning is side-effect free; writing emits
+only the selected redirect files and will not replace an existing host-rendered
+HTML page.
+
+```ts
+import { planRedirectOutputs, writeRedirectOutputs } from "@ox-content/vite-plugin";
+
+const redirectInput = {
+  redirects: {
+    provider: "cloudflare",
+    html: false,
+    map: { "/old-guide": "/guide" },
+  },
+  routes: [{ path: "/guide", aliases: ["/old"], redirect: "/retired" }],
+  occupiedPaths: hostPagePaths,
+  base: "/docs/",
+} as const;
+
+const redirectPlan = planRedirectOutputs(redirectInput);
+await writeRedirectOutputs({ ...redirectInput, outDir });
+```
+
+`planRedirectOutputs()` accepts the public `redirects` option, custom host
+routes, occupied host paths, `base`, and optional CI env. Outputs are
+discriminated as `html`, `provider`, `headers`, or `json`; provider outputs name
+`cloudflare` or `netlify` instead of exposing the internal file-plan field.
+`_redirects`, `_headers`, and `redirects.json` are root host files. Ox Content
+writes them only when requested by this API or the built-in SSG, so a custom host
+that already owns those files should merge or choose one owner before writing.
 
 ## API
 
@@ -111,6 +192,11 @@ traversal, and aliases outside the output directory are rejected.
 | `planCollectionAssets`             | Plan content-addressed targets from explicit collection source-to-public mappings.      |
 | `writeCollectionAssets`            | Write deduplicated collection targets and public hard-link/copy aliases.                |
 | `createCollectionAssetsMiddleware` | Serve the planned aliases and content targets in a development host.                    |
+| `rewriteCollectionAssetUrls`       | Rewrite host-rendered HTML aliases to collection content targets.                       |
+| `loadBlogFeedEntries`              | Load public RSS/Atom entries for a custom blog index without page rendering.            |
+| `mergeBlogFeedEntries`             | Merge host entries and external entries with built-in blog precedence.                  |
+| `planRedirectOutputs`              | Preview redirect HTML, provider, headers, and JSON outputs without writing files.       |
+| `writeRedirectOutputs`             | Emit selected redirect outputs beside host-rendered pages.                              |
 | `writeMarkdownCompanions`          | Write original Markdown beside host-rendered pages. Reuses the copy-as-markdown writer. |
 | `renderFeedFiles`                  | Render RSS / Atom / JSON feed files without filesystem writes.                          |
 | `writeFeedFiles`                   | Write RSS / Atom / JSON feeds, including [named feeds](./feeds.md).                     |
