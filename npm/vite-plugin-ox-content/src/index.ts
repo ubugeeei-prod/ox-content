@@ -988,9 +988,20 @@ export type {
 } from "./feeds";
 export {
   BlogFeedError,
+  loadBlogFeedEntries,
+  mergeBlogFeedEntries,
   resolveBlogOptions,
   resolveBlogCollectionName,
   readingTimeMinutes,
+} from "./blog";
+export type {
+  BlogFeedEntry,
+  BlogFeedFetchFn,
+  BlogFeedFetchLimits,
+  BlogFeedLookup,
+  BlogFeedNetwork,
+  LoadBlogFeedEntriesInput,
+  LoadBlogFeedEntriesResult,
 } from "./blog";
 export { resolveBudouxOptions, transformBudouxHtml } from "./budoux";
 export { resolvePwaOptions } from "./pwa";
