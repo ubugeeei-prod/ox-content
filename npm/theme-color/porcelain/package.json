@@ -1,6 +1,6 @@
 {
   "name": "@ox-content/theme-color-porcelain",
-  "version": "3.0.0-beta.10",
+  "version": "3.0.0-beta.11",
   "description": "Soft warm white with muted blue-grey — an Ox Content color scheme that composes with any @ox-content/theme-* skin",
   "keywords": [
     "color-scheme",
