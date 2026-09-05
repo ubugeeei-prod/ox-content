@@ -1,5 +1,11 @@
 # Changelog
 
+## [3.0.0-beta.10] - 2026-09-05
+
+### Bug Fixes
+
+- add browser-safe HTML host client (#1282)
+
 ## [3.0.0-beta.9] - 2026-09-05
 
 ### Features

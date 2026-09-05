@@ -1,6 +1,6 @@
 {
   "name": "@ox-content/theme-color-kanagawa",
-  "version": "3.0.0-beta.9",
+  "version": "3.0.0-beta.10",
   "description": "Kanagawa Lotus and Wave — an Ox Content color scheme that composes with any @ox-content/theme-* skin",
   "keywords": [
     "color-scheme",

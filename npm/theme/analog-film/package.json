@@ -1,6 +1,6 @@
 {
   "name": "@ox-content/theme-analog-film",
-  "version": "3.0.0-beta.9",
+  "version": "3.0.0-beta.10",
   "description": "Grain, halation and sprocket rails with a gentle gate weave — an Ox Content skin that composes with any @ox-content/theme-color-* scheme",
   "keywords": [
     "analog",
