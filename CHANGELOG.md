@@ -1,5 +1,11 @@
 # Changelog
 
+## [3.0.0-beta.9] - 2026-09-05
+
+### Features
+
+- expose output contracts
+
 ## [3.0.0-beta.8] - 2026-09-03
 
 ### Features

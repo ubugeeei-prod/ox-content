@@ -1,6 +1,6 @@
 {
   "name": "@ox-content/theme-color-one-dark",
-  "version": "3.0.0-beta.8",
+  "version": "3.0.0-beta.9",
   "description": "Atom One Light and One Dark — an Ox Content color scheme that composes with any @ox-content/theme-* skin",
   "keywords": [
     "color-scheme",

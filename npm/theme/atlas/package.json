@@ -1,6 +1,6 @@
 {
   "name": "@ox-content/theme-atlas",
-  "version": "3.0.0-beta.8",
+  "version": "3.0.0-beta.9",
   "description": "A survey sheet — contour bands, a keyed legend sidebar and registration marks — an Ox Content skin that composes with any @ox-content/theme-color-* scheme",
   "keywords": [
     "cartography",

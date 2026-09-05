@@ -1,6 +1,6 @@
 {
   "name": "@ox-content/theme-fabric",
-  "version": "3.0.0-beta.8",
+  "version": "3.0.0-beta.9",
   "description": "Woven texture, stitched seams and soft cloth-fold reveals — an Ox Content skin that composes with any @ox-content/theme-color-* scheme",
   "keywords": [
     "craft",
