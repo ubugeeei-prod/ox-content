@@ -1009,6 +1009,12 @@ export {
   type WriteCollectionAssetsResult,
 } from "./collection-assets";
 export {
+  rewriteCollectionAssetUrls,
+  type CollectionAssetUrlRewrite,
+  type RewriteCollectionAssetUrlsInput,
+  type RewriteCollectionAssetUrlsResult,
+} from "./collection-asset-html";
+export {
   resolveSelfHostedAssetManifest,
   writeSelfHostedAssets,
   type OxContentAssetManifest,

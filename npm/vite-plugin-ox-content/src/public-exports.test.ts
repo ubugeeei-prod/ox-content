@@ -58,6 +58,7 @@ describe("public export surface", () => {
       "renderReaderChromeAttributes",
       "renderReaderChromeScriptTag",
       "renderReaderChromeStyleTag",
+      "rewriteCollectionAssetUrls",
       "tokensToCss",
       "resolveReaderChromeInput",
       "resolveBudouxOptions",

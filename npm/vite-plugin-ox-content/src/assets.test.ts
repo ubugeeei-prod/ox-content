@@ -13,6 +13,7 @@ import {
   planCollectionAssets,
   writeCollectionAssets,
 } from "./collection-assets";
+import { rewriteCollectionAssetUrls } from "./collection-asset-html";
 import { resolveOptions } from "./resolve-options";
 
 const fixtureFont = path.join(
@@ -186,6 +187,46 @@ describe("collection asset contract", () => {
         ],
       }),
     ).rejects.toThrow("case-insensitive filesystems");
+  });
+
+  it("rewrites host-rendered HTML aliases to content-addressed paths", () => {
+    const manifest = {
+      assets: [
+        {
+          sourcePath: "/repo/content/chart.png",
+          publicPaths: ["/blog/example/chart.png", "/blog/example/%E5%9B%B3.png"],
+          contentPath: "/assets/content/abc123.png",
+        },
+      ],
+    };
+
+    const result = rewriteCollectionAssetUrls({
+      html: [
+        '<img src="./chart.png?size=2#preview" alt="Chart">',
+        '<a href="/blog/example/%E5%9B%B3.png">encoded</a>',
+        '<video poster="https://site.example/blog/example/chart.png"></video>',
+        '<a href="https://other.example/blog/example/chart.png">external</a>',
+        '<a href="#local">fragment</a>',
+        '<img src="data:image/png;base64,abc">',
+        '<script>const src = "./chart.png";</script>',
+      ].join(""),
+      pagePath: "/blog/example/",
+      origin: "https://site.example",
+      manifest,
+    });
+
+    expect(result.rewrites.map((rewrite) => [rewrite.attribute, rewrite.replacement])).toEqual([
+      ["src", "/assets/content/abc123.png?size=2#preview"],
+      ["href", "/assets/content/abc123.png"],
+      ["poster", "/assets/content/abc123.png"],
+    ]);
+    expect(result.html).toContain('src="/assets/content/abc123.png?size=2#preview"');
+    expect(result.html).toContain('href="/assets/content/abc123.png"');
+    expect(result.html).toContain('poster="/assets/content/abc123.png"');
+    expect(result.html).toContain("https://other.example/blog/example/chart.png");
+    expect(result.html).toContain('href="#local"');
+    expect(result.html).toContain("data:image/png;base64,abc");
+    expect(result.html).toContain('const src = "./chart.png";');
   });
 });
 
