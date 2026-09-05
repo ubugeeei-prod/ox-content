@@ -1,6 +1,6 @@
 {
   "name": "@ox-content/theme-color-snow",
-  "version": "3.0.0-beta.11",
+  "version": "3.0.0-beta.12",
   "description": "Crisp snow white over deep slate — an Ox Content color scheme that composes with any @ox-content/theme-* skin",
   "keywords": [
     "color-scheme",

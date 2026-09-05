@@ -1,6 +1,6 @@
 {
   "name": "@ox-content/theme-blueprint",
-  "version": "3.0.0-beta.11",
+  "version": "3.0.0-beta.12",
   "description": "Technical drawing grid with dashed callouts and strokes that draw themselves — an Ox Content skin that composes with any @ox-content/theme-color-* scheme",
   "keywords": [
     "blueprint",

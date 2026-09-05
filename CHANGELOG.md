@@ -1,5 +1,11 @@
 # Changelog
 
+## [3.0.0-beta.12] - 2026-09-05
+
+### Bug Fixes
+
+- preserve public declaration export names
+
 ## [3.0.0-beta.11] - 2026-09-05
 
 ### Features

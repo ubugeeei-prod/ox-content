@@ -1,6 +1,6 @@
 {
   "name": "@ox-content/theme-bauhaus",
-  "version": "3.0.0-beta.11",
+  "version": "3.0.0-beta.12",
   "description": "Circle, square, triangle and a diagonal that refuses the grid — an Ox Content skin that composes with any @ox-content/theme-color-* scheme",
   "keywords": [
     "bauhaus",
