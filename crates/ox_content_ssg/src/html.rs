@@ -198,21 +198,40 @@ struct BarePageTemplate<'a> {
 }
 
 /// Marker expanded from `ssg.css` so Magic Link rules live in one file.
-const MAGIC_LINKS_INCLUDE_MARK: &str = "/* @include magic-links.css */\n";
+const MAGIC_LINKS_INCLUDE_MARK: &str = "/* @include magic-links.css */";
 
 /// Published Magic Link stylesheet. Inlined into `SSG_CSS` at the same
 /// position the rules previously occupied in `ssg.css`.
 const MAGIC_LINKS_CSS: &str = include_str!("plugins/magic-links.css");
 
 /// CSS styles for SSG pages, with Magic Link rules spliced in.
-static SSG_CSS: std::sync::LazyLock<String> = std::sync::LazyLock::new(|| {
-    let template = include_str!("ssg.css");
+static SSG_CSS: std::sync::LazyLock<String> =
+    std::sync::LazyLock::new(|| inline_magic_links_css(include_str!("ssg.css")));
+
+fn inline_magic_links_css(template: &str) -> String {
     assert!(
         template.contains(MAGIC_LINKS_INCLUDE_MARK),
         "ssg.css must include the magic-links marker so SSG and published CSS stay aligned"
     );
-    template.replacen(MAGIC_LINKS_INCLUDE_MARK, MAGIC_LINKS_CSS, 1)
-});
+    let Some(marker_start) = template.find(MAGIC_LINKS_INCLUDE_MARK) else {
+        return template.to_string();
+    };
+    let marker_end = marker_start + MAGIC_LINKS_INCLUDE_MARK.len();
+    let newline_end = if template[marker_end..].starts_with("\r\n") {
+        marker_end + 2
+    } else if template[marker_end..].starts_with('\n') {
+        marker_end + 1
+    } else {
+        marker_end
+    };
+    let mut css = String::with_capacity(
+        template.len() - (newline_end - marker_start) + MAGIC_LINKS_CSS.len(),
+    );
+    css.push_str(&template[..marker_start]);
+    css.push_str(MAGIC_LINKS_CSS);
+    css.push_str(&template[newline_end..]);
+    css
+}
 
 /// CSS styles for Entry pages (hero, features).
 const ENTRY_CSS: &str = include_str!("entry.css");

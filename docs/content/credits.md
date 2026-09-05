@@ -62,6 +62,19 @@ Contribution summary:
   sveltweet reference contract.
 - Reported the custom-host reader-chrome copy sizing requirement from the
   ryoppippi.com integration.
+- Requested the collection asset URL rewriter, public external-feed ingestion,
+  redirect-output planner/writer, Solid HTML-string host adapter, and Solid
+  island stylesheet resolver used by custom hosts.
+
+### bulebrainbrand
+
+Special thanks to [bulebrainbrand](https://github.com/bulebrainbrand) for
+reporting the Windows SSG panic in the Vite plugin.
+
+Contribution summary:
+
+- Reported that Windows line endings could make the shared `ssg.css` magic-link
+  marker check panic before the page opened in a Vite development server.
 
 ## Third-party attribution
 

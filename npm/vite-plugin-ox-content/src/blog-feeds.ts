@@ -7,8 +7,16 @@ import { feedDateIso } from "./blog-feed-date";
 import { fetchBlogFeedBody, type BlogFeedNetwork } from "./blog-feed-fetch";
 import { parseBlogFeed, type ParsedFeedItem } from "./blog-feed-parse";
 import { canonicalizeFeedItemUrl } from "./blog-feed-url";
+import { resolveBlogOptions } from "./blog-options";
 import { sortPosts } from "./blog-posts";
-import type { ResolvedBlogFeedSource } from "./types";
+import type { BlogFeedSource, ResolvedBlogFeedSource } from "./types";
+
+export type {
+  BlogFeedFetchFn,
+  BlogFeedFetchLimits,
+  BlogFeedLookup,
+  BlogFeedNetwork,
+} from "./blog-feed-fetch";
 
 export class BlogFeedError extends Error {
   readonly issues: string[];
@@ -26,6 +34,49 @@ export interface LoadedBlogFeeds {
   fatals: string[];
 }
 
+export interface BlogFeedEntry {
+  title: string;
+  url: string;
+  id: string;
+  canonical?: string;
+  date?: string;
+  language?: string;
+  author?: string;
+  summary?: string;
+  external?: boolean;
+  sourceUrl?: string;
+}
+
+export interface LoadBlogFeedEntriesInput {
+  sources?: readonly (string | BlogFeedSource)[];
+  network?: BlogFeedNetwork;
+}
+
+export interface LoadBlogFeedEntriesResult {
+  entries: BlogFeedEntry[];
+  warnings: string[];
+  fatals: string[];
+}
+
+export async function loadBlogFeedEntries(
+  input: LoadBlogFeedEntriesInput = {},
+): Promise<LoadBlogFeedEntriesResult> {
+  const sources = resolveBlogOptions({ feeds: [...(input.sources ?? [])] }).feeds;
+  const loaded = await loadExternalBlogPosts(sources, input.network);
+  return {
+    entries: loaded.pages.map(toFeedEntry),
+    warnings: loaded.warnings,
+    fatals: loaded.fatals,
+  };
+}
+
+export function mergeBlogFeedEntries(
+  local: readonly BlogFeedEntry[],
+  external: readonly BlogFeedEntry[],
+): BlogFeedEntry[] {
+  return mergeBlogPosts(local.map(toBlogPage), external.map(toBlogPage)).map(toFeedEntry);
+}
+
 export async function loadExternalBlogPosts(
   sources: readonly ResolvedBlogFeedSource[],
   network: BlogFeedNetwork = {},
@@ -38,24 +89,27 @@ export async function loadExternalBlogPosts(
   }
 
   const bodies = new Map<string, Promise<string>>();
-  const results = await Promise.all(
+  const results: Array<
+    | { ok: true; pages: BlogSourcePage[] }
+    | { ok: false; source: ResolvedBlogFeedSource; message: string }
+  > = await Promise.all(
     sources.map(async (source) => {
       try {
         const body = await cachedBody(source.url, bodies, network);
         const items = parseBlogFeed(body, source.language).map((item) =>
           toExternalPage(item, source),
         );
-        return { source, pages: items.filter((page): page is BlogSourcePage => page != null) };
+        return { ok: true, pages: items.filter((page): page is BlogSourcePage => page != null) };
       } catch (error) {
         const detail = error instanceof Error ? error.message : String(error);
         const message = `[ox-content] blog feed ${source.url}: ${detail}`;
-        return { source, message };
+        return { ok: false, source, message };
       }
     }),
   );
 
   for (const result of results) {
-    if ("pages" in result) {
+    if (result.ok) {
       pages.push(...result.pages);
       continue;
     }
@@ -125,6 +179,43 @@ function toExternalPage(
       language,
       author,
       summary: item.summary,
+      sourceUrl: source.url,
+    },
+  };
+}
+
+function toFeedEntry(page: BlogSourcePage): BlogFeedEntry {
+  const id = stringField(page.frontmatter.id) ?? page.routePaths.href;
+  return {
+    title: page.title,
+    url: page.routePaths.href,
+    id,
+    canonical: stringField(page.frontmatter.canonical),
+    date: stringField(page.frontmatter.date),
+    language: stringField(page.frontmatter.language),
+    author: stringField(page.frontmatter.author),
+    summary: stringField(page.frontmatter.summary),
+    external: page.external || page.frontmatter.external === true,
+    sourceUrl: stringField(page.frontmatter.sourceUrl),
+  };
+}
+
+function toBlogPage(entry: BlogFeedEntry): BlogSourcePage {
+  return {
+    title: entry.title,
+    inputPath: `${entry.external ? "external" : "host"}:${entry.id || entry.url}`,
+    transformedHtml: "",
+    external: entry.external,
+    routePaths: { href: entry.url },
+    frontmatter: {
+      ...(entry.id ? { id: entry.id } : {}),
+      ...(entry.canonical ? { canonical: entry.canonical } : {}),
+      ...(entry.date ? { date: entry.date } : {}),
+      ...(entry.language ? { language: entry.language } : {}),
+      ...(entry.author ? { author: entry.author } : {}),
+      ...(entry.summary ? { summary: entry.summary } : {}),
+      ...(entry.sourceUrl ? { sourceUrl: entry.sourceUrl } : {}),
+      ...(entry.external ? { external: true } : {}),
     },
   };
 }

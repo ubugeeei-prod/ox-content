@@ -1,6 +1,11 @@
 import { describe, expect, it } from "vite-plus/test";
 import { generateFeeds } from "./feeds";
-import { loadExternalBlogPosts, mergeBlogPosts } from "./blog-feeds";
+import {
+  loadBlogFeedEntries,
+  loadExternalBlogPosts,
+  mergeBlogFeedEntries,
+  mergeBlogPosts,
+} from "./blog-feeds";
 import type { BlogSourcePage } from "./blog-html";
 import type { BlogFeedNetwork } from "./blog-feed-fetch";
 import type { ResolvedBlogFeedSource } from "./types";
@@ -181,6 +186,79 @@ describe("loadExternalBlogPosts", () => {
       ),
     );
     expect(redirects.warnings[0]).toContain("too many redirects");
+  });
+});
+
+describe("public blog feed entries", () => {
+  it("loads RSS and Atom entries without internal page objects", async () => {
+    const loaded = await loadBlogFeedEntries({
+      sources: [
+        { url: "https://feeds.example.com/rss.xml", language: "en", author: "ada" },
+        { url: "https://feeds.example.com/atom.xml", language: "ja" },
+        { url: "https://feeds.example.com/bad.xml" },
+      ],
+      network: network((url) => {
+        if (url.endsWith("bad.xml")) {
+          return xmlResponse("<html><body>nope</body></html>", 200, {
+            "content-type": "text/html",
+          });
+        }
+        return xmlResponse(url.endsWith("atom.xml") ? ATOM : RSS);
+      }),
+    });
+
+    expect(loaded.fatals).toEqual([]);
+    expect(loaded.warnings[0]).toContain("bad.xml");
+    expect(loaded.entries).toEqual([
+      expect.objectContaining({
+        title: "Remote",
+        url: "https://news.example.com/remote",
+        id: "https://news.example.com/remote",
+        language: "en",
+        author: "ada",
+        external: true,
+        sourceUrl: "https://feeds.example.com/rss.xml",
+      }),
+      expect.objectContaining({
+        title: "Atom remote",
+        url: "https://news.example.com/atom",
+        id: "urn:atom:1",
+        language: "ja",
+        external: true,
+      }),
+    ]);
+  });
+
+  it("merges public entries with local precedence and date ordering", () => {
+    const merged = mergeBlogFeedEntries(
+      [
+        {
+          title: "Local reprint",
+          url: "/local/",
+          id: "local",
+          canonical: "https://news.example.com/remote",
+          date: "2024-01-15",
+        },
+      ],
+      [
+        {
+          title: "Remote duplicate",
+          url: "https://news.example.com/remote",
+          id: "remote",
+          date: "2024-03-01",
+          external: true,
+        },
+        {
+          title: "Remote kept",
+          url: "https://news.example.com/kept",
+          id: "kept",
+          date: "2024-02-01",
+          external: true,
+        },
+      ],
+    );
+
+    expect(merged.map((entry) => entry.title)).toEqual(["Remote kept", "Local reprint"]);
   });
 });
 

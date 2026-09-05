@@ -215,6 +215,9 @@ export type {
   BuiltinEmbedOptions,
   ResolvedBuiltinEmbedOptions,
   BuiltinPmOptions,
+  MdxImport,
+  MdxImportSpecifier,
+  MdxImportSpecifierKind,
 } from "./types";
 
 /**
@@ -975,6 +978,16 @@ export {
 } from "./publish-state";
 export { resolvePermalinksOptions, resolveCascadeOptions } from "./permalinks";
 export { resolveRedirectsOptions } from "./redirects";
+export {
+  planRedirectOutputs,
+  writeRedirectOutputs,
+  type CustomHostRedirectRoute,
+  type PlanRedirectOutputsInput,
+  type PlannedRedirectOutput,
+  type RedirectOutputsPlan,
+  type WriteRedirectOutputsInput,
+  type WriteRedirectOutputsResult,
+} from "./redirect-outputs";
 export { enhanceMarkdownTables, markdownTableScrollLabel } from "./markdown-tables";
 export type { MarkdownTableEnhancementOptions } from "./markdown-tables";
 export { generateFeeds, renderFeedFiles, resolveFeedsOptions } from "./feeds";
@@ -988,9 +1001,20 @@ export type {
 } from "./feeds";
 export {
   BlogFeedError,
+  loadBlogFeedEntries,
+  mergeBlogFeedEntries,
   resolveBlogOptions,
   resolveBlogCollectionName,
   readingTimeMinutes,
+} from "./blog";
+export type {
+  BlogFeedEntry,
+  BlogFeedFetchFn,
+  BlogFeedFetchLimits,
+  BlogFeedLookup,
+  BlogFeedNetwork,
+  LoadBlogFeedEntriesInput,
+  LoadBlogFeedEntriesResult,
 } from "./blog";
 export { resolveBudouxOptions, transformBudouxHtml } from "./budoux";
 export { resolvePwaOptions } from "./pwa";
@@ -1008,6 +1032,12 @@ export {
   type WriteCollectionAssetsInput,
   type WriteCollectionAssetsResult,
 } from "./collection-assets";
+export {
+  rewriteCollectionAssetUrls,
+  type CollectionAssetUrlRewrite,
+  type RewriteCollectionAssetUrlsInput,
+  type RewriteCollectionAssetUrlsResult,
+} from "./collection-asset-html";
 export {
   resolveSelfHostedAssetManifest,
   writeSelfHostedAssets,

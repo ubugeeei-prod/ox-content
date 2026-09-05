@@ -74,6 +74,18 @@ fn ssg_css_inlines_shared_magic_links_stylesheet() {
 }
 
 #[test]
+fn magic_links_include_marker_tolerates_windows_line_endings() {
+    let lf = "a\n/* @include magic-links.css */\nb\n";
+    let crlf = lf.replace('\n', "\r\n");
+
+    assert_eq!(super::inline_magic_links_css(lf), format!("a\n{}b\n", super::MAGIC_LINKS_CSS));
+    assert_eq!(
+        super::inline_magic_links_css(&crlf),
+        format!("a\r\n{}b\r\n", super::MAGIC_LINKS_CSS)
+    );
+}
+
+#[test]
 fn default_theme_surfaces_stay_flat() {
     let default_css = [
         super::SSG_CSS.as_str(),

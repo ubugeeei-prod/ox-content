@@ -176,6 +176,104 @@ other framework integrations use. Each island is mounted with `render` from
 Markdown without any registered or document-imported component skips the island
 runtime entirely and compiles to a single `innerHTML` binding.
 
+## HTML-string custom hosts
+
+Hosts that call `renderMarkdown()` and then place the returned HTML inside their
+own Solid page shell can use the Solid adapter without importing each Markdown
+document as a Vite module. `renderSolidHtmlHost()` resolves document-local MDX
+imports, loads the matching server modules through a host-supplied loader, and
+replaces island bodies with Solid SSR HTML.
+
+```ts
+import { renderSolidHtmlHost, type MdxImport } from "@ox-content/vite-plugin-solid";
+
+const imports: MdxImport[] = [
+  { source: "./Chart.tsx", specifiers: [{ imported: "default", local: "Chart", kind: "default" }] },
+];
+
+const rendered = await renderSolidHtmlHost({
+  html: markdown.html,
+  documentPath: "/repo/docs/report.mdx",
+  root: "/repo",
+  srcDir: "docs",
+  imports,
+  components: { Badge: "./src/components/Badge.tsx" },
+  loadModule: (moduleId) => viteDevServer.ssrLoadModule(moduleId),
+  resolveClientModule: (module) => `/assets/islands/${module.name}.js`,
+});
+```
+
+The module cache is scoped to one render call, so development edits should
+trigger a fresh call after the host invalidates its page state. `modules` is
+server-side metadata for this render; serialize only `clientModules` or your own
+resolver output when sending island module identities to the browser.
+
+Diagnostics report missing components, module load failures, missing exports,
+SSR errors, and unsupported document-local import forms with document/component
+context. The supported document-local forms are the same ones the Markdown-module
+adapter understands: default imports and named imports with local bindings.
+
+The client helper is a fresh-mount bridge, not Solid hydration. It reads the
+existing Ox Content island payload and slot HTML, clears the target, and lets the
+caller mount with `@solidjs/web`. Use it with `initIslands()` so load strategies,
+disposal, and cancellation stay owned by the shared island runtime.
+
+```tsx
+import { initIslands } from "@ox-content/islands";
+import { render } from "@solidjs/web";
+import { createSolidHtmlHostHydrate } from "@ox-content/vite-plugin-solid";
+import * as components from "./generated-island-client-modules";
+
+const hydrate = createSolidHtmlHostHydrate({
+  components,
+  render(Component, props, element, slotHtml) {
+    const dispose = render(
+      () =>
+        slotHtml ? (
+          <Component {...props}>
+            <div innerHTML={slotHtml} />
+          </Component>
+        ) : (
+          <Component {...props} />
+        ),
+      element,
+    );
+    return dispose;
+  },
+});
+
+initIslands(hydrate, { selector: ".ox-content [data-ox-island]" });
+```
+
+## Island stylesheets for custom hosts
+
+Server-rendered islands often need their CSS before the client module mounts.
+`resolveSolidIslandStylesheets()` maps island module identities to stylesheet
+URLs from either a Vite build manifest or a development module graph.
+
+```ts
+import { resolveSolidIslandStylesheets } from "@ox-content/vite-plugin-solid";
+
+const styles = resolveSolidIslandStylesheets({
+  modules: rendered.modules.map((module) => module.serverModuleId),
+  manifest: viteManifest,
+  base: "/docs/",
+});
+
+for (const stylesheet of styles.stylesheets) {
+  head.push(`<link rel="stylesheet" href="${escapeHtml(stylesheet.href)}">`);
+}
+```
+
+Build resolution walks static `imports`, deduplicates CSS, keeps imported chunk
+CSS before the importing island, and respects `base` plus emitted hashed file
+names. Development resolution accepts a Vite-like module graph with
+`getModuleById()` and optional `getModulesByFile()`, preserving CSS query
+parameters so HMR URLs remain loadable. A valid island with no CSS returns no
+stylesheet and no diagnostic; missing manifest/module-graph entries report a
+`missing-module` diagnostic. If neither resolver is supplied, each requested
+module reports `missing-resolver`.
+
 ## HMR
 
 Components are hot-reloaded when modified. Markdown modules that use a changed
