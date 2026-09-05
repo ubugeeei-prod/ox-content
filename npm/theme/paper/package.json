@@ -1,6 +1,6 @@
 {
   "name": "@ox-content/theme-paper",
-  "version": "3.0.0-beta.12",
+  "version": "3.0.0-beta.13",
   "description": "Letterpress impressions on soft stock with a deckled page edge — an Ox Content skin that composes with any @ox-content/theme-color-* scheme",
   "keywords": [
     "documentation",

@@ -1,6 +1,6 @@
 {
   "name": "@ox-content/theme-color-material",
-  "version": "3.0.0-beta.12",
+  "version": "3.0.0-beta.13",
   "description": "Material Theme Lighter and Material Theme — an Ox Content color scheme that composes with any @ox-content/theme-* skin",
   "keywords": [
     "color-scheme",

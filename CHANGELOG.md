@@ -1,5 +1,12 @@
 # Changelog
 
+## [3.0.0-beta.13] - 2026-09-05
+
+### Features
+
+- resolve island stylesheets via assets context
+- generate selected Solid island registry
+
 ## [3.0.0-beta.12] - 2026-09-05
 
 ### Bug Fixes

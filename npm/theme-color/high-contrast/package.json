@@ -1,6 +1,6 @@
 {
   "name": "@ox-content/theme-color-high-contrast",
-  "version": "3.0.0-beta.12",
+  "version": "3.0.0-beta.13",
   "description": "Maximum-contrast scheme aimed at WCAG AAA body text — an Ox Content color scheme that composes with any @ox-content/theme-* skin",
   "keywords": [
     "color-scheme",

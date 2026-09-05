@@ -1,6 +1,6 @@
 {
   "name": "@ox-content/theme-ledger",
-  "version": "3.0.0-beta.12",
+  "version": "3.0.0-beta.13",
   "description": "A bound accounting book — text set on real ruled lines, tabular figures throughout — an Ox Content skin that composes with any @ox-content/theme-color-* scheme",
   "keywords": [
     "accounting",

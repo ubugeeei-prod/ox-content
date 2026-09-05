@@ -1,6 +1,6 @@
 {
   "name": "@ox-content/theme-fluid",
-  "version": "3.0.0-beta.12",
+  "version": "3.0.0-beta.13",
   "description": "Organic blob gradients that drift and morph behind the content — an Ox Content skin that composes with any @ox-content/theme-color-* scheme",
   "keywords": [
     "blob",
