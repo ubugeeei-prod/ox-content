@@ -101,6 +101,42 @@ route の出力 path が重複すると、どの route 同士が衝突したか�
 失敗させます。公開対象の選択はホストが持ち、Ox Content はホストが返した route
 だけを書きます。
 
+Solid HTML-string host は、同じ選択済み route / document set から browser island registry を
+生成できます。`@ox-content/vite-plugin-solid` の
+`createSolidHtmlHostIslandRegistry()` を使い、client entry では directory 全体の
+`import.meta.glob()` の代わりに `virtual:ox-content-solid/html-host/modules` を
+import します。生成 module には選択された island dynamic-import root だけが入り、
+Vite はその transitive dependency を保持します。
+
+## Island stylesheet
+
+描画済み route が SSR-visible island の browser module id を知っている場合は、
+blocking CSS を `ctx.assets.stylesheets()` から解決します。
+
+```ts
+const islandStyles = ctx.assets.stylesheets({
+  modules: rendered.clientModules.map((module) => module.moduleId),
+});
+
+const assets = ctx.assets.document({
+  islandStyles: islandStyles.stylesheets,
+  clientEntries: ["src/main.ts"],
+});
+
+return {
+  html: `<!doctype html><html><head>${assets.headHtml}</head><body>${rendered.html}</body></html>`,
+  dependencies: islandStyles.dependencies,
+};
+```
+
+development では、host が `ctx.loadModule()` で island を描画したあと、描画済み browser module id
+に対応する内部 Vite module graph を辿り、direct / transitive CSS を依存順に返します。
+CSS query string は保持され、source file dependency も返るため cached route を invalidation
+できます。build では Vite manifest を使い、同じ module identity から emitted hashed stylesheet
+href を返します。entry が見つからない場合は style を黙って落とさず diagnostic に出ます。
+返された style は `ctx.assets.document()` に渡すと、document-level dedupe、nonce、base、
+shared CSS、page CSS と同じ場所で合成できます。
+
 ## テーマトークン stylesheet
 
 `themeTokens` は小さな stylesheet を書き出して dev でも配信します。既定 href は

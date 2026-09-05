@@ -52,7 +52,7 @@ export async function runCustomHostBuild(
   const outDir = resolveOutDir(config, options, root);
   const loaderServer = await createHostLoaderServer(config);
   const clientManifest = await readClientManifest(outDir);
-  const assets = createAssetsContext(options, outDir, clientManifest, themeTokens);
+  const assets = createAssetsContext(options, outDir, clientManifest, themeTokens, undefined, root);
   const loadModule = (moduleId: string) => loaderServer.ssrLoadModule(moduleId);
 
   try {

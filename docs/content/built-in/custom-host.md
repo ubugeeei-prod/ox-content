@@ -119,6 +119,37 @@ whole-directory `import.meta.glob()`. The generated module contains only the
 selected island dynamic-import roots; Vite still keeps their transitive
 dependencies.
 
+## Island stylesheets
+
+When a rendered route knows the browser module ids used by SSR-visible islands,
+resolve their blocking CSS through `ctx.assets.stylesheets()`.
+
+```ts
+const islandStyles = ctx.assets.stylesheets({
+  modules: rendered.clientModules.map((module) => module.moduleId),
+});
+
+const assets = ctx.assets.document({
+  islandStyles: islandStyles.stylesheets,
+  clientEntries: ["src/main.ts"],
+});
+
+return {
+  html: `<!doctype html><html><head>${assets.headHtml}</head><body>${rendered.html}</body></html>`,
+  dependencies: islandStyles.dependencies,
+};
+```
+
+In development, after the host renders islands through `ctx.loadModule()`, the
+resolver walks the internal Vite module graph for each rendered browser module
+id, includes direct and transitive CSS in dependency order, preserves CSS query
+strings, and returns source file dependencies that can invalidate the cached
+route. In build, it reads the Vite manifest and returns the same module
+identities with emitted hashed stylesheet hrefs. Missing entries are reported
+as diagnostics instead of silently dropping styles. Pass the returned styles
+into `ctx.assets.document()` so document-level dedupe, nonce, base, shared CSS,
+and page CSS composition all stay in one place.
+
 ## Theme token stylesheet
 
 `themeTokens` writes and serves a small stylesheet, defaulting to

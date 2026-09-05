@@ -1,6 +1,7 @@
 import type { OxContentAssetManifest } from "./assets";
 import type {
   DocumentAssetManifest,
+  DocumentStyleDescriptor,
   RenderDocumentAssetsInput,
   RenderDocumentAssetsResult,
 } from "./document-assets";
@@ -110,7 +111,35 @@ export interface OxContentCustomHostAssetsContext {
   selfHosted: OxContentAssetManifest;
   clientManifest?: DocumentAssetManifest;
   themeTokens?: ResolvedThemeTokens;
+  stylesheets(input: OxContentCustomHostStylesheetsInput): OxContentCustomHostStylesheetsResult;
   document(input?: RenderDocumentAssetsInput): RenderDocumentAssetsResult;
+}
+
+export interface OxContentCustomHostStylesheetsInput {
+  /** Route-rendered browser module identities, for example island client modules. */
+  modules: readonly string[];
+  /** Override the custom host base path for returned stylesheet hrefs. */
+  base?: string;
+}
+
+export interface OxContentCustomHostStylesheet extends DocumentStyleDescriptor {
+  kind: "style";
+  href: string;
+  /** Module id that requested this stylesheet. */
+  moduleId: string;
+}
+
+export interface OxContentCustomHostStylesheetDiagnostic {
+  code: "missing-module" | "missing-resolver";
+  moduleId: string;
+  message: string;
+}
+
+export interface OxContentCustomHostStylesheetsResult {
+  stylesheets: OxContentCustomHostStylesheet[];
+  diagnostics: OxContentCustomHostStylesheetDiagnostic[];
+  /** Dev-only source files that should be merged into route dependencies. */
+  dependencies: string[];
 }
 
 export interface OxContentCustomHostBaseContext {

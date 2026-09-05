@@ -1032,6 +1032,10 @@ export type {
   OxContentCustomHostRenderResult,
   OxContentCustomHostRoute,
   OxContentCustomHostRoutesContext,
+  OxContentCustomHostStylesheet,
+  OxContentCustomHostStylesheetDiagnostic,
+  OxContentCustomHostStylesheetsInput,
+  OxContentCustomHostStylesheetsResult,
   OxContentCustomHostThemeTokensOptions,
 } from "./custom-host";
 export { resolveNotFoundOptions } from "./not-found";

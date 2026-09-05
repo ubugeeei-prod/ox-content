@@ -18,6 +18,10 @@ export const publicDeclarationEntries = [
       "OxContentCustomHostRenderResult",
       "OxContentCustomHostRoute",
       "OxContentCustomHostRoutesContext",
+      "OxContentCustomHostStylesheet",
+      "OxContentCustomHostStylesheetDiagnostic",
+      "OxContentCustomHostStylesheetsInput",
+      "OxContentCustomHostStylesheetsResult",
       "OxContentCustomHostThemeTokensOptions",
     ],
     runtimeLinks: [

@@ -3,6 +3,10 @@ import * as path from "node:path";
 import type { Connect } from "vite";
 import { resolveSelfHostedAssetManifest } from "./assets";
 import { DEFAULT_THEME_TOKEN_HREF } from "./custom-host-constants";
+import {
+  resolveCustomHostStylesheets,
+  type CustomHostDevModuleGraph,
+} from "./custom-host-stylesheets";
 import type {
   OxContentCustomHostAssetsContext,
   OxContentCustomHostOptions,
@@ -22,12 +26,23 @@ export function createAssetsContext(
   _outDir: string,
   clientManifest: DocumentAssetManifest | undefined,
   themeTokens: ResolvedThemeTokens | undefined,
+  moduleGraph?: CustomHostDevModuleGraph,
+  root?: string,
 ): OxContentCustomHostAssetsContext {
   const selfHosted = resolveSelfHostedAssetManifest(options);
   return {
     selfHosted,
     clientManifest,
     themeTokens,
+    stylesheets(input) {
+      return resolveCustomHostStylesheets({
+        ...input,
+        base: input.base ?? options.base,
+        manifest: clientManifest,
+        moduleGraph,
+        root,
+      });
+    },
     document(input: RenderDocumentAssetsInput = {}) {
       return renderDocumentAssets({
         base: options.base,

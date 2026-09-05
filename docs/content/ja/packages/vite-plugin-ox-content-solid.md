@@ -160,31 +160,31 @@ unknown module、loader、runtime、export、render の失敗は `onError` に�
 ## 独自ホストの island stylesheet
 
 server-rendered island は、client module が mount する前から CSS を必要とすることが
-あります。`resolveSolidIslandStylesheets()` は Vite build manifest または
-development module graph から、island module identity に必要な stylesheet URL を
-解決します。
+あります。`oxContentCustomHost()` を使う場合は public host assets context から解決し、
+host が Vite manifest や development module graph を直接触らない形にします。
 
 ```ts
-import { resolveSolidIslandStylesheets } from "@ox-content/vite-plugin-solid";
-
-const styles = resolveSolidIslandStylesheets({
-  modules: rendered.modules.map((module) => module.serverModuleId),
-  manifest: viteManifest,
-  base: "/docs/",
+const styles = ctx.assets.stylesheets({
+  modules: rendered.clientModules.map((module) => module.moduleId),
 });
 
-for (const stylesheet of styles.stylesheets) {
-  head.push(`<link rel="stylesheet" href="${escapeHtml(stylesheet.href)}">`);
-}
+const assets = ctx.assets.document({
+  islandStyles: styles.stylesheets,
+  clientEntries: ["src/main.ts"],
+});
+
+return {
+  html: `<!doctype html><html><head>${assets.headHtml}</head><body>${rendered.html}</body></html>`,
+  dependencies: styles.dependencies,
+};
 ```
 
-build 解決は static `imports` を辿り、CSS を重複排除し、imported chunk の CSS を
-importing island の CSS より先に並べ、`base` と emitted hashed filename を尊重します。
-development 解決は Vite 風の module graph（`getModuleById()` と任意の
-`getModulesByFile()`）を受け取り、CSS query parameter を残すため HMR URL をそのまま
-stylesheet として読めます。CSS を持たない有効な island は stylesheet も diagnostic も
-返しません。manifest / module graph に entry が無ければ `missing-module`、resolver を
-何も渡さなければ `missing-resolver` diagnostic を返します。
+assets context は direct / transitive island CSS を client module script より前に解決し、
+`ctx.assets.document()` 側で dedupe します。dev CSS query string は保持され、stylesheet 編集で
+cached custom-host route を更新する dependency path も返ります。build mode では同じ method が
+Vite manifest を内部で使い、同じ module identity から emitted hashed href を返します。
+manifest や module graph を意図的に自分で管理する non-custom host 向けには、
+低レベルの `resolveSolidIslandStylesheets()` helper も残っています。
 
 ## HMR
 

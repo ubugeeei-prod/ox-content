@@ -236,10 +236,15 @@ function valueUsage(entry, prefix) {
   if (entry.distBase === "custom-host") {
     return [
       "declare const customOptions: OxContentCustomHostOptions;",
+      "declare const customAssets: OxContentCustomHostAssetsContext;",
       `const customPlugin = ${prefix}createOxContentCustomHostPlugin(customOptions);`,
       `const customOxOptions = ${prefix}customHostOxContentOptions();`,
+      `const customStyles = customAssets.stylesheets({ modules: ["/src/Island.ts"] });`,
+      "customAssets.document({ islandStyles: customStyles.stylesheets });",
+      "const customDeps: string[] = customStyles.dependencies;",
       "void customPlugin;",
       "void customOxOptions;",
+      "void customDeps;",
     ].join("\n");
   }
 
