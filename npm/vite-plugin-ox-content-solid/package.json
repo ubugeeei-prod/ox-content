@@ -45,7 +45,7 @@
     "provenance": true
   },
   "scripts": {
-    "build": "vp pack && node ../../tools/scripts/stabilize-public-declaration-exports.mjs @ox-content/vite-plugin-solid",
+    "build": "vp pack && node ../../tools/scripts/stabilize-public-declaration-exports.mjs @ox-content/vite-plugin-solid && node ../../tools/scripts/write-solid-virtual-declarations.mjs",
     "dev": "vp pack --watch",
     "typecheck": "tsgo --noEmit"
   },

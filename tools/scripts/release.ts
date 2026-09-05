@@ -45,6 +45,7 @@ const CARGO_PUBLISH_PACKAGES = [
 ];
 
 const CARGO_TOML = "Cargo.toml";
+const CARGO_LOCK = "Cargo.lock";
 const RUST_DOC_FILES = ["docs/content/getting-started.md"];
 const ZED_EXTENSION_TOML = "editors/zed/extension.toml";
 const ZED_CARGO_TOML = "editors/zed/Cargo.toml";
@@ -93,6 +94,17 @@ function setCargoVersion(version: string): void {
   content = content.replace(/(ox_content_\w+\s*=\s*\{\s*version\s*=\s*)"[^"]+"/g, `$1"${version}"`);
   fs.writeFileSync(fullPath, content, "utf-8");
   console.log(`  Updated Cargo.toml workspace version to ${version}`);
+}
+
+function setCargoLockVersion(version: string): void {
+  const fullPath = path.join(ROOT, CARGO_LOCK);
+  let content = fs.readFileSync(fullPath, "utf-8");
+  content = content.replace(
+    /(\[\[package\]\]\nname = "ox_content_[^"]+"\nversion = )"[^"]+"/g,
+    `$1"${version}"`,
+  );
+  fs.writeFileSync(fullPath, content, "utf-8");
+  console.log(`  Updated Cargo.lock workspace package versions to ${version}`);
 }
 
 function setZedVersion(version: string): void {
@@ -279,6 +291,7 @@ async function main(): Promise<void> {
 
   console.log("Updating Cargo.toml version...");
   setCargoVersion(newVersion);
+  setCargoLockVersion(newVersion);
   setZedVersion(newVersion);
 
   console.log("Updating package versions...");

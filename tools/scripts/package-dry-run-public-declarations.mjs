@@ -32,6 +32,42 @@ export function checkPublicDeclarationExports({
   }
   checkRuntimeConsumer({ tarball, entry, packDir, failures, packedPackages, mode: "import" });
   checkRuntimeConsumer({ tarball, entry, packDir, failures, packedPackages, mode: "require" });
+
+  if (pkg.name === "@ox-content/vite-plugin-solid") {
+    checkSolidHtmlHostRegistryConsumer({ tarball, packDir, failures, packedPackages });
+  }
+}
+
+function checkSolidHtmlHostRegistryConsumer({ tarball, packDir, failures, packedPackages }) {
+  const entry = {
+    packageName: "@ox-content/vite-plugin-solid",
+    packageDir: "npm/vite-plugin-ox-content-solid",
+    specifier: "@ox-content/vite-plugin-solid",
+    packedDependencies: ["@ox-content/vite-plugin", "@ox-content/islands"],
+    runtimeLinks: ["@types/node", "vite", "@solidjs/vite-plugin", "@solidjs/web", "solid-js"],
+  };
+  const consumerRoot = prepareConsumer({ tarball, entry, packDir, packedPackages });
+  for (const dependency of [
+    "@ox-content/napi",
+    "glob",
+    "rehype-parse",
+    "rehype-stringify",
+    "unified",
+  ]) {
+    linkPackageDependency(consumerRoot, "npm/vite-plugin-ox-content", dependency);
+  }
+  writeFileSync(join(consumerRoot, "package.json"), JSON.stringify({ type: "module" }));
+  writeFileSync(join(consumerRoot, "registry-fixture.ts"), solidHtmlHostRegistryFixture());
+  writeFileSync(join(consumerRoot, "tsconfig.json"), tsconfig("bundler", ["registry-fixture.ts"]));
+
+  const result = spawnSync(tscBin, ["-p", join(consumerRoot, "tsconfig.json")], {
+    encoding: "utf8",
+    stdio: ["ignore", "pipe", "pipe"],
+  });
+  if (result.error) throw result.error;
+  if (result.status !== 0) {
+    failures.push(`${entry.specifier} registry consumer failed:\n${result.stdout}${result.stderr}`);
+  }
 }
 
 function checkDeclarationNames({ declaration, entry, extension, failures }) {
@@ -224,7 +260,34 @@ function runtimeAssertions(namespace, entry) {
     .join("\n");
 }
 
-function tsconfig(mode) {
+function solidHtmlHostRegistryFixture() {
+  return [
+    "import {",
+    "  SOLID_HTML_HOST_MODULES_VIRTUAL_ID,",
+    "  createSolidHtmlHostIslandRegistry,",
+    "  toSolidHtmlHostClientModuleId,",
+    "  type SolidHtmlHostIslandDocument,",
+    "  type SolidHtmlHostIslandEntry,",
+    '} from "@ox-content/vite-plugin-solid";',
+    'import modules, { clientModules } from "virtual:ox-content-solid/html-host/modules";',
+    "",
+    'const documents: SolidHtmlHostIslandDocument[] = [{ documentPath: "content/published.mdx" }];',
+    'const entries: SolidHtmlHostIslandEntry[] = [{ name: "Probe", moduleId: "./src/Probe.tsx" }];',
+    "const registry = createSolidHtmlHostIslandRegistry({ documents, entries });",
+    'const clientModuleId: string = registry.resolveClientModule({ serverModuleId: "./src/Probe.tsx" });',
+    "const virtualModuleId: string = registry.virtualModuleId;",
+    "const normalizedModuleId: string = toSolidHtmlHostClientModuleId(clientModuleId);",
+    "for (const module of clientModules) {",
+    "  const exportName: string = module.exportName;",
+    "  void exportName;",
+    "}",
+    "void modules;",
+    "void virtualModuleId;",
+    "void normalizedModuleId;",
+  ].join("\n");
+}
+
+function tsconfig(mode, files) {
   const compilerOptions =
     mode === "bundler"
       ? {
@@ -249,7 +312,8 @@ function tsconfig(mode) {
   return JSON.stringify(
     {
       compilerOptions,
-      files: mode === "bundler" ? ["esm-fixture.ts"] : ["esm-fixture.ts", "cjs-fixture.cts"],
+      files:
+        files ?? (mode === "bundler" ? ["esm-fixture.ts"] : ["esm-fixture.ts", "cjs-fixture.cts"]),
     },
     null,
     2,

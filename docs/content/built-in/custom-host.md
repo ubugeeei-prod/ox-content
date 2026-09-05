@@ -111,6 +111,14 @@ Duplicate route output paths fail the build with the conflicting owners. The
 host still owns publication selection; Ox Content only writes the routes the
 host returns.
 
+Solid HTML-string hosts can generate their browser island registry from that
+same selected route/document set. Use `createSolidHtmlHostIslandRegistry()` from
+`@ox-content/vite-plugin-solid` and import
+`virtual:ox-content-solid/html-host/modules` in the client entry instead of a
+whole-directory `import.meta.glob()`. The generated module contains only the
+selected island dynamic-import roots; Vite still keeps their transitive
+dependencies.
+
 ## Theme token stylesheet
 
 `themeTokens` writes and serves a small stylesheet, defaulting to
