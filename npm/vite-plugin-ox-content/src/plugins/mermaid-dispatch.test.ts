@@ -9,14 +9,41 @@ const { render } = vi.hoisted(() => ({
     errors: [],
   })),
 }));
-vi.mock("../napi", () => ({ importNapiModule: async () => ({ transformMermaid: render }) }));
+vi.mock("../napi", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("../napi")>();
+  return {
+    ...actual,
+    importNapiModule: async () => ({
+      ...(await actual.importNapiModule()),
+      transformMermaid: render,
+    }),
+  };
+});
 import { transformMermaidStatic } from "./mermaid";
+import { renderMarkdown } from "../render-markdown";
 
 beforeEach(() => {
   render.mockClear();
 });
 
 describe("Mermaid fence dispatch", () => {
+  it("renders ordinary fences when the public mermaid option is enabled", async () => {
+    const source = "```mermaid\ngraph TD; A-->B;\n```";
+    const enabled = await renderMarkdown(source, "/virtual/diagram.md", {
+      mermaid: true,
+      highlight: false,
+      embeds: false,
+    });
+    expect(enabled.html).toContain("<svg>");
+    expect(render).toHaveBeenCalledTimes(1);
+    const disabled = await renderMarkdown(source, "/virtual/diagram.md", {
+      mermaid: false,
+      highlight: false,
+      embeds: false,
+    });
+    expect(disabled.html).toContain('class="language-mermaid"');
+    expect(render).toHaveBeenCalledTimes(1);
+  });
   it("dispatches ordinary Markdown renderer output without a rendered-diagram marker", async () => {
     const html = '<pre><code class="language-mermaid">graph TD; A--&gt;B;</code></pre>\n';
     expect(await transformMermaidStatic(html)).toContain("<svg>");
