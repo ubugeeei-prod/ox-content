@@ -17,19 +17,20 @@ pub(super) fn unescape_table_pipes<'a>(
     content: &'a str,
 ) -> TableCellContent<'a> {
     let bytes = content.as_bytes();
-    if !bytes
-        .iter()
-        .enumerate()
-        .any(|(index, &byte)| byte == b'|' && is_escaped_table_pipe(bytes, index))
-    {
+    // Most cells contain no pipe at all. Search only actual pipe positions
+    // instead of examining every byte, then reuse the first escaped match
+    // when constructing the remapped source below.
+    let Some(first_pipe) =
+        memchr::memchr_iter(b'|', bytes).find(|&index| is_escaped_table_pipe(bytes, index))
+    else {
         return TableCellContent { content, source_offsets: None };
-    }
+    };
 
     let mut unescaped =
         ox_content_allocator::String::with_capacity_in(content.len(), allocator.bump());
     let mut source_offsets: Vec<'a, u32> = allocator.new_vec();
     let mut copied_through = 0;
-    let mut search_start = 0;
+    let mut search_start = first_pipe;
     while let Some(relative) = memchr(b'|', &bytes[search_start..]) {
         let pipe = search_start + relative;
         if is_escaped_table_pipe(bytes, pipe) {

@@ -52,4 +52,8 @@ harness = false
 
 [[bench]]
 name = "tables"
+ harness = false
+
+[[bench]]
+name = "table_pipes"
 harness = false
