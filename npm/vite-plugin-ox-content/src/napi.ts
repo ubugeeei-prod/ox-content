@@ -22,7 +22,21 @@ function normalizeNapiModule(mod: NapiModule): NapiModule {
     : mod;
 }
 
-export async function importNapiModule(): Promise<NapiModule> {
+let asyncNapiModule: Promise<NapiModule> | undefined;
+
+export function importNapiModule(): Promise<NapiModule> {
+  if (!asyncNapiModule) {
+    asyncNapiModule = loadNapiModule().catch((error: unknown) => {
+      // Failed loads remain retryable, as before. Share successful imports and
+      // normalization across all extension stages and concurrent documents.
+      asyncNapiModule = undefined;
+      throw error;
+    });
+  }
+  return asyncNapiModule;
+}
+
+async function loadNapiModule(): Promise<NapiModule> {
   try {
     return normalizeNapiModule((await import("@ox-content/napi")) as NapiModule);
   } catch (importError) {
