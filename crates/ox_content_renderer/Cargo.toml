@@ -44,3 +44,7 @@ harness = false
 [[bench]]
 name = "headings"
 harness = false
+
+[[bench]]
+name = "sanitized_urls"
+harness = false

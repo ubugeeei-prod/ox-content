@@ -143,13 +143,19 @@ impl HtmlRenderer {
             return true;
         }
 
-        let scheme = url[..colon_index]
-            .chars()
-            .filter(|ch| !ch.is_ascii_whitespace())
-            .map(|ch| ch.to_ascii_lowercase())
-            .collect::<String>();
+        // Every allowed scheme is ASCII and at most six bytes. Normalize
+        // into bounded stack storage instead of allocating for each link.
+        let mut scheme = [0; 6];
+        let mut len = 0;
+        for byte in url[..colon_index].bytes().filter(|byte| !byte.is_ascii_whitespace()) {
+            let Some(slot) = scheme.get_mut(len) else {
+                return false;
+            };
+            *slot = byte.to_ascii_lowercase();
+            len += 1;
+        }
 
-        matches!(scheme.as_str(), "http" | "https" | "mailto" | "tel")
+        matches!(&scheme[..len], b"http" | b"https" | b"mailto" | b"tel")
     }
 
     pub(in crate::html::renderer) fn write_html_value(&mut self, value: &str) {
@@ -270,3 +276,6 @@ impl HtmlRenderer {
         self.heading_id_counts.insert(key, 1);
     }
 }
+
+#[cfg(test)]
+mod tests;
