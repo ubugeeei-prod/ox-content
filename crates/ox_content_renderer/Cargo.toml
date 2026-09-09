@@ -40,3 +40,7 @@ criterion = { workspace = true }
 [[bench]]
 name = "renderer"
 harness = false
+
+[[bench]]
+name = "headings"
+harness = false

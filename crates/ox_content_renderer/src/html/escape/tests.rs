@@ -27,6 +27,23 @@ fn check(s: &str) {
     let mut url = String::new();
     write_url_escaped_into(&mut url, s);
     assert_eq!(url, reference(s, &URL_ESCAPE_FLAG, &URL_ESCAPE_TABLE), "url escape: {s:?}");
+
+    let mut attributes = String::from("prefix:");
+    let mut expected = attributes.clone();
+    for ch in s.chars() {
+        match ch {
+            '&' => expected.push_str("&amp;"),
+            '<' => expected.push_str("&lt;"),
+            '>' => expected.push_str("&gt;"),
+            '"' => expected.push_str("&quot;"),
+            '\'' => expected.push_str("&#39;"),
+            '\r' => expected.push_str("&#13;"),
+            '\n' => expected.push_str("&#10;"),
+            _ => expected.push(ch),
+        }
+    }
+    write_attribute_escaped_into(&mut attributes, s);
+    assert_eq!(attributes, expected, "attribute escape: {s:?}");
 }
 
 #[test]
@@ -48,6 +65,9 @@ fn matches_reference_on_fixtures() {
         // the ones a sloppy fold would leak: 0x21 0x23 0x25 0x3D 0x3F.
         "!#%=?",
         "!#%=? &<>\"' !#%=?",
+        "\r\n",
+        "\n\r\r\n\n",
+        "日本語\r\n<&>\"'\n🙂\r",
     ] {
         check(case);
     }
@@ -117,7 +137,7 @@ fn matches_reference_on_pseudorandom_bytes() {
     // xorshift over the printable-plus-needles range; deterministic so a
     // failure is reproducible.
     let mut state = 0x2545_F491_4F6C_DD1Du64;
-    let alphabet: Vec<u8> = (0x20u8..0x7f).chain(*b"&<>\"' ").collect();
+    let alphabet: Vec<u8> = (0x20u8..0x7f).chain(*b"&<>\"' \r\n").collect();
     for len in 0..200 {
         let mut s = String::with_capacity(len);
         for _ in 0..len {

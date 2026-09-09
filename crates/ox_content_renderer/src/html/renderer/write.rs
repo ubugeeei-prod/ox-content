@@ -10,7 +10,9 @@ use compact_str::CompactString;
 use ox_content_ast::{Heading, Node, Span};
 
 use super::super::autolink::find_autolink_match;
-use super::super::escape::{write_escaped_into, write_url_escaped_into};
+use super::super::escape::{
+    write_attribute_escaped_into, write_escaped_into, write_url_escaped_into,
+};
 use super::super::heading::{
     HEADING_PERMALINK_CLASS, collect_heading_text_into, heading_has_permalink_marker,
     slugify_heading_into,
@@ -34,18 +36,7 @@ impl HtmlRenderer {
     }
 
     pub(in crate::html::renderer) fn write_attribute_escaped(&mut self, s: &str) {
-        for ch in s.chars() {
-            match ch {
-                '&' => self.output.push_str("&amp;"),
-                '<' => self.output.push_str("&lt;"),
-                '>' => self.output.push_str("&gt;"),
-                '"' => self.output.push_str("&quot;"),
-                '\'' => self.output.push_str("&#39;"),
-                '\n' => self.output.push_str("&#10;"),
-                '\r' => self.output.push_str("&#13;"),
-                _ => self.output.push(ch),
-            }
-        }
+        write_attribute_escaped_into(&mut self.output, s);
     }
 
     pub(in crate::html::renderer) fn write_source_span_attr(&mut self, span: Span) {
@@ -223,8 +214,7 @@ impl HtmlRenderer {
     pub(in crate::html::renderer) fn write_heading_id(&mut self, heading: &Heading<'_>) {
         crate::profile_span!("renderer::write_heading_id");
         self.prepare_heading_id(heading);
-        let id = self.heading_id_scratch.clone();
-        self.write_attribute_escaped(&id);
+        write_attribute_escaped_into(&mut self.output, &self.heading_id_scratch);
     }
 
     pub(in crate::html::renderer) fn write_heading_permalink_if_needed(
@@ -240,8 +230,7 @@ impl HtmlRenderer {
         self.output.push_str("<a class=\"");
         self.output.push_str(HEADING_PERMALINK_CLASS);
         self.output.push_str("\" href=\"#");
-        let id = self.heading_id_scratch.clone();
-        self.write_attribute_escaped(&id);
+        write_attribute_escaped_into(&mut self.output, &self.heading_id_scratch);
         if self.heading_text_scratch.is_empty() {
             self.output.push_str("\" aria-label=\"Permalink to this section\">#</a>");
             return;

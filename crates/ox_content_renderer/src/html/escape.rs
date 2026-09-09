@@ -271,5 +271,20 @@ pub(super) fn write_url_escaped_into(out: &mut String, s: &str) {
     escape_into(out, s, url_escape_mask, &URL_ESCAPE_FLAG, &URL_ESCAPE_TABLE, &URL_ESCAPE_NIBBLES);
 }
 
+/// Escapes attribute values, including line endings, directly into the output.
+/// Separate field borrows let heading IDs stay in their reusable scratch buffer.
+pub(super) fn write_attribute_escaped_into(out: &mut String, s: &str) {
+    // Attribute escaping differs from text escaping only at CR/LF. Split
+    // at those ASCII boundaries and reuse the vectorized text escaper for
+    // whole runs, preserving UTF-8 without decoding and pushing each char.
+    let mut start = 0;
+    for index in memchr::memchr2_iter(b'\r', b'\n', s.as_bytes()) {
+        write_escaped_into(out, &s[start..index]);
+        out.push_str(if s.as_bytes()[index] == b'\r' { "&#13;" } else { "&#10;" });
+        start = index + 1;
+    }
+    write_escaped_into(out, &s[start..]);
+}
+
 #[cfg(test)]
 mod tests;
