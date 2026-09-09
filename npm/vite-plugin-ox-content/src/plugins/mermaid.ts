@@ -98,7 +98,7 @@ export async function transformMermaidStatic(
   html: string,
   _options?: MermaidOptions,
 ): Promise<string> {
-  if (!html.includes("ox-mermaid")) {
+  if (!html.includes('<pre><code class="language-mermaid">')) {
     return html;
   }
 
