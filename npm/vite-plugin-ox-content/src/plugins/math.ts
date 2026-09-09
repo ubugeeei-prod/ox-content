@@ -68,6 +68,7 @@ export async function renderKatexMath(
     return html;
   }
 
+  const renderer = hasRepeatedFormula(html) ? cacheKatex(katex) : katex;
   return html.replace(MATH_TAG, (match, tag: string) => {
     const openTag = match.slice(0, match.indexOf(">"));
     const className = CLASS_ATTR.exec(openTag)?.[1] ?? "";
@@ -92,7 +93,7 @@ export async function renderKatexMath(
 
     let rendered: string;
     try {
-      rendered = katex.renderToString(tex, { ...options, throwOnError: true });
+      rendered = renderer.renderToString(tex, { ...options, throwOnError: true });
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
       failures?.push({ tex, block, message });
@@ -104,10 +105,58 @@ export async function renderKatexMath(
         // the sentence reads the way its author wrote it.
         return escapeHtmlText(block ? `$$${tex}$$` : `$${tex}$`);
       }
-      rendered = katex.renderToString(tex, { ...options, throwOnError: false });
+      rendered = renderer.renderToString(tex, { ...options, throwOnError: false });
     }
     return `<${tag} class="ox-math ox-math-${kind}"${sourceSpan}>${rendered}</${tag}>`;
   });
+}
+
+// Sampling bounds the decision even on very large pages. A missed later
+// repetition only means rendering it normally, with no per-formula cache work.
+function hasRepeatedFormula(html: string): boolean {
+  const seen = new Set<string>();
+  for (const match of html.matchAll(MATH_TAG)) {
+    const encoded = TEX_ATTR.exec(match[0].slice(0, match[0].indexOf(">")))?.[1];
+    if (encoded === undefined) continue;
+    if (seen.has(encoded)) return true;
+    seen.add(encoded);
+    if (seen.size >= 32) return false;
+  }
+  return false;
+}
+
+function cacheKatex(katex: KatexModule): KatexModule {
+  type Result = { html: string } | { error: unknown };
+  const cache = new Map<string, Result>();
+  let characters = 0;
+  return {
+    renderToString(tex, options) {
+      // Other render options are fixed by renderKatexMath. Throwing and literal
+      // rendering remain separate, as do inline and display-mode output.
+      const key = `${options?.displayMode ? "b" : "i"}${options?.throwOnError ? "t" : "f"}${tex}`;
+      const cached = cache.get(key);
+      if (cached) {
+        if ("error" in cached) throw cached.error;
+        return cached.html;
+      }
+      let result: Result;
+      let size = key.length;
+      try {
+        const html = katex.renderToString(tex, options);
+        result = { html };
+        size += html.length;
+      } catch (error) {
+        result = { error };
+        size += error instanceof Error ? error.message.length : String(error).length;
+      }
+      if (cache.size < 128 && characters + size <= 128 * 1024) {
+        cache.set(key, result);
+        characters += size;
+      }
+      if ("error" in result) throw result.error;
+      return result.html;
+    },
+  };
 }
 
 function escapeHtmlText(value: string): string {
