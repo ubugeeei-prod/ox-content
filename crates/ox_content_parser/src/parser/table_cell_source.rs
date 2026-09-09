@@ -20,9 +20,7 @@ pub(super) fn unescape_table_pipes<'a>(
     // Most cells contain no pipe at all. Search only actual pipe positions
     // instead of examining every byte, then reuse the first escaped match
     // when constructing the remapped source below.
-    let Some(first_pipe) =
-        memchr::memchr_iter(b'|', bytes).find(|&index| is_escaped_table_pipe(bytes, index))
-    else {
+    let Some(first_pipe) = escaped_pipe_scan_start(bytes) else {
         return TableCellContent { content, source_offsets: None };
     };
 
@@ -55,6 +53,20 @@ pub(super) fn unescape_table_pipes<'a>(
         &mut source_offsets,
     );
     TableCellContent { content: unescaped.into_bump_str(), source_offsets: Some(source_offsets) }
+}
+
+#[inline]
+fn escaped_pipe_scan_start(bytes: &[u8]) -> Option<usize> {
+    // Vector dispatch costs more than the scan for short labels. Keep the
+    // scalar path there; long prose cells benefit from skipping whole runs.
+    if bytes.len() < 64 {
+        return bytes
+            .iter()
+            .enumerate()
+            .any(|(index, &byte)| byte == b'|' && is_escaped_table_pipe(bytes, index))
+            .then_some(0);
+    }
+    memchr::memchr_iter(b'|', bytes).find(|&index| is_escaped_table_pipe(bytes, index))
 }
 
 fn push_mapped_table_cell_slice(
@@ -196,3 +208,6 @@ fn table_cell_boundary_offset(index: usize, offsets: &[u32]) -> u32 {
 pub(super) fn is_escaped_table_pipe(bytes: &[u8], pipe: usize) -> bool {
     bytes[..pipe].iter().rev().take_while(|&&byte| byte == b'\\').count() % 2 == 1
 }
+
+#[cfg(test)]
+mod tests;
