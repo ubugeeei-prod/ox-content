@@ -201,7 +201,7 @@ export async function resolveSolidHtmlHostIslandRegistry(
     if (entry.documentPath) watchFiles.add(resolveWatchFile(entry.documentPath, context.root));
   }
 
-  const oxContent = customHostOxContentOptions(input.oxContent ?? {});
+  const oxContent = customHostOxContentOptions({ ...(input.oxContent ?? {}), embeds: false });
   const srcDir = oxContent.srcDir ?? "content";
   const contentRoot = resolveContentRootPath({ root: context.root, srcDir });
   for (const document of documents) {

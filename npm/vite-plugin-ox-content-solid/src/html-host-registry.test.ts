@@ -77,6 +77,47 @@ describe("createSolidHtmlHostIslandRegistry", () => {
     );
   });
 
+  it("discovers islands without rendering built-in embeds", async () => {
+    const root = await createProject("ox-solid-html-discovery-embeds-");
+    const originalFetch = globalThis.fetch;
+    const fetchCalls: Parameters<typeof fetch>[0][] = [];
+    globalThis.fetch = (async (input) => {
+      fetchCalls.push(input);
+      throw new Error("registry discovery should not fetch embeds");
+    }) as typeof fetch;
+
+    try {
+      const result = await resolveSolidHtmlHostIslandRegistry(
+        {
+          root,
+          oxContent: {
+            embeds: { github: false, openGraph: { cache: false } },
+            mdx: true,
+          },
+          documents: [
+            {
+              documentPath: path.join(root, "content", "published.mdx"),
+              source: [
+                "import Probe from './published/Probe.tsx'",
+                "",
+                "<Probe />",
+                '<OgCard url="https://example.com/post" />',
+              ].join("\n"),
+            },
+          ],
+        },
+        { root, mode: "production", command: "build" },
+      );
+
+      expect(result.modules).toEqual([
+        { name: "Probe", moduleId: "/content/published/Probe.tsx", exportName: "default" },
+      ]);
+      expect(fetchCalls).toEqual([]);
+    } finally {
+      globalThis.fetch = originalFetch;
+    }
+  });
+
   it("builds a browser registry that includes reachable selected chunks only", async () => {
     const root = await createProject("ox-solid-html-build-");
     const registry = createSolidHtmlHostIslandRegistry({
