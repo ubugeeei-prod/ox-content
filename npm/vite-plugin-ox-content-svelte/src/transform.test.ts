@@ -5,7 +5,7 @@ import {
   createOptions,
   stripSvelteComments,
   withGeneratedModule,
-} from "../test/fixtures/transform-harness";
+} from "./test/fixtures/transform-harness";
 
 describe("transformMarkdownWithSvelte", () => {
   it("turns registered components into islands and leaves fenced tags literal", async () => {

@@ -66,7 +66,7 @@ export function createCustomHostSsrStylesheetController(
   let buildRecords: RootRecord[] = [];
   let records = new Map<string, RootRecord>();
   let virtualModules = new Map<string, string>();
-  const configuredModules = options && options !== false ? options.modules : [];
+  const configuredModules = options === false ? [] : (options?.modules ?? []);
   let configured = false;
 
   return {
@@ -175,13 +175,13 @@ function resolveDev(
   input: ResolveCustomHostSsrStylesheetsInput,
 ): OxContentCustomHostSsrStylesheetsResult {
   const styles = resolveCustomHostStylesheets(input);
-  if (styles.stylesheets.length === 0 && input.root) {
+  if (input.root) {
     const staticResult = resolveStaticDevSsrStylesheets({
       modules: input.modules,
       base: input.base,
       root: input.root,
     });
-    if (staticResult) {
+    if (staticResult && (styles.stylesheets.length === 0 || hasInlineStyles(staticResult))) {
       return staticResult;
     }
   }
@@ -194,6 +194,10 @@ function resolveDev(
     };
   });
   return { ...styles, descriptors };
+}
+
+function hasInlineStyles(result: OxContentCustomHostSsrStylesheetsResult): boolean {
+  return result.stylesheets.some((stylesheet) => stylesheet.content != null);
 }
 
 function mergeResult(

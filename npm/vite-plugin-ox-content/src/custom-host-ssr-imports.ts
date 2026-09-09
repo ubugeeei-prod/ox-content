@@ -3,7 +3,18 @@ import * as path from "node:path";
 import type { OxContentCustomHostStylesheetDiagnostic } from "./custom-host-types";
 
 const STYLE_EXTENSIONS = new Set([".css"]);
-const SOURCE_EXTENSIONS = new Set([".cjs", ".cts", ".js", ".jsx", ".mjs", ".mts", ".ts", ".tsx"]);
+const SOURCE_EXTENSIONS = new Set([
+  ".cjs",
+  ".cts",
+  ".js",
+  ".jsx",
+  ".mjs",
+  ".mts",
+  ".svelte",
+  ".ts",
+  ".tsx",
+]);
+const FRAMEWORK_STYLE_ROOT_EXTENSIONS = new Set([".svelte"]);
 
 export function parseImports(source: string): { specifier: string; dynamic: boolean }[] {
   const imports: { index: number; specifier: string; dynamic: boolean }[] = [];
@@ -34,9 +45,12 @@ export function parseImports(source: string): { specifier: string; dynamic: bool
 export function moduleIdCandidates(moduleId: string, root: string | undefined): string[] {
   const file = root ? fileFromModuleId(moduleId, root) : undefined;
   return unique(
-    [moduleId, cleanModulePath(moduleId), file, file && publicModuleId(file, root)].filter(
-      (value): value is string => !!value,
-    ),
+    [
+      moduleId,
+      cleanModulePath(moduleId),
+      file,
+      file && root ? publicModuleId(file, root) : undefined,
+    ].filter((value): value is string => !!value),
   );
 }
 
@@ -71,6 +85,10 @@ export function isStyleFile(file: string): boolean {
 
 export function isSourceFile(file: string): boolean {
   return SOURCE_EXTENSIONS.has(path.extname(cleanModulePath(file)));
+}
+
+export function isFrameworkStyleRoot(file: string): boolean {
+  return FRAMEWORK_STYLE_ROOT_EXTENSIONS.has(path.extname(cleanModulePath(file)));
 }
 
 export function cleanModulePath(moduleId: string): string {

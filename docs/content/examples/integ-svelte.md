@@ -114,6 +114,29 @@ Only identifiers and dotted property paths are resolved from Svelte component
 props. Missing values throw a deterministic SSR error instead of rendering an
 empty string.
 
+## Alternative Compilers
+
+Use the adapter `compiler` option when Markdown and MDX-generated Svelte modules
+should be compiled by the same alternative compiler as ordinary `.svelte` files.
+
+```ts
+// vite.config.ts
+import { svelte } from "@rsvelte/vite-plugin-svelte";
+import { compile } from "@rsvelte/vite-plugin-svelte-native";
+import { oxContentSvelte } from "@ox-content/vite-plugin-svelte";
+
+export default {
+  plugins: [
+    svelte(),
+    oxContentSvelte({
+      srcDir: "docs",
+      compiler: compile,
+      components: "./src/components/*.svelte",
+    }),
+  ],
+};
+```
+
 ## Svelte 5 Features
 
 This example uses Svelte 5's new features:

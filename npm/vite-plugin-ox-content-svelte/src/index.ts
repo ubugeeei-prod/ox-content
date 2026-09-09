@@ -4,18 +4,16 @@
  * Uses Vite's Environment API to enable embedding Svelte components in Markdown.
  */
 
-import * as fs from "fs";
-import * as path from "path";
 import type { Plugin, PluginOption, ResolvedConfig } from "vite";
 import { oxContent } from "@ox-content/vite-plugin";
 import { transformMarkdownWithSvelte } from "./transform";
 import { createSvelteMarkdownEnvironment } from "./environment";
+import { resolveComponentsGlob } from "./components";
 import type {
   SvelteIntegrationOptions,
   ResolvedSvelteOptions,
-  ComponentsMap,
-  ComponentsOption,
   BuiltinEmbedOptions,
+  SvelteCompilerWarning,
 } from "./types";
 
 const DEFAULT_MARKDOWN_EXTENSIONS = [".md", ".markdown", ".mdx"] as const;
@@ -64,8 +62,84 @@ export type {
   OpenGraphEmbedOptions,
   ResolvedBuiltinEmbedOptions,
   SvelteTransformResult,
+  SvelteCompilerOption,
+  SvelteCompilerWarning,
+  SvelteCompilerOptions,
+  SvelteCompilerResult,
+  SvelteCompileFunction,
   ComponentIsland,
 } from "./types";
+export type {
+  MdxImport,
+  MdxImportSpecifier,
+  MdxImportSpecifierKind,
+} from "@ox-content/vite-plugin";
+export {
+  createSvelteHtmlHostHydrate,
+  renderSvelteHtmlHost,
+  type CreateSvelteHtmlHostHydrateInput,
+  type RenderSvelteHtmlHostInput,
+  type RenderSvelteHtmlHostResult,
+  type SvelteClientModuleResolver,
+  type SvelteHostHydrateRenderer,
+  type SvelteHtmlComponentRenderer,
+  type SvelteHtmlHostClientModule,
+  type SvelteHtmlHostDiagnostic,
+  type SvelteHtmlHostDiagnosticCode,
+  type SvelteHtmlHostModule,
+  type SvelteServerModuleLoader,
+} from "./html-host";
+export {
+  SvelteHtmlHostRenderError,
+  createSvelteHtmlHostRenderer,
+  type CreateSvelteHtmlHostRendererInput,
+  type SvelteHtmlHostRenderer,
+  type SvelteHtmlHostRendererContext,
+  type SvelteHtmlHostRendererDiagnosticPolicy,
+} from "./html-host-renderer";
+export {
+  createSvelteHtmlHostDomRenderer,
+  createSvelteHtmlHostLazyHydrate,
+  initSvelteHtmlHost,
+  loadSvelteHtmlHostDomRuntime,
+  readSvelteHtmlHostSlot,
+  type CreateSvelteHtmlHostLazyHydrateInput,
+  type InitSvelteHtmlHostInput,
+  type SvelteHtmlHostClientComponentValue,
+  type SvelteHtmlHostClientContext,
+  type SvelteHtmlHostClientDiagnosticCode,
+  type SvelteHtmlHostClientError,
+  type SvelteHtmlHostClientModuleLoader,
+  type SvelteHtmlHostClientModules,
+  type SvelteHtmlHostClientModuleValue,
+  type SvelteHtmlHostClientRenderer,
+  type SvelteHtmlHostClientRuntimeLoader,
+  type SvelteHtmlHostDomMode,
+  type SvelteHtmlHostDomRenderer,
+  type SvelteHtmlHostDomRendererInput,
+  type SvelteHtmlHostDomRuntime,
+  type SvelteHtmlHostExportNameResolver,
+  type SvelteHtmlHostInitIslands,
+  type SvelteHtmlHostModuleIdResolver,
+} from "./html-host-client";
+export {
+  SVELTE_HTML_HOST_MODULES_VIRTUAL_ID,
+  createSvelteHtmlHostIslandRegistry,
+  resolveSvelteHtmlHostIslandRegistry,
+  toSvelteHtmlHostClientModuleId,
+  type CreateSvelteHtmlHostIslandRegistryInput,
+  type ResolvedSvelteHtmlHostIslandRegistry,
+  type SvelteHtmlHostIslandDocument,
+  type SvelteHtmlHostIslandEntry,
+  type SvelteHtmlHostIslandRegistry,
+  type SvelteHtmlHostIslandRegistryContext,
+} from "./html-host-registry";
+export {
+  createSvelteHtmlHostCollectionDocuments,
+  resolveSvelteHtmlHostCollectionDocuments,
+  type SvelteHtmlHostCollectionDocument,
+  type SvelteHtmlHostCollectionDocumentsOptions,
+} from "./html-host-collection-documents";
 
 /**
  * Creates the Ox Content Svelte integration plugin.
@@ -130,9 +204,13 @@ export function oxContentSvelte(options: SvelteIntegrationOptions = {}): PluginO
         ssr: transformOptions?.ssr,
       });
 
+      for (const warning of result.warnings) {
+        this.warn(formatSvelteCompilerWarning(warning));
+      }
+
       return {
         code: result.code,
-        map: result.map,
+        map: result.map as never,
       };
     },
   };
@@ -225,10 +303,17 @@ function resolveSvelteOptions(
     tocMaxDepth: options.tocMaxDepth ?? 3,
     codeAnnotations: resolveCodeAnnotationsOptions(options.codeAnnotations),
     runes: options.runes ?? true,
+    compiler: options.compiler,
     embeds: resolveBuiltinEmbedOptions(options.embeds),
     mdx: options.mdx,
     mdxDocumentProps: options.mdxDocumentProps ?? false,
   };
+}
+
+function formatSvelteCompilerWarning(warning: SvelteCompilerWarning): string {
+  const code = warning.code ? `[${warning.code}] ` : "";
+  const message = `${code}${warning.message}`;
+  return warning.frame ? `${message}\n${warning.frame}` : message;
 }
 
 function resolveCodeAnnotationsOptions(
@@ -279,85 +364,6 @@ ${exports.join("\n")}
 
 export default components;
 `;
-}
-
-async function resolveComponentsGlob(
-  componentsOption: ComponentsOption,
-  root: string,
-): Promise<ComponentsMap> {
-  if (typeof componentsOption === "object" && !Array.isArray(componentsOption)) {
-    return componentsOption;
-  }
-
-  const patterns = Array.isArray(componentsOption) ? componentsOption : [componentsOption];
-
-  const result: ComponentsMap = {};
-
-  for (const pattern of patterns) {
-    const files = await globFiles(pattern, root);
-
-    for (const file of files) {
-      const baseName = path.basename(file, path.extname(file));
-      const componentName = toPascalCase(baseName);
-      const relativePath = "./" + path.relative(root, file).replace(/\\/g, "/");
-
-      result[componentName] = relativePath;
-    }
-  }
-
-  return result;
-}
-
-async function globFiles(pattern: string, root: string): Promise<string[]> {
-  const files: string[] = [];
-  const isGlob = pattern.includes("*");
-
-  if (!isGlob) {
-    const fullPath = path.resolve(root, pattern);
-    if (fs.existsSync(fullPath)) {
-      files.push(fullPath);
-    }
-    return files;
-  }
-
-  const parts = pattern.split("*");
-  const baseDir = path.resolve(root, parts[0]);
-  const ext = parts[1] || "";
-
-  if (!fs.existsSync(baseDir)) {
-    return files;
-  }
-
-  if (pattern.includes("**")) {
-    await walkDir(baseDir, files, ext);
-  } else {
-    const entries = await fs.promises.readdir(baseDir, { withFileTypes: true });
-    for (const entry of entries) {
-      if (entry.isFile() && entry.name.endsWith(ext)) {
-        files.push(path.join(baseDir, entry.name));
-      }
-    }
-  }
-
-  return files;
-}
-
-async function walkDir(dir: string, files: string[], ext: string): Promise<void> {
-  const entries = await fs.promises.readdir(dir, { withFileTypes: true });
-
-  for (const entry of entries) {
-    const fullPath = path.join(dir, entry.name);
-
-    if (entry.isDirectory()) {
-      await walkDir(fullPath, files, ext);
-    } else if (entry.isFile() && entry.name.endsWith(ext)) {
-      files.push(fullPath);
-    }
-  }
-}
-
-function toPascalCase(str: string): string {
-  return str.replace(/[-_](\w)/g, (_, c) => c.toUpperCase()).replace(/^\w/, (c) => c.toUpperCase());
 }
 
 export { oxContent, renderHead } from "@ox-content/vite-plugin";

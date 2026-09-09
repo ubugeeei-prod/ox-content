@@ -1,4 +1,5 @@
 import type { OxContentOptions, RenderIslandFn } from "@ox-content/vite-plugin";
+import type { CompileOptions, Warning } from "svelte/compiler";
 
 /**
  * Code annotation options for the Svelte integration.
@@ -33,6 +34,40 @@ export type ComponentsMap = Record<string, string>;
  * `configResolved`.
  */
 export type ComponentsOption = ComponentsMap | string | string[];
+
+export type SvelteCompilerWarning = Warning;
+
+export interface SvelteCompilerOptions extends Omit<
+  CompileOptions,
+  "filename" | "generate" | "runes"
+> {
+  filename: string;
+  generate: "client" | "server";
+  runes: boolean;
+}
+
+export interface SvelteCompilerJsOutput {
+  code: string;
+  map?: unknown;
+}
+
+export interface SvelteCompilerObjectResult {
+  js: SvelteCompilerJsOutput | string;
+  warnings?: readonly SvelteCompilerWarning[];
+}
+
+export type SvelteCompilerResult = SvelteCompilerObjectResult | string;
+
+export type SvelteCompileFunction = (
+  source: string,
+  options: SvelteCompilerOptions,
+) => SvelteCompilerResult | Promise<SvelteCompilerResult>;
+
+export type SvelteCompilerOption =
+  | SvelteCompileFunction
+  | {
+      compile: SvelteCompileFunction;
+    };
 
 /**
  * Opt-in build-time props for MDX documents imported as Svelte components.
@@ -97,6 +132,17 @@ export interface SvelteIntegrationOptions extends OxContentOptions {
    * @default true
    */
   runes?: boolean;
+
+  /**
+   * Compiler used for Markdown/MDX-generated Svelte modules.
+   *
+   * The default is `svelte/compiler`. Pass the same compiler used by an
+   * alternative Svelte Vite integration to keep ordinary `.svelte` files and
+   * Ox Content-generated document modules on the same compiler implementation.
+   *
+   * @default `svelte/compiler`
+   */
+  compiler?: SvelteCompilerOption;
 
   /**
    * Built-in static embeds rendered during Markdown transformation.
@@ -229,6 +275,7 @@ export interface ResolvedSvelteOptions {
   codeAnnotations: ResolvedCodeAnnotationsOptions;
   components: ComponentsMap;
   runes: boolean;
+  compiler?: SvelteCompilerOption;
   embeds: ResolvedBuiltinEmbedOptions;
   mdx?: boolean;
   root?: string;
@@ -239,7 +286,8 @@ export interface ResolvedSvelteOptions {
 
 export interface SvelteTransformResult {
   code: string;
-  map: null;
+  map: unknown;
+  warnings: SvelteCompilerWarning[];
   usedComponents: string[];
   frontmatter: Record<string, unknown>;
 }

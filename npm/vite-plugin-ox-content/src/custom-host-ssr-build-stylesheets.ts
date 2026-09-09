@@ -15,7 +15,7 @@ export type SsrStylesheetBuildRecord = {
 
 export type WritableSsrStylesheetBuildRecord = SsrStylesheetBuildRecord & {
   entryName: string;
-  css: readonly { file: string }[];
+  css: readonly { file: string; moduleId?: string }[];
   referenceId?: string;
 };
 
@@ -73,17 +73,21 @@ export function isSsrStylesheetVirtualId(id: string): boolean {
 }
 
 export function ssrStylesheetVirtualCss(
-  record: { css: readonly { file: string }[] },
+  record: { css: readonly { file: string; moduleId?: string }[] },
   root: string,
 ): string {
   return `${record.css
-    .map((stylesheet, index) => stylesheetImport(stylesheet.file, root, index))
+    .map((stylesheet, index) => stylesheetImport(stylesheet, root, index))
     .join("\n")}\n`;
 }
 
-function stylesheetImport(file: string, root: string, index: number): string {
-  const moduleId = JSON.stringify(publicModuleId(file, root));
-  if (isCssModuleFile(file)) {
+function stylesheetImport(
+  stylesheet: { file: string; moduleId?: string },
+  root: string,
+  index: number,
+): string {
+  const moduleId = JSON.stringify(stylesheet.moduleId ?? publicModuleId(stylesheet.file, root));
+  if (isCssModuleFile(stylesheet.file)) {
     const binding = `__oxContentSsrCssModule${index}`;
     return `import ${binding} from ${moduleId};\nexport const ${binding}ClassNames = Object.values(${binding});`;
   }

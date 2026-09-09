@@ -1,6 +1,11 @@
-import * as fsSync from "node:fs";
 import * as path from "node:path";
 import type { DocumentAssetManifest } from "./document-assets";
+import {
+  cleanModulePath,
+  isWithinRoot,
+  normalizeFilePath,
+  unique,
+} from "./custom-host-ssr-imports";
 import type {
   OxContentCustomHostStylesheet,
   OxContentCustomHostStylesheetDiagnostic,
@@ -263,7 +268,7 @@ function devCssHref(
     return undefined;
   }
   const [pathname, suffix = ""] = splitModuleSuffix(raw);
-  if (!pathname.endsWith(".css")) {
+  if (!isDevCssModule(pathname, suffix)) {
     return undefined;
   }
   if (pathname.startsWith("/@fs/")) {
@@ -277,6 +282,20 @@ function devCssHref(
     return joinBase(base, `${pathname}${suffix}`);
   }
   return joinBase(base, `/${pathname}${suffix}`);
+}
+
+function isDevCssModule(pathname: string, suffix: string): boolean {
+  if (pathname.endsWith(".css")) {
+    return true;
+  }
+  if (!suffix) {
+    return false;
+  }
+  const params = new URLSearchParams(suffix.slice(1));
+  if (params.get("type") === "style") {
+    return true;
+  }
+  return /(?:[?&])type=style(?:&|$)/u.test(suffix) && /\.css(?:&|$)/u.test(suffix);
 }
 
 function devDependency(
@@ -307,16 +326,6 @@ function rootRelativeId(value: string, root: string | undefined): boolean {
   return !isWithinRoot(value, root) && !value.startsWith("/@fs/");
 }
 
-function isWithinRoot(file: string, root: string): boolean {
-  const normalizedFile = normalizeFilePath(file);
-  const normalizedRoot = normalizeFilePath(root);
-  return normalizedFile === normalizedRoot || normalizedFile.startsWith(`${normalizedRoot}/`);
-}
-
-function cleanModulePath(moduleId: string): string {
-  return splitModuleSuffix(moduleId)[0].replace(/\\/g, "/");
-}
-
 function splitModuleSuffix(moduleId: string): [string, string?] {
   const match = /[?#]/u.exec(moduleId);
   return match ? [moduleId.slice(0, match.index), moduleId.slice(match.index)] : [moduleId];
@@ -324,19 +333,6 @@ function splitModuleSuffix(moduleId: string): [string, string?] {
 
 function joinBase(base: string | undefined, href: string): string {
   return withBase(base ?? "/", href);
-}
-
-function normalizeFilePath(file: string): string {
-  const resolved = path.resolve(file);
-  try {
-    return fsSync.realpathSync.native(resolved).replace(/\\/g, "/");
-  } catch {
-    return resolved.replace(/\\/g, "/");
-  }
-}
-
-function unique(values: string[]): string[] {
-  return values.filter((value, index) => values.indexOf(value) === index);
 }
 
 function first<T>(set: Set<T> | undefined): T | undefined {

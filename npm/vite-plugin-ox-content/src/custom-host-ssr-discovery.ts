@@ -7,6 +7,7 @@ import {
   dynamicDiagnostic,
   fileFromModuleId,
   hasGlobSyntax,
+  isFrameworkStyleRoot,
   isLocalSpecifier,
   isSourceFile,
   isStyleFile,
@@ -116,6 +117,12 @@ async function visitSource(
   context.addWatchFile(clean);
 
   const source = await fs.readFile(clean, "utf8");
+  if (isFrameworkStyleRoot(clean) && hasFrameworkStyleBlock(source)) {
+    const moduleId = publicModuleId(clean, root);
+    if (!record.css.some((entry) => entry.moduleId === moduleId)) {
+      record.css.push({ moduleId, file: clean });
+    }
+  }
   for (const item of parseImports(source)) {
     if (!isLocalSpecifier(item.specifier)) {
       continue;
@@ -136,11 +143,15 @@ async function visitSource(
     if (resolved.kind === "style") {
       record.dependencies.push(resolved.file);
       context.addWatchFile(resolved.file);
-      record.css.push({ moduleId: resolved.file, file: resolved.file });
+      record.css.push({ moduleId: publicModuleId(resolved.file, root), file: resolved.file });
     } else {
       await visitSource(context, resolved.file, root, record, seen);
     }
   }
+}
+
+function hasFrameworkStyleBlock(source: string): boolean {
+  return /<style(?:\s|>)/iu.test(source);
 }
 
 async function resolveModule(

@@ -27,6 +27,16 @@
       "import": "./dist/index.mjs",
       "require": "./dist/index.cjs",
       "types": "./dist/index.d.mts"
+    },
+    "./html-host/client": {
+      "import": {
+        "types": "./dist/html-host-client.d.mts",
+        "default": "./dist/html-host-client.mjs"
+      },
+      "require": {
+        "types": "./dist/html-host-client.d.cts",
+        "default": "./dist/html-host-client.cjs"
+      }
     }
   },
   "publishConfig": {
@@ -34,7 +44,7 @@
     "provenance": true
   },
   "scripts": {
-    "build": "vp pack",
+    "build": "vp pack && node ../../tools/scripts/stabilize-public-declaration-exports.mjs @ox-content/vite-plugin-svelte",
     "dev": "vp pack --watch",
     "typecheck": "tsgo --noEmit"
   },
@@ -43,6 +53,8 @@
     "@ox-content/vite-plugin": "workspace:*"
   },
   "devDependencies": {
+    "@rsvelte/vite-plugin-svelte": "^0.5.2",
+    "@rsvelte/vite-plugin-svelte-native": "^0.3.12",
     "@sveltejs/vite-plugin-svelte": "catalog:",
     "@types/node": "catalog:",
     "@typescript/native-preview": "catalog:",

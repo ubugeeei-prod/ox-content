@@ -3,6 +3,7 @@ import * as path from "node:path";
 import {
   dynamicDiagnostic,
   fileFromModuleId,
+  isFrameworkStyleRoot,
   isLocalSpecifier,
   isStyleFile,
   isSourceFile,
@@ -22,7 +23,7 @@ import type {
 } from "./custom-host-types";
 import { withBase } from "./custom-host-utils";
 
-const OUTSIDE_ROOT = { kind: "outside-root" } as const;
+const OUTSIDE_ROOT = Symbol("outside-root");
 
 export function resolveStaticDevSsrStylesheets(input: {
   modules: readonly string[];
@@ -87,6 +88,14 @@ function collectRoot(
     dependencies.add(clean);
     rootDependencies.add(clean);
     const source = fsSync.readFileSync(clean, "utf8");
+    const styleContent = isFrameworkStyleRoot(clean) ? frameworkStyleContent(source) : undefined;
+    if (styleContent) {
+      const href = frameworkStyleHref(clean, root, base);
+      if (!seenRootCss.has(href)) {
+        seenRootCss.add(href);
+        stylesheets.push({ kind: "style", href, moduleId, content: styleContent });
+      }
+    }
     for (const item of parseImports(source)) {
       if (!isLocalSpecifier(item.specifier)) {
         continue;
@@ -144,7 +153,7 @@ function resolveLocalImport(
     return undefined;
   }
   if (!isWithinRoot(resolved, root) && isStyleFile(resolved)) {
-    return "outside-root";
+    return OUTSIDE_ROOT;
   }
   return isStyleFile(resolved) || isSourceFile(resolved) ? normalizeFilePath(resolved) : undefined;
 }
@@ -154,9 +163,20 @@ function candidateFiles(file: string): string[] {
   if (path.extname(clean)) {
     return [clean];
   }
-  return [".ts", ".tsx", ".js", ".jsx", ".mjs", ".mts", ".css"].map(
+  return [".ts", ".tsx", ".js", ".jsx", ".mjs", ".mts", ".svelte", ".css"].map(
     (extension) => `${clean}${extension}`,
   );
+}
+
+function frameworkStyleContent(source: string): string | undefined {
+  const blocks = [...source.matchAll(/<style(?:\s[^>]*)?>([\s\S]*?)<\/style>/giu)]
+    .map((match) => match[1].trim())
+    .filter(Boolean);
+  return blocks.length > 0 ? `${blocks.join("\n")}\n` : undefined;
+}
+
+function frameworkStyleHref(file: string, root: string, base: string | undefined): string {
+  return withBase(base ?? "/", `${publicModuleId(file, root)}?svelte&type=style&lang.css`);
 }
 
 function firstExisting(files: readonly string[]): string | undefined {

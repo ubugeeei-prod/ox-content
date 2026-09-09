@@ -5,7 +5,7 @@ import {
   createOptions,
   stripSvelteComments,
   withGeneratedModule,
-} from "../test/fixtures/transform-harness";
+} from "./test/fixtures/transform-harness";
 
 const OPTIONS = { components: {}, mdxDocumentProps: true, ssr: true } as const;
 

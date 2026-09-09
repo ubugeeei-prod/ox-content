@@ -7,12 +7,16 @@ import {
   transformMarkdown as baseTransformMarkdown,
   type ResolvedDocumentComponentImport,
 } from "@ox-content/vite-plugin";
-import { compile } from "svelte/compiler";
+import { compile as compileWithDefaultSvelte } from "svelte/compiler";
 import type {
   ResolvedSvelteOptions,
   SvelteTransformResult,
   ComponentIsland,
   ComponentsMap,
+  SvelteCompileFunction,
+  SvelteCompilerOption,
+  SvelteCompilerResult,
+  SvelteCompilerWarning,
 } from "./types";
 
 const COMPONENT_REGEX = /<([A-Z][a-zA-Z0-9]*)\s*([^>]*?)\s*(?:\/>|>([\s\S]*?)<\/\1>)/g;
@@ -124,7 +128,7 @@ export async function transformMarkdownWithSvelte(
         id,
         discovered.usedComponents,
         frontmatter,
-        options.ssr,
+        options,
       );
     }
     const html = options.renderIsland
@@ -148,7 +152,7 @@ export async function transformMarkdownWithSvelte(
       id,
       discovered.usedComponents,
       frontmatter,
-      options.ssr,
+      options,
     );
   }
 
@@ -205,29 +209,96 @@ export async function transformMarkdownWithSvelte(
     id,
     usedComponents,
     frontmatter,
-    options.ssr,
+    options,
   );
 }
 
-function compileSvelteResult(
+async function compileSvelteResult(
   svelteCode: string,
   id: string,
   usedComponents: string[],
   frontmatter: Record<string, unknown>,
-  ssr = false,
-): SvelteTransformResult {
-  const compiled = compile(svelteCode, {
-    filename: id,
-    generate: ssr ? "server" : "client",
-    runes: true,
-  });
+  options: ResolvedSvelteOptions,
+): Promise<SvelteTransformResult> {
+  const compiler = resolveSvelteCompiler(options.compiler);
+  const compiled = normalizeSvelteCompilerResult(
+    await compiler(svelteCode, {
+      filename: id,
+      generate: options.ssr ? "server" : "client",
+      runes: options.runes,
+    }),
+    id,
+  );
 
   return {
-    code: `${compiled.js.code}\nexport const frontmatter = ${JSON.stringify(frontmatter)};`,
-    map: null,
+    code: `${compiled.code}\nexport const frontmatter = ${JSON.stringify(frontmatter)};`,
+    map: compiled.map,
+    warnings: compiled.warnings,
     usedComponents,
     frontmatter,
   };
+}
+
+function resolveSvelteCompiler(compiler: SvelteCompilerOption | undefined): SvelteCompileFunction {
+  if (!compiler) {
+    return compileWithDefaultSvelte as SvelteCompileFunction;
+  }
+  if (typeof compiler === "function") {
+    return compiler;
+  }
+  return compiler.compile;
+}
+
+function normalizeSvelteCompilerResult(
+  result: Awaited<SvelteCompilerResult>,
+  id: string,
+): {
+  code: string;
+  map: unknown;
+  warnings: SvelteCompilerWarning[];
+} {
+  let value: unknown = result;
+
+  if (typeof value === "string") {
+    const source = value;
+    try {
+      value = JSON.parse(source) as unknown;
+    } catch {
+      return { code: source, map: null, warnings: [] };
+    }
+  }
+
+  if (!value || typeof value !== "object") {
+    throwUnsupportedCompilerResult(id);
+  }
+
+  const output = value as {
+    js?: unknown;
+    warnings?: unknown;
+  };
+  const js = output.js;
+  const warnings = Array.isArray(output.warnings)
+    ? (output.warnings as SvelteCompilerWarning[])
+    : [];
+
+  if (typeof js === "string") {
+    return { code: js, map: null, warnings };
+  }
+
+  if (js && typeof js === "object") {
+    const jsOutput = js as { code?: unknown; map?: unknown };
+    if (typeof jsOutput.code === "string") {
+      return { code: jsOutput.code, map: jsOutput.map ?? null, warnings };
+    }
+  }
+
+  throwUnsupportedCompilerResult(id);
+}
+
+function throwUnsupportedCompilerResult(id: string): never {
+  throw new Error(
+    `[ox-content-svelte] Compiler for ${id} returned an unsupported result. Expected { js: { code } } or a compatible JSON string.`,
+  );
 }
 
 function createIslandMarker(islandId: string): string {

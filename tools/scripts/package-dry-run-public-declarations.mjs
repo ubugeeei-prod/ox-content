@@ -131,16 +131,11 @@ function checkTypeConsumer({ tarball, entry, packDir, failures, packedPackages, 
 function checkRuntimeConsumer({ tarball, entry, packDir, failures, packedPackages, mode }) {
   const consumerRoot = prepareConsumer({ tarball, entry, packDir, packedPackages });
   const file = mode === "import" ? "runtime-fixture.mjs" : "runtime-fixture.cjs";
-  const source =
+  const statement =
     mode === "import"
-      ? [
-          `const mod = await import(${JSON.stringify(entry.specifier)});`,
-          runtimeAssertions("mod", entry),
-        ].join("\n")
-      : [
-          `const mod = require(${JSON.stringify(entry.specifier)});`,
-          runtimeAssertions("mod", entry),
-        ].join("\n");
+      ? `const mod = await import(${JSON.stringify(entry.specifier)});`
+      : `const mod = require(${JSON.stringify(entry.specifier)});`;
+  const source = [statement, runtimeAssertions("mod", entry)].join("\n");
   writeFileSync(join(consumerRoot, file), source);
 
   const result = spawnSync(process.execPath, [join(consumerRoot, file)], {
@@ -281,18 +276,29 @@ function valueUsage(entry, prefix) {
       "void customLastmodSources;",
     ].join("\n");
   }
-
+  const names = htmlHostClientNames(entry);
   return [
-    `const hydrate = ${prefix}createSolidHtmlHostLazyHydrate({ modules: {}, render: () => {} });`,
-    `const domRenderer = ${prefix}createSolidHtmlHostDomRenderer({ mode: "render" });`,
-    `const domHydrate = ${prefix}createSolidHtmlHostLazyHydrate({ modules: {}, mount: { mode: "render" } });`,
-    `void ${prefix}loadSolidHtmlHostDomRuntime;`,
-    `${prefix}readSolidHtmlHostSlot({ dataset: {}, innerHTML: "" });`,
-    `${prefix}initSolidHtmlHost({ initIslands: () => undefined, modules: {}, render: () => {} });`,
+    `const hydrate = ${prefix}${names.createLazyHydrate}({ modules: {}, render: () => {} });`,
+    `const domRenderer = ${prefix}${names.createDomRenderer}({ mode: "render" });`,
+    `const domHydrate = ${prefix}${names.createLazyHydrate}({ modules: {}, mount: { mode: "render" } });`,
+    `void ${prefix}${names.loadDomRuntime};`,
+    `${prefix}${names.readSlot}({ dataset: {}, innerHTML: "" });`,
+    `${prefix}${names.initHost}({ initIslands: () => undefined, modules: {}, render: () => {} });`,
     "void hydrate;",
     "void domRenderer;",
     "void domHydrate;",
   ].join("\n");
+}
+
+function htmlHostClientNames(entry) {
+  const prefix = entry.packageName.endsWith("-svelte") ? "Svelte" : "Solid";
+  return {
+    initHost: `init${prefix}HtmlHost`,
+    createDomRenderer: `create${prefix}HtmlHostDomRenderer`,
+    createLazyHydrate: `create${prefix}HtmlHostLazyHydrate`,
+    loadDomRuntime: `load${prefix}HtmlHostDomRuntime`,
+    readSlot: `read${prefix}HtmlHostSlot`,
+  };
 }
 
 function runtimeAssertions(namespace, entry) {

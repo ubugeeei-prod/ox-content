@@ -2,7 +2,7 @@ import { mkdir, mkdtemp, rm, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import type { Component } from "svelte";
-import type { ResolvedSvelteOptions } from "../../src/types";
+import type { ResolvedSvelteOptions } from "../../types";
 
 export type GeneratedComponent = Component<Record<string, unknown>>;
 
@@ -33,7 +33,7 @@ export function createOptions(
   } as ResolvedSvelteOptions;
 }
 
-const packageRoot = path.dirname(fileURLToPath(new URL("../../package.json", import.meta.url)));
+const packageRoot = path.dirname(fileURLToPath(new URL("../../../package.json", import.meta.url)));
 // Inside the package rather than the OS temp dir: the generated module can
 // import `@ox-content/islands`, which only resolves from here.
 const scratchRoot = path.join(packageRoot, "node_modules", ".ox-content-test");

@@ -6,13 +6,13 @@ export default defineConfig({
     ignorePatterns: ["dist/**"],
   },
   pack: definePackConfig({
-    entry: ["src/index.ts"],
+    entry: ["src/index.ts", "src/html-host-client.ts"],
     format: ["esm", "cjs"],
     dts: true,
     clean: true,
     hash: false,
     deps: {
-      neverBundle: ["vite", "svelte", "@ox-content/vite-plugin"],
+      neverBundle: ["vite", "svelte", "svelte/server", "@ox-content/vite-plugin"],
     },
   }),
 });
