@@ -81,15 +81,24 @@ pub(super) fn resolve(
     })
 }
 
+#[cfg(test)]
 pub(super) fn transform(
     source: &str,
     options: &ResolvedDataTableOptions,
     errors: &mut Vec<String>,
 ) -> String {
+    preprocess(source, options, errors).unwrap_or_else(|| source.to_string())
+}
+
+pub(super) fn preprocess(
+    source: &str,
+    options: &ResolvedDataTableOptions,
+    errors: &mut Vec<String>,
+) -> Option<String> {
     if !source.contains(CSV_LANGUAGE) && !source.contains(JSON_LANGUAGE) {
-        return source.to_string();
+        return None;
     }
-    rewrite(source, options, errors)
+    Some(rewrite(source, options, errors))
 }
 
 fn rewrite(source: &str, options: &ResolvedDataTableOptions, errors: &mut Vec<String>) -> String {

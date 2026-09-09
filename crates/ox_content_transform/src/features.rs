@@ -273,8 +273,10 @@ pub fn preprocess_markdown_with_frontmatter<'a, S: BuildHasher>(
     {
         current = Cow::Owned(file_tree::transform(&current, file_tree));
     }
-    if let Some(tables) = &options.data_tables {
-        current = Cow::Owned(data_tables::transform(&current, tables, &mut errors));
+    if let Some(tables) = &options.data_tables
+        && let Some(transformed) = data_tables::preprocess(&current, tables, &mut errors)
+    {
+        current = Cow::Owned(transformed);
     }
     if options.badges && current.contains("{badge:") {
         let replaced = transform_markdown_text_segments(&current, |segment, out| {

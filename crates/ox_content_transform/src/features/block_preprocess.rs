@@ -11,7 +11,9 @@ pub(super) fn apply<'a, S: BuildHasher>(
     frontmatter: &HashMap<String, Value, S>,
     errors: &mut Vec<String>,
 ) -> Cow<'a, str> {
-    if let Some(conditionals) = &options.conditional_blocks {
+    if let Some(conditionals) = &options.conditional_blocks
+        && current.contains("if")
+    {
         current = Cow::Owned(super::conditional_blocks::transform(
             &current,
             conditionals,
@@ -19,23 +21,34 @@ pub(super) fn apply<'a, S: BuildHasher>(
             errors,
         ));
     }
-    if let Some(galleries) = &options.image_galleries {
+    if let Some(galleries) = &options.image_galleries
+        && current.contains("gallery")
+    {
         current = Cow::Owned(super::image_galleries::transform(&current, galleries, errors));
     }
-    if let Some(timelines) = &options.timelines {
+    if let Some(timelines) = &options.timelines
+        && current.contains("timeline")
+    {
         current = Cow::Owned(super::timelines::transform(&current, timelines, errors));
     }
-    if options.cards.is_some() {
+    if options.cards.is_some() && crate::html_scan::find_ci(&current, 0, "card").is_some() {
         current = Cow::Owned(super::cards::transform(&current));
     }
-    if options.steps.is_some() {
+    if options.steps.is_some() && crate::html_scan::find_ci(&current, 0, "steps").is_some() {
         current = Cow::Owned(super::steps::transform(&current));
     }
-    if options.code_groups.is_some() {
+    if options.code_groups.is_some()
+        && crate::html_scan::find_ci(&current, 0, "code-group").is_some()
+    {
         current = Cow::Owned(super::code_groups::transform(&current, errors));
     }
-    if let Some(containers) = &options.containers {
+    if let Some(containers) = &options.containers
+        && current.contains(":::")
+    {
         current = Cow::Owned(super::containers::transform(&current, containers));
     }
     current
 }
+
+#[cfg(test)]
+mod tests;
