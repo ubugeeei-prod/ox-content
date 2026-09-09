@@ -1,6 +1,8 @@
+import type { Options as HtmlMinifierOptions } from "html-minifier-terser";
+
 const HYDRATION_COMMENT = /^\s*[!/$#]/u;
 
-const HTML_MINIFY_OPTIONS = {
+const HTML_MINIFY_OPTIONS: HtmlMinifierOptions = {
   caseSensitive: true,
   collapseWhitespace: true,
   conservativeCollapse: true,
@@ -10,15 +12,64 @@ const HTML_MINIFY_OPTIONS = {
   removeComments: true,
   removeRedundantAttributes: true,
   useShortDoctype: true,
-} as const;
+};
+
+export interface HtmlMinifyContext {
+  scripts: Map<string, Promise<string>>;
+  styles: Map<string, Promise<string>>;
+}
 
 let cleanCssModule: Promise<typeof import("clean-css")> | undefined;
 let htmlMinifierModule: Promise<typeof import("html-minifier-terser")> | undefined;
 let terserModule: Promise<typeof import("terser")> | undefined;
 
-export async function minifyHtmlOutput(html: string): Promise<string> {
+export function createHtmlMinifyContext(): HtmlMinifyContext {
+  return {
+    scripts: new Map(),
+    styles: new Map(),
+  };
+}
+
+export async function minifyHtmlOutput(
+  html: string,
+  context: HtmlMinifyContext = createHtmlMinifyContext(),
+): Promise<string> {
   const { minify } = await loadHtmlMinifier();
-  return minify(html, HTML_MINIFY_OPTIONS);
+  return minify(html, optionsForContext(context));
+}
+
+function optionsForContext(context: HtmlMinifyContext): HtmlMinifierOptions {
+  return {
+    ...HTML_MINIFY_OPTIONS,
+    minifyCSS: (text, type) =>
+      cachedMinify(context.styles, cacheKey(type ?? "style", text), () => minifyCss(text, type)),
+    minifyJS: (text, inline) =>
+      cachedMinify(context.scripts, cacheKey(inline === true ? "inline" : "script", text), () =>
+        minifyJs(text, inline),
+      ),
+  };
+}
+
+function cachedMinify(
+  cache: Map<string, Promise<string>>,
+  key: string,
+  minify: () => Promise<string>,
+): Promise<string> {
+  const cached = cache.get(key);
+  if (cached) return cached;
+
+  const next = minify().catch((error: unknown) => {
+    if (cache.get(key) === next) {
+      cache.delete(key);
+    }
+    throw error;
+  });
+  cache.set(key, next);
+  return next;
+}
+
+function cacheKey(kind: string, text: string): string {
+  return `${kind}\0${text}`;
 }
 
 async function minifyJs(text: string, inline?: boolean): Promise<string> {

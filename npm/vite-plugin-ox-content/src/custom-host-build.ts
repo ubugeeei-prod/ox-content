@@ -39,7 +39,7 @@ import {
   shouldTransformHtml,
   ssgUrlPath,
 } from "./custom-host-utils";
-import { minifyHtmlOutput } from "./html-minify";
+import { createHtmlMinifyContext, minifyHtmlOutput } from "./html-minify";
 import { writeRedirectOutputs } from "./redirect-outputs";
 import {
   planSsgOutputs,
@@ -201,6 +201,7 @@ async function writeCoordinatedOutputs(
   const rewrittenHtml = new Map(
     resources.pages.map((page) => [path.resolve(page.outputPath), page.html]),
   );
+  const htmlMinifyContext = createHtmlMinifyContext();
 
   await Promise.all(
     routes.map(async (entry) => {
@@ -208,7 +209,7 @@ async function writeCoordinatedOutputs(
         rewrittenHtml.get(path.resolve(entry.outputPath)) ?? entry.body;
       if (minifyHtml && isHtmlContentType(entry.contentType)) {
         const html = typeof body === "string" ? body : new TextDecoder().decode(body);
-        body = await minifyHtmlOutput(html);
+        body = await minifyHtmlOutput(html, htmlMinifyContext);
       }
       await fs.mkdir(path.dirname(entry.outputPath), { recursive: true });
       await fs.writeFile(entry.outputPath, body);

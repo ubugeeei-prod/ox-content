@@ -105,7 +105,7 @@ import {
   writeSnapshotSearchIndex,
 } from "./versions";
 import { PageResourceError, createResourceDedupeStore, processPageResources } from "./resources";
-import { minifyHtmlOutput } from "./html-minify";
+import { createHtmlMinifyContext, minifyHtmlOutput } from "./html-minify";
 import {
   createVersionNavigationContext,
   rewriteVersionedHeaderNavItems,
@@ -2317,9 +2317,13 @@ async function writeGeneratedPages(
     }
   }
 
+  const htmlMinifyContext = createHtmlMinifyContext();
+
   await Promise.all(
     optimizedOutput.pages.map(async (page) => {
-      const html = context.ssgOptions.minifyHtml ? await minifyHtmlOutput(page.html) : page.html;
+      const html = context.ssgOptions.minifyHtml
+        ? await minifyHtmlOutput(page.html, htmlMinifyContext)
+        : page.html;
       await fs.mkdir(path.dirname(page.outputPath), { recursive: true });
       await fs.writeFile(page.outputPath, html, "utf-8");
     }),

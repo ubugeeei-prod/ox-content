@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vite-plus/test";
-import { minifyHtmlOutput } from "./html-minify";
+import { createHtmlMinifyContext, minifyHtmlOutput } from "./html-minify";
 
 describe("minifyHtmlOutput", () => {
   it("minifies final HTML while preserving whitespace-sensitive content", async () => {
@@ -60,5 +60,25 @@ describe("minifyHtmlOutput", () => {
     await expect(
       minifyHtmlOutput("<!doctype html><script>function () {</script>"),
     ).rejects.toThrow();
+  });
+
+  it("reuses identical inline script and style minification within a build context", async () => {
+    const context = createHtmlMinifyContext();
+    const script = "const answer = 1 + 2; window.__answer = answer;";
+    const style = ".badge { color: red; margin: 0px; }";
+
+    const [first, second] = await Promise.all([
+      minifyHtmlOutput(`<style>${style}</style><script>${script}</script>`, context),
+      minifyHtmlOutput(`<main><style>${style}</style><script>${script}</script></main>`, context),
+    ]);
+
+    expect(first).toBe(
+      "<style>.badge{color:red;margin:0}</style><script>const answer=3;window.__answer=3</script>",
+    );
+    expect(second).toBe(
+      "<main><style>.badge{color:red;margin:0}</style><script>const answer=3;window.__answer=3</script></main>",
+    );
+    expect(context.scripts.size).toBe(1);
+    expect(context.styles.size).toBe(1);
   });
 });
