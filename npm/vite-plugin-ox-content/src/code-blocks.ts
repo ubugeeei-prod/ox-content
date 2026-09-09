@@ -150,7 +150,7 @@ export async function typecheckCodeBlocks(
     try {
       await execFileAsync(
         options.tsgoCommand ?? "tsgo",
-        ["--noEmit", "--pretty", "false", ...files],
+        ["--ignoreConfig", "--noEmit", "--pretty", "false", ...files],
         {
           cwd: process.cwd(),
           maxBuffer: 1024 * 1024 * 4,
