@@ -29,8 +29,17 @@ export async function enrichSpeakerDeckEmbeds(
     full: match[0],
     index: match.index ?? 0,
   }));
+  const requests = new Map<string, Promise<SpeakerDeckMeta | null>>();
+  const loadMeta = (url: string): Promise<SpeakerDeckMeta | null> => {
+    let pending = requests.get(url);
+    if (!pending) {
+      pending = fetchOembed(url, fetchImpl);
+      requests.set(url, pending);
+    }
+    return pending;
+  };
   const enriched = await mapWithConcurrency(matches, OEMBED_CONCURRENCY, (match) =>
-    enrichTag(match.full, match.attrs, fetchImpl),
+    enrichTag(match.full, match.attrs, loadMeta),
   );
 
   let output = "";
@@ -67,7 +76,7 @@ async function mapWithConcurrency<T, U>(
 async function enrichTag(
   full: string,
   attrs: string,
-  fetchImpl: SpeakerDeckFetch,
+  loadMeta: (url: string) => Promise<SpeakerDeckMeta | null>,
 ): Promise<string> {
   if (readAttr(attrs, "player") || readAttr(attrs, "id")) {
     return full;
@@ -77,7 +86,7 @@ async function enrichTag(
     return full;
   }
 
-  const meta = await fetchOembed(url, fetchImpl);
+  const meta = await loadMeta(url);
   if (!meta) {
     return full;
   }
