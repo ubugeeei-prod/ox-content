@@ -1,0 +1,9 @@
+[
+  {
+    "id": "example",
+    "type": "article-journal",
+    "title": "Example",
+    "author": [{ "given": "Ada", "family": "Example" }],
+    "issued": { "date-parts": [[2026]] }
+  }
+]

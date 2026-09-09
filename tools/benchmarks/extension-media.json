@@ -1,0 +1,180 @@
+{
+  "options": {
+    "spotify": true,
+    "appleMusic": true,
+    "speakerDeck": true,
+    "audio": true,
+    "video": true,
+    "stackBlitz": true,
+    "twitter": true,
+    "bluesky": true,
+    "googleMaps": true,
+    "qiita": true,
+    "zenn": true,
+    "packageRegistry": true,
+    "playgrounds": true,
+    "vimeo": true,
+    "twitch": true,
+    "discord": true,
+    "fediverse": true,
+    "facebook": true,
+    "threads": true,
+    "instagram": true,
+    "webContainer": true,
+    "loom": true,
+    "asciinema": true,
+    "figma": true,
+    "note": true,
+    "googleSlides": true
+  },
+  "fixtures": [
+    {
+      "name": "loom",
+      "html": "<loom url=\"https://www.loom.com/share/abc123def\"></loom>"
+    },
+    {
+      "name": "asciinema",
+      "html": "<asciinema url=\"https://asciinema.org/a/569727\"></asciinema>"
+    },
+    {
+      "name": "figma",
+      "html": "<figma url=\"https://www.figma.com/file/AbC123/My-Design\"></figma>"
+    },
+    {
+      "name": "note",
+      "html": "<note url=\"https://note.com/someone/n/nabc123\"></note>"
+    },
+    {
+      "name": "replit",
+      "html": "<replit url=\"https://replit.com/@someone/my-repl\"></replit>"
+    },
+    {
+      "name": "spotify",
+      "html": "<Spotify url=\"https://open.spotify.com/track/abc123\"></Spotify>"
+    },
+    {
+      "name": "applemusic",
+      "html": "<AppleMusic url=\"https://music.apple.com/gb/album/1989-taylors-version/1708308989\"></AppleMusic>"
+    },
+    {
+      "name": "speakerdeck",
+      "html": "<SpeakerDeck url=\"https://speakerdeck.com/jane/my-cool-talk\"></SpeakerDeck>"
+    },
+    {
+      "name": "Audio",
+      "html": "<Audio src=\"https://cdn.example.com/intro.mp3\"></Audio>"
+    },
+    {
+      "name": "Video",
+      "html": "<Video src=\"/talk.mp4\" poster=\"/talk.jpg\" captions=\"/talk.en.vtt\" srclang=\"en\" label=\"English\" width=\"1280\" height=\"720\" title=\"Talk\"></Video>"
+    },
+    {
+      "name": "stackblitz",
+      "html": "<StackBlitz url=\"https://stackblitz.com/edit/vitejs-vite\"></StackBlitz>"
+    },
+    {
+      "name": "tweet",
+      "html": "<Tweet url=\"https://x.com/jack/status/20\" displayName=\"jack\" handle=\"jack\" avatar=\"https://pbs.twimg.com/profile_images/avatar.jpg\" datetime=\"2006-03-21T20:50:14Z\" dateLabel=\"Mar 21, 2006\" replies=\"120\" retweets=\"520\" quotes=\"8\" likes=\"2.4M\" views=\"10M\">just setting up my twttr</Tweet>"
+    },
+    {
+      "name": "bluesky",
+      "html": "<Bluesky url=\"https://bsky.app/profile/bsky.app/post/3l6oveex3ii2l\" displayName=\"Bluesky\" handle=\"bsky.app\" avatar=\"https://bsky.app/static/apple-touch-icon.png\" datetime=\"2024-02-06T12:34:56Z\" dateLabel=\"Feb 6, 2024\" replies=\"10\" reposts=\"20\" likes=\"30\" quotes=\"4\">hello sky</Bluesky>"
+    },
+    {
+      "name": "googlemaps",
+      "html": "<GoogleMaps url=\"https://www.google.com/maps/place/Tokyo+Station/\" place=\"Tokyo Station\" address=\"1 Chome Marunouchi, Chiyoda City\" embed=\"https://www.google.com/maps/embed?pb=!1m18\"></GoogleMaps>"
+    },
+    {
+      "name": "qiita",
+      "html": "<Qiita url=\"https://qiita.com/ubugeeei/items/abcdef123456\"></Qiita>"
+    },
+    {
+      "name": "zenn",
+      "html": "<Zenn url=\"https://zenn.dev/ubugeeei/articles/ox-content\" title=\"Ox Content notes\" author=\"ubugeeei\" date=\"2026-08-26\" likes=\"12\"></Zenn>"
+    },
+    {
+      "name": "npmpackage",
+      "html": "<NpmPackage url=\"https://www.npmjs.com/package/@vitejs/plugin-vue/v/6.0.0\" title=\"@vitejs/plugin-vue\" license=\"MIT\" repository=\"https://github.com/vitejs/vite-plugin-vue\" dateTime=\"2026-08-26T00:00:00Z\" dateLabel=\"2026-08-26\">Vue support for Vite.</NpmPackage>"
+    },
+    {
+      "name": "cratesio",
+      "html": "<CratesIo url=\"https://crates.io/crates/serde/1.0.0\" description=\"Serialization framework\" license=\"MIT OR Apache-2.0\" downloads=\"123456\"></CratesIo>"
+    },
+    {
+      "name": "pypi",
+      "html": "<PyPI url=\"https://pypi.org/project/requests/2.32.0\" repository=\"https://github.com/psf/requests\">Python HTTP for Humans.</PyPI>"
+    },
+    {
+      "name": "dockerhub",
+      "html": "<DockerHub url=\"https://hub.docker.com/_/nginx/tags?name=mainline\" downloads=\"987654\" stars=\"321\" dateLabel=\"2026-08-23\"></DockerHub>"
+    },
+    {
+      "name": "codepen",
+      "html": "<CodePen url=\"https://codepen.io/ubugeeei/pen/abc123\" title=\"Card demo\" author=\"ubugeeei\" image=\"https://shots.codepen.io/card.png\">Static preview.</CodePen>"
+    },
+    {
+      "name": "jsfiddle",
+      "html": "<JSFiddle url=\"https://jsfiddle.net/ubugeeei/abc123/2/\" title=\"Fiddle demo\" embed=\"https://jsfiddle.net/ubugeeei/abc123/2/embedded/result/\"></JSFiddle>"
+    },
+    {
+      "name": "observable",
+      "html": "<Observable url=\"https://observablehq.com/@d3/bar-chart\" author=\"@d3\" runtime=\"Observable Runtime\"></Observable>"
+    },
+    {
+      "name": "codesandbox",
+      "html": "<CodeSandbox url=\"https://codesandbox.io/s/demo\" embed=\"https://codesandbox.io/embed/demo\"></CodeSandbox>"
+    },
+    {
+      "name": "vimeo",
+      "html": "<Vimeo url=\"https://vimeo.com/123456789\" title=\"Vimeo demo\" author=\"Vimeo Staff\" duration=\"1:30\" image=\"https://i.vimeocdn.com/video/123.jpg\" embed=\"https://player.vimeo.com/video/123456789?dnt=1\">A video fallback.</Vimeo>"
+    },
+    {
+      "name": "twitch",
+      "html": "<Twitch url=\"https://www.twitch.tv/videos/40464143\" title=\"Twitch VOD\" channel=\"twitchdev\" duration=\"2:00:00\" embed=\"https://player.twitch.tv/?video=v40464143&parent=docs.example.com&autoplay=false\"></Twitch>"
+    },
+    {
+      "name": "discord",
+      "html": "<Discord url=\"https://discord.gg/abc123\" server=\"Ox Content\" channel=\"announcements\">Join the release channel.</Discord>"
+    },
+    {
+      "name": "mastodon",
+      "html": "<Mastodon url=\"https://mastodon.social/@docs/111\" author=\"@docs@mastodon.social\" replies=\"3\" reposts=\"5\" likes=\"8\">Fediverse release note.</Mastodon>"
+    },
+    {
+      "name": "facebook",
+      "html": "<Facebook url=\"https://www.facebook.com/example/posts/123\" title=\"Launch note\" author=\"Example\"></Facebook>"
+    },
+    {
+      "name": "threads",
+      "html": "<Threads url=\"https://www.threads.net/@example/post/abc\" author=\"@example\">Thread copy.</Threads>"
+    },
+    {
+      "name": "instagram",
+      "html": "<Instagram url=\"https://www.instagram.com/p/abc123/\" author=\"@example\" image=\"https://cdn.example.com/photo.jpg\">Caption text.</Instagram>"
+    },
+    {
+      "name": "webcontainer",
+      "html": "<WebContainer entry=\"src/main.ts\" title=\"Demo & Tools\">\nnpm install\nnpm run dev\n</WebContainer>"
+    },
+    {
+      "name": "googleslides",
+      "html": "<googleslides url=\"https://docs.google.com/presentation/d/1AbC_123/edit\"></googleslides>"
+    },
+    {
+      "name": "fediverse",
+      "html": "<fediverse url=\"https://social.example/@author/123\"></fediverse>"
+    },
+    {
+      "name": "misskey",
+      "html": "<misskey url=\"https://social.example/notes/123\"></misskey>"
+    },
+    {
+      "name": "mixi2",
+      "html": "<mixi2 url=\"https://mixi.social/@author/posts/123\"></mixi2>"
+    },
+    {
+      "name": "xpost",
+      "html": "<XPost url=\"https://x.com/jack/status/20\" displayName=\"jack\" handle=\"jack\" avatar=\"https://pbs.twimg.com/profile_images/avatar.jpg\" datetime=\"2006-03-21T20:50:14Z\" dateLabel=\"Mar 21, 2006\" replies=\"120\" retweets=\"520\" quotes=\"8\" likes=\"2.4M\" views=\"10M\">just setting up my twttr</XPost>"
+    }
+  ]
+}
