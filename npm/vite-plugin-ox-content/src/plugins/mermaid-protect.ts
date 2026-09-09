@@ -20,20 +20,28 @@ export interface MermaidSvgProtection {
  */
 export function protectStaticDiagramSvgs(html: string): MermaidSvgProtection {
   const svgs = new Map<string, string>();
-  let result = html;
-  let idx = 0;
+  const chunks: string[] = [];
+  const markers = /<div class="ox-mermaid"|<figure class="ox-graphviz"/gi;
+  let cursor = 0;
+  let match: RegExpExecArray | null;
 
-  while (true) {
-    const block = findNextStaticDiagramBlock(result, idx);
-    if (!block) break;
+  while ((match = markers.exec(html)) !== null) {
+    const tag = match[0].slice(1, 4).toLowerCase() === "div" ? "div" : "figure";
+    const end = findMatchingElementEnd(html, match.index, tag);
+    if (end === -1) break;
 
     const placeholder = `<!--ox-static-diagram-${svgs.size}-->`;
-    svgs.set(placeholder, result.substring(block.start, block.end));
-    result = result.substring(0, block.start) + placeholder + result.substring(block.end);
-    idx = block.start + placeholder.length;
+    // Retain slices of one source string, not one whole intermediate document
+    // for every diagram. Offsets stay in the original UTF-16 string as well.
+    svgs.set(placeholder, html.slice(match.index, end));
+    chunks.push(html.slice(cursor, match.index), placeholder);
+    cursor = end;
+    markers.lastIndex = end;
   }
 
-  return { html: result, svgs };
+  if (svgs.size === 0) return { html, svgs };
+  chunks.push(html.slice(cursor));
+  return { html: chunks.join(""), svgs };
 }
 
 /**
@@ -64,45 +72,14 @@ export function restoreMermaidSvgs(html: string, svgs: Map<string, string>): str
   return restoreStaticDiagramSvgs(html, svgs);
 }
 
-function findNextStaticDiagramBlock(
-  html: string,
-  startAt: number,
-): { start: number; end: number } | null {
-  const lower = html.toLowerCase();
-  const markers = [
-    { marker: '<div class="ox-mermaid"', tag: "div" },
-    { marker: '<figure class="ox-graphviz"', tag: "figure" },
-  ];
-  const next = markers
-    .map((candidate) => ({ ...candidate, start: lower.indexOf(candidate.marker, startAt) }))
-    .filter((candidate) => candidate.start !== -1)
-    .sort((a, b) => a.start - b.start)[0];
-  if (!next) return null;
-
-  const end = findMatchingElementEnd(lower, next.start, next.tag);
-  return end === -1 ? null : { start: next.start, end };
-}
-
-function findMatchingElementEnd(html: string, start: number, tag: string): number {
+function findMatchingElementEnd(html: string, start: number, tag: "div" | "figure"): number {
+  const tags = tag === "div" ? /<div|<\/div>/gi : /<figure|<\/figure>/gi;
+  tags.lastIndex = start;
   let depth = 0;
-  let pos = start;
-  const open = `<${tag}`;
-  const close = `</${tag}>`;
-
-  while (pos < html.length) {
-    const openIdx = html.indexOf(open, pos);
-    const closeIdx = html.indexOf(close, pos);
-    if (closeIdx === -1) return -1;
-
-    if (openIdx !== -1 && openIdx < closeIdx) {
-      depth++;
-      pos = openIdx + open.length;
-    } else {
-      depth--;
-      if (depth === 0) return closeIdx + close.length;
-      pos = closeIdx + close.length;
-    }
+  let match: RegExpExecArray | null;
+  while ((match = tags.exec(html)) !== null) {
+    depth += match[0][1] === "/" ? -1 : 1;
+    if (depth === 0) return tags.lastIndex;
   }
-
   return -1;
 }
