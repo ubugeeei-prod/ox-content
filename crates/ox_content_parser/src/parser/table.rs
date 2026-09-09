@@ -118,7 +118,11 @@ impl<'a> Parser<'a> {
         column_count: usize,
     ) -> ParseResult<TableRow<'a>> {
         profile_span_detail!("parser::table_row");
-        let mut cells: Vec<'a, TableCell<'a>> = self.allocator.new_vec();
+        // Every row is truncated or padded to the delimiter's exact width.
+        // Reserve it before parsing inline children: those arena allocations
+        // otherwise prevent the cell vector from growing in place, leaving
+        // each discarded backing buffer live until the arena is dropped.
+        let mut cells: Vec<'a, TableCell<'a>> = self.allocator.new_vec_with_capacity(column_count);
         let line_end = line_start + line.len();
         for (cell_content, cell_start, cell_end) in
             Self::table_row_cells_with_offsets(line).take(column_count)

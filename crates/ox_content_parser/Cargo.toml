@@ -49,3 +49,7 @@ harness = false
 [[bench]]
 name = "prepass"
 harness = false
+
+[[bench]]
+name = "tables"
+harness = false
