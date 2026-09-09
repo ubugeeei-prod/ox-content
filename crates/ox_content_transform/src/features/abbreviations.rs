@@ -12,7 +12,11 @@ use std::borrow::Cow;
 use crate::AbbreviationsOptions;
 
 mod protect;
+mod terms;
+use terms::Terms;
 
+#[cfg(test)]
+mod matching_tests;
 #[cfg(test)]
 mod tests;
 
@@ -20,7 +24,7 @@ use protect::next_protected;
 
 #[derive(Clone)]
 pub(super) struct ResolvedAbbreviations {
-    terms: Vec<(String, String)>,
+    terms: Terms,
     first_use_only: bool,
 }
 
@@ -47,38 +51,48 @@ pub(super) fn resolve(options: Option<&AbbreviationsOptions>) -> Option<Resolved
             terms.push((term.to_string(), title.to_string()));
         }
     }
-    Some(ResolvedAbbreviations { terms, first_use_only: options.first_use_only.unwrap_or(false) })
+    Some(ResolvedAbbreviations {
+        terms: Terms::new(terms),
+        first_use_only: options.first_use_only.unwrap_or(false),
+    })
 }
 
 pub(super) fn apply(current: &mut Cow<'_, str>, options: Option<&ResolvedAbbreviations>) {
     let Some(options) = options else {
         return;
     };
-    let mut terms = options.terms.clone();
+    let mut definitions = None;
     if current.contains("*[")
         && let Some(stripped) =
             super::segments::transform_markdown_text_segments(current, |segment, out| {
-                strip_or_copy_definition(segment, &mut terms, out);
+                strip_or_copy_definition(segment, &options.terms, &mut definitions, out);
             })
     {
         *current = Cow::Owned(stripped);
     }
+    let local_terms = definitions.map(Terms::new);
+    let terms = local_terms.as_ref().unwrap_or(&options.terms);
     if terms.is_empty() {
         return;
     }
-    terms.sort_by(|a, b| b.0.len().cmp(&a.0.len()).then_with(|| a.0.cmp(&b.0)));
     let mut used = FxHashSet::default();
     if let Some(replaced) =
         super::segments::transform_markdown_text_segments(current, |segment, out| {
-            replace(segment, &terms, options.first_use_only, &mut used, out);
+            replace(segment, terms, options.first_use_only, &mut used, out);
         })
     {
         *current = Cow::Owned(replaced);
     }
 }
 
-fn strip_or_copy_definition(segment: &str, terms: &mut Vec<(String, String)>, out: &mut String) {
+fn strip_or_copy_definition(
+    segment: &str,
+    configured: &Terms,
+    definitions: &mut Option<Vec<(String, String)>>,
+    out: &mut String,
+) {
     if let Some((term, title)) = parse_standalone_definition(segment) {
+        let terms = definitions.get_or_insert_with(|| configured.entries().to_vec());
         if let Some(existing) = terms.iter_mut().find(|entry| entry.0 == term) {
             existing.1 = title;
         } else {
@@ -101,18 +115,18 @@ fn parse_standalone_definition(segment: &str) -> Option<(String, String)> {
     Some((term.to_string(), title.to_string()))
 }
 
-fn replace(
+fn replace<'a>(
     segment: &str,
-    terms: &[(String, String)],
+    terms: &'a Terms,
     first_use_only: bool,
-    used: &mut FxHashSet<String>,
+    used: &mut FxHashSet<&'a str>,
     out: &mut String,
 ) {
     let mut cursor = 0usize;
+    let mut protected = next_protected(segment, cursor);
     while cursor < segment.len() {
-        let protected = next_protected(segment, cursor);
         let found = next_term(segment, cursor, terms, protected.as_ref().map(|span| span.start));
-        match (found, protected) {
+        match (found, protected.as_ref()) {
             (None, None) => {
                 out.push_str(&segment[cursor..]);
                 return;
@@ -120,10 +134,12 @@ fn replace(
             (None, Some(span)) => {
                 out.push_str(&segment[cursor..span.end]);
                 cursor = span.end;
+                protected = next_protected(segment, cursor);
             }
             (Some(found), Some(span)) if span.start <= found.start => {
                 out.push_str(&segment[cursor..span.end]);
                 cursor = span.end;
+                protected = next_protected(segment, cursor);
             }
             (Some(found), _) => {
                 out.push_str(&segment[cursor..found.start]);
@@ -134,13 +150,13 @@ fn replace(
     }
 }
 
-fn emit_or_copy(
-    found: TermMatch<'_>,
+fn emit_or_copy<'a>(
+    found: TermMatch<'a>,
     first_use_only: bool,
-    used: &mut FxHashSet<String>,
+    used: &mut FxHashSet<&'a str>,
     out: &mut String,
 ) {
-    if first_use_only && !used.insert(found.term.to_string()) {
+    if first_use_only && !used.insert(found.term) {
         out.push_str(found.term);
         return;
     }
@@ -152,9 +168,9 @@ fn emit_or_copy(
 }
 
 fn next_term<'a>(
-    segment: &'a str,
+    segment: &str,
     from: usize,
-    terms: &'a [(String, String)],
+    terms: &'a Terms,
     limit: Option<usize>,
 ) -> Option<TermMatch<'a>> {
     let limit = limit.unwrap_or(segment.len());
@@ -164,8 +180,9 @@ fn next_term<'a>(
             cursor += 1;
             continue;
         }
-        if left_boundary(segment, cursor) {
-            for (term, title) in terms {
+        let candidates = terms.starting_with(segment.as_bytes()[cursor]);
+        if !candidates.is_empty() && left_boundary(segment, cursor) {
+            for (term, title) in candidates {
                 let end = cursor + term.len();
                 if end <= limit
                     && segment.is_char_boundary(end)
