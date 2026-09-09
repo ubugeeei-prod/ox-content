@@ -97,7 +97,9 @@ export function createCustomHostCollectionAssetsDevController(input: {
 
   return {
     async manifest() {
-      return (await loadSnapshot()).manifest;
+      // A watcher-triggered refresh publishes atomically through `apply`.
+      // Keep serving the last successful generation while it runs or fails.
+      return snapshot?.manifest ?? (await loadSnapshot()).manifest;
     },
     middleware: async (req, res, next) => {
       if (req.method !== "GET" && req.method !== "HEAD") {
@@ -111,7 +113,7 @@ export function createCustomHostCollectionAssetsDevController(input: {
       }
 
       try {
-        const current = await loadSnapshot();
+        const current = snapshot ?? (await loadSnapshot());
         await serveCollectionAsset(current, publicPath, req, res, next);
       } catch (error) {
         next(error);
