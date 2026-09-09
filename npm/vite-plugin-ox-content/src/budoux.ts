@@ -12,6 +12,9 @@ const DEFAULT_LANGUAGE: BudouxLanguage = "ja";
 const DEFAULT_SEPARATOR = "\u200b";
 const ENTITY = /&(?:#[0-9]+|#x[0-9A-Fa-f]+|[A-Za-z][A-Za-z0-9]+);/g;
 const PROTECTED_TAGS = new Set(["code", "math", "pre", "script", "style", "svg", "textarea"]);
+const PROTECTED_CLOSE_PATTERNS = new Map(
+  [...PROTECTED_TAGS].map((name) => [name, new RegExp(`</${name}`, "gi")]),
+);
 const VOID_TAGS = new Set([
   "area",
   "base",
@@ -78,7 +81,6 @@ function transformHtmlText(html: string, replacer: (text: string) => string): st
       if (closeStart > cursor) {
         output += html.slice(cursor, closeStart);
         cursor = closeStart;
-        continue;
       }
     }
 
@@ -165,7 +167,10 @@ function tagName(tag: string): string | undefined {
 }
 
 function findClosingTag(html: string, from: number, tagName: string): number {
-  return html.toLowerCase().indexOf(`</${tagName}`, from);
+  const pattern = PROTECTED_CLOSE_PATTERNS.get(tagName);
+  if (!pattern) return -1;
+  pattern.lastIndex = from;
+  return pattern.exec(html)?.index ?? -1;
 }
 
 async function loadDefaultParser(language: BudouxLanguage): Promise<BudouxParser> {
