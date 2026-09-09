@@ -12,48 +12,61 @@ pub struct MermaidTransformResult {
 /// renders each in parallel using the mmdc CLI, and replaces them with
 /// `<div class="ox-mermaid">...</div>`.
 pub fn transform_mermaid(html: String, mmdc_path: &str) -> MermaidTransformResult {
-    let blocks = extract_mermaid_blocks_from_html(&html);
+    transform_with_renderer(html, &|source| render_mermaid_with_mmdc(source, mmdc_path))
+}
 
+fn transform_with_renderer(
+    html: String,
+    renderer: &(impl Fn(&str) -> Result<String, String> + Sync),
+) -> MermaidTransformResult {
+    let blocks = extract_mermaid_blocks_from_html(&html);
     if blocks.is_empty() {
         return MermaidTransformResult { html, errors: vec![] };
     }
 
-    // Render all diagrams in parallel using scoped threads.
-    // The intermediate collect() is intentional: we must spawn ALL threads before
-    // joining any, otherwise they would run sequentially instead of in parallel.
+    // Deduplicate decoded sources only within this document. Render raw SVGs;
+    // each occurrence receives fresh IDs when inserted into the document.
+    let mut sources: Vec<&str> = blocks.iter().map(|block| block.source.as_str()).collect();
+    sources.sort_unstable();
+    sources.dedup();
     #[allow(clippy::needless_collect)]
-    let render_results: Vec<std::result::Result<String, String>> = std::thread::scope(|s| {
-        let handles: Vec<_> = blocks
-            .iter()
-            .map(|block| {
-                let source = &block.source;
-                s.spawn(move || render_mermaid_with_mmdc(source, mmdc_path))
-            })
-            .collect();
-
+    let rendered: Vec<Result<String, String>> = std::thread::scope(|scope| {
+        let handles: Vec<_> =
+            sources.iter().map(|source| scope.spawn(move || renderer(source))).collect();
         handles
             .into_iter()
-            .map(|h| h.join().unwrap_or_else(|_| Err("Thread panicked".to_string())))
+            .map(|handle| handle.join().unwrap_or_else(|_| Err("Thread panicked".to_string())))
             .collect()
     });
 
-    // Replace blocks in reverse order to preserve positions
-    let mut result_html = html;
+    let mut output = String::with_capacity(html.len());
+    let mut cursor = 0;
     let mut errors = Vec::new();
-
-    for (i, block) in blocks.iter().enumerate().rev() {
-        match &render_results[i] {
-            Ok(svg) => {
-                let replacement = format!(r#"<div class="ox-mermaid">{svg}</div>"#);
-                result_html.replace_range(block.start..block.end, &replacement);
+    for block in &blocks {
+        output.push_str(&html[cursor..block.start]);
+        let result = sources
+            .binary_search(&block.source.as_str())
+            .ok()
+            .and_then(|index| rendered.get(index));
+        match result {
+            Some(Ok(svg)) => {
+                let id = MERMAID_FILE_COUNTER.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
+                output.push_str(r#"<div class="ox-mermaid">"#);
+                output.push_str(&postprocess_mermaid_svg(svg, id));
+                output.push_str("</div>");
             }
-            Err(e) => {
-                errors.push(e.clone());
+            Some(Err(error)) => {
+                errors.push(error.clone());
+                output.push_str(&html[block.start..block.end]);
             }
+            None => output.push_str(&html[block.start..block.end]),
         }
+        cursor = block.end;
     }
-
-    MermaidTransformResult { html: result_html, errors }
+    output.push_str(&html[cursor..]);
+    // Preserve the previous reverse replacement order for diagnostics.
+    errors.reverse();
+    MermaidTransformResult { html: output, errors }
 }
 
 struct MermaidBlock {
@@ -163,9 +176,6 @@ fn render_mermaid_with_mmdc(source: &str, mmdc_path: &str) -> std::result::Resul
 
     let _ = std::fs::remove_file(&output_path);
 
-    // Post-process SVG
-    let svg = postprocess_mermaid_svg(&svg, id);
-
     Ok(svg)
 }
 
@@ -180,3 +190,6 @@ fn postprocess_mermaid_svg(svg: &str, id: u64) -> String {
         .replace("background-color:white;", "background-color:transparent;")
         .replace("my-svg", &unique_id)
 }
+
+#[cfg(test)]
+mod tests;
