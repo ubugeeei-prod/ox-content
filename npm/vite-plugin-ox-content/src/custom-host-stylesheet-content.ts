@@ -11,7 +11,10 @@ import { resolveOutputPath } from "./custom-host-utils";
 export interface ResolveCustomHostStylesheetContentInput extends OxContentCustomHostStylesheetContentInput {
   build: boolean;
   outDir: string;
+  resolveDevContent?: CustomHostDevStylesheetContentResolver;
 }
+
+export type CustomHostDevStylesheetContentResolver = (href: string) => Promise<string | undefined>;
 
 export async function resolveCustomHostStylesheetContent(
   input: ResolveCustomHostStylesheetContentInput,
@@ -26,6 +29,11 @@ export async function resolveCustomHostStylesheetContent(
       continue;
     }
     if (!input.build) {
+      const content = await input.resolveDevContent?.(stylesheet.href);
+      if (content != null) {
+        stylesheets.push(stylesheetContent(stylesheet, content));
+        continue;
+      }
       diagnostics.push({
         code: "unavailable",
         href: stylesheet.href,

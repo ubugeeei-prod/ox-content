@@ -7,13 +7,13 @@ export function invalidateViteModules(server: ViteDevServer, file: string, all =
         moduleGraph.invalidateAll();
       } else {
         for (const mod of moduleGraph.idToModuleMap?.values() ?? []) {
-          moduleGraph.invalidateModule(mod);
+          moduleGraph.invalidateModule?.(mod);
         }
       }
       continue;
     }
-    for (const mod of moduleGraph.getModulesByFile(file) ?? []) {
-      moduleGraph.invalidateModule(mod);
+    for (const mod of moduleGraph.getModulesByFile?.(file) ?? []) {
+      moduleGraph.invalidateModule?.(mod);
     }
   }
   for (const evaluatedModules of viteEvaluatedModules(server)) {
@@ -27,16 +27,17 @@ export function invalidateViteModules(server: ViteDevServer, file: string, all =
   }
 }
 
-type InvalidatableViteModuleGraph = {
+export type ViteModuleGraphLike = {
   idToModuleMap?: Map<string, unknown>;
-  getModulesByFile(file: string): Set<unknown> | undefined;
+  getModuleById?(id: string): unknown;
+  getModulesByFile?(file: string): Set<unknown> | undefined;
   invalidateAll?: () => void;
-  invalidateModule(mod: unknown): void;
+  invalidateModule?(mod: unknown): void;
 };
 
-function viteModuleGraphs(server: ViteDevServer): InvalidatableViteModuleGraph[] {
-  const graphs = new Set<InvalidatableViteModuleGraph>();
-  graphs.add(server.moduleGraph as unknown as InvalidatableViteModuleGraph);
+export function viteModuleGraphs(server: ViteDevServer): ViteModuleGraphLike[] {
+  const graphs = new Set<ViteModuleGraphLike>();
+  graphs.add(server.moduleGraph as unknown as ViteModuleGraphLike);
   const environments = (
     server as ViteDevServer & {
       environments?: Record<string, ViteEnvironmentWithCaches>;
@@ -51,7 +52,7 @@ function viteModuleGraphs(server: ViteDevServer): InvalidatableViteModuleGraph[]
 }
 
 type ViteEnvironmentWithCaches = {
-  moduleGraph?: InvalidatableViteModuleGraph;
+  moduleGraph?: ViteModuleGraphLike;
   runner?: { evaluatedModules?: InvalidatableEvaluatedModules };
 };
 

@@ -4,12 +4,16 @@ import type { Connect } from "vite";
 import { resolveSelfHostedAssetManifest } from "./assets";
 import type { CollectionAssetManifest } from "./collection-assets";
 import { DEFAULT_THEME_TOKEN_HREF } from "./custom-host-constants";
-import { resolveCustomHostStylesheetContent } from "./custom-host-stylesheet-content";
+import {
+  resolveCustomHostStylesheetContent,
+  type CustomHostDevStylesheetContentResolver,
+} from "./custom-host-stylesheet-content";
 import {
   resolveCustomHostStylesheets,
   type CustomHostDevModuleGraph,
 } from "./custom-host-stylesheets";
 import type { CustomHostSsrStylesheetController } from "./custom-host-ssr-stylesheets";
+import type { CustomHostDevImportResolver } from "./custom-host-ssr-dev-stylesheets";
 import type {
   OxContentCustomHostAssetsContext,
   OxContentCustomHostOptions,
@@ -33,6 +37,8 @@ export function createAssetsContext(
   root?: string,
   collectionManifest: () => Promise<CollectionAssetManifest | undefined> = async () => undefined,
   ssrStylesheets?: CustomHostSsrStylesheetController,
+  resolveImport?: CustomHostDevImportResolver,
+  resolveDevContent?: CustomHostDevStylesheetContentResolver,
 ): OxContentCustomHostAssetsContext {
   const selfHosted = resolveSelfHostedAssetManifest(options);
   return {
@@ -57,6 +63,7 @@ export function createAssetsContext(
           manifest: clientManifest,
           moduleGraph,
           root,
+          resolveImport,
         }) ?? {
           stylesheets: [],
           dependencies: [],
@@ -74,6 +81,7 @@ export function createAssetsContext(
         ...input,
         build: !!clientManifest,
         outDir,
+        resolveDevContent,
       });
     },
     document(input: RenderDocumentAssetsInput = {}) {

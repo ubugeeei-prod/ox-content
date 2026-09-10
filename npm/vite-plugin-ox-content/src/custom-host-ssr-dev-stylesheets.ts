@@ -25,10 +25,16 @@ import { withBase } from "./custom-host-utils";
 
 const OUTSIDE_ROOT = Symbol("outside-root");
 
+export type CustomHostDevImportResolver = (
+  specifier: string,
+  importer: string,
+) => string | undefined;
+
 export function resolveStaticDevSsrStylesheets(input: {
   modules: readonly string[];
   base?: string;
   root: string;
+  resolveImport?: CustomHostDevImportResolver;
 }): OxContentCustomHostSsrStylesheetsResult | undefined {
   const stylesheets: OxContentCustomHostStylesheet[] = [];
   const diagnostics: OxContentCustomHostStylesheetDiagnostic[] = [];
@@ -46,7 +52,14 @@ export function resolveStaticDevSsrStylesheets(input: {
       });
       continue;
     }
-    const record = collectRoot(moduleId, rootFile, input.root, input.base, dependencies);
+    const record = collectRoot(
+      moduleId,
+      rootFile,
+      input.root,
+      input.base,
+      dependencies,
+      input.resolveImport,
+    );
     for (const stylesheet of record.stylesheets) {
       if (!seenAggregateCss.has(stylesheet.href)) {
         seenAggregateCss.add(stylesheet.href);
@@ -73,6 +86,7 @@ function collectRoot(
   root: string,
   base: string | undefined,
   dependencies: Set<string>,
+  resolveImport: CustomHostDevImportResolver | undefined,
 ) {
   const stylesheets: OxContentCustomHostStylesheet[] = [];
   const diagnostics: OxContentCustomHostStylesheetDiagnostic[] = [];
@@ -88,12 +102,11 @@ function collectRoot(
     dependencies.add(clean);
     rootDependencies.add(clean);
     const source = fsSync.readFileSync(clean, "utf8");
-    const styleContent = isFrameworkStyleRoot(clean) ? frameworkStyleContent(source) : undefined;
-    if (styleContent) {
+    if (isFrameworkStyleRoot(clean) && hasFrameworkStyleBlock(source)) {
       const href = frameworkStyleHref(clean, root, base);
       if (!seenRootCss.has(href)) {
         seenRootCss.add(href);
-        stylesheets.push({ kind: "style", href, moduleId, content: styleContent });
+        stylesheets.push({ kind: "style", href, moduleId });
       }
     }
     for (const item of parseImports(source)) {
@@ -104,7 +117,7 @@ function collectRoot(
         diagnostics.push(dynamicDiagnostic(moduleId, item.specifier, clean));
         continue;
       }
-      const imported = resolveLocalImport(item.specifier, clean, root);
+      const imported = resolveImportSpecifier(item.specifier, clean, root, resolveImport);
       if (imported === OUTSIDE_ROOT) {
         diagnostics.push(outsideRootDiagnostic(moduleId, item.specifier, clean));
         continue;
@@ -148,6 +161,23 @@ function resolveLocalImport(
   const base = specifier.startsWith(".")
     ? path.resolve(path.dirname(importer), specifier)
     : (fileFromModuleId(specifier, root) ?? path.resolve(root, specifier));
+  return resolveImportFile(base, root);
+}
+
+function resolveImportSpecifier(
+  specifier: string,
+  importer: string,
+  root: string,
+  resolveImport: CustomHostDevImportResolver | undefined,
+): string | typeof OUTSIDE_ROOT | undefined {
+  const resolved = resolveImport?.(specifier, importer);
+  if (resolved) {
+    return resolveImportFile(resolved, root);
+  }
+  return resolveLocalImport(specifier, importer, root);
+}
+
+function resolveImportFile(base: string, root: string): string | typeof OUTSIDE_ROOT | undefined {
   const resolved = firstExisting(candidateFiles(base));
   if (!resolved) {
     return undefined;
@@ -168,11 +198,8 @@ function candidateFiles(file: string): string[] {
   );
 }
 
-function frameworkStyleContent(source: string): string | undefined {
-  const blocks = [...source.matchAll(/<style(?:\s[^>]*)?>([\s\S]*?)<\/style>/giu)]
-    .map((match) => match[1].trim())
-    .filter(Boolean);
-  return blocks.length > 0 ? `${blocks.join("\n")}\n` : undefined;
+function hasFrameworkStyleBlock(source: string): boolean {
+  return /<style(?:\s[^>]*)?>[\s\S]*?<\/style>/iu.test(source);
 }
 
 function frameworkStyleHref(file: string, root: string, base: string | undefined): string {

@@ -73,6 +73,27 @@ describe("resolveCustomHostStylesheetContent", () => {
       expect.objectContaining({ code: "missing-artifact", href: "/assets/missing.css" }),
     ]);
   });
+
+  it("uses the dev stylesheet content resolver before reporting unavailable CSS", async () => {
+    const outDir = await createTempDir("ox-custom-host-style-content-dev-resolver-");
+    const result = await resolveCustomHostStylesheetContent({
+      build: false,
+      outDir,
+      resolveDevContent: async (href) =>
+        href === "/src/page.css" ? ".page{color:red}\n" : undefined,
+      stylesheets: [{ kind: "style", href: "/src/page.css", moduleId: "/src/page.css" }],
+    });
+
+    expect(result.stylesheets).toEqual([
+      {
+        stylesheet: { kind: "style", href: "/src/page.css", moduleId: "/src/page.css" },
+        href: "/src/page.css",
+        moduleId: "/src/page.css",
+        content: ".page{color:red}\n",
+      },
+    ]);
+    expect(result.diagnostics).toEqual([]);
+  });
 });
 
 describe("custom host stylesheet content", () => {

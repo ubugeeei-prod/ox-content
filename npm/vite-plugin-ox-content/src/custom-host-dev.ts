@@ -1,9 +1,10 @@
 import type { ViteDevServer } from "vite";
-import { createAssetsContext, themeTokenMiddleware } from "./custom-host-assets";
+import { themeTokenMiddleware } from "./custom-host-assets";
 import {
   createCustomHostCollectionAssetsDevController,
   type CustomHostCollectionAssetsDevController,
 } from "./custom-host-collection-assets";
+import { createCustomHostDevAssetsContext } from "./custom-host-dev-assets";
 import type { DevRoutesState } from "./custom-host-dev-state";
 import { hasRouteHostImportMetaGlob } from "./custom-host-route-glob";
 import type { CustomHostSsrStylesheetController } from "./custom-host-ssr-stylesheets";
@@ -58,16 +59,15 @@ export function configureDevServer(
   const root = server.config.root;
   const outDir = resolveOutDir(server.config, options, root);
   let collectionAssets: CustomHostCollectionAssetsDevController | undefined;
-  const assets = createAssetsContext(
+  const assets = createCustomHostDevAssetsContext({
+    server,
     options,
     outDir,
-    undefined,
     themeTokens,
-    server.moduleGraph,
     root,
-    async () => collectionAssets?.manifest(),
+    collectionManifest: async () => collectionAssets?.manifest(),
     ssrStylesheets,
-  );
+  });
   let ssrVersion = 0;
   const loadModule = (moduleId: string) =>
     server.ssrLoadModule(versionedModuleId(moduleId, ssrVersion));

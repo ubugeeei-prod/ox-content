@@ -13,7 +13,10 @@ import {
   findRecord,
   type RootRecord,
 } from "./custom-host-ssr-discovery";
-import { resolveStaticDevSsrStylesheets } from "./custom-host-ssr-dev-stylesheets";
+import {
+  resolveStaticDevSsrStylesheets,
+  type CustomHostDevImportResolver,
+} from "./custom-host-ssr-dev-stylesheets";
 import { hasGlobSyntax } from "./custom-host-ssr-imports";
 import {
   resolveCustomHostStylesheets,
@@ -57,6 +60,7 @@ export interface ResolveCustomHostSsrStylesheetsInput extends OxContentCustomHos
   root?: string;
   manifest?: DocumentAssetManifest;
   moduleGraph?: CustomHostDevModuleGraph;
+  resolveImport?: CustomHostDevImportResolver;
 }
 
 export function createCustomHostSsrStylesheetController(
@@ -175,16 +179,27 @@ function resolveDev(
   input: ResolveCustomHostSsrStylesheetsInput,
 ): OxContentCustomHostSsrStylesheetsResult {
   const styles = resolveCustomHostStylesheets(input);
+  if (styles.stylesheets.length > 0) {
+    return withDevDescriptors(input, styles);
+  }
   if (input.root) {
     const staticResult = resolveStaticDevSsrStylesheets({
       modules: input.modules,
       base: input.base,
       root: input.root,
+      resolveImport: input.resolveImport,
     });
-    if (staticResult && (styles.stylesheets.length === 0 || hasInlineStyles(staticResult))) {
+    if (staticResult) {
       return staticResult;
     }
   }
+  return withDevDescriptors(input, styles);
+}
+
+function withDevDescriptors(
+  input: ResolveCustomHostSsrStylesheetsInput,
+  styles: OxContentCustomHostStylesheetsResult,
+): OxContentCustomHostSsrStylesheetsResult {
   const descriptors = input.modules.map((moduleId): OxContentCustomHostSsrStylesheetDescriptor => {
     const result = resolveCustomHostStylesheets({ ...input, modules: [moduleId] });
     return {
@@ -194,10 +209,6 @@ function resolveDev(
     };
   });
   return { ...styles, descriptors };
-}
-
-function hasInlineStyles(result: OxContentCustomHostSsrStylesheetsResult): boolean {
-  return result.stylesheets.some((stylesheet) => stylesheet.content != null);
 }
 
 function mergeResult(
