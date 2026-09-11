@@ -1,6 +1,6 @@
 {
   "name": "vscode-ox-content",
-  "version": "3.1.7",
+  "version": "3.1.8",
   "private": true,
   "description": "VS Code extension for Ox Content authoring and i18n workflows",
   "categories": [

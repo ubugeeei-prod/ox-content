@@ -1,5 +1,11 @@
 # Changelog
 
+## [3.1.8] - 2026-09-11
+
+### Bug Fixes
+
+- resolve inherited tsconfig stylesheet imports _(affects: npm: @ox-content/vite-plugin, @ox-content/vite-plugin-svelte; workspace metadata)_
+
 ## [3.1.7] - 2026-09-10
 
 ### Bug Fixes
