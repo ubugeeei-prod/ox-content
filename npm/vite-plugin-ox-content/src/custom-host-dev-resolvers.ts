@@ -1,5 +1,6 @@
 import * as fsSync from "node:fs";
 import * as path from "node:path";
+import { readTsconfig, resolvePathAlias, type TsconfigResult } from "get-tsconfig";
 import type { Alias, ViteDevServer } from "vite";
 import type { CustomHostDevImportResolver } from "./custom-host-ssr-dev-stylesheets";
 import type { CustomHostDevStylesheetContentResolver } from "./custom-host-stylesheet-content";
@@ -47,15 +48,15 @@ export function createDevImportResolver(
       (typeof alias.find === "string" || alias.find instanceof RegExp) &&
       typeof alias.replacement === "string",
   );
-  const tsconfigPaths = hasTsconfigPathResolver(server)
-    ? readTsconfigPaths(server.config.root)
+  const tsconfigPathResolver = hasTsconfigPathResolver(server)
+    ? createTsconfigPathResolver(server.config.root)
     : undefined;
-  if (aliases.length === 0 && (!tsconfigPaths || tsconfigPaths.paths.length === 0)) {
+  if (aliases.length === 0 && !tsconfigPathResolver) {
     return undefined;
   }
   return (specifier) =>
     resolveAliasImport(specifier, aliases, server.config.root) ??
-    resolveTsconfigPathImport(specifier, tsconfigPaths);
+    resolveTsconfigPathImport(specifier, tsconfigPathResolver);
 }
 
 export function createDevStylesheetContentResolver(
@@ -129,37 +130,17 @@ function replaceStringAlias(
   return undefined;
 }
 
-type TsconfigPaths = {
-  baseUrl: string;
-  paths: { pattern: string; targets: string[] }[];
+type TsconfigPathResolver = {
+  tsconfig: TsconfigResult;
 };
 
-function readTsconfigPaths(root: string): TsconfigPaths | undefined {
+function createTsconfigPathResolver(root: string): TsconfigPathResolver | undefined {
   try {
-    const config = JSON.parse(fsSync.readFileSync(path.join(root, "tsconfig.json"), "utf8")) as {
-      compilerOptions?: {
-        baseUrl?: unknown;
-        paths?: Record<string, unknown>;
-      };
-    };
-    const rawPaths = config.compilerOptions?.paths;
-    if (!rawPaths) {
+    const tsconfig = readTsconfig(path.join(root, "tsconfig.json"));
+    if (!tsconfig.config.compilerOptions?.paths) {
       return undefined;
     }
-    return {
-      baseUrl: path.resolve(
-        root,
-        typeof config.compilerOptions?.baseUrl === "string" ? config.compilerOptions.baseUrl : ".",
-      ),
-      paths: Object.entries(rawPaths)
-        .map(([pattern, targets]) => ({
-          pattern,
-          targets: Array.isArray(targets)
-            ? targets.filter((target): target is string => typeof target === "string")
-            : [],
-        }))
-        .filter((entry) => entry.targets.length > 0),
-    };
+    return { tsconfig };
   } catch {
     return undefined;
   }
@@ -167,32 +148,12 @@ function readTsconfigPaths(root: string): TsconfigPaths | undefined {
 
 function resolveTsconfigPathImport(
   specifier: string,
-  tsconfigPaths: TsconfigPaths | undefined,
+  resolver: TsconfigPathResolver | undefined,
 ): string | undefined {
-  if (!tsconfigPaths) {
+  if (!resolver) {
     return undefined;
   }
-  for (const { pattern, targets } of tsconfigPaths.paths) {
-    const wildcard = tsconfigWildcard(pattern, specifier);
-    if (wildcard == null) {
-      continue;
-    }
-    for (const target of targets) {
-      return path.resolve(tsconfigPaths.baseUrl, target.replace("*", wildcard));
-    }
-  }
-  return undefined;
-}
-
-function tsconfigWildcard(pattern: string, specifier: string): string | undefined {
-  if (!pattern.includes("*")) {
-    return pattern === specifier ? "" : undefined;
-  }
-  const [prefix, suffix = ""] = pattern.split("*", 2);
-  if (!specifier.startsWith(prefix) || !specifier.endsWith(suffix)) {
-    return undefined;
-  }
-  return specifier.slice(prefix.length, specifier.length - suffix.length);
+  return resolvePathAlias(resolver.tsconfig, specifier)[0];
 }
 
 function resolveImportCandidate(specifier: string, root: string): string {

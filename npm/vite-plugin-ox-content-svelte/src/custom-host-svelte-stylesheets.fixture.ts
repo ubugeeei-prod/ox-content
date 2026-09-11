@@ -28,12 +28,29 @@ export async function createProject(prefix: string): Promise<string> {
   await fs.mkdir(path.join(root, "src"), { recursive: true });
   await fs.mkdir(path.join(root, "src", "components"), { recursive: true });
   await fs.mkdir(path.join(root, "src", "config"), { recursive: true });
+  await fs.mkdir(path.join(root, "config"), { recursive: true });
   await fs.mkdir(path.join(root, "content"), { recursive: true });
   await writeFile(root, "package.json", '{"type":"module"}\n');
   await writeFile(
     root,
     "tsconfig.json",
-    JSON.stringify({ compilerOptions: { paths: { "@/*": ["./src/*"] } } }, null, 2),
+    [
+      "{",
+      '  "extends": "./config/tsconfig.base.json",',
+      '  "compilerOptions": {',
+      '    "allowJs": true,',
+      '    "checkJs": true,',
+      "  },",
+      "}",
+      "",
+    ].join("\n"),
+  );
+  await writeFile(
+    root,
+    "config/tsconfig.base.json",
+    ["{", '  "compilerOptions": {', '    "paths": { "@/*": ["../src/*"] }', "  }", "}", ""].join(
+      "\n",
+    ),
   );
   await writeFile(root, "src/main.js", "document.body.dataset.client = 'unused';\n");
   await writeFile(root, "src/Page.svelte", pageSource());
@@ -66,10 +83,10 @@ export async function writeViteConfig(
       "  appType: 'custom',",
       "  logLevel: 'silent',",
       "  resolve: {",
-      '    alias: { "@": path.join(root, "src") },',
       "    tsconfigPaths: true,",
       "  },",
       "  plugins: [",
+      "    inheritedTsconfigRuntimeResolver(),",
       "    noopSsrSvelteStyleImports(),",
       "    svelte({ configFile: false }),",
       "    ...oxContentCustomHost({",
@@ -100,6 +117,16 @@ export async function writeViteConfig(
       '    rollupOptions: { input: path.join(root, "src", "main.js") },',
       "  },",
       "};",
+      "function inheritedTsconfigRuntimeResolver() {",
+      "  return {",
+      "    name: 'ox-content-svelte-test:inherited-tsconfig-runtime',",
+      "    enforce: 'pre',",
+      "    resolveId(id) {",
+      "      if (!id.startsWith('@/')) return null;",
+      '      return path.join(root, "src", id.slice(2));',
+      "    },",
+      "  };",
+      "}",
       "function noopSsrSvelteStyleImports() {",
       "  const prefix = '\\0ox-content-svelte-ssr-style:';",
       "  const modules = new Map();",

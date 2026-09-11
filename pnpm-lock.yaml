@@ -2131,6 +2131,9 @@ importers:
       budoux:
         specifier: ^0.9.0
         version: 0.9.0(supports-color@10.2.2)
+      get-tsconfig:
+        specifier: ^5.0.0-beta.4
+        version: 5.0.0-beta.4
       katex:
         specifier: ^0.16.22
         version: 0.16.47
