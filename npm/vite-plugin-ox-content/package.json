@@ -224,6 +224,7 @@
     "@types/react-dom": "catalog:",
     "@typescript/native-preview": "catalog:",
     "budoux": "^0.9.0",
+    "get-tsconfig": "^5.0.0-beta.4",
     "katex": "^0.16.22",
     "vite": "catalog:",
     "vite-plus": "catalog:",
