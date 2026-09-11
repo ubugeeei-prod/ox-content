@@ -4876,6 +4876,29 @@ export interface NavItem {
  */
 export type CollectionIncludeField = "body" | "html" | "toc";
 
+export type CollectionValidationResult = void | string | readonly string[] | null | false;
+
+export interface CollectionValidationContext {
+  /** Collection name that owns the document. */
+  collection: string;
+  /** Source path relative to `srcDir`. */
+  source: string;
+  /** Absolute source file path. */
+  documentPath: string;
+  /** File-tree route path before permalink / cascade rewrites. */
+  path: string;
+  /** File-tree stem before permalink / cascade rewrites. */
+  stem: string;
+  /** Parsed frontmatter for the document. */
+  frontmatter: Record<string, unknown>;
+  /** Metadata-only collection entry before permalink / cascade rewrites. */
+  entry: CollectionEntry;
+}
+
+export type CollectionValidateHook = (
+  context: CollectionValidationContext,
+) => CollectionValidationResult | Promise<CollectionValidationResult>;
+
 /**
  * Collection source configuration.
  */
@@ -4900,6 +4923,16 @@ export interface CollectionOptions {
    * @default []
    */
   include?: readonly CollectionIncludeField[];
+
+  /**
+   * Validate a parsed collection document during manifest generation.
+   *
+   * Return a string or an array of strings to mark the document invalid. Return
+   * nothing, `null`, or `false` to accept it. `path` and `stem` are the
+   * file-tree route values before permalink / cascade rewrites so validators
+   * can compare frontmatter `permalink` values against the source layout.
+   */
+  validate?: CollectionValidateHook;
 }
 
 /**
@@ -4914,6 +4947,7 @@ export interface ResolvedCollectionOptions {
   name: string;
   source: string[];
   include: CollectionIncludeField[];
+  validate?: CollectionValidateHook;
 }
 
 /**

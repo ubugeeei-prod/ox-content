@@ -13,6 +13,7 @@ describe("public export surface", () => {
       "buildCollectionManifest",
       "buildSsg",
       "collectDocsTests",
+      "CollectionValidationError",
       "createCollectionAssetsMiddleware",
       "createDevServerCache",
       "createDevServerMiddleware",

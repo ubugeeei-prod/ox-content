@@ -34,15 +34,49 @@ oxContent({
 });
 ```
 
-| Option    | Default            | Purpose                                        |
-| --------- | ------------------ | ---------------------------------------------- |
-| `source`  | all Markdown files | Glob pattern(s) resolved from `srcDir`.        |
-| `include` | `[]`               | Extra per-entry fields: `body`, `html`, `toc`. |
+| Option     | Default            | Purpose                                              |
+| ---------- | ------------------ | ---------------------------------------------------- |
+| `source`   | all Markdown files | Glob pattern(s) resolved from `srcDir`.              |
+| `include`  | `[]`               | Extra per-entry fields: `body`, `html`, `toc`.       |
+| `validate` | `undefined`        | Build-time validation hook for each parsed document. |
 
 By default each entry carries metadata only. `include` opts into heavier
 fields per collection: `body` is the raw Markdown, `html` the natively
 rendered HTML, and `toc` the parsed table of contents. Numeric route prefixes
 such as `1.guide/2.install.md` are stripped from the generated `path`.
+
+## Validating Frontmatter
+
+Use `validate` when a collection needs frontmatter rules that depend on the
+source path. The hook runs while the collection manifest is generated, after
+Ox Content has parsed frontmatter and before permalink / cascade rewrites are
+applied. Return a string or an array of strings to mark the document invalid;
+return nothing, `null`, or `false` to accept it. All invalid documents are
+reported together and the build fails.
+
+```ts
+import { oxContent, defineCollections } from "@ox-content/vite-plugin";
+
+oxContent({
+  permalinks: true,
+  collections: defineCollections({
+    blog: {
+      source: "blog/*/index.md",
+      validate({ frontmatter, path }) {
+        const permalink =
+          typeof frontmatter.permalink === "string" ? frontmatter.permalink : "(missing)";
+        if (permalink !== path) {
+          return `expected permalink ${path}, found ${permalink}`;
+        }
+      },
+    },
+  }),
+});
+```
+
+`path` and `stem` are the file-tree route values before permalink / cascade
+rewrites. `source` is relative to `srcDir`, and `documentPath` is the absolute
+source file path.
 
 ## Entry Shape
 
