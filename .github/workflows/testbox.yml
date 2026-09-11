@@ -69,7 +69,7 @@ jobs:
       # step on a hit, keeping system libraries in place.
       - name: Install browsers for docs rendering
         run: |
-          vp exec --filter @ox-content/vite-plugin -- playwright install --with-deps chromium
+          vp exec --filter @ox-content/vite-plugin -- playwright install chromium
           vp exec --filter @ox-content/vite-plugin -- puppeteer browsers install chrome-headless-shell
 
       - name: Run Testbox
