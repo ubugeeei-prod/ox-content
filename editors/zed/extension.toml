@@ -1,6 +1,6 @@
 id = "ox-content"
 name = "Ox Content"
-version = "3.1.8"
+version = "3.2.0"
 schema_version = 1
 authors = ["ubugeeei"]
 description = "Ox Content authoring support for Zed"

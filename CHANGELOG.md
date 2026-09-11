@@ -1,5 +1,11 @@
 # Changelog
 
+## [3.2.0] - 2026-09-11
+
+### Features
+
+- validate frontmatter during manifest builds _(affects: npm: @ox-content/vite-plugin; ci, docs)_
+
 ## [3.1.8] - 2026-09-11
 
 ### Bug Fixes
