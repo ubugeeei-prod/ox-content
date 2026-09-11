@@ -32,8 +32,35 @@ oxContent({
 | ---------- | ----------------- | ----------------------------------------------------- |
 | `source`   | すべての Markdown | `srcDir` から解決する glob パターン。                 |
 | `include`  | `[]`              | エントリごとの追加フィールド: `body`、`html`、`toc`。 |
+| `validate` | `undefined`       | パース済み document ごとのビルド時 validation hook。  |
 
 既定では各エントリはメタデータだけです。`include` でコレクションごとに重いフィールドを足します。`body` は生 Markdown、`html` はネイティブ描画した HTML、`toc` はパース済み目次です。`1.guide/2.install.md` のような数値ルートプレフィックスは、生成される `path` から除きます。
+
+## Frontmatter の validation
+
+ソースパスに依存する frontmatter ルールがある場合は `validate` を使います。この hook は Ox Content が frontmatter をパースしたあと、permalink / cascade の書き換えを適用する前に、コレクションマニフェスト生成の中で走ります。document を無効にするには文字列または文字列配列を返します。何も返さない、`null`、`false` は通過です。無効な document はまとめて報告され、ビルドは失敗します。
+
+```ts
+import { oxContent, defineCollections } from "@ox-content/vite-plugin";
+
+oxContent({
+  permalinks: true,
+  collections: defineCollections({
+    blog: {
+      source: "blog/*/index.md",
+      validate({ frontmatter, path }) {
+        const permalink =
+          typeof frontmatter.permalink === "string" ? frontmatter.permalink : "(missing)";
+        if (permalink !== path) {
+          return `expected permalink ${path}, found ${permalink}`;
+        }
+      },
+    },
+  }),
+});
+```
+
+`path` と `stem` は permalink / cascade 書き換え前のファイルツリー由来 route です。`source` は `srcDir` からの相対パスで、`documentPath` は絶対ソースファイルパスです。
 
 ## エントリの形
 

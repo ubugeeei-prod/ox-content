@@ -2,12 +2,13 @@ import * as fs from "node:fs/promises";
 import * as os from "node:os";
 import * as path from "node:path";
 import { afterEach, describe, expect, it } from "vite-plus/test";
+import { CollectionValidationError } from "./collection-validation";
 import {
   buildCollectionManifest,
   generateCollectionsVirtualModule,
   resolveCollectionsOptions,
 } from "./collections";
-import type { ResolvedOptions } from "./types";
+import type { CollectionValidationContext, ResolvedOptions } from "./types";
 
 const tempDirs: string[] = [];
 
@@ -69,6 +70,100 @@ describe("collections", () => {
       mod.queryCollection("blog").where("path", "LIKE", "/blog/%").count(),
     ).resolves.toBe(2);
   });
+
+  it("runs validate hooks with file-tree paths before permalink rewrites", async () => {
+    const root = await createPermalinkFixture({
+      "blog/first/index.md": "---\ntitle: First\npermalink: /custom-first\n---\n# First\n",
+    });
+    const contexts: Array<Pick<CollectionValidationContext, "source" | "documentPath" | "path">> =
+      [];
+
+    const manifest = await buildCollectionManifest(
+      root,
+      createOptions({
+        permalinks: { enabled: true },
+        collections: resolveCollectionsOptions({
+          blog: {
+            source: "blog/*/index.md",
+            validate(context) {
+              contexts.push({
+                source: context.source,
+                documentPath: context.documentPath,
+                path: context.path,
+              });
+            },
+          },
+        }),
+      }),
+    );
+
+    expect(contexts).toEqual([
+      {
+        source: "blog/first/index.md",
+        documentPath: path.join(root, "content/blog/first/index.md"),
+        path: "/blog/first",
+      },
+    ]);
+    expect(manifest.collections.blog[0]?.path).toBe("/custom-first");
+  });
+
+  it("fails with aggregated diagnostics from collection validate hooks", async () => {
+    const root = await createPermalinkFixture({
+      "blog/first/index.md": "---\ntitle: First\npermalink: /blog/wrong\n---\n# First\n",
+      "blog/second/index.md": "---\ntitle: Second\n---\n# Second\n",
+      "docs/guide.md": "---\ntitle: Guide\n---\n# Guide\n",
+    });
+
+    let thrown: unknown;
+    try {
+      await buildCollectionManifest(
+        root,
+        createOptions({
+          collections: resolveCollectionsOptions({
+            blog: {
+              source: "blog/*/index.md",
+              validate: ({ frontmatter, path }) => {
+                const permalink = frontmatter.permalink;
+                return permalink === path
+                  ? undefined
+                  : `expected permalink ${path}, found ${formatPermalinkValue(permalink)}`;
+              },
+            },
+            docs: {
+              source: "docs/**/*.md",
+              validate: () => undefined,
+            },
+          }),
+        }),
+      );
+    } catch (error) {
+      thrown = error;
+    }
+
+    expect(thrown).toBeInstanceOf(CollectionValidationError);
+    expect((thrown as CollectionValidationError).diagnostics).toEqual([
+      {
+        collection: "blog",
+        source: "blog/first/index.md",
+        documentPath: path.join(root, "content/blog/first/index.md"),
+        path: "/blog/first",
+        message: "expected permalink /blog/first, found /blog/wrong",
+      },
+      {
+        collection: "blog",
+        source: "blog/second/index.md",
+        documentPath: path.join(root, "content/blog/second/index.md"),
+        path: "/blog/second",
+        message: "expected permalink /blog/second, found (missing)",
+      },
+    ]);
+    expect((thrown as Error).message).toContain(
+      "[ox-content] Collection validation failed with 2 diagnostics.",
+    );
+    expect((thrown as Error).message).toContain(
+      "- blog: blog/second/index.md (/blog/second): expected permalink /blog/second, found (missing)",
+    );
+  });
 });
 
 async function createFixture(): Promise<string> {
@@ -91,7 +186,7 @@ async function createFixture(): Promise<string> {
   return root;
 }
 
-function createOptions(): ResolvedOptions {
+function createOptions(overrides: Partial<ResolvedOptions> = {}): ResolvedOptions {
   return {
     srcDir: "content",
     extensions: [".md", ".markdown", ".mdx"],
@@ -100,5 +195,21 @@ function createOptions(): ResolvedOptions {
       blog: { source: "blog/**/*.md", include: ["body"] },
       docs: "docs/**/*.md",
     }),
+    ...overrides,
   } as ResolvedOptions;
+}
+
+async function createPermalinkFixture(files: Record<string, string>): Promise<string> {
+  const root = await fs.mkdtemp(path.join(os.tmpdir(), "ox-content-collections-validate-"));
+  tempDirs.push(root);
+  for (const [file, source] of Object.entries(files)) {
+    const destination = path.join(root, "content", file);
+    await fs.mkdir(path.dirname(destination), { recursive: true });
+    await fs.writeFile(destination, source);
+  }
+  return root;
+}
+
+function formatPermalinkValue(value: unknown): string {
+  return typeof value === "string" ? value : "(missing)";
 }

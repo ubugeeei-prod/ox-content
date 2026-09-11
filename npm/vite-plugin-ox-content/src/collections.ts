@@ -1,5 +1,6 @@
 import * as path from "node:path";
 import { applyCollectionRoutes } from "./apply-permalinks";
+import { validateCollectionManifest } from "./collection-validation";
 import { toJsConditionalBlockOptions } from "./conditional-block-options";
 import { toJsDataTableOptions } from "./data-table-options";
 import { toJsFileTreeOptions } from "./file-tree-options";
@@ -16,7 +17,6 @@ import type {
   ResolvedOptions,
 } from "./types";
 
-const DEFAULT_COLLECTION_NAME = "content";
 const DEFAULT_COLLECTION_SOURCE = "**/*";
 
 type NativeCollectionDefinition = {
@@ -149,7 +149,8 @@ export function resolveCollectionsOptions(
     return { enabled: false, collections: {} };
   }
 
-  const source = options === true || options === undefined ? defaultCollections() : options;
+  const source =
+    options === true || options === undefined ? { content: DEFAULT_COLLECTION_SOURCE } : options;
   const collections: ResolvedCollectionsOptions["collections"] = {};
 
   for (const [name, value] of Object.entries(source)) {
@@ -158,6 +159,7 @@ export function resolveCollectionsOptions(
       name,
       source: normalizeSourcePatterns(collection.source),
       include: [...new Set(collection.include ?? [])],
+      validate: collection.validate,
     };
   }
 
@@ -185,8 +187,11 @@ export async function buildCollectionManifest(
     transformOptions: createNativeTransformOptions(options),
   });
 
+  const rawManifest = parseCollectionManifest(manifestJson);
+  await validateCollectionManifest(root, options, rawManifest);
+
   const { manifest, errors } = applyCollectionRoutes(
-    parseCollectionManifest(manifestJson),
+    rawManifest,
     options.permalinks,
     options.cascade,
   );
@@ -338,13 +343,5 @@ function createNativeTransformOptions(options: ResolvedOptions): NativeTransform
         }
       : undefined,
     math: options.math?.enabled ?? false,
-  };
-}
-
-function defaultCollections(): CollectionsOptions {
-  return {
-    [DEFAULT_COLLECTION_NAME]: {
-      source: DEFAULT_COLLECTION_SOURCE,
-    },
   };
 }

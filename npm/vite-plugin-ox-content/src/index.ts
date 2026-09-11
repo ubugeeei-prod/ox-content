@@ -1224,6 +1224,10 @@ export {
   resolveCollectionsOptions,
 } from "./collections";
 export {
+  CollectionValidationError,
+  type CollectionValidationDiagnostic,
+} from "./collection-validation";
+export {
   DEFAULT_MARKDOWN_EXTENSIONS,
   normalizeMarkdownExtensions,
   isMarkdownFilePath,
