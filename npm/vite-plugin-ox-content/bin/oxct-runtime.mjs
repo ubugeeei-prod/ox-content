@@ -6,10 +6,11 @@ import { runLinkCheck, runMdcCheck } from "./oxct-checkers.mjs";
 import { runI18n } from "./oxct-i18n.mjs";
 import { loadNapi } from "./oxct-napi.mjs";
 import { runOgPreview } from "./oxct-og-preview.mjs";
+import { runValidate } from "./oxct-validate.mjs";
 
 const here = dirname(fileURLToPath(import.meta.url));
 
-export function main(args) {
+export async function main(args) {
   if (isHelp(args)) {
     printHelp();
     return;
@@ -18,6 +19,10 @@ export function main(args) {
   const [command, ...rest] = args;
   if (command === "i18n") {
     runI18n(rest);
+    return;
+  }
+  if (command === "validate") {
+    await runValidate(rest);
     return;
   }
   if (command === "link-check") {
@@ -168,6 +173,7 @@ Usage:
 
 Commands:
   i18n <command>           Check dictionaries and validate MessageFormat 2
+  validate                 Run collection validate hooks without a full build
   link-check <files...>    Check Markdown/MDC local links
   migrate vitepress        Generate ox-content config from VitePress config
   mdc-check <files...>     Check MDC component syntax
