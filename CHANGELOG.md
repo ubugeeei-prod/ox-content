@@ -1,5 +1,11 @@
 # Changelog
 
+## [3.2.2] - 2026-09-12
+
+### Features
+
+- add collection validation command _(affects: npm: @ox-content/vite-plugin; docs)_
+
 ## [3.2.1] - 2026-09-12
 
 ### Bug Fixes
