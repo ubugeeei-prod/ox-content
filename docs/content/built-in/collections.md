@@ -91,6 +91,28 @@ Use `--config` when the Vite config is not at the project root, and repeat
 vpx oxct validate --config apps/docs/vite.config.ts --collection blog
 ```
 
+## Reading and Writing Frontmatter
+
+`parseFrontmatter` and `stringifyFrontmatter` expose the same frontmatter
+handling the collection pipeline uses, for tools that work on a single document
+outside a build — a scaffolding script, or a loader that reads one file directly.
+
+```ts
+import { parseFrontmatter, stringifyFrontmatter } from "@ox-content/vite-plugin";
+
+const { frontmatter, content } = parseFrontmatter(source);
+
+const document = stringifyFrontmatter(
+  { permalink: "/blog/post", title: "Post", draft: false },
+  "Body\n",
+);
+```
+
+The two round-trip: a document written with `stringifyFrontmatter` parses back to
+the values passed in, so a generated file is read exactly as the build will read
+it. Key order is preserved, and passing no keys returns the body unchanged
+rather than emitting an empty block.
+
 ## Entry Shape
 
 Each entry is a `CollectionEntry`:

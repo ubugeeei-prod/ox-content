@@ -62,6 +62,27 @@ oxContent({
 
 `path` と `stem` は permalink / cascade 書き換え前のファイルツリー由来 route です。`source` は `srcDir` からの相対パスで、`documentPath` は絶対ソースファイルパスです。
 
+## Frontmatter の読み書き
+
+`parseFrontmatter` と `stringifyFrontmatter` は、コレクションのパイプラインが使う
+frontmatter 処理をそのまま公開します。ビルドの外で単一の document を扱うツール
+（scaffold スクリプトや、ファイルを直読みするローダー）のための API です。
+
+```ts
+import { parseFrontmatter, stringifyFrontmatter } from "@ox-content/vite-plugin";
+
+const { frontmatter, content } = parseFrontmatter(source);
+
+const document = stringifyFrontmatter(
+  { permalink: "/blog/post", title: "Post", draft: false },
+  "Body\n",
+);
+```
+
+両者は round-trip します。`stringifyFrontmatter` で書き出した document は渡した値
+のままパースし直せるので、生成したファイルはビルドが読むのと同じ結果になります。
+キーの順序は保たれ、キーが空の場合は空ブロックを出さずに body をそのまま返します。
+
 ## エントリの形
 
 各エントリは `CollectionEntry` です。

@@ -1237,6 +1237,7 @@ export {
   CollectionValidationError,
   type CollectionValidationDiagnostic,
 } from "./collection-validation";
+export { parseFrontmatter, stringifyFrontmatter, type ParsedFrontmatter } from "./frontmatter";
 export {
   DEFAULT_MARKDOWN_EXTENSIONS,
   normalizeMarkdownExtensions,

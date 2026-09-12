@@ -113,6 +113,8 @@ describe("public export surface", () => {
       "writeSearchIndex",
       "writeSelfHostedAssets",
       "writeSiteMapFiles",
+      "parseFrontmatter",
+      "stringifyFrontmatter",
     ].sort();
 
     const actual = Object.keys(publicApi)
