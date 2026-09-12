@@ -109,9 +109,10 @@ describe("custom host collection asset manifest context", () => {
     server.watcher.emit("change", sourcePath);
     await waitFor(() => manifestLoads > loadsBeforeFailedReplan);
 
-    const routeAfterFailedReplan = await text(listener.port, "/");
+    const routeAfterFailedReplan = await waitForResponse(listener.port, "/", (response) =>
+      response.text.includes(secondAsset.contentPath),
+    );
     expect(routeAfterFailedReplan).toMatchObject({ status: 200 });
-    expect(routeAfterFailedReplan.text).toContain(secondAsset.contentPath);
     const failedLoads = manifestLoads;
 
     await fs.writeFile(gatePath, "ok\n");
