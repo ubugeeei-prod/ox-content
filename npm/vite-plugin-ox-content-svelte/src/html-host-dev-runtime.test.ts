@@ -37,10 +37,10 @@ describe("Svelte HTML host development runtime", () => {
 
       expect(response.status, response.text).toBe(200);
       expect(response.text).toContain('data-diagnostics=""');
-      expect(response.text).toContain('data-loaded-runtime="true"');
+      expect(response.text).toContain('data-host-runtime-loaded="false"');
       expect(response.text).toContain('data-role="probe"');
       expect(response.text).toContain(">ready</button>");
-      expect(response.text).toContain("svelte/server\nsvelte");
+      expect(response.text).toContain("<pre>/src/Probe.svelte</pre>");
     },
     30_000,
   );
@@ -128,13 +128,13 @@ export default {
           },
         );
         const diagnostics = result.diagnostics.map((diagnostic) => diagnostic.code).join(",");
-        const runtimeLoaded = loaded.includes("svelte/server") && loaded.includes("svelte");
+        const hostRuntimeLoaded = loaded.includes("svelte/server") && loaded.includes("svelte");
         return {
           html:
             '<!doctype html><html><body data-diagnostics="' +
             diagnostics +
-            '" data-loaded-runtime="' +
-            String(runtimeLoaded) +
+            '" data-host-runtime-loaded="' +
+            String(hostRuntimeLoaded) +
             '"><pre>' +
             loaded.slice(-2).join("\\n") +
             "</pre>" +
