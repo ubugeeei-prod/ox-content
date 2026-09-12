@@ -181,47 +181,39 @@ describe("createSvelteHtmlHostRenderer", () => {
     );
   });
 
-  it("loads the default Svelte SSR runtime through the host module loader", async () => {
-    const loaded: string[] = [];
-    const component = { name: "Echo" };
-    const renderIslands = createSvelteHtmlHostRenderer({
-      root: "/repo",
-      loadModule: async (moduleId) => {
-        loaded.push(moduleId);
-        if (moduleId === "/repo/src/Echo.svelte") {
-          return { default: component };
-        }
-        if (moduleId === "svelte/server") {
-          return {
-            render: (value: unknown, options: { props?: Record<string, unknown> }) => {
-              const children = options.props?.children as { read: () => string } | undefined;
-              return {
-                html: `<section>${String(value === component)}:${children?.read()}</section>`,
-                head: '<meta name="svelte-html-host" content="ready">',
-              };
-            },
-          };
-        }
-        if (moduleId === "svelte") {
-          return {
-            createRawSnippet: (factory: () => { render: () => string }) => ({
-              read: () => factory().render(),
-            }),
-          };
-        }
-        throw new Error(`Unexpected module ${moduleId}`);
+  it("keeps the package default renderer unless a host renderer is provided", async () => {
+    const compiled = compile(
+      "<script>let { children } = $props();</script><section>{@render children?.()}</section>",
+      {
+        filename: "/repo/src/Echo.svelte",
+        generate: "server",
+        runes: true,
       },
-    });
+    );
 
-    const result = await renderIslands('<div data-ox-island="Echo"><em>slot</em></div>', {
-      documentPath: "/repo/docs/report.mdx",
-      components: { Echo: "./src/Echo.svelte" },
-    });
+    await withGeneratedModule(compiled.js.code, async (Echo) => {
+      const loaded: string[] = [];
+      const renderIslands = createSvelteHtmlHostRenderer({
+        root: "/repo",
+        loadModule: async (moduleId) => {
+          loaded.push(moduleId);
+          if (moduleId === "/repo/src/Echo.svelte") {
+            return { default: Echo };
+          }
+          throw new Error(`Unexpected module ${moduleId}`);
+        },
+      });
 
-    expect(loaded).toEqual(["/repo/src/Echo.svelte", "svelte/server", "svelte"]);
-    expect(result.diagnostics).toEqual([]);
-    expect(result.html).toContain("<section>true:<em>slot</em></section>");
-    expect(result.headHtml).toBe('<meta name="svelte-html-host" content="ready">');
+      const result = await renderIslands('<div data-ox-island="Echo"><em>slot</em></div>', {
+        documentPath: "/repo/docs/report.mdx",
+        components: { Echo: "./src/Echo.svelte" },
+      });
+
+      expect(loaded).toEqual(["/repo/src/Echo.svelte"]);
+      expect(result.diagnostics).toEqual([]);
+      expect(result.html).toContain("<section>");
+      expect(result.html).toContain("<em>slot</em>");
+    });
   });
 
   it("throws diagnostics by default and can collect them for custom policies", async () => {

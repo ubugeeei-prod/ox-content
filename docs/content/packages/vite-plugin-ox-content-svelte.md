@@ -201,10 +201,11 @@ with `data-ox-export` preserving named imports. Use the same module ids in the
 browser loader map so post-local components can share names across documents.
 Pass `diagnostics: "collect"` when a host wants structured diagnostics instead
 of thrown `SvelteHtmlHostRenderError` failures.
-The default server renderer loads `svelte/server` and `svelte` through the same
-`loadModule` callback so Vite development hosts keep the renderer and compiled
-component in one SSR runtime. Hosts that pass `renderComponent` own that runtime
-selection themselves.
+The default server renderer owns its Svelte SSR runtime import so package-level
+`ssr.noExternal` keeps the renderer and compiled component aligned in Vite SSR.
+Hosts that pass `renderComponent` own runtime selection themselves and may load
+`svelte/server` through their host loader when that better matches their module
+graph.
 
 Inside `ctx.markdown.render({ renderHtml })`, `renderHtmlHostMarkdown()` from
 `@ox-content/vite-plugin/html-host` can combine the Svelte island renderer with

@@ -7,7 +7,6 @@ import {
   type SvelteHtmlHostDiagnostic,
   type SvelteServerModuleLoader,
 } from "./html-host";
-import { createSvelteHtmlHostComponentRenderer } from "./html-host-default-renderer";
 import type { MdxImport } from "@ox-content/vite-plugin";
 import type { ComponentsMap } from "./types";
 
@@ -54,7 +53,6 @@ export function createSvelteHtmlHostRenderer(
   input: CreateSvelteHtmlHostRendererInput,
 ): SvelteHtmlHostRenderer {
   const policy = input.diagnostics ?? "throw";
-  const defaultRenderComponent = createSvelteHtmlHostComponentRenderer(input.loadModule);
 
   return async (html, context) => {
     const root = context.root ?? input.root;
@@ -67,7 +65,7 @@ export function createSvelteHtmlHostRenderer(
       imports: context.imports,
       components: context.components ?? input.components,
       loadModule: input.loadModule,
-      renderComponent: context.renderComponent ?? input.renderComponent ?? defaultRenderComponent,
+      renderComponent: context.renderComponent ?? input.renderComponent,
       resolveClientModule:
         context.resolveClientModule ??
         input.resolveClientModule ??
