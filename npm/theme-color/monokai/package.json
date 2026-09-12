@@ -1,6 +1,6 @@
 {
   "name": "@ox-content/theme-color-monokai",
-  "version": "3.2.0",
+  "version": "3.2.1",
   "description": "Monokai Pro with a light companion — an Ox Content color scheme that composes with any @ox-content/theme-* skin",
   "keywords": [
     "color-scheme",

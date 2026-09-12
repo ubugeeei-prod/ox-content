@@ -1,6 +1,6 @@
 {
   "name": "@ox-content/theme-color-solarized",
-  "version": "3.2.0",
+  "version": "3.2.1",
   "description": "Ethan Schoonover's Solarized Light and Dark — an Ox Content color scheme that composes with any @ox-content/theme-* skin",
   "keywords": [
     "color-scheme",

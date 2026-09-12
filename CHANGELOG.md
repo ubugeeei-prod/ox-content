@@ -1,5 +1,11 @@
 # Changelog
 
+## [3.2.1] - 2026-09-12
+
+### Bug Fixes
+
+- keep html host runtime package-owned _(affects: npm: @ox-content/vite-plugin, @ox-content/vite-plugin-svelte; docs)_
+
 ## [3.2.0] - 2026-09-11
 
 ### Features

@@ -1,6 +1,6 @@
 {
   "name": "@ox-content/theme-pixel",
-  "version": "3.2.0",
+  "version": "3.2.1",
   "description": "Chunky 8-bit surfaces, hard offset shadows and stepped motion — an Ox Content skin that composes with any @ox-content/theme-color-* scheme",
   "keywords": [
     "8bit",

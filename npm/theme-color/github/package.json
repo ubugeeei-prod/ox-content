@@ -1,6 +1,6 @@
 {
   "name": "@ox-content/theme-color-github",
-  "version": "3.2.0",
+  "version": "3.2.1",
   "description": "GitHub Light and GitHub Dark — an Ox Content color scheme that composes with any @ox-content/theme-* skin",
   "keywords": [
     "color-scheme",

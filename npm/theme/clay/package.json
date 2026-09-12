@@ -1,6 +1,6 @@
 {
   "name": "@ox-content/theme-clay",
-  "version": "3.2.0",
+  "version": "3.2.1",
   "description": "Soft extruded clay that squishes under the pointer — an Ox Content skin that composes with any @ox-content/theme-color-* scheme",
   "keywords": [
     "3d",
