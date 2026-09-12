@@ -225,6 +225,8 @@ export type {
   MdxImportSpecifierKind,
 } from "./types";
 
+const oxContentOptionsMeta = Symbol.for("ox-content:vite-plugin-options");
+
 /**
  * Creates the Ox Content Vite plugin.
  *
@@ -246,6 +248,7 @@ export type {
  */
 export function oxContent(options: OxContentOptions = {}): Plugin[] {
   const resolvedOptions = resolveOptions(options);
+  const metadata = { options, resolvedOptions };
   let config: ResolvedConfig | undefined;
   const getRoot = () => config?.root || process.cwd();
 
@@ -272,6 +275,13 @@ export function oxContent(options: OxContentOptions = {}): Plugin[] {
 
   if (resolvedOptions.ogViewer) {
     plugins.push(createOgViewerPlugin(resolvedOptions));
+  }
+
+  for (const plugin of plugins) {
+    Object.defineProperty(plugin, oxContentOptionsMeta, {
+      value: metadata,
+      enumerable: false,
+    });
   }
 
   return plugins;
