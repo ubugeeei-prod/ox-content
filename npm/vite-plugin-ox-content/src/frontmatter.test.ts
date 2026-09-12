@@ -35,6 +35,13 @@ describe("stringifyFrontmatter", () => {
     expect(stringifyFrontmatter({}, "Body\n")).toBe("Body\n");
   });
 
+  it("keeps a body that starts with a blank line", () => {
+    expect(stringifyFrontmatter({}, "\nBody\n")).toBe("\nBody\n");
+    expect(stringifyFrontmatter({ title: "Post" }, "\nBody\n")).toBe(
+      "---\ntitle: Post\n---\n\nBody\n",
+    );
+  });
+
   it("round-trips through parseFrontmatter", () => {
     const frontmatter = { permalink: "/blog/post", title: "Post", draft: false, tags: ["a", "b"] };
     const parsed = parseFrontmatter(stringifyFrontmatter(frontmatter, "Body\n"));

@@ -29,9 +29,8 @@ export function parseFrontmatter(source: string): ParsedFrontmatter {
  * document without frontmatter should not gain an empty block.
  */
 export function stringifyFrontmatter(frontmatter: Record<string, unknown>, content = ""): string {
-  const body = content.startsWith("\n") ? content.slice(1) : content;
   if (Object.keys(frontmatter).length === 0) {
-    return body;
+    return content;
   }
-  return `---\n${stringifyYaml(frontmatter)}---\n${body}`;
+  return `---\n${stringifyYaml(frontmatter)}---\n${content}`;
 }
