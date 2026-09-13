@@ -15,7 +15,9 @@ use ox_content_mdast::{
 use ox_content_parser::{ParseError, Parser, ParserOptions};
 use ox_content_renderer::{HtmlRenderer, HtmlRendererOptions};
 
-pub use frontmatter::{PreparedMarkdownSource, SourceOrigin, parse_frontmatter};
+pub use frontmatter::{
+    PreparedMarkdownSource, SourceOrigin, parse_frontmatter, stringify_frontmatter,
+};
 
 use frontmatter::{parse_frontmatter_with_origin, source_without_frontmatter};
 use options::{transform_options_to_parser_options, transform_options_to_renderer_options};

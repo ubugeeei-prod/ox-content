@@ -157,6 +157,7 @@ const binding = loadBinding();
 // Export individual functions for ESM compatibility
 module.exports = binding;
 module.exports.parse = binding.parse;
+module.exports.parseFrontmatter = binding.parseFrontmatter;
 module.exports.parseTransferRaw = binding.parseTransferRaw;
 module.exports.parseMdastRaw = binding.parseMdastRaw;
 module.exports.parseAndRender = binding.parseAndRender;
@@ -165,6 +166,7 @@ module.exports.IncrementalMarkdownParser = binding.IncrementalMarkdownParser;
 module.exports.IncrementalMarkdownRenderer = binding.IncrementalMarkdownRenderer;
 module.exports.prepareSource = binding.prepareSource;
 module.exports.prepareSourceRaw = binding.prepareSourceRaw;
+module.exports.stringifyFrontmatter = binding.stringifyFrontmatter;
 module.exports.lintMarkdown = binding.lintMarkdown;
 module.exports.lintMarkdownDocuments = binding.lintMarkdownDocuments;
 module.exports.render = binding.render;

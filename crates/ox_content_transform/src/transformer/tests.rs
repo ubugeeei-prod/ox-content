@@ -1,9 +1,10 @@
 use ox_content_allocator::Allocator;
 use ox_content_parser::Parser;
+use rustc_hash::FxHashMap;
 
 use super::{
     MarkdownTransformer,
-    frontmatter::{SourceOrigin, parse_frontmatter_with_origin},
+    frontmatter::{SourceOrigin, parse_frontmatter_with_origin, stringify_frontmatter},
     toc::extract_toc,
 };
 use crate::TransformOptions;
@@ -127,6 +128,37 @@ fn tracks_source_origin_after_frontmatter() {
         prepared.source_origin,
         SourceOrigin { byte_offset: 43, offset: 31, line: 5, column: 1 }
     );
+}
+
+#[test]
+fn preserves_leading_blank_body_line_after_frontmatter() {
+    let (content, frontmatter) = super::parse_frontmatter("---\ntitle: Blank\n---\n\n# Hello");
+
+    assert_eq!(content, "\n# Hello");
+    assert_eq!(frontmatter.get("title"), Some(&serde_json::json!("Blank")));
+}
+
+#[test]
+fn stringifies_frontmatter_for_the_native_parser() {
+    let frontmatter = FxHashMap::from_iter([
+        ("permalink".to_string(), serde_json::json!("/blog/post")),
+        ("title".to_string(), serde_json::json!("Post")),
+    ]);
+    let content = "\n# Post\n";
+    let document = stringify_frontmatter(&frontmatter, content).unwrap();
+    let (parsed_content, parsed_frontmatter) = super::parse_frontmatter(&document);
+
+    assert_eq!(parsed_content, content);
+    assert_eq!(parsed_frontmatter.get("permalink"), Some(&serde_json::json!("/blog/post")));
+    assert_eq!(parsed_frontmatter.get("title"), Some(&serde_json::json!("Post")));
+}
+
+#[test]
+fn stringifies_empty_frontmatter_without_touching_content() {
+    let content = "\n# Body";
+    let document = stringify_frontmatter(&FxHashMap::default(), content).unwrap();
+
+    assert_eq!(document, content);
 }
 
 #[test]

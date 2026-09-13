@@ -58,6 +58,38 @@ const result = parseAndRender(markdown, {
 console.log(result.html);
 ```
 
+### frontmatter の読み書き
+
+loader、scaffold、migration などの Node.js / Bun script で 1 つの文書の
+YAML frontmatter だけを扱いたいときは、Vite plugin を読み込まずに
+`parseFrontmatter` と `stringifyFrontmatter` を使えます。
+
+```ts
+import { parseFrontmatter, stringifyFrontmatter } from "@ox-content/napi";
+
+const source = `---
+title: Draft
+---
+# Draft
+`;
+
+const { frontmatter, content } = parseFrontmatter(source);
+
+const document = stringifyFrontmatter(
+  {
+    ...frontmatter,
+    permalink: "/blog/draft",
+    isPublished: false,
+  },
+  content,
+);
+```
+
+`parseFrontmatter(source)` は、Ox Content のビルドが使う parser と同じ
+single-document frontmatter API です。`stringifyFrontmatter(frontmatter,
+content)` は native YAML 実装で直列化し、`frontmatter` が空なら `content`
+をそのまま返します。
+
 ## API
 
 ### parseMarkdown(content, options?)
@@ -72,6 +104,37 @@ Markdown をパースし、AST を返します。
 #### 戻り値
 
 `MarkdownAst` — パース済み AST
+
+### parseFrontmatter(content)
+
+YAML frontmatter をパースし、frontmatter を除いた Markdown 本文を返します。
+
+#### 引数
+
+- `content`: `string` — パースする Markdown
+
+#### 戻り値
+
+```ts
+interface FrontmatterParseResult {
+  content: string;
+  frontmatter: Record<string, unknown>;
+}
+```
+
+### stringifyFrontmatter(frontmatter, content)
+
+frontmatter object と Markdown 本文を 1 つの文書へ直列化します。
+
+#### 引数
+
+- `frontmatter`: `Record<string, unknown>` — 書き込む frontmatter field
+- `content`: `string` — Markdown 本文
+
+#### 戻り値
+
+`string` — YAML frontmatter 付きの Markdown 文書。`frontmatter` が空の場合は
+元の本文を返します。
 
 ### parseAndRender(content, options?)
 
