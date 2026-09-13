@@ -71,6 +71,7 @@ normalizeVitePressFrontmatter
 parse
 parseAndRender
 parseAndRenderAsync
+parseFrontmatter
 parseFeedDate
 parseMdastRaw
 parseScopedSearchQuery
@@ -89,6 +90,7 @@ resolveSsgRoutePaths
 runLspStdio
 sanitizeHtml
 searchIndex
+stringifyFrontmatter
 transform
 transformAsync
 transformCrossReferences

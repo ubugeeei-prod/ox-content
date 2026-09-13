@@ -171,6 +171,14 @@ export declare function extractYoutubeVideoId(input: string): string | null
 /** Formats a file or directory segment as an SSG title. */
 export declare function formatSsgTitle(name: string): string
 
+/** Parsed frontmatter and document body for one Markdown source. */
+export interface FrontmatterParseResult {
+  /** Markdown content after frontmatter removal. */
+  content: string
+  /** Parsed frontmatter object. */
+  frontmatter: Record<string, any>
+}
+
 /** Generates the machine-readable docs data JSON payload. */
 export declare function generateDocsDataJson(docs: Array<JsDocsMarkdownModule>, generatedAt: string): string
 
@@ -3318,6 +3326,9 @@ export declare function parseAndRenderAsync(source: string, options?: JsParserOp
  */
 export declare function parseFeedDate(value?: string | undefined | null): JsParsedFeedDate | null
 
+/** Parses one Markdown source's YAML frontmatter without loading the Vite plugin. */
+export declare function parseFrontmatter(source: string): FrontmatterParseResult
+
 /** Parses Markdown source into a raw mdast memory block for JavaScript-side deserialization. */
 export declare function parseMdastRaw(source: string, options?: JsParserOptions | undefined | null): Uint8Array
 
@@ -3419,6 +3430,9 @@ export declare function sanitizeHtml(html: string, options?: JsSanitizeOptions |
  * Returns an array of search results.
  */
 export declare function searchIndex(indexJson: string, query: string, options?: JsSearchOptions | undefined | null): Array<JsSearchResult>
+
+/** Serializes frontmatter and Markdown content into one document. */
+export declare function stringifyFrontmatter(frontmatter: Record<string, any>, content: string): string
 
 /** Whether a fenced code block tagged `lang` will be highlighted natively. */
 export declare function supportsHighlightLanguage(lang: string): boolean

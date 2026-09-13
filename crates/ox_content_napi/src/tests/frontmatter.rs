@@ -29,3 +29,37 @@ fn malformed_yaml_strips_block_and_returns_empty_frontmatter() {
     assert_eq!(content, "Body");
     assert!(frontmatter.is_empty());
 }
+
+#[test]
+fn parse_frontmatter_napi_returns_body_and_frontmatter() {
+    let result = crate::parse_frontmatter_napi(
+        "---\ntitle: Guide\nmeta:\n  draft: false\n---\n# Body".to_string(),
+    );
+
+    assert_eq!(result.content, "# Body");
+    assert_eq!(result.frontmatter.get("title"), Some(&json!("Guide")));
+    assert_eq!(result.frontmatter.get("meta"), Some(&json!({"draft": false})));
+}
+
+#[test]
+fn stringify_frontmatter_napi_roundtrips_with_leading_blank_body_line() {
+    let mut frontmatter = HashMap::new();
+    frontmatter.insert("permalink".to_string(), json!("/blog/post"));
+    frontmatter.insert("title".to_string(), json!("Post"));
+
+    let document = crate::stringify_frontmatter_napi(frontmatter, "\n# Post\n".to_string())
+        .expect("frontmatter serialization should succeed");
+    let result = crate::parse_frontmatter_napi(document);
+
+    assert_eq!(result.content, "\n# Post\n");
+    assert_eq!(result.frontmatter.get("permalink"), Some(&json!("/blog/post")));
+    assert_eq!(result.frontmatter.get("title"), Some(&json!("Post")));
+}
+
+#[test]
+fn stringify_frontmatter_napi_preserves_body_without_frontmatter() {
+    let document =
+        crate::stringify_frontmatter_napi(HashMap::new(), "\n# Body".to_string()).unwrap();
+
+    assert_eq!(document, "\n# Body");
+}

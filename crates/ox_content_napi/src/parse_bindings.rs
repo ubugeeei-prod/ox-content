@@ -125,6 +125,17 @@ pub struct PreparedSourceResult {
     pub source_offset: JsSourceOrigin,
 }
 
+/// Parsed frontmatter and document body for one Markdown source.
+#[napi(object)]
+#[allow(clippy::disallowed_types)]
+pub struct FrontmatterParseResult {
+    /// Markdown content after frontmatter removal.
+    pub content: String,
+
+    /// Parsed frontmatter object.
+    pub frontmatter: HashMap<String, serde_json::Value>,
+}
+
 /// Source preparation options for JavaScript.
 #[napi(object)]
 #[derive(Default, Clone)]

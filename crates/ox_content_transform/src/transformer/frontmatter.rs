@@ -1,4 +1,8 @@
 use rustc_hash::FxHashMap;
+use std::{
+    collections::{BTreeMap, HashMap},
+    hash::BuildHasher,
+};
 
 pub struct PreparedMarkdownSource {
     pub content: String,
@@ -30,6 +34,21 @@ pub fn parse_frontmatter(source: &str) -> (String, FxHashMap<String, serde_json:
     (prepared.content, prepared.frontmatter)
 }
 
+pub fn stringify_frontmatter<S: BuildHasher>(
+    frontmatter: &HashMap<String, serde_json::Value, S>,
+    content: &str,
+) -> Result<String, serde_yaml::Error> {
+    if frontmatter.is_empty() {
+        return Ok(content.to_string());
+    }
+
+    let sorted_frontmatter = frontmatter.iter().collect::<BTreeMap<_, _>>();
+    let yaml = serde_yaml::to_string(&sorted_frontmatter)?;
+    let yaml = yaml.trim_end();
+
+    Ok(format!("---\n{yaml}\n---\n{content}"))
+}
+
 pub(super) fn parse_frontmatter_with_origin(source: &str) -> PreparedMarkdownSource {
     if !source.starts_with("---") {
         return source_without_frontmatter(source);
@@ -41,7 +60,7 @@ pub(super) fn parse_frontmatter_with_origin(source: &str) -> PreparedMarkdownSou
     };
 
     let frontmatter_str = rest[..end_pos].trim_start_matches('\n');
-    let content = rest[end_pos + 4..].trim_start_matches('\n');
+    let content = strip_frontmatter_content_separator(&rest[end_pos + 4..]);
     let frontmatter = serde_yaml::from_str(frontmatter_str).unwrap_or_default();
 
     // Keep both byte and UTF-16 offsets for the stripped body. The byte offset
@@ -50,6 +69,10 @@ pub(super) fn parse_frontmatter_with_origin(source: &str) -> PreparedMarkdownSou
     let source_origin = source_origin_for_content(source, content);
 
     PreparedMarkdownSource { content: content.to_string(), frontmatter, source_origin }
+}
+
+fn strip_frontmatter_content_separator(content: &str) -> &str {
+    content.strip_prefix("\r\n").or_else(|| content.strip_prefix('\n')).unwrap_or(content)
 }
 
 pub(super) fn source_without_frontmatter(source: &str) -> PreparedMarkdownSource {

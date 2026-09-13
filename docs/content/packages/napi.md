@@ -53,6 +53,38 @@ const result = parseAndRender(markdown, {
 console.log(result.html);
 ```
 
+### Parse and Write Frontmatter
+
+Use `parseFrontmatter` and `stringifyFrontmatter` from plain Node.js or Bun scripts
+when a loader, scaffold, or migration needs one document's YAML frontmatter
+without loading the Vite plugin.
+
+```ts
+import { parseFrontmatter, stringifyFrontmatter } from "@ox-content/napi";
+
+const source = `---
+title: Draft
+---
+# Draft
+`;
+
+const { frontmatter, content } = parseFrontmatter(source);
+
+const document = stringifyFrontmatter(
+  {
+    ...frontmatter,
+    permalink: "/blog/draft",
+    isPublished: false,
+  },
+  content,
+);
+```
+
+`parseFrontmatter(source)` is the supported single-document entry point for the
+same parser used by Ox Content builds. `stringifyFrontmatter(frontmatter,
+content)` serializes with the native YAML implementation and returns `content`
+unchanged when `frontmatter` is empty.
+
 ## API
 
 ### parseMarkdown(content, options?)
@@ -67,6 +99,37 @@ Parses Markdown content and returns the AST.
 #### Returns
 
 `MarkdownAst` - The parsed AST
+
+### parseFrontmatter(content)
+
+Parses YAML frontmatter and returns the stripped Markdown body.
+
+#### Parameters
+
+- `content`: `string` - Markdown content to parse
+
+#### Returns
+
+```ts
+interface FrontmatterParseResult {
+  content: string;
+  frontmatter: Record<string, unknown>;
+}
+```
+
+### stringifyFrontmatter(frontmatter, content)
+
+Serializes a frontmatter object and Markdown body into one document.
+
+#### Parameters
+
+- `frontmatter`: `Record<string, unknown>` - Frontmatter fields to write
+- `content`: `string` - Markdown body
+
+#### Returns
+
+`string` - A Markdown document with YAML frontmatter, or the original body when
+`frontmatter` is empty.
 
 ### parseAndRender(content, options?)
 
