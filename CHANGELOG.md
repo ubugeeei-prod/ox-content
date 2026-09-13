@@ -1,5 +1,11 @@
 # Changelog
 
+## [3.2.3] - 2026-09-13
+
+### Features
+
+- add frontmatter document helpers _(affects: crates: ox_content_napi, ox_content_transform; npm: @ox-content/napi; docs)_
+
 ## [3.2.2] - 2026-09-12
 
 ### Features
