@@ -5,6 +5,7 @@ use napi::bindgen_prelude::*;
 use napi_derive::napi;
 use ox_content_mdast::transfer::TransferPayloadKind;
 use ox_content_parser::ParserOptions;
+use serde_json::{Map, Value};
 
 use crate::parser_options::JsParserOptions;
 use crate::render_scratch;
@@ -133,7 +134,7 @@ pub struct FrontmatterParseResult {
     pub content: String,
 
     /// Parsed frontmatter object.
-    pub frontmatter: HashMap<String, serde_json::Value>,
+    pub frontmatter: Map<String, Value>,
 }
 
 /// Source preparation options for JavaScript.

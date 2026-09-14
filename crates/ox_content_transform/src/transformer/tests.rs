@@ -4,7 +4,10 @@ use rustc_hash::FxHashMap;
 
 use super::{
     MarkdownTransformer,
-    frontmatter::{SourceOrigin, parse_frontmatter_with_origin, stringify_frontmatter},
+    frontmatter::{
+        SourceOrigin, parse_frontmatter_with_origin, stringify_frontmatter,
+        stringify_ordered_frontmatter,
+    },
     toc::extract_toc,
 };
 use crate::TransformOptions;
@@ -151,6 +154,24 @@ fn stringifies_frontmatter_for_the_native_parser() {
     assert_eq!(parsed_content, content);
     assert_eq!(parsed_frontmatter.get("permalink"), Some(&serde_json::json!("/blog/post")));
     assert_eq!(parsed_frontmatter.get("title"), Some(&serde_json::json!("Post")));
+}
+
+#[test]
+fn stringifies_ordered_frontmatter_without_sorting_keys() {
+    let frontmatter = serde_json::Map::from_iter([
+        ("permalink".to_string(), serde_json::json!("/blog/post")),
+        ("title".to_string(), serde_json::json!("Post")),
+        ("date".to_string(), serde_json::json!("2026-09-13")),
+        ("isPublished".to_string(), serde_json::json!(false)),
+        ("lang".to_string(), serde_json::json!("en")),
+    ]);
+
+    let document = stringify_ordered_frontmatter(&frontmatter, "").unwrap();
+
+    assert_eq!(
+        document,
+        "---\npermalink: /blog/post\ntitle: Post\ndate: 2026-09-13\nisPublished: false\nlang: en\n---\n"
+    );
 }
 
 #[test]

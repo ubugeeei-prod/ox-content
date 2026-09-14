@@ -16,7 +16,8 @@ use ox_content_parser::{ParseError, Parser, ParserOptions};
 use ox_content_renderer::{HtmlRenderer, HtmlRendererOptions};
 
 pub use frontmatter::{
-    PreparedMarkdownSource, SourceOrigin, parse_frontmatter, stringify_frontmatter,
+    PreparedMarkdownSource, SourceOrigin, parse_frontmatter, parse_frontmatter_ordered,
+    stringify_frontmatter, stringify_ordered_frontmatter,
 };
 
 use frontmatter::{parse_frontmatter_with_origin, source_without_frontmatter};

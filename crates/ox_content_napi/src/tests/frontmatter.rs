@@ -42,8 +42,19 @@ fn parse_frontmatter_napi_returns_body_and_frontmatter() {
 }
 
 #[test]
+fn parse_frontmatter_napi_preserves_yaml_key_order() {
+    let result = crate::parse_frontmatter_napi(
+        "---\npermalink: /blog/post\ntitle: Post\ndate: 2026-09-13\nisPublished: false\nlang: en\n---\n"
+            .to_string(),
+    );
+    let keys = result.frontmatter.keys().map(String::as_str).collect::<Vec<_>>();
+
+    assert_eq!(keys, ["permalink", "title", "date", "isPublished", "lang"]);
+}
+
+#[test]
 fn stringify_frontmatter_napi_roundtrips_with_leading_blank_body_line() {
-    let mut frontmatter = HashMap::new();
+    let mut frontmatter = serde_json::Map::new();
     frontmatter.insert("permalink".to_string(), json!("/blog/post"));
     frontmatter.insert("title".to_string(), json!("Post"));
 
@@ -57,9 +68,27 @@ fn stringify_frontmatter_napi_roundtrips_with_leading_blank_body_line() {
 }
 
 #[test]
+fn stringify_frontmatter_napi_preserves_js_key_order() {
+    let mut frontmatter = serde_json::Map::new();
+    frontmatter.insert("permalink".to_string(), json!("/blog/post"));
+    frontmatter.insert("title".to_string(), json!("Post"));
+    frontmatter.insert("date".to_string(), json!("2026-09-13"));
+    frontmatter.insert("isPublished".to_string(), json!(false));
+    frontmatter.insert("lang".to_string(), json!("en"));
+
+    let document = crate::stringify_frontmatter_napi(frontmatter, String::new())
+        .expect("frontmatter serialization should succeed");
+
+    assert_eq!(
+        document,
+        "---\npermalink: /blog/post\ntitle: Post\ndate: 2026-09-13\nisPublished: false\nlang: en\n---\n"
+    );
+}
+
+#[test]
 fn stringify_frontmatter_napi_preserves_body_without_frontmatter() {
     let document =
-        crate::stringify_frontmatter_napi(HashMap::new(), "\n# Body".to_string()).unwrap();
+        crate::stringify_frontmatter_napi(serde_json::Map::new(), "\n# Body".to_string()).unwrap();
 
     assert_eq!(document, "\n# Body");
 }
