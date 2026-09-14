@@ -1,5 +1,11 @@
 # Changelog
 
+## [3.2.4] - 2026-09-14
+
+### Bug Fixes
+
+- preserve frontmatter key order _(affects: crates: ox_content_napi, ox_content_transform; npm: @ox-content/napi; workspace metadata)_
+
 ## [3.2.3] - 2026-09-13
 
 ### Features
