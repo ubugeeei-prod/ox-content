@@ -107,6 +107,43 @@ describe("resolveCustomHostStylesheets", () => {
     ]);
     expect(result.diagnostics).toEqual([]);
   });
+
+  it("keeps Vite+ Svelte style request modules when plain CSS is present", () => {
+    const pageFile = "/repo/src/Page.svelte";
+    const layoutFile = "/repo/src/Layout.svelte";
+    const pageStyle = node(`${pageFile}?svelte&type=style&lang.css`, [], pageFile);
+    const layoutStyle = node(`${layoutFile}?svelte&type=style&lang.css`, [], layoutFile);
+    const plainCss = node("/src/Page.css", [], "/repo/src/Page.css");
+    const page: CustomHostDevModuleNode = {
+      file: pageFile,
+      importedModules: [pageStyle, plainCss],
+    };
+    const layout: CustomHostDevModuleNode = {
+      file: layoutFile,
+      importedModules: [layoutStyle],
+    };
+    const modulesByFile = new Map([
+      [pageFile, new Set([pageStyle, page])],
+      [layoutFile, new Set([layoutStyle, layout])],
+    ]);
+
+    const result = resolveCustomHostStylesheets({
+      modules: ["/src/Page.svelte", "/src/Layout.svelte"],
+      moduleGraph: {
+        getModuleById: () => undefined,
+        getModulesByFile: (file) => modulesByFile.get(file),
+      },
+      base: "/docs/",
+      root: "/repo",
+    });
+
+    expect(result.stylesheets.map((stylesheet) => stylesheet.href)).toEqual([
+      "/docs/src/Page.svelte?svelte&type=style&lang.css",
+      "/docs/src/Page.css",
+      "/docs/src/Layout.svelte?svelte&type=style&lang.css",
+    ]);
+    expect(result.diagnostics).toEqual([]);
+  });
 });
 
 function node(

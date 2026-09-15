@@ -38,6 +38,23 @@ describe("custom host module dependency inference", () => {
 
     expect(dependencies).toEqual([normalize(file)]);
   });
+
+  it("starts from the source module when Svelte style request nodes share its file", () => {
+    const root = path.resolve("fixtures/custom-host");
+    const pageFile = path.join(root, "src", "Page.svelte");
+    const sharedFile = path.join(root, "src", "shared.ts");
+    const styleRequest = node({
+      id: `${pageFile}?direct&svelte&type=style&lang.css`,
+      file: pageFile,
+    });
+    const shared = node({ file: sharedFile });
+    const page = node({ file: pageFile, imports: [shared] });
+    const moduleGraph = graph([styleRequest, page, shared]);
+
+    const dependencies = collectDevModuleDependencies(moduleGraph, "/src/Page.svelte", root);
+
+    expect(dependencies).toEqual([normalize(pageFile), normalize(sharedFile)]);
+  });
 });
 
 function node(input: {
@@ -60,7 +77,10 @@ function graph(nodes: CustomHostDevModuleNode[]): CustomHostDevModuleGraph {
     if (!moduleNode.file) {
       continue;
     }
-    modulesByFile.set(normalize(moduleNode.file), new Set([moduleNode]));
+    const file = normalize(moduleNode.file);
+    const fileModules = modulesByFile.get(file) ?? new Set();
+    fileModules.add(moduleNode);
+    modulesByFile.set(file, fileModules);
   }
   return {
     idToModuleMap: new Map(

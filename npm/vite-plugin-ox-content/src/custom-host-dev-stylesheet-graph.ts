@@ -94,9 +94,6 @@ function visitDevModule(
   }
 
   const frameworkCss = devFrameworkCssContent(node);
-  if (!frameworkCss && isDevFrameworkStyleModule(node)) {
-    return;
-  }
   const href = frameworkCss ? devFrameworkCssHref(node, base, root) : devCssHref(node, base, root);
   if (href) {
     addDevStylesheet(seenCss, stylesheets, {
@@ -139,7 +136,13 @@ function devEntry(
     }
   }
   for (const file of moduleFileCandidates(moduleId, root)) {
-    const byFile = first(moduleGraph.getModulesByFile?.(file));
+    const direct = moduleGraph.getModuleById(file);
+    if (direct) {
+      return direct;
+    }
+  }
+  for (const file of moduleFileCandidates(moduleId, root)) {
+    const byFile = sourceModuleForFile(moduleGraph.getModulesByFile?.(file));
     if (byFile) {
       return byFile;
     }
@@ -147,13 +150,20 @@ function devEntry(
 
   const ids = new Set(moduleIdCandidates(moduleId, root).map(cleanModulePath));
   const files = new Set(moduleFileCandidates(moduleId, root).map(normalizeFilePath));
+  let fileMatch: CustomHostDevModuleNode | undefined;
   for (const [id, node] of moduleGraph.idToModuleMap ?? []) {
     const cleanId = cleanModulePath(id);
-    if (ids.has(cleanId) || (node.file && files.has(normalizeFilePath(node.file)))) {
+    if (ids.has(cleanId)) {
       return node;
     }
+    if (!node.file || !files.has(normalizeFilePath(node.file))) {
+      continue;
+    }
+    if (!fileMatch || (isDevFrameworkStyleModule(fileMatch) && !isDevFrameworkStyleModule(node))) {
+      fileMatch = node;
+    }
   }
-  return undefined;
+  return fileMatch;
 }
 
 function moduleIdCandidates(moduleId: string, root: string | undefined): string[] {
@@ -315,4 +325,18 @@ function joinBase(base: string | undefined, href: string): string {
 
 function first<T>(set: Set<T> | undefined): T | undefined {
   return set?.values().next().value;
+}
+
+function sourceModuleForFile(
+  modules: Set<CustomHostDevModuleNode> | undefined,
+): CustomHostDevModuleNode | undefined {
+  if (!modules) {
+    return undefined;
+  }
+  for (const module of modules) {
+    if (!isDevFrameworkStyleModule(module)) {
+      return module;
+    }
+  }
+  return first(modules);
 }
