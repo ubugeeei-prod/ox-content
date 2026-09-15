@@ -1,6 +1,29 @@
+import {
+  applyThemeBootstrapDocumentColors,
+  createThemeBootstrapDocumentStyleFromResolved,
+  renderThemeBootstrapDocumentColorsFromResolved,
+  resolveThemeBootstrapDocumentColors,
+} from "./theme-bootstrap-document-colors";
+
 export type ThemeBootstrapPreference = "light" | "dark" | "system";
 export type ThemeBootstrapResolvedTheme = "light" | "dark";
 export type ThemeBootstrapSource = "storage" | "fallback";
+
+export interface ThemeBootstrapDocumentColor {
+  /** Canvas background applied before external CSS loads. */
+  background?: string;
+  /** Browser UI colour written to the shared `theme-color` meta tag. */
+  themeColor?: string;
+  /** Root `color-scheme` for form controls and browser chrome. */
+  colorScheme?: string;
+}
+
+export interface ThemeBootstrapDocumentColors {
+  light: ThemeBootstrapDocumentColor;
+  dark: ThemeBootstrapDocumentColor;
+  /** Single browser-facing colour meta updated by the bootstrap. */
+  themeColorMetaSelector?: string | false;
+}
 
 export interface ThemeBootstrapOptions {
   /**
@@ -39,6 +62,8 @@ export interface ThemeBootstrapOptions {
    * @default "data-theme"
    */
   themeAttribute?: string | false;
+  /** Opt-in document colour state for custom hosts that own head output. */
+  documentColors?: ThemeBootstrapDocumentColors;
 }
 
 export interface ResolvedThemeBootstrapOptions {
@@ -48,6 +73,19 @@ export interface ResolvedThemeBootstrapOptions {
   darkClass: string | false;
   lightClass: string | false;
   themeAttribute: string | false;
+  documentColors: ResolvedThemeBootstrapDocumentColors | false;
+}
+
+export interface ResolvedThemeBootstrapDocumentColor {
+  background: string | false;
+  themeColor: string | false;
+  colorScheme: string;
+}
+
+export interface ResolvedThemeBootstrapDocumentColors {
+  light: ResolvedThemeBootstrapDocumentColor;
+  dark: ResolvedThemeBootstrapDocumentColor;
+  themeColorMetaSelector: string | false;
 }
 
 export interface ThemeBootstrapState {
@@ -66,6 +104,7 @@ export interface RenderThemeBootstrapScriptOptions {
 const DEFAULT_STORAGE_KEY = "theme";
 const DEFAULT_ROOT_SELECTOR = ":root";
 const DEFAULT_DARK_CLASS = "dark";
+const DEFAULT_THEME_COLOR_META_SELECTOR = 'meta[name="theme-color"]';
 
 /**
  * Resolve a stored theme preference to the root state the bootstrap applies.
@@ -96,7 +135,7 @@ export function applyThemeBootstrap(options: ThemeBootstrapOptions = {}): ThemeB
   const state = resolveThemeBootstrapState(
     readStoredPreference(resolved.storageKey),
     prefersDarkColorScheme(),
-    resolved,
+    options,
   );
   applyThemeBootstrapState(state, resolved);
   return state;
@@ -111,7 +150,7 @@ export function setThemeBootstrapPreference(
 ): ThemeBootstrapState {
   const resolved = resolveThemeBootstrapOptions(options);
   writeStoredPreference(resolved.storageKey, preference);
-  const state = resolveThemeBootstrapState(preference, prefersDarkColorScheme(), resolved);
+  const state = resolveThemeBootstrapState(preference, prefersDarkColorScheme(), options);
   applyThemeBootstrapState(state, resolved);
   return state;
 }
@@ -121,7 +160,16 @@ export function setThemeBootstrapPreference(
  */
 export function createThemeBootstrapScript(options: ThemeBootstrapOptions = {}): string {
   const config = serializeJsonForScript(resolveThemeBootstrapOptions(options));
-  return `(()=>{const c=${config};const n=v=>v==="light"||v==="dark"||v==="system"?v:null;const g=()=>{if(!c.storageKey)return null;try{return localStorage.getItem(c.storageKey)}catch{return null}};const m=()=>{try{return matchMedia("(prefers-color-scheme: dark)").matches===true}catch{return false}};const r=()=>{try{return document.querySelector(c.rootSelector)||document.documentElement}catch{return document.documentElement}};const p=n(g())||c.defaultPreference;const t=p==="system"?(m()?"dark":"light"):p;const e=r();if(!e)return;if(c.themeAttribute)e.setAttribute(c.themeAttribute,t);if(c.darkClass)e.classList.toggle(c.darkClass,t==="dark");if(c.lightClass)e.classList.toggle(c.lightClass,t==="light")})();`;
+  return `(()=>{const c=${config};const n=v=>v==="light"||v==="dark"||v==="system"?v:null;const g=()=>{if(!c.storageKey)return null;try{return localStorage.getItem(c.storageKey)}catch{return null}};const m=()=>{try{return matchMedia("(prefers-color-scheme: dark)").matches===true}catch{return false}};const r=()=>{try{return document.querySelector(c.rootSelector)||document.documentElement}catch{return document.documentElement}};const y=t=>{const d=c.documentColors;if(!d)return;const x=d[t],h=document.documentElement;if(h&&h.style){if(x.background)h.style.backgroundColor=x.background;if(x.colorScheme)h.style.colorScheme=x.colorScheme}if(d.themeColorMetaSelector&&x.themeColor){let e=null;try{e=document.querySelector(d.themeColorMetaSelector)}catch{}if(!e&&d.themeColorMetaSelector==='${DEFAULT_THEME_COLOR_META_SELECTOR}'&&document.createElement){e=document.createElement("meta");e.setAttribute("name","theme-color");document.head&&document.head.appendChild(e)}e&&e.setAttribute("content",x.themeColor)}};const p=n(g())||c.defaultPreference;const t=p==="system"?(m()?"dark":"light"):p;const e=r();if(e){if(c.themeAttribute)e.setAttribute(c.themeAttribute,t);if(c.darkClass)e.classList.toggle(c.darkClass,t==="dark");if(c.lightClass)e.classList.toggle(c.lightClass,t==="light")}y(t)})();`;
+}
+
+/**
+ * Return the exact inline CSS body for the document colour fallback.
+ *
+ * Hash this string for CSP when a host cannot use style nonces.
+ */
+export function createThemeBootstrapDocumentStyle(options: ThemeBootstrapOptions = {}): string {
+  return createThemeBootstrapDocumentStyleFromResolved(resolveThemeBootstrapOptions(options));
 }
 
 /**
@@ -135,6 +183,23 @@ export function renderThemeBootstrapScript(
   renderOptions: RenderThemeBootstrapScriptOptions = {},
 ): string {
   return `<script${renderScriptAttrs(renderOptions)}>${createThemeBootstrapScript(options)}</script>`;
+}
+
+/**
+ * Render the optional no-JS document colour fallback for custom hosts.
+ *
+ * Place this before the bootstrap script and app stylesheets. The script will
+ * update the emitted single `theme-color` meta whenever storage or toggles
+ * resolve to another theme.
+ */
+export function renderThemeBootstrapDocumentColors(
+  options: ThemeBootstrapOptions = {},
+  renderOptions: RenderThemeBootstrapScriptOptions = {},
+): string {
+  return renderThemeBootstrapDocumentColorsFromResolved(
+    resolveThemeBootstrapOptions(options),
+    renderOptions,
+  );
 }
 
 export function resolveThemeBootstrapOptions(
@@ -168,6 +233,7 @@ export function resolveThemeBootstrapOptions(
         : typeof options.themeAttribute === "string" && options.themeAttribute.trim()
           ? options.themeAttribute
           : "data-theme",
+    documentColors: resolveThemeBootstrapDocumentColors(options.documentColors),
   };
 }
 
@@ -187,6 +253,9 @@ function applyThemeBootstrapState(
   }
   if (options.lightClass) {
     root.classList.toggle(options.lightClass, state.theme === "light");
+  }
+  if (options.documentColors) {
+    applyThemeBootstrapDocumentColors(state.theme, options.documentColors);
   }
 }
 

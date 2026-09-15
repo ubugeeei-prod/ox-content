@@ -4,7 +4,9 @@ import { afterEach, describe, expect, it } from "vite-plus/test";
 import packageJson from "../package.json" with { type: "json" };
 import {
   applyThemeBootstrap,
+  createThemeBootstrapDocumentStyle,
   createThemeBootstrapScript,
+  renderThemeBootstrapDocumentColors,
   renderThemeBootstrapScript,
   resolveThemeBootstrapState,
   setThemeBootstrapPreference,
@@ -93,10 +95,91 @@ describe("theme bootstrap public API", () => {
     expect(dom.documentElement.classes.has("is-dark")).toBe(true);
   });
 
+  it("syncs document colours for a default-dark first paint on a light OS", () => {
+    const dom = installDom({ prefersDark: false });
+
+    runInThisContext(
+      createThemeBootstrapScript({
+        defaultPreference: "dark",
+        documentColors: documentColors(),
+      }),
+    );
+
+    expect(dom.documentElement.attributes.get("data-theme")).toBe("dark");
+    expect(dom.documentElement.style.backgroundColor).toBe("#060816");
+    expect(dom.documentElement.style.colorScheme).toBe("dark");
+    expect(dom.themeColorMeta?.attributes.get("content")).toBe("#060816");
+  });
+
+  it("lets a saved light preference own document colours on a dark OS", () => {
+    const dom = installDom({ stored: "light", prefersDark: true, includeThemeColorMeta: true });
+
+    const state = applyThemeBootstrap({ documentColors: documentColors() });
+
+    expect(state).toMatchObject({ preference: "light", theme: "light", source: "storage" });
+    expect(dom.documentElement.style.backgroundColor).toBe("#ffffff");
+    expect(dom.documentElement.style.colorScheme).toBe("light");
+    expect(dom.themeColorMeta?.attributes.get("content")).toBe("#ffffff");
+  });
+
+  it("keeps document colours aligned when toggles move both directions", () => {
+    const dom = installDom({ prefersDark: false, includeThemeColorMeta: true });
+    const options = { documentColors: documentColors() };
+
+    setThemeBootstrapPreference("dark", options);
+    expect(dom.storage.get("theme")).toBe("dark");
+    expect(dom.documentElement.style.backgroundColor).toBe("#060816");
+    expect(dom.themeColorMeta?.attributes.get("content")).toBe("#060816");
+
+    setThemeBootstrapPreference("light", options);
+    expect(dom.storage.get("theme")).toBe("light");
+    expect(dom.documentElement.style.backgroundColor).toBe("#ffffff");
+    expect(dom.themeColorMeta?.attributes.get("content")).toBe("#ffffff");
+  });
+
+  it("uses document colour fallback when storage throws", () => {
+    const dom = installDom({ throwsGet: true, prefersDark: false, includeThemeColorMeta: true });
+
+    const state = applyThemeBootstrap({
+      defaultPreference: "dark",
+      documentColors: documentColors(),
+    });
+
+    expect(state).toMatchObject({ preference: "dark", theme: "dark", source: "fallback" });
+    expect(dom.documentElement.style.backgroundColor).toBe("#060816");
+    expect(dom.themeColorMeta?.attributes.get("content")).toBe("#060816");
+  });
+
+  it("renders one fallback meta and nonceable document colour style", () => {
+    const html = renderThemeBootstrapDocumentColors(
+      { defaultPreference: "dark", documentColors: documentColors() },
+      { id: 'document-colors"</style>', nonce: 'nonce"value' },
+    );
+
+    expect(html).toContain('<meta name="theme-color" content="#060816">');
+    expect(html).toContain('id="document-colors&quot;&lt;/style&gt;"');
+    expect(html).toContain('nonce="nonce&quot;value"');
+    expect(html).toContain("html{color-scheme:dark;background-color:#060816;}");
+    expect(html).toContain(
+      'html[data-theme="light"]{color-scheme:light;background-color:#ffffff;}',
+    );
+    expect(html.toLowerCase().replace("</style>", "")).not.toContain("</style>");
+  });
+
   it("serializes custom configuration without injectable closing script tags", () => {
     const script = createThemeBootstrapScript({
       storageKey: 'theme"></script><script>alert(1)</script>',
       rootSelector: 'html[data-x="</script>"]',
+      documentColors: {
+        light: { background: '#fff"></script><script>alert(1)</script>' },
+        dark: { background: "#000" },
+      },
+    });
+    const style = createThemeBootstrapDocumentStyle({
+      documentColors: {
+        light: { background: "#fff;}</style><script>alert(1)</script>" },
+        dark: { background: "#000" },
+      },
     });
     const tag = renderThemeBootstrapScript(
       { storageKey: "theme" },
@@ -105,6 +188,8 @@ describe("theme bootstrap public API", () => {
 
     expect(script.toLowerCase()).not.toContain("</script>");
     expect(script).toContain("\\u003C/script");
+    expect(style.toLowerCase()).not.toContain("</style>");
+    expect(style).not.toContain("alert");
     expect(tag).toContain('id="theme&quot;&lt;/script&gt;"');
     expect(tag).toContain('nonce="nonce&quot;value"');
     expect(tag.toLowerCase().replace("</script>", "")).not.toContain("</script>");
@@ -132,16 +217,44 @@ interface PackageConditionalExport {
   };
 }
 
-function installDom(input: { stored?: string | null; throwsGet?: boolean; prefersDark: boolean }) {
+function documentColors() {
+  return {
+    light: { background: "#ffffff" },
+    dark: { background: "#060816" },
+  };
+}
+
+function installDom(input: {
+  stored?: string | null;
+  throwsGet?: boolean;
+  prefersDark: boolean;
+  includeThemeColorMeta?: boolean;
+}) {
   const storage = new Map<string, string>();
   if (input.stored != null) {
     storage.set("theme", input.stored);
   }
   const documentElement = elementStub();
   const root = elementStub();
+  let themeColorMeta = input.includeThemeColorMeta ? elementStub() : null;
   const document = {
     documentElement,
+    head: {
+      appendChild(element: ReturnType<typeof elementStub>) {
+        if (element.attributes.get("name") === "theme-color") {
+          themeColorMeta = element;
+        }
+      },
+    },
+    createElement(name: string) {
+      const element = elementStub();
+      element.localName = name;
+      return element;
+    },
     querySelector(selector: string) {
+      if (selector === 'meta[name="theme-color"]') {
+        return themeColorMeta;
+      }
       return selector === "#app" ? root : documentElement;
     },
   };
@@ -158,15 +271,25 @@ function installDom(input: { stored?: string | null; throwsGet?: boolean; prefer
     },
   });
   defineGlobal("matchMedia", () => ({ matches: input.prefersDark }));
-  return { documentElement, root, storage };
+  return {
+    documentElement,
+    root,
+    storage,
+    get themeColorMeta() {
+      return themeColorMeta;
+    },
+  };
 }
 
 function elementStub() {
   const attributes = new Map<string, string>();
   const classes = new Set<string>();
+  const style: Record<string, string> = {};
   return {
     attributes,
     classes,
+    localName: "element",
+    style,
     setAttribute(name: string, value: string) {
       attributes.set(name, value);
     },
