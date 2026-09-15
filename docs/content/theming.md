@@ -387,17 +387,27 @@ theme without adopting the default header toggle:
 ```ts
 import {
   applyThemeBootstrap,
+  createThemeBootstrapDocumentStyle,
   createThemeBootstrapScript,
+  renderThemeBootstrapDocumentColors,
   renderThemeBootstrapScript,
   setThemeBootstrapPreference,
 } from "@ox-content/vite-plugin/theme-bootstrap";
 
-const bootstrap = renderThemeBootstrapScript({
+const themeBootstrap = {
   storageKey: "theme",
   defaultPreference: "system",
   darkClass: "dark",
   themeAttribute: "data-theme",
-});
+  documentColors: {
+    light: { background: "#ffffff" },
+    dark: { background: "#060816" },
+  },
+};
+
+const head =
+  renderThemeBootstrapDocumentColors(themeBootstrap, { nonce }) +
+  renderThemeBootstrapScript(themeBootstrap, { nonce });
 ```
 
 The bootstrap safely reads `localStorage`, accepts stored `light`, `dark`, or
@@ -406,11 +416,17 @@ throws, and applies the root class plus `data-theme` before stylesheet-driven
 first paint. It does not mark JavaScript as enabled; keep that host concern
 separate unless your document contract wants to own it.
 
-For CSP, use `renderThemeBootstrapScript(options, { nonce })` when the host has
-a nonce. Static hosts that use hashes can call `createThemeBootstrapScript()` to
-get the exact inline body to hash. A later toggle can call
-`setThemeBootstrapPreference()` inside `applyThemeTransition({ apply })` so the
-animation and the initial bootstrap share one root/storage contract.
+`documentColors` is opt-in for custom hosts that own `<head>`. It emits one
+fallback `theme-color` meta plus a small canvas/`color-scheme` style, then the
+bootstrap keeps that metadata aligned with saved preferences, OS fallback, and
+later `setThemeBootstrapPreference()` calls.
+
+For CSP, use the render helpers with `{ nonce }` when the host has a nonce.
+Static hosts that use hashes can call `createThemeBootstrapScript()` and
+`createThemeBootstrapDocumentStyle()` to get the exact inline bodies to hash. A
+later toggle can call `setThemeBootstrapPreference()` inside
+`applyThemeTransition({ apply })` so the animation and the initial bootstrap
+share one root/storage contract.
 
 ## Theme Tokens in a Bare or Custom Host
 

@@ -339,17 +339,27 @@ light / dark 契約を使えます。
 ```ts
 import {
   applyThemeBootstrap,
+  createThemeBootstrapDocumentStyle,
   createThemeBootstrapScript,
+  renderThemeBootstrapDocumentColors,
   renderThemeBootstrapScript,
   setThemeBootstrapPreference,
 } from "@ox-content/vite-plugin/theme-bootstrap";
 
-const bootstrap = renderThemeBootstrapScript({
+const themeBootstrap = {
   storageKey: "theme",
   defaultPreference: "system",
   darkClass: "dark",
   themeAttribute: "data-theme",
-});
+  documentColors: {
+    light: { background: "#ffffff" },
+    dark: { background: "#060816" },
+  },
+};
+
+const head =
+  renderThemeBootstrapDocumentColors(themeBootstrap, { nonce }) +
+  renderThemeBootstrapScript(themeBootstrap, { nonce });
 ```
 
 bootstrap は `localStorage` を安全に読み、保存済みの `light`、`dark`、`system` を
@@ -358,11 +368,16 @@ stylesheet による first paint より前に root class と `data-theme` を揃
 JavaScript 有効化 class はここでは付けません。document contract として明示的に
 持ちたい場合を除き、ホスト側の別 concern として扱ってください。
 
-CSP nonce があるホストは `renderThemeBootstrapScript(options, { nonce })` を使います。
-hash を使う静的ホストは `createThemeBootstrapScript()` から exact inline body を取得して
-hash できます。後続の toggle は `applyThemeTransition({ apply })` の中で
-`setThemeBootstrapPreference()` を呼ぶと、初期 bootstrap と animation が同じ
-root/storage contract を共有できます。
+`documentColors` は `<head>` を自分で組み立てる独自ホスト向けの opt-in です。
+fallback の `theme-color` meta と小さな canvas / `color-scheme` style を出力し、
+保存済み preference、OS fallback、後続の `setThemeBootstrapPreference()` に合わせて
+metadata を同期します。
+
+CSP nonce があるホストは render helper に `{ nonce }` を渡します。hash を使う静的ホストは
+`createThemeBootstrapScript()` と `createThemeBootstrapDocumentStyle()` から exact inline
+body を取得して hash できます。後続の toggle は `applyThemeTransition({ apply })` の中で
+`setThemeBootstrapPreference()` を呼ぶと、初期 bootstrap と animation が同じ root/storage
+contract を共有できます。
 
 ## bare / 独自ホストでのテーマトークン
 

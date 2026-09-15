@@ -1014,7 +1014,9 @@ export type {
 } from "./document-assets";
 export {
   applyThemeBootstrap,
+  createThemeBootstrapDocumentStyle,
   createThemeBootstrapScript,
+  renderThemeBootstrapDocumentColors,
   renderThemeBootstrapScript,
   resolveThemeBootstrapOptions,
   resolveThemeBootstrapState,
@@ -1022,7 +1024,11 @@ export {
 } from "./theme-bootstrap";
 export type {
   RenderThemeBootstrapScriptOptions,
+  ResolvedThemeBootstrapDocumentColor,
+  ResolvedThemeBootstrapDocumentColors,
   ResolvedThemeBootstrapOptions,
+  ThemeBootstrapDocumentColor,
+  ThemeBootstrapDocumentColors,
   ThemeBootstrapOptions,
   ThemeBootstrapPreference,
   ThemeBootstrapResolvedTheme,
