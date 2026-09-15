@@ -1,5 +1,11 @@
 # Changelog
 
+## [3.2.6] - 2026-09-15
+
+### Features
+
+- sync document colours _(affects: npm: @ox-content/vite-plugin; docs)_
+
 ## [3.2.5] - 2026-09-15
 
 ### Bug Fixes
