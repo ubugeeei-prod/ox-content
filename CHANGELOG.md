@@ -1,5 +1,11 @@
 # Changelog
 
+## [3.2.5] - 2026-09-15
+
+### Bug Fixes
+
+- preserve dev Svelte scoped CSS _(affects: npm: @ox-content/vite-plugin)_
+
 ## [3.2.4] - 2026-09-14
 
 ### Bug Fixes
