@@ -1,5 +1,11 @@
 # Changelog
 
+## [3.2.7] - 2026-09-17
+
+### Features
+
+- allow hiding header logo _(affects: crates: ox_content_napi, ox_content_ssg; npm: @ox-content/napi, @ox-content/vite-plugin; docs)_
+
 ## [3.2.6] - 2026-09-15
 
 ### Features
