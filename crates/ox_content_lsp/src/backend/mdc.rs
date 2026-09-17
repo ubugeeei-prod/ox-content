@@ -17,7 +17,7 @@ pub enum CompletionSite<'a> {
     /// `<Foo a|`. Suggest attributes whose start matches `prefix`,
     /// scoped to `component`. The current attribute prefix may be
     /// empty when the cursor is right after whitespace.
-    AttributeName { component: &'a str, prefix: &'a str },
+    AttributeName { component: &'a str, prefix: &'a str, existing: Vec<&'a str> },
 }
 
 /// Inspect the chunk of the current line that sits before the cursor
@@ -110,11 +110,78 @@ pub fn detect_site(line_prefix: &str) -> Option<CompletionSite<'_>> {
     Some(CompletionSite::AttributeName {
         component: component_name,
         prefix: &after_name[prefix_start..],
+        existing: attribute_names_before(&after_name[..prefix_start]),
     })
 }
 
 fn is_tag_name_char(ch: char) -> bool {
     ch.is_ascii_alphanumeric() || matches!(ch, '.' | '_' | '-')
+}
+
+fn is_attr_name_char(byte: u8) -> bool {
+    byte.is_ascii_alphanumeric() || matches!(byte, b':' | b'_' | b'-')
+}
+
+fn attribute_names_before(mut source: &str) -> Vec<&str> {
+    let mut names = Vec::new();
+    while !source.is_empty() {
+        source = source.trim_start_matches([' ', '\t', '\n', '\r']);
+        if source.is_empty() || source.starts_with('/') {
+            break;
+        }
+        let bytes = source.as_bytes();
+        let name_end =
+            bytes.iter().position(|byte| !is_attr_name_char(*byte)).unwrap_or(bytes.len());
+        if name_end == 0 {
+            break;
+        }
+        names.push(&source[..name_end]);
+        source = &source[name_end..];
+        source = source.trim_start_matches([' ', '\t', '\n', '\r']);
+        if !source.starts_with('=') {
+            continue;
+        }
+        source = skip_attribute_value_source(&source[1..]);
+    }
+    names
+}
+
+fn skip_attribute_value_source(source: &str) -> &str {
+    let trimmed = source.trim_start_matches([' ', '\t', '\n', '\r']);
+    let bytes = trimmed.as_bytes();
+    match bytes.first().copied() {
+        Some(b'"' | b'\'') => {
+            let quote = bytes[0];
+            let end = bytes[1..]
+                .iter()
+                .position(|byte| *byte == quote)
+                .map_or(trimmed.len(), |index| index + 2);
+            &trimmed[end..]
+        }
+        Some(b'{') => {
+            let mut depth = 0usize;
+            for (index, byte) in bytes.iter().enumerate() {
+                match byte {
+                    b'{' => depth += 1,
+                    b'}' => {
+                        depth = depth.saturating_sub(1);
+                        if depth == 0 {
+                            return &trimmed[index + 1..];
+                        }
+                    }
+                    _ => {}
+                }
+            }
+            ""
+        }
+        _ => {
+            let end = bytes
+                .iter()
+                .position(|byte| byte.is_ascii_whitespace() || *byte == b'>')
+                .unwrap_or(trimmed.len());
+            &trimmed[end..]
+        }
+    }
 }
 
 #[must_use]
@@ -124,8 +191,9 @@ pub fn completion_items(site: &CompletionSite<'_>, registry: &Registry) -> Vec<C
             .complete_components(prefix)
             .map(|(name, component)| component_item(name, component))
             .collect(),
-        CompletionSite::AttributeName { component, prefix } => registry
+        CompletionSite::AttributeName { component, prefix, existing } => registry
             .complete_attributes(component, prefix)
+            .filter(|(name, _)| !existing.iter().any(|existing| existing == name))
             .map(|(name, attribute)| attribute_item(name, attribute))
             .collect(),
     }

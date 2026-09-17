@@ -31,21 +31,21 @@ must not depend on a later one in the list.
 
 ## Feature Matrix
 
-| #   | Feature                                         | LSP                      | CLI                          | VS Code                  | Neovim                      | Status           |
-| --- | ----------------------------------------------- | ------------------------ | ---------------------------- | ------------------------ | --------------------------- | ---------------- |
-| 1   | Markdown preview (HMR)                          | push channel             | none                         | subscribed webview       | external browser, on-demand | needs CLI + nvim |
-| 2   | i18n preview / completion                       | present                  | `vpx oxct i18n`              | present                  | present                     | shipped          |
-| 3   | MDC completion + type check                     | completion + diagnostics | `vpx oxct mdc-check`         | completion + diagnostics | completion + diagnostics    | shipped          |
-| 4   | Vue / React props completion + jump + typecheck | crate scaffold           | planned                      | planned                  | planned                     | scaffold landed  |
-| 5   | Asset path completion + diagnostics             | completion provider      | via link checker             | completion + diagnostics | completion + diagnostics    | shipped          |
-| 6   | Dead link checker                               | diagnostics              | `vpx oxct link-check`        | diagnostics              | diagnostics                 | local: shipped   |
-| 7   | textlint integration                            | diagnostics + quickfix   | via configured command       | enabled per setting      | enabled per setting         | shipped (opt-in) |
-| 8   | Frontmatter schema completion + diagnostics     | present                  | none (validated through LSP) | present                  | present                     | built-in meta    |
-| 9   | Document structure (outline + folding)          | symbols + folding ranges | none (unit-tested headless)  | outline + folding        | outline + folding           | shipped          |
-| 10  | Document links (Markdown links + images)        | document link provider   | none (unit-tested headless)  | clickable links          | clickable links             | shipped          |
-| 11  | Selection ranges (expand selection)             | selection range provider | none (unit-tested headless)  | expand/shrink selection  | expand/shrink selection     | shipped          |
-| 12  | Document highlights (matching link targets)     | document highlight prov. | none (unit-tested headless)  | highlight same-target    | highlight same-target       | shipped          |
-| 13  | Half/full-width spacing                         | diagnostics + formatting | none (validated through LSP) | quickfix + save fix      | quickfix + formatting       | shipped          |
+| #   | Feature                                         | LSP                                           | CLI                          | VS Code                                       | Neovim                                        | Status           |
+| --- | ----------------------------------------------- | --------------------------------------------- | ---------------------------- | --------------------------------------------- | --------------------------------------------- | ---------------- |
+| 1   | Markdown preview (HMR)                          | push channel                                  | none                         | subscribed webview                            | external browser, on-demand                   | needs CLI + nvim |
+| 2   | i18n preview / completion                       | present                                       | `vpx oxct i18n`              | present                                       | present                                       | shipped          |
+| 3   | MDC completion + type check                     | completion + hover + definition + diagnostics | `vpx oxct mdc-check`         | completion + hover + definition + diagnostics | completion + hover + definition + diagnostics | shipped          |
+| 4   | Vue / React props completion + jump + typecheck | crate scaffold                                | planned                      | planned                                       | planned                                       | scaffold landed  |
+| 5   | Asset path completion + diagnostics             | completion provider                           | via link checker             | completion + diagnostics                      | completion + diagnostics                      | shipped          |
+| 6   | Dead link checker                               | diagnostics                                   | `vpx oxct link-check`        | diagnostics                                   | diagnostics                                   | local: shipped   |
+| 7   | textlint integration                            | diagnostics + quickfix                        | via configured command       | enabled per setting                           | enabled per setting                           | shipped (opt-in) |
+| 8   | Frontmatter schema completion + diagnostics     | present                                       | none (validated through LSP) | present                                       | present                                       | built-in meta    |
+| 9   | Document structure (outline + folding)          | symbols + folding ranges                      | none (unit-tested headless)  | outline + folding                             | outline + folding                             | shipped          |
+| 10  | Document links (Markdown links + images)        | document link provider                        | none (unit-tested headless)  | clickable links                               | clickable links                               | shipped          |
+| 11  | Selection ranges (expand selection)             | selection range provider                      | none (unit-tested headless)  | expand/shrink selection                       | expand/shrink selection                       | shipped          |
+| 12  | Document highlights (matching link targets)     | document highlight prov.                      | none (unit-tested headless)  | highlight same-target                         | highlight same-target                         | shipped          |
+| 13  | Half/full-width spacing                         | diagnostics + formatting                      | none (validated through LSP) | quickfix + save fix                           | quickfix + formatting                         | shipped          |
 
 ## PR Sequence
 
@@ -138,9 +138,11 @@ Replace the polling refresh path with an explicit push channel.
 - ✅ Registry path is configurable via the `mdcComponents`
   initialization option, `mdc.components` in the workspace config
   file, or `OX_CONTENT_MDC_COMPONENTS` env var (in that order).
+- ✅ LSP hover on MDC component and prop names shows registry
+  documentation, prop type hints, and required markers.
+- ✅ Go-to-definition from MDC component and prop names jumps to the
+  corresponding `name` entry in the configured registry JSON.
 - Pending follow-ups:
-  - Hover documentation for an MDC tag the cursor sits on
-    (registry already exposes the data).
   - Diagnostic for using an unknown component (opt-in only — would
     be noisy for projects with partial registries).
   - Framework-specific auto-discovery (Nuxt content, Astro, etc.)

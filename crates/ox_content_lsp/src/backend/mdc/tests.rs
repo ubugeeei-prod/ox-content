@@ -58,13 +58,23 @@ mod detect_site {
     #[test]
     fn whitespace_after_name_means_attribute_site_with_empty_prefix() {
         let site = detect_site("<Alert ").expect("site");
-        assert_eq!(site, CompletionSite::AttributeName { component: "Alert", prefix: "" });
+        assert_eq!(
+            site,
+            CompletionSite::AttributeName { component: "Alert", prefix: "", existing: vec![] }
+        );
     }
 
     #[test]
     fn typing_attribute_name_after_existing_attribute() {
         let site = detect_site("<Alert tone=\"info\" ic").expect("site");
-        assert_eq!(site, CompletionSite::AttributeName { component: "Alert", prefix: "ic" });
+        assert_eq!(
+            site,
+            CompletionSite::AttributeName {
+                component: "Alert",
+                prefix: "ic",
+                existing: vec!["tone"],
+            }
+        );
     }
 
     #[test]
@@ -106,7 +116,7 @@ mod completion_items {
     fn attribute_completion_returns_props_with_property_kind() {
         let registry = registry();
         let items = completion_items(
-            &CompletionSite::AttributeName { component: "Alert", prefix: "" },
+            &CompletionSite::AttributeName { component: "Alert", prefix: "", existing: vec![] },
             &registry,
         );
         assert_eq!(labels(&items), vec!["icon", "tone"]);
@@ -120,9 +130,23 @@ mod completion_items {
     fn attribute_completion_for_unknown_component_is_empty() {
         let registry = registry();
         let items = completion_items(
-            &CompletionSite::AttributeName { component: "Unknown", prefix: "" },
+            &CompletionSite::AttributeName { component: "Unknown", prefix: "", existing: vec![] },
             &registry,
         );
         assert!(items.is_empty());
+    }
+
+    #[test]
+    fn attribute_completion_suppresses_existing_props() {
+        let registry = registry();
+        let items = completion_items(
+            &CompletionSite::AttributeName {
+                component: "Alert",
+                prefix: "",
+                existing: vec!["tone"],
+            },
+            &registry,
+        );
+        assert_eq!(labels(&items), vec!["icon"]);
     }
 }

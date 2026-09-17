@@ -35,6 +35,8 @@ tokio = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }
 serde_yaml = { workspace = true }
+tree-sitter = "0.26"
+tree-sitter-json = "0.24"
 
 [dev-dependencies]
 insta = { workspace = true }

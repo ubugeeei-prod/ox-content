@@ -7,8 +7,6 @@ use crate::frontmatter;
 use crate::i18n;
 use crate::preview;
 
-use ox_content_mdc_checker::Registry;
-
 use super::Backend;
 use super::assets::{completion_items as asset_completion_items, detect_context, line_prefix};
 use super::mdc::{completion_items as mdc_completion_items, detect_site as detect_mdc_site};
@@ -72,7 +70,7 @@ impl Backend {
         if let Some(site) = detect_mdc_site(prefix)
             && let Some(registry) = load_mdc_registry(&config)
         {
-            let items = mdc_completion_items(&site, &registry);
+            let items = mdc_completion_items(&site, &registry.registry);
             if !items.is_empty() {
                 return Some(CompletionResponse::Array(items));
             }
@@ -130,6 +128,13 @@ impl Backend {
 
         let document = self.state.document(uri).await?;
         let config = self.resolved_config().await;
+        if let Some(registry) = load_mdc_registry(&config)
+            && let Some(symbol) = super::mdc_intel::symbol_at(&document, position)
+            && let Some(hover) = super::mdc_intel::hover(&symbol, &registry.registry)
+        {
+            return Some(hover);
+        }
+
         let block = frontmatter::parse_frontmatter(&document).block?;
         let schema = Self::load_schema(&config).ok().flatten()?;
         frontmatter::hover(&block, position, &schema)
@@ -143,6 +148,26 @@ impl Backend {
         let Ok(path) = uri.to_file_path() else {
             return None;
         };
+        if is_markdown_path(&path) {
+            let document = self.state.document(uri).await?;
+            let config = self.resolved_config().await;
+            let registry = load_mdc_registry(&config)?;
+            let symbol = super::mdc_intel::symbol_at(&document, position)?;
+            let target_range = match &symbol {
+                super::mdc_intel::SymbolAt::Component { name, .. } => {
+                    registry.locations.component(name)?
+                }
+                super::mdc_intel::SymbolAt::Attribute { component, name, .. } => {
+                    registry.locations.attribute(component, name)?
+                }
+            };
+            let target_uri = Url::from_file_path(&registry.path).ok()?;
+            return Some(GotoDefinitionResponse::Scalar(Location {
+                uri: target_uri,
+                range: target_range,
+            }));
+        }
+
         if !i18n::is_i18n_source_path(&path) {
             return None;
         }
@@ -315,11 +340,9 @@ fn push_fmt(output: &mut String, args: std::fmt::Arguments<'_>) {
     }
 }
 
-fn load_mdc_registry(config: &crate::config::ResolvedConfig) -> Option<Registry> {
+fn load_mdc_registry(
+    config: &crate::config::ResolvedConfig,
+) -> Option<super::mdc_registry::LoadedRegistry> {
     let path = config.mdc_components.as_deref()?;
-    // Treat a missing or unreadable registry file the same as "no
-    // registry configured" — completion silently falls through. The
-    // alternative (publishing a diagnostic on every keystroke) would
-    // be noisy and we'd rather not double the failure modes here.
-    Registry::from_path(path).ok().flatten()
+    super::mdc_registry::load(path)
 }

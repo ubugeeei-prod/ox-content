@@ -4,6 +4,8 @@ mod diagnostics;
 mod features;
 mod handlers;
 mod mdc;
+mod mdc_intel;
+mod mdc_registry;
 mod snippets;
 
 use tower_lsp::Client;
