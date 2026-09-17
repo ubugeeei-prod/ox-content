@@ -66,6 +66,8 @@ pub struct JsThemeHeader {
     pub logo_light: Option<String>,
     /// Dark mode logo image URL.
     pub logo_dark: Option<String>,
+    /// Whether to render the header logo image.
+    pub show_logo: Option<bool>,
     /// Whether to render the site name text next to the logo.
     pub show_site_name_text: Option<bool>,
     /// Logo width in pixels.

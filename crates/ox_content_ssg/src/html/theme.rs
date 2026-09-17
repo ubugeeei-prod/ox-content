@@ -65,6 +65,9 @@ pub struct ThemeHeader {
     /// Dark mode logo image URL.
     #[serde(rename = "logoDark")]
     pub logo_dark: Option<String>,
+    /// Whether to render the header logo image.
+    #[serde(rename = "showLogo")]
+    pub show_logo: Option<bool>,
     /// Whether to render the site name text next to the logo.
     #[serde(rename = "showSiteNameText")]
     pub show_site_name_text: Option<bool>,

@@ -224,19 +224,18 @@ pub(super) fn generate_html_inner(
     };
 
     let header_config = theme.and_then(|t| t.header.as_ref());
-    let logo_url = header_config
-        .and_then(|h| h.logo.as_ref())
-        .map_or_else(|| "logo.svg", std::string::String::as_str);
+    let show_logo = header_config.and_then(|h| h.show_logo).unwrap_or(true);
     let logo_width = header_config.and_then(|h| h.logo_width).unwrap_or(28);
     let logo_height = header_config.and_then(|h| h.logo_height).unwrap_or(28);
     let show_site_name_text = header_config.and_then(|h| h.show_site_name_text).unwrap_or(true);
 
     let resolve_theme_asset = |url: &str| with_base(&config.base, url);
-
-    let logo_src = resolve_theme_asset(logo_url);
-    let logo_light_src =
-        header_config.and_then(|h| h.logo_light.as_deref()).map(resolve_theme_asset);
-    let logo_dark_src = header_config.and_then(|h| h.logo_dark.as_deref()).map(resolve_theme_asset);
+    let resolve_logo_asset = |url: Option<&String>| {
+        show_logo.then(|| url.map(String::as_str).map(resolve_theme_asset)).flatten()
+    };
+    let logo_src = resolve_logo_asset(header_config.and_then(|h| h.logo.as_ref()));
+    let logo_light_src = resolve_logo_asset(header_config.and_then(|h| h.logo_light.as_ref()));
+    let logo_dark_src = resolve_logo_asset(header_config.and_then(|h| h.logo_dark.as_ref()));
     let locale_switcher_html = render_locale_switcher(config);
     let custom_js = theme.and_then(|t| t.js.as_deref()).unwrap_or("");
     let all_js = assemble_page_js(&PageJsInput {
@@ -310,7 +309,7 @@ pub(super) fn generate_html_inner(
         header_nav_html: &header_nav_html,
         embed_header_after,
         base: &config.base,
-        logo_src: &logo_src,
+        logo_src: logo_src.as_deref(),
         logo_light_src: logo_light_src.as_deref(),
         logo_dark_src: logo_dark_src.as_deref(),
         show_site_name_text,
@@ -342,8 +341,6 @@ pub(super) fn generate_html_inner(
 }
 
 fn theme_has_self_hosted_icons(theme: Option<&super::ThemeConfig>) -> bool {
-    theme
-        .and_then(|t| t.embed.as_ref())
-        .and_then(|e| e.head.as_deref())
-        .is_some_and(|head| head.contains("__ox_icons__/"))
+    let head = theme.and_then(|t| t.embed.as_ref()).and_then(|e| e.head.as_deref());
+    head.is_some_and(|head| head.contains("__ox_icons__/"))
 }

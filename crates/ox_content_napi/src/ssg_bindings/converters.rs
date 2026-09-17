@@ -43,6 +43,7 @@ pub(super) fn convert_theme_config(
             logo: h.logo,
             logo_light: h.logo_light,
             logo_dark: h.logo_dark,
+            show_logo: h.show_logo,
             show_site_name_text: h.show_site_name_text,
             logo_width: h.logo_width,
             logo_height: h.logo_height,

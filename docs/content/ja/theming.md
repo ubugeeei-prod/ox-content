@@ -436,6 +436,20 @@ defineTheme({
 });
 ```
 
+## ヘッダーロゴ
+
+ヘッダーのロゴ画像は、`theme.header.logo`、`logoLight`、`logoDark` のいずれかを設定したときだけ描画されます。ヘッダーのタイトル、検索、テーマ切替は残したまま、設定済みロゴを DOM から外したい場合は `showLogo: false` を設定します。
+
+```ts
+defineTheme({
+  extends: defaultTheme,
+  header: {
+    logo: "/logo.svg",
+    showLogo: false,
+  },
+});
+```
+
 ## ページアウトライン
 
 既定テーマは、ページ見出しから右側の「このページ」アウトラインを描けます。**既定はオフ** です。`aside: true` でオンにします。アウトラインが出るのは TOC エントリがあるページだけです。エントリページはアウトラインを出しません。
@@ -777,6 +791,15 @@ const defaultTheme = {
     sidebarWidth: "260px",
     headerHeight: "60px",
     maxContentWidth: "960px",
+  },
+  header: {
+    logo: undefined,
+    logoLight: undefined,
+    logoDark: undefined,
+    showLogo: true,
+    showSiteNameText: true,
+    logoWidth: 28,
+    logoHeight: 28,
   },
   socialLinks: {},
 };

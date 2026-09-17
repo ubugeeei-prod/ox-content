@@ -2398,7 +2398,7 @@ a:hover {
     </button>
     <a href="/index.html" class="header-title" aria-label="Test Site">
 
-      <img src="/logo.svg" alt="" width="28" height="28" class="header-logo" />
+
 
 
       Test Site
