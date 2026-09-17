@@ -2768,6 +2768,8 @@ export interface JsThemeHeader {
   logoLight?: string
   /** Dark mode logo image URL. */
   logoDark?: string
+  /** Whether to render the header logo image. */
+  showLogo?: boolean
   /** Whether to render the site name text next to the logo. */
   showSiteNameText?: boolean
   /** Logo width in pixels. */

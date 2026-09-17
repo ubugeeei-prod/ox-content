@@ -499,6 +499,22 @@ defineTheme({
 });
 ```
 
+## Header Logo
+
+The header renders a logo image only when `theme.header.logo`, `logoLight`, or
+`logoDark` is configured. To keep the header title, search, and theme toggle
+while removing a configured logo from the DOM, set `showLogo: false`:
+
+```ts
+defineTheme({
+  extends: defaultTheme,
+  header: {
+    logo: "/logo.svg",
+    showLogo: false,
+  },
+});
+```
+
 ## Page Outline
 
 The default theme can render a right-hand "On this page" outline from the page
@@ -852,6 +868,15 @@ const defaultTheme = {
     sidebarWidth: "260px",
     headerHeight: "60px",
     maxContentWidth: "960px",
+  },
+  header: {
+    logo: undefined,
+    logoLight: undefined,
+    logoDark: undefined,
+    showLogo: true,
+    showSiteNameText: true,
+    logoWidth: 28,
+    logoHeight: 28,
   },
   socialLinks: {},
 };

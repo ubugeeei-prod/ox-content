@@ -29,7 +29,9 @@
       <img src="{{ light_logo_src }}" alt="" width="{{ logo_width }}" height="{{ logo_height }}" class="header-logo" />
 {% endif %}
 {% else %}
+{% if let Some(logo_src) = logo_src %}
       <img src="{{ logo_src }}" alt="" width="{{ logo_width }}" height="{{ logo_height }}" class="header-logo" />
+{% endif %}
 {% endif %}
 {% if show_site_name_text %}
       {{ site_name }}

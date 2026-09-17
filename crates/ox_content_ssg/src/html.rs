@@ -156,7 +156,7 @@ struct PageTemplate<'a> {
     header_nav_html: &'a str,
     embed_header_after: &'a str,
     base: &'a str,
-    logo_src: &'a str,
+    logo_src: Option<&'a str>,
     logo_light_src: Option<&'a str>,
     logo_dark_src: Option<&'a str>,
     show_site_name_text: bool,

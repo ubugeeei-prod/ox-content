@@ -228,3 +228,75 @@ fn theme_asset_paths_are_prefixed_with_the_deployment_base() {
         generate_html(&page_data, &[], &config("/team/docs/", "https://cdn.example.com/logo.svg"));
     assert!(html.contains(r#"src="https://cdn.example.com/logo.svg""#), "{html}");
 }
+
+#[test]
+fn header_logo_is_omitted_when_no_logo_is_configured() {
+    let html = generate_html(
+        &themed_page_data(),
+        &[],
+        &theme_config_with_header(Some(ThemeHeader::default())),
+    );
+
+    assert!(!html.contains(r#"class="header-logo""#), "{html}");
+    assert!(!html.contains("logo.svg"), "{html}");
+    assert!(html.contains("Logo Site"), "{html}");
+}
+
+#[test]
+fn header_logo_can_be_disabled_even_when_configured() {
+    let html = generate_html(
+        &themed_page_data(),
+        &[],
+        &theme_config_with_header(Some(ThemeHeader {
+            logo: Some("/img/logo.svg".to_string()),
+            show_logo: Some(false),
+            ..Default::default()
+        })),
+    );
+
+    assert!(!html.contains(r#"class="header-logo""#), "{html}");
+    assert!(!html.contains(r#"src="/img/logo.svg""#), "{html}");
+    assert!(html.contains("Logo Site"), "{html}");
+}
+
+fn themed_page_data() -> PageData {
+    PageData {
+        title: "Logo".to_string(),
+        description: None,
+        content: "<p>Content</p>".to_string(),
+        toc: vec![],
+        last_updated: None,
+        contributors: vec![],
+        path: "logo".to_string(),
+        entry_page: None,
+        prev: None,
+        next: None,
+        breadcrumbs: None,
+        chrome: PageChromeFlags::default(),
+        robots: None,
+        canonical: None,
+        markdown_source: None,
+    }
+}
+
+fn theme_config_with_header(header: Option<ThemeHeader>) -> SsgConfig {
+    SsgConfig {
+        site_name: "Logo Site".to_string(),
+        base: "/".to_string(),
+        breadcrumb_root_href: None,
+        og_image: None,
+        locale: None,
+        available_locales: None,
+        theme: Some(ThemeConfig { header, ..Default::default() }),
+        pagination: false,
+        breadcrumbs: false,
+        reader_chrome: ReaderChrome::default(),
+        locale_switcher: false,
+        locale_paths: vec![],
+        a11y: A11y::default(),
+        page_chrome: false,
+        json_ld: JsonLd::default(),
+        site_url: None,
+        head_validation: HeadValidation::Off,
+    }
+}

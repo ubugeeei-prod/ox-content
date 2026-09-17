@@ -96,6 +96,8 @@ export interface ThemeHeader {
   logoLight?: string;
   /** Dark mode logo image URL */
   logoDark?: string;
+  /** Whether to render the header logo image */
+  showLogo?: boolean;
   /** Whether to render the site name text next to the logo */
   showSiteNameText?: boolean;
   /** Logo width in pixels */
@@ -351,6 +353,7 @@ export const defaultTheme: ThemeConfig = {
     logo: undefined,
     logoLight: undefined,
     logoDark: undefined,
+    showLogo: true,
     showSiteNameText: true,
     logoWidth: 28,
     logoHeight: 28,
@@ -616,11 +619,15 @@ export function themeToNapi(
         }
       : undefined,
     header:
-      theme.header.logo || theme.header.logoLight || theme.header.logoDark
+      theme.header.logo ||
+      theme.header.logoLight ||
+      theme.header.logoDark ||
+      theme.header.showLogo === false
         ? {
             logo: theme.header.logo,
             logoLight: theme.header.logoLight,
             logoDark: theme.header.logoDark,
+            showLogo: theme.header.showLogo,
             showSiteNameText: theme.header.showSiteNameText,
             logoWidth: theme.header.logoWidth,
             logoHeight: theme.header.logoHeight,
@@ -722,6 +729,7 @@ export interface NapiThemeHeader {
   logo?: string;
   logoLight?: string;
   logoDark?: string;
+  showLogo?: boolean;
   showSiteNameText?: boolean;
   logoWidth?: number;
   logoHeight?: number;

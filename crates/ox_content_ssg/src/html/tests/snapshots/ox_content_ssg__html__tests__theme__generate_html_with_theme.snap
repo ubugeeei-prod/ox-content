@@ -2425,7 +2425,7 @@ a:hover {
     </button>
     <a href="/index.html" class="header-title" aria-label="Themed Site">
 
-      <img src="/logo.svg" alt="" width="28" height="28" class="header-logo" />
+
 
 
       Themed Site
