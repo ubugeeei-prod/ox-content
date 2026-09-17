@@ -1,5 +1,11 @@
 # Changelog
 
+## [3.2.8] - 2026-09-17
+
+### Features
+
+- improve MDC hover and definition _(affects: crates: ox_content_lsp; docs, workspace metadata)_
+
 ## [3.2.7] - 2026-09-17
 
 ### Features
