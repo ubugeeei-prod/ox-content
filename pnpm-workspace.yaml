@@ -26,8 +26,8 @@ catalog:
   solid-js: ^2.0.0-rc.8
   svelte: ^5.57.0
   typescript: ^7.0.2
-  vite: npm:@voidzero-dev/vite-plus-core@0.2.8
-  vitest: 5.0.1
+  vite: npm:@voidzero-dev/vite-plus-core@0.3.2
+  vitest: 4.1.11
   vue: ^3.5.43
   vite-plus: 0.3.2
 

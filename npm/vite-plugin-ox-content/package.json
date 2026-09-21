@@ -217,7 +217,7 @@
     "unified": "^11.0.5"
   },
   "devDependencies": {
-    "@playwright/test": "^1.62.1",
+    "@playwright/test": "^1.63.0",
     "@types/hast": "^3.0.5",
     "@types/node": "catalog:",
     "@types/react": "catalog:",
