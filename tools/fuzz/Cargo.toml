@@ -15,10 +15,10 @@ cargo-fuzz = true
 
 [dependencies]
 libfuzzer-sys = "0.4"
-ox_content_allocator = { path = "../crates/ox_content_allocator" }
-ox_content_ast = { path = "../crates/ox_content_ast" }
-ox_content_parser = { path = "../crates/ox_content_parser" }
-ox_content_renderer = { path = "../crates/ox_content_renderer" }
+ox_content_allocator = { path = "../../crates/ox_content_allocator" }
+ox_content_ast = { path = "../../crates/ox_content_ast" }
+ox_content_parser = { path = "../../crates/ox_content_parser" }
+ox_content_renderer = { path = "../../crates/ox_content_renderer" }
 
 [[bin]]
 name = "parse"

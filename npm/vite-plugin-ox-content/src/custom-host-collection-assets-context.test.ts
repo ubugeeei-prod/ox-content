@@ -144,6 +144,11 @@ function config(
     configFile: false,
     appType: "custom",
     logLevel: "silent",
+    // The dev test drives every replan through `server.watcher.emit`. A real
+    // watcher would also fire for the source write that precedes the gate flip,
+    // and a replan landing between the two writes publishes a generation the
+    // test expects to fail.
+    server: { watch: null },
     plugins: [
       ...oxContentCustomHost({
         host: "./src/host.ts",
