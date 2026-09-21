@@ -53,8 +53,8 @@
     "@ox-content/vite-plugin": "workspace:*"
   },
   "devDependencies": {
-    "@rsvelte/vite-plugin-svelte": "^0.5.2",
-    "@rsvelte/vite-plugin-svelte-native": "^0.3.12",
+    "@rsvelte/vite-plugin-svelte": "^0.5.3",
+    "@rsvelte/vite-plugin-svelte-native": "^0.3.14",
     "@sveltejs/vite-plugin-svelte": "catalog:",
     "@types/node": "catalog:",
     "@typescript/native-preview": "catalog:",

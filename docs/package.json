@@ -13,7 +13,7 @@
     "@ox-content/code-play": "workspace:*",
     "@ox-content/vite-plugin": "workspace:*",
     "@typescript/native-preview": "catalog:",
-    "katex": "^0.16.22",
+    "katex": "^0.18.7",
     "vite": "catalog:",
     "vite-plus": "catalog:"
   }

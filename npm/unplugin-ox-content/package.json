@@ -89,10 +89,10 @@
     "remark-math": "^6.0.0",
     "remark-smartypants": "^3.0.3",
     "remark-toc": "^9.0.0",
-    "rollup": "^4.62.5",
+    "rollup": "^4.63.3",
     "typescript": "catalog:",
     "vite": "catalog:",
     "vite-plus": "catalog:",
-    "webpack": "^5.109.2"
+    "webpack": "^5.111.0"
   }
 }
