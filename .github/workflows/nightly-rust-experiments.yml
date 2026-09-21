@@ -75,6 +75,12 @@ jobs:
         run: |
           set -euo pipefail
 
+          # rust-toolchain.toml pins stable and outranks the rustup default the
+          # setup step installs, so select the nightly explicitly for this and
+          # every later step.
+          export RUSTUP_TOOLCHAIN="${NIGHTLY_TOOLCHAIN}"
+          echo "RUSTUP_TOOLCHAIN=${NIGHTLY_TOOLCHAIN}" >> "$GITHUB_ENV"
+
           echo "=== pinned toolchain ==="
           echo "NIGHTLY_TOOLCHAIN=${NIGHTLY_TOOLCHAIN}"
           echo "EXPERIMENT_FLAG=${EXPERIMENT_FLAG}"
