@@ -195,13 +195,25 @@ describe("oxContentSolid", () => {
           solid({ extensions: [".md", ".markdown", ".mdx"], compiler: "native" }),
         ],
         resolve: {
-          alias: {
-            "@ox-content/islands": fileURLToPath(
-              new URL("../../ox-content-islands/src/index.ts", import.meta.url),
-            ),
-            "@solidjs/web": path.join(packageNodeModules, "@solidjs/web/dist/web.js"),
-            "solid-js": path.join(packageNodeModules, "solid-js/dist/solid.js"),
-          },
+          // The Solid aliases are anchored so subpath imports such as
+          // `solid-js/internal` (imported by @solidjs/web) keep resolving
+          // through the package exports.
+          alias: [
+            {
+              find: "@ox-content/islands",
+              replacement: fileURLToPath(
+                new URL("../../ox-content-islands/src/index.ts", import.meta.url),
+              ),
+            },
+            {
+              find: /^@solidjs\/web$/,
+              replacement: path.join(packageNodeModules, "@solidjs/web/dist/web.js"),
+            },
+            {
+              find: /^solid-js$/,
+              replacement: path.join(packageNodeModules, "solid-js/dist/solid.js"),
+            },
+          ],
         },
         build: {
           outDir: "dist",
