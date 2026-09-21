@@ -26,9 +26,9 @@ xai-grok-markdown-core = { git = "https://github.com/xai-org/grok-build", rev = 
 # The engine under test, referenced by path so the base and head benchmark
 # checkouts each measure their own core. These rows show the boundary-free
 # engine next to the @ox-content/napi rows the JS harness measures.
-ox_content_allocator = { path = "../../crates/ox_content_allocator" }
-ox_content_parser = { path = "../../crates/ox_content_parser" }
-ox_content_renderer = { path = "../../crates/ox_content_renderer" }
+ox_content_allocator = { path = "../../../crates/ox_content_allocator" }
+ox_content_parser = { path = "../../../crates/ox_content_parser" }
+ox_content_renderer = { path = "../../../crates/ox_content_renderer" }
 
 [dev-dependencies]
 # Test-only: proves the hand-rolled JSON output parses and has the row shape
