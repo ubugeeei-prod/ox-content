@@ -43,6 +43,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "equivalent"
+version = "1.0.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "877a4ace8713b0bcf2a4e7eec82529c029f1d0619886d18145fea96c3ffe5c0f"
+
+[[package]]
 name = "ferromark"
 version = "0.7.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -65,10 +71,26 @@ dependencies = [
 ]
 
 [[package]]
+name = "hashbrown"
+version = "0.17.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "ed5909b6e89a2db4456e54cd5f673791d7eca6732202bbf2a9cc504fe2f9b84a"
+
+[[package]]
 name = "html-escape"
 version = "0.2.15"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "c9356095b4b41197bba32173600e1582792cda618f65d12f68e2e77d273413c5"
+
+[[package]]
+name = "indexmap"
+version = "2.14.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "cc4e190f5d26ca7051642629da2c52fc03bde85a03197c99408dcd291734c855"
+dependencies = [
+ "equivalent",
+ "hashbrown",
+]
 
 [[package]]
 name = "itoa"
@@ -97,33 +119,34 @@ dependencies = [
 
 [[package]]
 name = "ox_content_allocator"
-version = "3.0.0-beta.0"
+version = "3.2.8"
 dependencies = [
  "bumpalo",
 ]
 
 [[package]]
 name = "ox_content_ast"
-version = "3.0.0-beta.0"
+version = "3.2.8"
 dependencies = [
  "ox_content_allocator",
 ]
 
 [[package]]
 name = "ox_content_parser"
-version = "3.0.0-beta.0"
+version = "3.2.8"
 dependencies = [
  "compact_str",
  "memchr",
  "ox_content_allocator",
  "ox_content_ast",
  "rustc-hash",
+ "smallvec",
  "thiserror",
 ]
 
 [[package]]
 name = "ox_content_renderer"
-version = "3.0.0-beta.0"
+version = "3.2.8"
 dependencies = [
  "compact_str",
  "memchr",
@@ -219,6 +242,7 @@ version = "1.0.150"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "e8014e44b4736ed0538adeecded0fce2a272f22dc9578a7eb6b2d9993c74cfb9"
 dependencies = [
+ "indexmap",
  "itoa",
  "memchr",
  "serde",

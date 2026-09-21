@@ -16,7 +16,7 @@
 //! published in the benchmark tables has to be produced by the same rules the
 //! conformance suite is reviewed against.
 
-#[path = "../../../crates/ox_content_renderer/tests/spec_support/normalize.rs"]
+#[path = "../../../../crates/ox_content_renderer/tests/spec_support/normalize.rs"]
 mod normalize;
 
 use std::fmt::Write as _;
@@ -206,7 +206,7 @@ mod tests {
 
     const SPEC_PATH: &str = concat!(
         env!("CARGO_MANIFEST_DIR"),
-        "/../../crates/ox_content_renderer/tests/spec_fixtures/commonmark-0.31.2-spec.txt"
+        "/../../../crates/ox_content_renderer/tests/spec_fixtures/commonmark-0.31.2-spec.txt"
     );
 
     #[test]
