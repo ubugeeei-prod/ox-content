@@ -205,7 +205,7 @@
     "cspell-lib": "^10.0.1",
     "glob": "^13.0.6",
     "html-minifier-terser": "^7.2.0",
-    "playwright": "^1.62.1",
+    "playwright": "^1.63.0",
     "puppeteer": "^25.8.0",
     "rehype-parse": "^9.0.1",
     "rehype-stringify": "^10.0.1",
