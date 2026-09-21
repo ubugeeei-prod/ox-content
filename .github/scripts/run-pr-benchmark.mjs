@@ -41,7 +41,10 @@ for (const file of [
   copyFileSync(from, to);
 }
 
-run("vp", ["install"]);
+// The copied bundle-size manifest comes from the PR head, so the base
+// checkout's lockfile does not describe it whenever a PR changes harness
+// dependencies. Both checkouts are throwaway; let the install resolve them.
+run("vp", ["install", "--no-frozen-lockfile"]);
 run("vp", ["run", "build:npm"]);
 if (options.skipRuntime) {
   writeSkippedRuntimeReport(options.runtimeJson);
