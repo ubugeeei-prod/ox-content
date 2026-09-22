@@ -7,6 +7,6 @@
     "build": "astro build"
   },
   "dependencies": {
-    "astro": "^7.3.1"
+    "astro": "^7.3.3"
   }
 }

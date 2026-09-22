@@ -195,13 +195,21 @@ describe("oxContentSolid", () => {
           solid({ extensions: [".md", ".markdown", ".mdx"], compiler: "native" }),
         ],
         resolve: {
-          alias: {
-            "@ox-content/islands": fileURLToPath(
-              new URL("../../ox-content-islands/src/index.ts", import.meta.url),
-            ),
-            "@solidjs/web": path.join(packageNodeModules, "@solidjs/web/dist/web.js"),
-            "solid-js": path.join(packageNodeModules, "solid-js/dist/solid.js"),
-          },
+          alias: [
+            {
+              find: "@ox-content/islands",
+              replacement: fileURLToPath(
+                new URL("../../ox-content-islands/src/index.ts", import.meta.url),
+              ),
+            },
+            ...Object.entries({
+              "@solidjs/web": "@solidjs/web/dist/web.js",
+              "solid-js": "solid-js/dist/solid.js",
+            }).map(([id, file]) => ({
+              find: new RegExp(`^${id}$`),
+              replacement: path.join(packageNodeModules, file),
+            })),
+          ],
         },
         build: {
           outDir: "dist",
