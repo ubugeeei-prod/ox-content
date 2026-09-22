@@ -1,288 +1,181 @@
 #!/usr/bin/env node
-// Usage: node tools/scripts/release.ts [patch|minor|major|alpha|beta|x.y.z] [--prepare-only]
+// Usage: vp run release [patch|minor|major|alpha|beta|x.y.z] | --resume <pr-number>
 
-import { execSync } from "child_process";
-import * as fs from "fs";
-import * as path from "path";
-import { fileURLToPath } from "url";
-import { categorizeCommits, generateChangelog, getCommitsSinceTag } from "./release-changelog.ts";
-import { verifyPublishWorkflow } from "./verify-publish-targets.ts";
+import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join, resolve } from "node:path";
+import { bumpVersion, prepareRelease } from "./release-prepare.ts";
+import { releaseVersion, VERSION_PATTERN } from "./release-policy.ts";
+import {
+  api,
+  authorPermission,
+  ensureReleaseProtection,
+  latestRun,
+  mergeRelease,
+  requireReleasePr,
+  run,
+  runPassed,
+  watchPublication,
+  type PullRequest,
+} from "./release-github.ts";
 
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const ROOT = path.resolve(__dirname, "..", "..");
+const root = resolve(import.meta.dirname, "../..");
 
-// Packages to publish (relative to root)
-const NPM_PACKAGES = [
-  "crates/ox_content_napi",
-  "npm/ox-content-islands",
-  "npm/ox-content-code-play",
-  "npm/unplugin-ox-content",
-  "npm/vite-plugin-ox-content",
-  "npm/vite-plugin-ox-content-react",
-  "npm/vite-plugin-ox-content-solid",
-  "npm/vite-plugin-ox-content-svelte",
-  "npm/vite-plugin-ox-content-vue",
-  "npm/vscode-ox-content",
-  // Theme presets are generated, so enumerate them rather than keep ~70 paths.
-  ...["theme", "theme-color"].flatMap((g) =>
-    fs.readdirSync(path.join(ROOT, "npm", g)).map((n) => `npm/${g}/${n}`),
-  ),
-];
-
-const CARGO_PUBLISH_PACKAGES = [
-  "ox_content_allocator",
-  "ox_content_ast",
-  "ox_content_profiler",
-  "ox_content_parser",
-  "ox_content_mdast",
-  "ox_content_renderer",
-  "ox_content_incremental",
-  "ox_content_og_image",
-  "ox_content_transform",
-  "ox_content_search",
-  "ox_content_ssg",
-  "ox_content_docs",
-  "ox_content_vite",
-];
-
-const CARGO_TOML = "Cargo.toml";
-const CARGO_LOCK = "Cargo.lock";
-const RUST_DOC_FILES = ["docs/content/getting-started.md"];
-const ZED_EXTENSION_TOML = "editors/zed/extension.toml";
-const ZED_CARGO_TOML = "editors/zed/Cargo.toml";
-
-function exec(cmd: string, options: { cwd?: string; stdio?: "inherit" | "pipe" } = {}): string {
-  console.log(`$ ${cmd}`);
-  try {
-    return execSync(cmd, {
-      cwd: options.cwd ?? ROOT,
-      encoding: "utf-8",
-      stdio: options.stdio ?? "pipe",
-    });
-  } catch (e) {
-    if (options.stdio === "inherit") throw e;
-    const err = e as { stderr?: string; stdout?: string; message?: string };
-    throw new Error(`Command failed: ${cmd}\n${err.stderr || err.stdout || err.message}`);
+function createReleasePr(repo: string, input: string): number {
+  run("git", ["fetch", "origin", "main", "--tags"], root);
+  const current = JSON.parse(
+    run("git", ["show", "origin/main:crates/ox_content_napi/package.json"], root),
+  ).version;
+  const bumps = ["patch", "minor", "major", "alpha", "beta"] as const;
+  const version = bumps.includes(input as (typeof bumps)[number])
+    ? bumpVersion(current, input as (typeof bumps)[number])
+    : input;
+  if (!VERSION_PATTERN.test(version)) throw new Error(`Invalid version: ${version}`);
+  const branch = `release/v${version}`;
+  const existing = api<PullRequest[]>(
+    repo,
+    `pulls?state=open&base=main&head=${encodeURIComponent(`${repo.split("/")[0]}:${branch}`)}`,
+  );
+  if (existing.length) return existing[0].number;
+  if (current === version)
+    throw new Error(`main is already v${version}; use --resume <pr-number>.`);
+  if (run("git", ["ls-remote", "--tags", "origin", `refs/tags/v${version}`], root)) {
+    throw new Error(`v${version} already exists; use --resume <pr-number>.`);
   }
-}
-
-function getPackageJson(pkgPath: string): {
-  name: string;
-  version: string;
-  [key: string]: unknown;
-} {
-  const fullPath = path.join(ROOT, pkgPath, "package.json");
-  return JSON.parse(fs.readFileSync(fullPath, "utf-8"));
-}
-
-function setPackageVersion(pkgPath: string, version: string): void {
-  const fullPath = path.join(ROOT, pkgPath, "package.json");
-  const pkg = JSON.parse(fs.readFileSync(fullPath, "utf-8"));
-  pkg.version = version;
-  fs.writeFileSync(fullPath, JSON.stringify(pkg, null, 2) + "\n", "utf-8");
-  console.log(`  Updated ${pkg.name} to ${version}`);
-}
-
-function setCargoVersion(version: string): void {
-  const fullPath = path.join(ROOT, CARGO_TOML);
-  let content = fs.readFileSync(fullPath, "utf-8");
-  // Update workspace.package version
-  content = content.replace(
-    /(\[workspace\.package\]\s*\n(?:[^[]*\n)*?version\s*=\s*)"[^"]+"/,
-    `$1"${version}"`,
-  );
-  // Update workspace.dependencies versions for internal crates
-  content = content.replace(/(ox_content_\w+\s*=\s*\{\s*version\s*=\s*)"[^"]+"/g, `$1"${version}"`);
-  fs.writeFileSync(fullPath, content, "utf-8");
-  console.log(`  Updated Cargo.toml workspace version to ${version}`);
-}
-
-function setCargoLockVersion(version: string): void {
-  const fullPath = path.join(ROOT, CARGO_LOCK);
-  let content = fs.readFileSync(fullPath, "utf-8");
-  content = content.replace(
-    /(\[\[package\]\]\nname = "ox_content_[^"]+"\nversion = )"[^"]+"/g,
-    `$1"${version}"`,
-  );
-  fs.writeFileSync(fullPath, content, "utf-8");
-  console.log(`  Updated Cargo.lock workspace package versions to ${version}`);
-}
-
-function setZedVersion(version: string): void {
-  const extensionTomlPath = path.join(ROOT, ZED_EXTENSION_TOML);
-  let extensionToml = fs.readFileSync(extensionTomlPath, "utf-8");
-  extensionToml = extensionToml.replace(/^version = ".*"$/m, `version = "${version}"`);
-  fs.writeFileSync(extensionTomlPath, extensionToml, "utf-8");
-
-  const cargoTomlPath = path.join(ROOT, ZED_CARGO_TOML);
-  let cargoToml = fs.readFileSync(cargoTomlPath, "utf-8");
-  cargoToml = cargoToml.replace(/^version = ".*"$/m, `version = "${version}"`);
-  fs.writeFileSync(cargoTomlPath, cargoToml, "utf-8");
-  console.log(`  Updated Zed extension version to ${version}`);
-}
-
-function updateRustDocsVersion(version: string): void {
-  for (const relativePath of RUST_DOC_FILES) {
-    const fullPath = path.join(ROOT, relativePath);
-    let content = fs.readFileSync(fullPath, "utf-8");
-
-    const updated = content.replace(/(ox_content_[a-z_]+\s*=\s*)"[^"]+"/g, `$1"${version}"`);
-
-    if (updated !== content) {
-      fs.writeFileSync(fullPath, updated, "utf-8");
-      console.log(`  Updated Rust crate versions in ${relativePath}`);
+  const temp = mkdtempSync(join(tmpdir(), "ox-content-release-"));
+  const worktree = join(temp, "checkout");
+  let added = false;
+  try {
+    run("git", ["worktree", "add", "-b", branch, worktree, "origin/main"], root);
+    added = true;
+    // Prepare from the fetched main inside the isolated checkout.
+    run(
+      process.execPath,
+      [join(worktree, "tools/scripts/release.ts"), version, "--prepare-only"],
+      worktree,
+    );
+    run("git", ["add", "-A"], worktree);
+    run("git", ["commit", "-m", `chore(release): v${version}`], worktree);
+    run("git", ["push", "--set-upstream", "origin", branch], worktree);
+    const body = join(temp, "body.md");
+    writeFileSync(
+      body,
+      `Release v${version}.\n\nThe release command waits for the full release validation and CI, updates this PR if main advances, and merges only with strict Release gate protection. The tag is created after the merge.\n`,
+    );
+    const url = run(
+      "gh",
+      [
+        "pr",
+        "create",
+        "--repo",
+        repo,
+        "--base",
+        "main",
+        "--head",
+        branch,
+        "--title",
+        `chore(release): v${version}`,
+        "--body-file",
+        body,
+      ],
+      worktree,
+    );
+    console.log(url);
+    return Number(url.split("/").at(-1));
+  } finally {
+    if (added && !run("git", ["status", "--porcelain"], worktree)) {
+      run("git", ["worktree", "remove", worktree], root);
+      rmSync(temp, { recursive: true, force: true });
+    } else if (added) {
+      console.error(`Preparation stopped; inspect the preserved worktree: ${worktree}`);
     } else {
-      console.log(`  No Rust crate versions to update in ${relativePath}`);
+      rmSync(temp, { recursive: true, force: true });
     }
   }
 }
 
-function bumpVersion(
-  current: string,
-  type: "patch" | "minor" | "major" | "alpha" | "beta",
-): string {
-  // Handle prerelease versions (alpha/beta)
-  if (type === "alpha" || type === "beta") {
-    const prereleaseMatch = current.match(/^(\d+\.\d+\.\d+)-(alpha|beta)\.(\d+)$/);
-    if (prereleaseMatch && prereleaseMatch[2] === type) {
-      const [, base, , num] = prereleaseMatch;
-      return `${base}-${type}.${Number(num) + 1}`;
+function tagMergedRelease(repo: string, pr: PullRequest): string {
+  requireReleasePr(repo, pr);
+  ensureReleaseProtection(repo);
+  if (!pr.merged || !pr.merge_commit_sha) throw new Error("Release PR has not merged.");
+  const version = releaseVersion(pr.head.ref);
+  for (const workflow of ["ci.yml", "release-pr.yml"]) {
+    if (!runPassed(latestRun(repo, workflow, pr.head.sha, "pull_request"))) {
+      throw new Error(`No successful ${workflow} run for the merged release PR head.`);
     }
-    // Start new prerelease or switch from alpha to beta
-    const baseVersion = current.replace(/-.*$/, "");
-    return `${baseVersion}-${type}.0`;
   }
-
-  // Remove any prerelease suffix for standard bumps
-  const baseVersion = current.replace(/-.*$/, "");
-  const [major, minor, patch] = baseVersion.split(".").map(Number);
-  switch (type) {
-    case "major":
-      return `${major + 1}.0.0`;
-    case "minor":
-      return `${major}.${minor + 1}.0`;
-    case "patch":
-      return `${major}.${minor}.${patch + 1}`;
+  run("git", ["fetch", "origin", "main", pr.head.sha, pr.merge_commit_sha], root);
+  run("git", ["merge-base", "--is-ancestor", `${pr.merge_commit_sha}^1`, pr.head.sha], root);
+  const tree = (sha: string) => run("git", ["rev-parse", `${sha}^{tree}`], root);
+  if (tree(pr.head.sha) !== tree(pr.merge_commit_sha)) {
+    throw new Error("Merged tree differs from the validated release PR; refusing to tag.");
   }
-}
-
-function isValidVersion(v: string): boolean {
-  return /^\d+\.\d+\.\d+(-[\w.]+)?$/.test(v);
-}
-
-function getLatestTag(): string | undefined {
-  try {
-    return exec("git describe --tags --abbrev=0").trim();
-  } catch {
-    return undefined;
+  run("git", ["merge-base", "--is-ancestor", pr.merge_commit_sha, "origin/main"], root);
+  const pkg = JSON.parse(
+    run("git", ["show", `${pr.merge_commit_sha}:crates/ox_content_napi/package.json`], root),
+  );
+  if (pkg.version !== version)
+    throw new Error("Release branch and merged package version disagree.");
+  const tag = `v${version}`;
+  const refs = run(
+    "git",
+    ["ls-remote", "--tags", "origin", `refs/tags/${tag}`, `refs/tags/${tag}^{}`],
+    root,
+  );
+  if (refs) {
+    const lines = refs.split("\n");
+    const commit = (lines.find((line) => line.endsWith("^{}")) ?? lines[0]).split(/\s+/)[0];
+    if (commit !== pr.merge_commit_sha) throw new Error(`${tag} points to a different commit.`);
+  } else {
+    // A user-authenticated push event starts both publishers (GITHUB_TOKEN would not).
+    api(repo, "git/refs", { ref: `refs/tags/${tag}`, sha: pr.merge_commit_sha });
   }
-}
-
-function updateChangelogFile(content: string): void {
-  const changelogPath = path.join(ROOT, "CHANGELOG.md");
-  let existing = "";
-
-  if (fs.existsSync(changelogPath)) {
-    existing = fs.readFileSync(changelogPath, "utf-8");
-    // Remove header if exists
-    existing = existing.replace(/^# Changelog\n+/, "");
-  }
-
-  const full = `# Changelog\n\n${content}${existing}`;
-  fs.writeFileSync(changelogPath, full, "utf-8");
-  console.log("  Updated CHANGELOG.md");
+  return tag;
 }
 
 async function main(): Promise<void> {
   const args = process.argv.slice(2).filter((arg) => arg !== "--");
-  const prepareOnly = args.includes("--prepare-only");
-  const input = args.find((arg) => arg !== "--prepare-only");
-
-  if (!input) {
-    console.error("Usage: vpr release [patch|minor|major|alpha|beta|x.y.z] [--prepare-only]");
-    process.exit(1);
-  }
-
-  const status = exec("git status --porcelain");
-  if (status.trim()) {
-    console.error("Error: Working directory is not clean. Commit or stash changes first.");
-    process.exit(1);
-  }
-
-  const currentPkg = getPackageJson(NPM_PACKAGES[0]);
-  const currentVersion = currentPkg.version || "0.0.0";
-  let newVersion: string;
-
-  if (["patch", "minor", "major", "alpha", "beta"].includes(input)) {
-    newVersion = bumpVersion(
-      currentVersion,
-      input as "patch" | "minor" | "major" | "alpha" | "beta",
-    );
-  } else if (isValidVersion(input)) {
-    newVersion = input;
-  } else {
-    console.error(`Invalid version: ${input}`);
-    process.exit(1);
-  }
-
-  console.log(`\nReleasing v${newVersion} (from ${currentVersion})\n`);
-
-  console.log("Updating Cargo.toml version...");
-  setCargoVersion(newVersion);
-  setCargoLockVersion(newVersion);
-  setZedVersion(newVersion);
-
-  console.log("Updating package versions...");
-  for (const pkg of NPM_PACKAGES) {
-    setPackageVersion(pkg, newVersion);
-  }
-
-  console.log("Updating Rust docs versions...");
-  updateRustDocsVersion(newVersion);
-
-  console.log("Verifying publish workflow targets...");
-  verifyPublishWorkflow({
-    root: ROOT,
-    workflowRel: ".github/workflows/publish.yml",
-    cargoPackages: CARGO_PUBLISH_PACKAGES,
-    npmPackages: NPM_PACKAGES,
-  });
-
-  console.log("\nGenerating changelog...");
-  const latestTag = getLatestTag();
-  const commits = getCommitsSinceTag(exec, latestTag, {
-    root: ROOT,
-    npmPackages: NPM_PACKAGES,
-  });
-  const categorized = categorizeCommits(commits);
-  const changelogContent = generateChangelog(newVersion, categorized);
-  updateChangelogFile(changelogContent);
-
-  if (prepareOnly) {
-    console.log(`\nPrepared v${newVersion} without commit, tag, or push.`);
-    console.log("Bootstrap any first-time npm packages, then commit and tag.");
+  if (args.includes("--prepare-only")) {
+    const input = args.find((arg) => arg !== "--prepare-only") ?? "patch";
+    if (args.length > 2) throw new Error("Unexpected release arguments.");
+    prepareRelease(input);
     return;
   }
-
-  console.log("\nCreating git commit and tag...");
-  exec("git add -A");
-  exec(`git commit -m "chore(release): v${newVersion}"`);
-  exec(`git tag -a v${newVersion} -m "Release v${newVersion}"`);
-
-  console.log("\nPushing to remote...");
-  exec("git push");
-  exec("git push --tags");
-
-  console.log(`\n✅ Released v${newVersion} successfully!`);
-  console.log("\nNext steps:");
-  console.log("  1. GitHub Actions will publish to npm and crates.io");
-  console.log("  2. GitHub Actions will create or normalize the GitHub Release");
-  console.log(
-    `  3. Verify the release at https://github.com/ubugeeei-prod/ox-content/releases/tag/v${newVersion}`,
+  if (args[0] === "--help") {
+    console.log(
+      "vp run release [patch|minor|major|alpha|beta|x.y.z]\nvp run release --resume <pr-number>",
+    );
+    return;
+  }
+  const resume = args[0] === "--resume";
+  if (
+    (resume && (args.length !== 2 || !/^[1-9]\d*$/.test(args[1]))) ||
+    (!resume && args.length > 1)
+  ) {
+    throw new Error("Usage: vp run release [version] | --resume <pr-number>");
+  }
+  const repo = run(
+    "gh",
+    ["repo", "view", "--json", "nameWithOwner", "--jq", ".nameWithOwner"],
+    root,
   );
+  const login = run("gh", ["api", "user", "--jq", ".login"], root);
+  authorPermission(repo, login);
+  ensureReleaseProtection(repo, true);
+  const number = resume ? Number(args[1]) : createReleasePr(repo, args[0] ?? "patch");
+  try {
+    console.log(`Release PR #${number}; resume with: vp run release --resume ${number}`);
+    const pr = await mergeRelease(repo, number);
+    const tag = tagMergedRelease(repo, pr);
+    await watchPublication(repo, pr.merge_commit_sha!, tag, resume);
+    console.log(`Released ${tag}: https://github.com/${repo}/releases/tag/${tag}`);
+  } catch (error) {
+    console.error(`Resume with: vp run release --resume ${number}`);
+    throw error;
+  }
 }
 
-main().catch((e) => {
-  console.error(e);
-  process.exit(1);
+main().catch((error) => {
+  console.error(error instanceof Error ? error.message : error);
+  process.exitCode = 1;
 });

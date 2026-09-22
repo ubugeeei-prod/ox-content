@@ -36,7 +36,8 @@ profile = ["dep:ox_content_profiler"]
 [dev-dependencies]
 criterion = { workspace = true }
 insta = { workspace = true }
-ox_content_renderer = { workspace = true }
+# Keep this test-only back edge out of published crate manifests.
+ox_content_renderer = { path = "../ox_content_renderer" }
 
 [[bench]]
 name = "parser"

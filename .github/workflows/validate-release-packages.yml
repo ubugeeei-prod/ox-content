@@ -1,0 +1,38 @@
+name: Validate release packages
+
+on:
+  workflow_call:
+
+permissions:
+  contents: read
+
+jobs:
+  npm:
+    name: Release npm and WASM packages
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Setup Vite+
+        uses: voidzero-dev/setup-vp@24d870228786dc83ae73482406bdd1e7befaec14 # v1.21.0
+        with:
+          cache: true
+          run-install: true
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@02cb101ec7c40f2c49e1d9714d64511d8e1b74de # master
+        with:
+          toolchain: stable
+          targets: wasm32-unknown-unknown
+      - name: Assemble NAPI packages
+        uses: ./.github/actions/prepare-napi-packages
+      - name: Install wasm-pack
+        uses: ./.github/actions/setup-wasm-pack
+      - name: Build npm packages
+        run: vp run --concurrency-limit 12 --filter './npm/**' build
+      - name: Build WASM package
+        run: vp run build:wasm
+      - name: Pack and inspect public APIs
+        run: node tools/scripts/package-dry-run.mjs
+      - name: Pack every release package and check registry names
+        run: node tools/scripts/release-package-check.ts

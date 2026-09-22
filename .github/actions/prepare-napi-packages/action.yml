@@ -1,0 +1,57 @@
+name: Prepare NAPI packages
+description: Assemble the native binding packages from release build artifacts
+runs:
+  using: composite
+  steps:
+    - name: Download all artifacts
+      uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+      with:
+        pattern: napi-*
+        path: crates/ox_content_napi/artifacts
+
+      # napi-cli 3.8 rejects managed paths that escape the boundary it discovers
+      # from its cwd, so point --cwd at the workspace root and keep every path
+      # relative to it. `binding-packages` then resolves inside the pnpm
+      # workspace instead of escaping the crate directory.
+    - name: Create npm sub-package directories
+      working-directory: crates/ox_content_napi
+      shell: bash
+      run: >-
+        vp exec -- napi create-npm-dirs --cwd ../..
+        --package-json-path crates/ox_content_napi/package.json
+        --npm-dir binding-packages
+
+    - name: Move artifacts to sub-packages
+      working-directory: crates/ox_content_napi
+      shell: bash
+      run: |
+        declare -A target_map=(
+          ["x86_64-apple-darwin"]="darwin-x64"
+          ["aarch64-apple-darwin"]="darwin-arm64"
+          ["x86_64-unknown-linux-gnu"]="linux-x64-gnu"
+          ["x86_64-unknown-linux-musl"]="linux-x64-musl"
+          ["aarch64-unknown-linux-gnu"]="linux-arm64-gnu"
+          ["aarch64-unknown-linux-musl"]="linux-arm64-musl"
+          ["x86_64-pc-windows-msvc"]="win32-x64-msvc"
+        )
+        for dir in artifacts/napi-*; do
+          target="${dir##*/napi-}"
+          platform="${target_map[$target]}"
+          if [ -n "$platform" ]; then
+            for f in "$dir"/*.node; do
+              cp "$f" "../../binding-packages/${platform}/ox-content.${platform}.node"
+            done
+          fi
+        done
+        echo "=== Verify binding packages ==="
+        for pkg in ../../binding-packages/*/; do
+          ls -la "$pkg"*.node || { echo "::error::No native binary in $pkg"; exit 1; }
+        done
+
+    - name: Update optionalDependencies
+      working-directory: crates/ox_content_napi
+      shell: bash
+      run: >-
+        vp exec -- napi pre-publish -t npm --cwd ../..
+        --package-json-path crates/ox_content_napi/package.json
+        --npm-dir binding-packages --no-gh-release --skip-optional-publish

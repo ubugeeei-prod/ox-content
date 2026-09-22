@@ -1,0 +1,27 @@
+name: Authorize release
+
+on:
+  workflow_call:
+
+permissions:
+  contents: read
+  actions: read
+  pull-requests: read
+
+jobs:
+  authorize:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Setup Vite+
+        uses: voidzero-dev/setup-vp@24d870228786dc83ae73482406bdd1e7befaec14 # v1.21.0
+        with:
+          run-install: false
+      - name: Verify release PR and successful validation
+        if: github.event_name == 'push'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: node tools/scripts/release-tag-check.ts
