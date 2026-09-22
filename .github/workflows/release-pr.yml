@@ -1,0 +1,70 @@
+name: Release validation
+
+on:
+  pull_request:
+    branches: [main]
+    types: [opened, synchronize, reopened, ready_for_review, labeled, unlabeled]
+
+permissions:
+  contents: read
+  pull-requests: read
+
+concurrency:
+  group: release-validation-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  detect:
+    name: Release policy
+    runs-on: ubuntu-latest
+    outputs:
+      full: ${{ steps.policy.outputs.full }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Setup Vite+
+        uses: voidzero-dev/setup-vp@24d870228786dc83ae73482406bdd1e7befaec14 # v1.21.0
+        with:
+          run-install: false
+      - name: Check release policy
+        id: policy
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: node tools/scripts/release-pr-check.ts
+
+  napi:
+    needs: detect
+    if: needs.detect.outputs.full == 'true'
+    uses: ./.github/workflows/build-release-napi.yml
+
+  editors:
+    needs: detect
+    if: needs.detect.outputs.full == 'true'
+    uses: ./.github/workflows/build-release-editors.yml
+
+  packages:
+    needs: [detect, napi]
+    if: needs.detect.outputs.full == 'true'
+    uses: ./.github/workflows/validate-release-packages.yml
+
+  gate:
+    name: Release gate
+    needs: [detect, napi, editors, packages]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Setup Vite+
+        uses: voidzero-dev/setup-vp@24d870228786dc83ae73482406bdd1e7befaec14 # v1.21.0
+        with:
+          run-install: false
+      - name: Require all release jobs and recheck current main and author
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_JOB_RESULTS: ${{ toJSON(needs) }}
+        run: node tools/scripts/release-pr-check.ts --gate

@@ -1,0 +1,138 @@
+name: Build release NAPI
+
+on:
+  workflow_call:
+
+permissions:
+  contents: read
+
+env:
+  CARGO_TERM_COLOR: always
+  LINUX_GLIBC_VERSION: "2.17"
+
+jobs:
+  build-napi:
+    name: Build NAPI - ${{ matrix.target }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: macos-latest
+            target: x86_64-apple-darwin
+            platform: darwin-x64
+          - os: macos-latest
+            target: aarch64-apple-darwin
+            platform: darwin-arm64
+          - os: blacksmith-32vcpu-ubuntu-2404
+            target: x86_64-unknown-linux-gnu
+            platform: linux-x64-gnu
+          - os: blacksmith-32vcpu-ubuntu-2404
+            target: x86_64-unknown-linux-musl
+            platform: linux-x64-musl
+          - os: blacksmith-32vcpu-ubuntu-2404
+            target: aarch64-unknown-linux-gnu
+            platform: linux-arm64-gnu
+          - os: blacksmith-32vcpu-ubuntu-2404
+            target: aarch64-unknown-linux-musl
+            platform: linux-arm64-musl
+          - os: windows-2025
+            target: x86_64-pc-windows-msvc
+            platform: win32-x64-msvc
+
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Setup Vite+
+        uses: voidzero-dev/setup-vp@24d870228786dc83ae73482406bdd1e7befaec14 # v1.21.0
+        with:
+          cache: true
+          run-install: true
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@29eef336d9b2848a0b548edc03f92a220660cdb8 # stable
+        with:
+          targets: ${{ matrix.target }}
+
+      - name: Mount sticky cache
+        if: startsWith(matrix.os, 'blacksmith-')
+        uses: ./.github/actions/mount-sticky-cache
+        with:
+          key-prefix: ${{ github.repository }}-publish-${{ github.job }}-${{ matrix.target }}
+          cargo: "true"
+          target: target
+
+      - name: Install zig (Linux)
+        if: contains(matrix.target, 'unknown-linux')
+        run: |
+          curl --retry 5 --retry-delay 5 --retry-all-errors -fsSL https://ziglang.org/download/0.13.0/zig-linux-x86_64-0.13.0.tar.xz -o zig.tar.xz
+          tar -xf zig.tar.xz
+          echo "$PWD/zig-linux-x86_64-0.13.0" >> "$GITHUB_PATH"
+
+      - name: Install cargo-zigbuild (Linux)
+        if: contains(matrix.target, 'unknown-linux')
+        run: cargo install cargo-zigbuild
+
+      - name: Build NAPI (Linux)
+        if: contains(matrix.target, 'unknown-linux')
+        working-directory: crates/ox_content_napi
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          build_target="${{ matrix.target }}"
+          if [[ "${{ matrix.target }}" == *-unknown-linux-gnu ]]; then
+            build_target="${build_target}.${LINUX_GLIBC_VERSION}"
+          else
+            export RUSTFLAGS="${RUSTFLAGS:-} -C target-feature=-crt-static"
+          fi
+
+          cargo zigbuild --release --target "$build_target"
+
+          src="../../target/${{ matrix.target }}/release/libox_content_napi.so"
+          if [[ ! -f "$src" ]]; then
+            src="../../target/${build_target}/release/libox_content_napi.so"
+          fi
+          cp "$src" "ox-content.${{ matrix.platform }}.node"
+
+      - name: Verify Linux native dependencies
+        if: contains(matrix.target, 'unknown-linux')
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          node_file="crates/ox_content_napi/ox-content.${{ matrix.platform }}.node"
+
+          if [[ "${{ matrix.target }}" == *-unknown-linux-gnu ]]; then
+            max_glibc="$(
+              readelf --version-info "$node_file" |
+                sed -n 's/.*Name: GLIBC_\([0-9.]*\).*/\1/p' |
+                sort -V |
+                tail -1
+            )"
+            echo "max GLIBC version: ${max_glibc:-none}"
+            if [[ -n "$max_glibc" ]] &&
+              [[ "$(printf '%s\n' "$LINUX_GLIBC_VERSION" "$max_glibc" | sort -V | tail -1)" != "$LINUX_GLIBC_VERSION" ]]; then
+              echo "::error::${node_file} requires GLIBC_${max_glibc}, expected <= GLIBC_${LINUX_GLIBC_VERSION}"
+              exit 1
+            fi
+          else
+            if readelf --version-info "$node_file" | grep -q 'GLIBC_'; then
+              echo "::error::${node_file} unexpectedly references GLIBC symbols"
+              exit 1
+            fi
+          fi
+
+      - name: Build NAPI
+        if: ${{ !contains(matrix.target, 'unknown-linux') }}
+        working-directory: crates/ox_content_napi
+        run: vp exec -- napi build --release --target ${{ matrix.target }}
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: napi-${{ matrix.target }}
+          path: crates/ox_content_napi/*.node
+          if-no-files-found: error

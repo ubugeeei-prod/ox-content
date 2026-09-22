@@ -7,137 +7,20 @@ on:
 
 permissions:
   contents: read
+  actions: read
+  pull-requests: read
 
 env:
   CARGO_TERM_COLOR: always
   LINUX_GLIBC_VERSION: "2.17"
 
 jobs:
+  authorize:
+    uses: ./.github/workflows/authorize-release.yml
+
   build-napi:
-    name: Build NAPI - ${{ matrix.target }}
-    runs-on: ${{ matrix.os }}
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - os: macos-latest
-            target: x86_64-apple-darwin
-            platform: darwin-x64
-          - os: macos-latest
-            target: aarch64-apple-darwin
-            platform: darwin-arm64
-          - os: blacksmith-32vcpu-ubuntu-2404
-            target: x86_64-unknown-linux-gnu
-            platform: linux-x64-gnu
-          - os: blacksmith-32vcpu-ubuntu-2404
-            target: x86_64-unknown-linux-musl
-            platform: linux-x64-musl
-          - os: blacksmith-32vcpu-ubuntu-2404
-            target: aarch64-unknown-linux-gnu
-            platform: linux-arm64-gnu
-          - os: blacksmith-32vcpu-ubuntu-2404
-            target: aarch64-unknown-linux-musl
-            platform: linux-arm64-musl
-          - os: windows-2025
-            target: x86_64-pc-windows-msvc
-            platform: win32-x64-msvc
-
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          persist-credentials: false
-
-      - name: Setup Vite+
-        uses: voidzero-dev/setup-vp@24d870228786dc83ae73482406bdd1e7befaec14 # v1.21.0
-        with:
-          cache: true
-          run-install: true
-
-      - name: Setup Rust
-        uses: dtolnay/rust-toolchain@29eef336d9b2848a0b548edc03f92a220660cdb8 # stable
-        with:
-          targets: ${{ matrix.target }}
-
-      - name: Mount sticky cache
-        if: startsWith(matrix.os, 'blacksmith-')
-        uses: ./.github/actions/mount-sticky-cache
-        with:
-          key-prefix: ${{ github.repository }}-publish-${{ github.job }}-${{ matrix.target }}
-          cargo: "true"
-          target: target
-
-      - name: Install zig (Linux)
-        if: contains(matrix.target, 'unknown-linux')
-        run: |
-          curl --retry 5 --retry-delay 5 --retry-all-errors -fsSL https://ziglang.org/download/0.13.0/zig-linux-x86_64-0.13.0.tar.xz -o zig.tar.xz
-          tar -xf zig.tar.xz
-          echo "$PWD/zig-linux-x86_64-0.13.0" >> "$GITHUB_PATH"
-
-      - name: Install cargo-zigbuild (Linux)
-        if: contains(matrix.target, 'unknown-linux')
-        run: cargo install cargo-zigbuild
-
-      - name: Build NAPI (Linux)
-        if: contains(matrix.target, 'unknown-linux')
-        working-directory: crates/ox_content_napi
-        shell: bash
-        run: |
-          set -euo pipefail
-
-          build_target="${{ matrix.target }}"
-          if [[ "${{ matrix.target }}" == *-unknown-linux-gnu ]]; then
-            build_target="${build_target}.${LINUX_GLIBC_VERSION}"
-          else
-            export RUSTFLAGS="${RUSTFLAGS:-} -C target-feature=-crt-static"
-          fi
-
-          cargo zigbuild --release --target "$build_target"
-
-          src="../../target/${{ matrix.target }}/release/libox_content_napi.so"
-          if [[ ! -f "$src" ]]; then
-            src="../../target/${build_target}/release/libox_content_napi.so"
-          fi
-          cp "$src" "ox-content.${{ matrix.platform }}.node"
-
-      - name: Verify Linux native dependencies
-        if: contains(matrix.target, 'unknown-linux')
-        shell: bash
-        run: |
-          set -euo pipefail
-
-          node_file="crates/ox_content_napi/ox-content.${{ matrix.platform }}.node"
-
-          if [[ "${{ matrix.target }}" == *-unknown-linux-gnu ]]; then
-            max_glibc="$(
-              readelf --version-info "$node_file" |
-                sed -n 's/.*Name: GLIBC_\([0-9.]*\).*/\1/p' |
-                sort -V |
-                tail -1
-            )"
-            echo "max GLIBC version: ${max_glibc:-none}"
-            if [[ -n "$max_glibc" ]] &&
-              [[ "$(printf '%s\n' "$LINUX_GLIBC_VERSION" "$max_glibc" | sort -V | tail -1)" != "$LINUX_GLIBC_VERSION" ]]; then
-              echo "::error::${node_file} requires GLIBC_${max_glibc}, expected <= GLIBC_${LINUX_GLIBC_VERSION}"
-              exit 1
-            fi
-          else
-            if readelf --version-info "$node_file" | grep -q 'GLIBC_'; then
-              echo "::error::${node_file} unexpectedly references GLIBC symbols"
-              exit 1
-            fi
-          fi
-
-      - name: Build NAPI
-        if: ${{ !contains(matrix.target, 'unknown-linux') }}
-        working-directory: crates/ox_content_napi
-        run: vp exec -- napi build --release --target ${{ matrix.target }}
-
-      - name: Upload artifact
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
-        with:
-          name: napi-${{ matrix.target }}
-          path: crates/ox_content_napi/*.node
-          if-no-files-found: error
+    needs: authorize
+    uses: ./.github/workflows/build-release-napi.yml
 
   publish-napi:
     name: Publish @ox-content/napi
@@ -181,48 +64,8 @@ jobs:
       - name: Install npm with trusted publishing support
         run: npm install -g npm@11.19.0 # zizmor: ignore[adhoc-packages]
 
-      - name: Download all artifacts
-        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
-        with:
-          pattern: napi-*
-          path: crates/ox_content_napi/artifacts
-
-      # napi-cli 3.8 rejects managed paths that escape the boundary it discovers
-      # from its cwd, so point --cwd at the workspace root and keep every path
-      # relative to it. `binding-packages` then resolves inside the pnpm
-      # workspace instead of escaping the crate directory.
-      - name: Create npm sub-package directories
-        working-directory: crates/ox_content_napi
-        run: >-
-          vp exec -- napi create-npm-dirs --cwd ../..
-          --package-json-path crates/ox_content_napi/package.json
-          --npm-dir binding-packages
-
-      - name: Move artifacts to sub-packages
-        working-directory: crates/ox_content_napi
-        run: |
-          declare -A target_map=(
-            ["x86_64-apple-darwin"]="darwin-x64"
-            ["aarch64-apple-darwin"]="darwin-arm64"
-            ["x86_64-unknown-linux-gnu"]="linux-x64-gnu"
-            ["x86_64-unknown-linux-musl"]="linux-x64-musl"
-            ["aarch64-unknown-linux-gnu"]="linux-arm64-gnu"
-            ["aarch64-unknown-linux-musl"]="linux-arm64-musl"
-            ["x86_64-pc-windows-msvc"]="win32-x64-msvc"
-          )
-          for dir in artifacts/napi-*; do
-            target="${dir##*/napi-}"
-            platform="${target_map[$target]}"
-            if [ -n "$platform" ]; then
-              for f in "$dir"/*.node; do
-                cp "$f" "../../binding-packages/${platform}/ox-content.${platform}.node"
-              done
-            fi
-          done
-          echo "=== Verify binding packages ==="
-          for pkg in ../../binding-packages/*/; do
-            ls -la "$pkg"*.node 2>/dev/null || echo "WARNING: No .node file in $pkg"
-          done
+      - name: Assemble NAPI packages
+        uses: ./.github/actions/prepare-napi-packages
 
       - name: Determine npm tag
         id: npm-tag
@@ -242,13 +85,6 @@ jobs:
 
           echo "tag=$TAG" >> "$GITHUB_OUTPUT"
           echo "NPM_TAG=$TAG" >> "$GITHUB_ENV"
-
-      - name: Update optionalDependencies
-        working-directory: crates/ox_content_napi
-        run: >-
-          vp exec -- napi pre-publish -t npm --cwd ../..
-          --package-json-path crates/ox_content_napi/package.json
-          --npm-dir binding-packages --no-gh-release --skip-optional-publish
 
       - name: Publish binding sub-packages
         run: |
@@ -548,6 +384,7 @@ jobs:
           npm publish --provenance --access public --tag "$NPM_TAG"
 
   publish-crates:
+    needs: authorize
     name: Publish to crates.io
     runs-on: blacksmith-32vcpu-ubuntu-2404
     environment: crates.io

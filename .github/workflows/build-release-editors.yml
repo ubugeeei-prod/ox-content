@@ -1,0 +1,127 @@
+name: Build release editors
+
+on:
+  workflow_call:
+
+permissions:
+  contents: read
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  vscode-vsix:
+    name: Build VS Code VSIX - ${{ matrix.vscode-target }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-22.04
+            rust-target: x86_64-unknown-linux-gnu
+            vscode-target: linux-x64
+            binary-name: ox-content-lsp
+          - os: macos-latest
+            rust-target: x86_64-apple-darwin
+            vscode-target: darwin-x64
+            binary-name: ox-content-lsp
+          - os: macos-latest
+            rust-target: aarch64-apple-darwin
+            vscode-target: darwin-arm64
+            binary-name: ox-content-lsp
+          - os: windows-2025
+            rust-target: x86_64-pc-windows-msvc
+            vscode-target: win32-x64
+            binary-name: ox-content-lsp.exe
+
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Setup Vite+
+        uses: voidzero-dev/setup-vp@24d870228786dc83ae73482406bdd1e7befaec14 # v1.21.0
+        with:
+          cache: true
+          run-install: true
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@29eef336d9b2848a0b548edc03f92a220660cdb8 # stable
+        with:
+          targets: ${{ matrix.rust-target }}
+
+      - name: Mount sticky cache
+        if: startsWith(matrix.os, 'blacksmith-')
+        uses: ./.github/actions/mount-sticky-cache
+        with:
+          key-prefix: ${{ github.repository }}-editors-${{ matrix.vscode-target }}
+          cargo: "true"
+          target: target
+
+      - name: Build ox-content-lsp
+        run: >
+          cargo build --release -p ox_content_lsp --bin ox-content-lsp
+          --target ${{ matrix.rust-target }}
+
+      - name: Build and package VSIX
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p npm/vscode-ox-content/bin dist/vscode
+          cp "target/${{ matrix.rust-target }}/release/${{ matrix.binary-name }}" \
+            "npm/vscode-ox-content/bin/${{ matrix.binary-name }}"
+          if [ "${{ matrix.binary-name }}" = "ox-content-lsp" ]; then
+            chmod +x npm/vscode-ox-content/bin/ox-content-lsp
+          fi
+          vp run vscode:build
+          cd npm/vscode-ox-content
+          # pnpm 12 fails any install whose dependencies carry unapproved
+          # build scripts, and `pnpm dlx` installs outside the workspace, so
+          # the `allowBuilds` list in pnpm-workspace.yaml never reaches vsce's
+          # tree. The approval is accepted only as a CLI flag, so name the two
+          # packages here.
+          vp exec -- pnpm dlx \
+            --allow-build @vscode/vsce-sign \
+            --allow-build keytar \
+            @vscode/vsce package \
+            --target "${{ matrix.vscode-target }}" \
+            --out "../../dist/vscode/vscode-ox-content-${{ matrix.vscode-target }}.vsix" \
+            --no-dependencies
+
+      - name: Upload VSIX artifact
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: vscode-vsix-${{ matrix.vscode-target }}
+          path: dist/vscode/*.vsix
+          if-no-files-found: error
+
+  zed-extension:
+    name: Validate Zed extension
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@29eef336d9b2848a0b548edc03f92a220660cdb8 # stable
+        with:
+          targets: wasm32-unknown-unknown
+
+      - name: Build Zed extension WASM
+        run: cargo build --manifest-path editors/zed/Cargo.toml --target wasm32-unknown-unknown
+
+      - name: Package Zed extension source
+        run: |
+          set -euo pipefail
+          version=$(sed -n 's/^version = "\(.*\)"/\1/p' editors/zed/extension.toml)
+          mkdir -p dist/zed
+          tar -czf "dist/zed/ox-content-zed-${version}.tar.gz" \
+            -C editors/zed extension.toml Cargo.toml Cargo.lock README.md LICENSE src
+
+      - name: Upload Zed artifact
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: zed-extension-source
+          path: dist/zed/*.tar.gz
+          if-no-files-found: error
