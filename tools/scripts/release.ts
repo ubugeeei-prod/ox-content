@@ -105,6 +105,7 @@ function tagMergedRelease(repo: string, pr: PullRequest): string {
     }
   }
   run("git", ["fetch", "origin", "main", pr.head.sha, pr.merge_commit_sha], root);
+  run("git", ["merge-base", "--is-ancestor", `${pr.merge_commit_sha}^1`, pr.head.sha], root);
   const tree = (sha: string) => run("git", ["rev-parse", `${sha}^{tree}`], root);
   if (tree(pr.head.sha) !== tree(pr.merge_commit_sha)) {
     throw new Error("Merged tree differs from the validated release PR; refusing to tag.");

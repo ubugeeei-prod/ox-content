@@ -197,7 +197,11 @@ export async function watchPublication(
       return runPassed(item);
     });
     if (passed.every(Boolean)) {
-      run("gh", ["release", "view", tag, "--repo", repo]);
+      const release = JSON.parse(
+        run("gh", ["release", "view", tag, "--repo", repo, "--json", "isDraft,tagName"]),
+      );
+      if (release.isDraft || release.tagName !== tag)
+        throw new Error(`GitHub Release ${tag} is not published.`);
       return;
     }
     console.log(`Waiting for publication of ${tag}...`);

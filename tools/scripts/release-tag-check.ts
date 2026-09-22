@@ -28,6 +28,8 @@ for (const workflow of ["ci.yml", "release-pr.yml"]) {
 }
 run("git", ["fetch", "origin", "main", pr.head.sha]);
 run("git", ["merge-base", "--is-ancestor", sha, "origin/main"]);
+// The first parent is main at the instant of merge, even if main has since advanced.
+run("git", ["merge-base", "--is-ancestor", `${sha}^1`, pr.head.sha]);
 if (
   run("git", ["rev-parse", `${sha}^{tree}`]) !== run("git", ["rev-parse", `${pr.head.sha}^{tree}`])
 ) {

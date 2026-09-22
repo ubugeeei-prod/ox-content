@@ -33,7 +33,8 @@ frameworks = []
 profile = ["dep:ox_content_profiler"]
 
 [dev-dependencies]
-ox_content_parser = { workspace = true }
+# Keep this test-only back edge out of published crate manifests.
+ox_content_parser = { path = "../ox_content_parser" }
 insta = { workspace = true }
 criterion = { workspace = true }
 

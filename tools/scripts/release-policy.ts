@@ -35,7 +35,9 @@ export function requireSuccessfulJobs(results: Record<string, string>): void {
 export type Ruleset = {
   name: string;
   enforcement: string;
-  bypass_actors: unknown[];
+  // GitHub omits bypass_actors unless the token can edit the ruleset.
+  bypass_actors?: unknown[];
+  current_user_can_bypass?: string;
   conditions: { ref_name: { include: string[]; exclude: string[] } };
   rules: {
     type: string;
@@ -50,7 +52,8 @@ export function hasReleaseProtection(rule: Ruleset): boolean {
   return (
     rule.name === RELEASE_RULESET &&
     rule.enforcement === "active" &&
-    rule.bypass_actors.length === 0 &&
+    (rule.bypass_actors === undefined || rule.bypass_actors.length === 0) &&
+    (!rule.current_user_can_bypass || rule.current_user_can_bypass === "never") &&
     rule.conditions.ref_name.include.includes("refs/heads/main") &&
     rule.conditions.ref_name.exclude.length === 0 &&
     rule.rules.some((item) => item.type === "pull_request") &&

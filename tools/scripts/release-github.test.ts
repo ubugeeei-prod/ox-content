@@ -151,6 +151,16 @@ describe("release orchestration", () => {
     expect(() => runPassed({ ...success, conclusion: "skipped" })).toThrow();
     expect(runPassed(undefined)).toBe(false);
   });
+  it("does not report a draft GitHub Release as published", async () => {
+    mockApi((route) => {
+      if (route.includes("/runs?"))
+        return { workflow_runs: [{ ...success, head_branch: "v1.2.3" }] };
+      if (route === "view") return { isDraft: true, tagName: "v1.2.3" };
+    });
+    await expect(watchPublication("owner/repo", "head1", "v1.2.3", false)).rejects.toThrow(
+      /not published/,
+    );
+  });
   it("reports publication failure instead of claiming a release", async () => {
     mockApi((route) =>
       route.includes("/runs?")

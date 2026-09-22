@@ -58,6 +58,14 @@ describe("release branch and protection", () => {
   );
   it("requires a strict, non-bypassable Actions check on main", () => {
     expect(hasReleaseProtection(protectedRule)).toBe(true);
+    expect(hasReleaseProtection({ ...protectedRule, bypass_actors: undefined })).toBe(true);
+    expect(
+      hasReleaseProtection({
+        ...protectedRule,
+        bypass_actors: undefined,
+        current_user_can_bypass: "always",
+      }),
+    ).toBe(false);
     expect(hasReleaseProtection({ ...protectedRule, bypass_actors: [{ actor_id: 5 }] })).toBe(
       false,
     );
