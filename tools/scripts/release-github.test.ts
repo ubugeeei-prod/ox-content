@@ -98,6 +98,30 @@ describe("release orchestration", () => {
     await mergeRelease("owner/repo", 123);
     expect(stale).toBe(false);
   });
+  it("refuses to resume an ordinary PR even with successful checks", async () => {
+    mockApi((route) =>
+      route === "pulls/123" ? { ...pr, head: { ...pr.head, ref: "fix/ordinary" } } : undefined,
+    );
+    await expect(mergeRelease("owner/repo", 123)).rejects.toThrow(/Invalid release branch/);
+  });
+  it("revalidates after main advances at merge time", async () => {
+    let race = false;
+    let retried = false;
+    mockApi((route) => {
+      if (route.endsWith("/merge") && !retried) {
+        race = true;
+        throw new Error("Base branch changed");
+      }
+      if (route.startsWith("compare/")) return { behind_by: race ? 1 : 0 };
+      if (route.endsWith("/update-branch")) {
+        race = false;
+        retried = true;
+        return {};
+      }
+    });
+    expect((await mergeRelease("owner/repo", 123)).merged).toBe(true);
+    expect(retried).toBe(true);
+  });
   it("stops before merge when validation fails", async () => {
     mockApi((route) =>
       route.includes("release-pr.yml/runs?")

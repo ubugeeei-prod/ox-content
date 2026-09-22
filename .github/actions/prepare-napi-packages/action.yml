@@ -45,7 +45,7 @@ runs:
         done
         echo "=== Verify binding packages ==="
         for pkg in ../../binding-packages/*/; do
-          ls -la "$pkg"*.node 2>/dev/null || echo "WARNING: No .node file in $pkg"
+          ls -la "$pkg"*.node || { echo "::error::No native binary in $pkg"; exit 1; }
         done
 
     - name: Update optionalDependencies

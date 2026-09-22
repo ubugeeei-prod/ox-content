@@ -28,6 +28,7 @@ const metadata = [
 const versionChanged = metadata.some(
   (file) =>
     versionAt(event.pull_request.base.sha, file) !== undefined &&
+    versionAt(pr.head.sha, file) !== undefined &&
     versionAt(pr.head.sha, file) !== versionAt(event.pull_request.base.sha, file),
 );
 const release = versionChanged || pr.head.ref.startsWith("release/");

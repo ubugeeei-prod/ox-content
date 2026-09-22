@@ -44,6 +44,11 @@ jobs:
     if: needs.detect.outputs.full == 'true'
     uses: ./.github/workflows/build-release-editors.yml
 
+  crates:
+    needs: detect
+    if: needs.detect.outputs.full == 'true'
+    uses: ./.github/workflows/validate-release-crates.yml
+
   packages:
     needs: [detect, napi]
     if: needs.detect.outputs.full == 'true'
@@ -51,7 +56,7 @@ jobs:
 
   gate:
     name: Release gate
-    needs: [detect, napi, editors, packages]
+    needs: [detect, napi, editors, crates, packages]
     if: always()
     runs-on: ubuntu-latest
     steps:

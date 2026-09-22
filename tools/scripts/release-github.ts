@@ -5,6 +5,7 @@ import {
   RELEASE_CHECK,
   RELEASE_RULESET,
   requireMaintainer,
+  releaseVersion,
   type Permission,
   type Ruleset,
 } from "./release-policy.ts";
@@ -135,6 +136,7 @@ export async function mergeRelease(repo: string, number: number): Promise<PullRe
   while (Date.now() < deadline) {
     const pr = api<PullRequest>(repo, `pulls/${number}`);
     requireReleasePr(repo, pr);
+    releaseVersion(pr.head.ref);
     if (pr.merged) return pr;
     if (pr.state !== "open") throw new Error(`PR is closed: ${pr.html_url}`);
     if (!isCurrent(repo, pr)) {

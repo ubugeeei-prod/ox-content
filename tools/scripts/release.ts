@@ -48,7 +48,7 @@ function createReleasePr(repo: string, input: string): number {
   try {
     run("git", ["worktree", "add", "-b", branch, worktree, "origin/main"], root);
     added = true;
-    // Execute the preparation implementation from this command, against the isolated checkout.
+    // Prepare from the fetched main inside the isolated checkout.
     run(
       process.execPath,
       [join(worktree, "tools/scripts/release.ts"), version, "--prepare-only"],
