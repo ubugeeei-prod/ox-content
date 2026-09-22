@@ -9,31 +9,43 @@ This page is for maintainers cutting an Ox Content release.
 
 ## Standard Release
 
-Run releases from a clean `main` checkout:
+Run the release command from your checkout. GitHub CLI must be authenticated as
+someone with Maintain or Admin repository permission:
 
 ```bash
-git status --short
-vpr release patch
+vp run release
 ```
 
-For a 3.0 prerelease:
+The default bump is `patch`. Pass `minor`, `major`, `alpha`, `beta`, or an explicit
+version when needed, for example `vp run release 3.3.0-alpha.1`.
 
-```bash
-vpr release alpha
-```
+The command prepares versions and the changelog in an isolated worktree from the
+latest `origin/main`, opens a conventional `chore(release): v…` PR, and waits for
+CI and release validation. If main advances, it updates the PR and revalidates.
+It checks the PR author's current Maintain/Admin permission, merges the validated
+head, verifies the merged tree, creates the release tag, and watches both
+publishing workflows until the GitHub Release is published.
 
-For a first-time npm package, stop before the tag so you can bootstrap it:
+Release PRs run all native and editor targets, WASM, npm packaging and registry
+name checks, and compilation of the published crate archives. Ordinary PRs only
+add a lightweight release policy check to their existing CI. The
+`release-validation` label opts maintainer tooling PRs into the full matrix.
+Version changes are detected from manifests regardless of labels.
 
-```bash
-vpr release 3.0.0-alpha.1 --prepare-only
-node tools/scripts/bootstrap-npm-package.mjs npm/ox-content-code-play
-```
+The first command installs a strict `Release pull requests` ruleset when absent
+(requires Admin once). It requires `Release gate`, an up-to-date branch, and a PR,
+with no bypass actors. Existing repository rules still apply. GitHub scopes this
+rule to the target branch, so ordinary PRs also need the latest main, but do not
+run the additional full release matrix.
 
-The release script updates package versions, Cargo workspace versions, docs
-snippets, and the changelog. It then creates a conventional release commit and
-an annotated `v*` tag. Pushing the tag starts `.github/workflows/publish.yml`.
-Prerelease tags (`v3.0.0-alpha.1`) publish to the matching npm dist-tag
-(`alpha`) and create a GitHub prerelease so they do not replace `latest`.
+For first-time npm packages, bootstrap the package and configure trusted publishing
+before the PR can pass release validation. The offline helper
+`vp run release <version> --prepare-only` updates versions and the changelog in
+the current clean checkout without committing, creating a PR, tagging, or
+publishing. Normal releases should use the default PR flow.
+
+Prerelease tags publish to the matching npm dist-tag (`alpha`, for example) and
+create a GitHub prerelease so they do not replace `latest`.
 
 The publish workflow handles:
 
@@ -52,7 +64,7 @@ safe to re-run a failed release after some packages were already published.
 Rust crates must be published in dependency order. Keep both of these lists in
 sync when adding a crate that should ship to crates.io:
 
-- `CARGO_PUBLISH_PACKAGES` in `tools/scripts/release.ts`
+- `CARGO_PUBLISH_PACKAGES` in `tools/scripts/release-targets.ts`
 - `publish_crate ...` calls in `.github/workflows/publish.yml`
 
 The release script verifies that every crate listed in
@@ -137,41 +149,30 @@ crates.io credentials:
 cargo publish -p ox_content_new_crate
 ```
 
-After the crate exists, push or re-run the tag workflow. The workflow will skip
-already-published crates and continue with the remaining packages.
+After the crate exists and trusted publishing is configured, resume the release
+PR. The publishers skip versions that already exist.
 
 ## Recovering a Failed Publish
 
-If `.github/workflows/publish.yml` fails:
+The command prints the release PR number when it starts. Resume it with:
 
-1. Inspect the failing job log in GitHub Actions.
-2. Check which package versions already exist:
+```bash
+vp run release --resume <pr-number>
+```
 
-   ```bash
-   curl -fsSL https://crates.io/api/v1/crates/ox_content_parser/2.75.0 >/dev/null
-   npm view @ox-content/vite-plugin@2.75.0 version
-   ```
+If validation fails, the PR remains open and no tag is created. Fix the PR or
+rerun its failed Actions jobs before resuming. The command still checks the
+current author permission, main, and the exact validated head.
 
-3. Fix the workflow or publish any first-time crates manually when required.
-4. Move the release tag to the fixed commit and push the tag again:
+Publishing can fail because of registry outages or credentials even after
+validation passes. Inspect the failed job and fix the external configuration,
+then resume the same PR. Resume reruns failed publishing jobs against the existing
+tag; the publishers skip package versions that already exist. It also waits for
+both publishing workflows and verifies that the GitHub Release is not a draft.
 
-   ```bash
-   git tag -f -a v2.75.0 -m "Release v2.75.0" HEAD
-   git push --force origin refs/tags/v2.75.0
-   ```
-
-5. If GitHub does not start a new workflow for a tag-object-only update, delete
-   and recreate the remote tag:
-
-   ```bash
-   git push origin :refs/tags/v2.75.0
-   git push origin refs/tags/v2.75.0
-   ```
-
-6. Watch the new `Publish` run until it succeeds.
-
-Cancel duplicate publish runs when more than one tag push starts the workflow.
-Only one run should be allowed to publish at a time.
+Keep release tags immutable: do not move, delete, or recreate them. If a source or
+workflow correction is needed after tagging, land the fix through a new PR and
+cut a new version. Do not start concurrent retries of the same publish run.
 
 ## Documentation Deployment
 
