@@ -64,6 +64,9 @@ jobs:
           echo "Changed files:"
           sed 's/^/  /' "$RUNNER_TEMP/preview-changed-files.txt"
 
+      - name: Test preview connection retries
+        run: node --test .github/scripts/retry-preview-publish.test.mjs
+
   build-napi:
     name: Build NAPI - ${{ matrix.target }}
     needs: preview-scope
@@ -328,7 +331,8 @@ jobs:
         id: publish-pkg-pr-new
         continue-on-error: ${{ github.event_name == 'pull_request' }}
         run: |
-          vp exec -- pnpm dlx --yes pkg-pr-new publish --compact --pnpm \
+          bash .github/scripts/retry-preview-publish.sh \
+            vp exec -- pnpm dlx --yes pkg-pr-new publish --compact --pnpm \
             ./crates/ox_content_napi \
             ./binding-packages/darwin-x64 \
             ./binding-packages/darwin-arm64 \
