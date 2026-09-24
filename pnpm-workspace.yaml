@@ -68,10 +68,10 @@ peerDependencyRules:
     vite: "*"
     vitest: "*"
 minimumReleaseAgeExclude:
-  - '@mizchi/markdown@0.8.3'
-  - '@void/deploy-cloudflare@0.20.3'
-  - '@void/deploy-core@0.20.3'
-  - '@void/edge@0.20.3'
-  - '@void/isr@0.20.3'
-  - '@void/platform@0.20.3'
+  - "@mizchi/markdown@0.8.3"
+  - "@void/deploy-cloudflare@0.20.3"
+  - "@void/deploy-core@0.20.3"
+  - "@void/edge@0.20.3"
+  - "@void/isr@0.20.3"
+  - "@void/platform@0.20.3"
   - void@0.20.3

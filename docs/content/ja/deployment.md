@@ -29,13 +29,13 @@ vp run deploy#docs
 
 `void` は `tools/deploy` の devDependency として固定されており、同じディレクトリの `wrangler.jsonc` が Worker 名 `ox-content` を指定します。Cloudflare アカウントは `CLOUDFLARE_ACCOUNT_ID` から読み込みます。
 
-| 設定                       | 既定                          | 目的                                         |
-| -------------------------- | ----------------------------- | -------------------------------------------- |
-| `CLOUDFLARE_ACCOUNT_ID`    | なし                          | Worker をホストする Cloudflare アカウントです。 |
-| `CLOUDFLARE_API_TOKEN`     | なし（ローカルではブラウザログイン） | 非対話デプロイで使う API トークンです。 |
-| `OX_CONTENT_DOCS_BASE`     | `/`                           | Void ホスト向けサイトの Vite base パスです。 |
-| `OX_CONTENT_DOCS_SITE_URL` | `https://ox-content.void.app` | メタデータと OG に使う絶対サイト URL です。  |
-| デプロイディレクトリ       | `docs/dist/docs`              | `void deploy --dir` に渡します。             |
+| 設定                       | 既定                                 | 目的                                            |
+| -------------------------- | ------------------------------------ | ----------------------------------------------- |
+| `CLOUDFLARE_ACCOUNT_ID`    | なし                                 | Worker をホストする Cloudflare アカウントです。 |
+| `CLOUDFLARE_API_TOKEN`     | なし（ローカルではブラウザログイン） | 非対話デプロイで使う API トークンです。         |
+| `OX_CONTENT_DOCS_BASE`     | `/`                                  | Void ホスト向けサイトの Vite base パスです。    |
+| `OX_CONTENT_DOCS_SITE_URL` | `https://ox-content.void.app`        | メタデータと OG に使う絶対サイト URL です。     |
+| デプロイディレクトリ       | `docs/dist/docs`                     | `void deploy --dir` に渡します。                |
 
 Void は `https://ox-content.void.app` をルートパスでホストするので、デプロイタスクは docs の base を既定で `/` にします。その上書きなしの通常の本番 docs ビルドは、いまも `docs/vite.config.ts` で設定した GitHub Pages の base を使います。
 
