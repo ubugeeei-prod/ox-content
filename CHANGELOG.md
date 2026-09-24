@@ -1,5 +1,22 @@
 # Changelog
 
+## [3.2.9] - 2026-09-24
+
+### Features
+
+- validate releases through maintainer pull requests (#1436) _(affects: crates: ox_content_parser, ox_content_renderer; ci, docs, tooling)_
+
+### Bug Fixes
+
+- stop double-escaping code spans inside steps (#1441) _(affects: crates: ox_content_transform)_
+- retry transient preview service connections (#1439) _(affects: ci)_
+- publish nightly previews with Vite-managed pnpm (#1438) _(affects: ci)_
+- repair tool paths, nightly Rust lanes, and a racy replan test (#1435) _(affects: npm: @ox-content/vite-plugin; ci, tooling)_
+
+### Documentation
+
+- describe pull request releases and immutable tags (#1437) _(affects: docs)_
+
 ## [3.2.8] - 2026-09-17
 
 ### Features
