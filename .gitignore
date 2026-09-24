@@ -82,3 +82,6 @@ docs/public/theme-gallery.html
 tools/benchmarks/scale/content/
 tools/benchmarks/scale/.cache/
 tools/benchmarks/scale/docs/
+
+# Void deploy artifacts
+.void/

@@ -184,5 +184,5 @@ vp run deploy#docs
 ```
 
 The task builds the local workspace, builds docs with the Void base path, and
-then runs `vpx void@0.10.8 deploy`. Use `VOID_PROJECT` or forwarded Void CLI
-flags for preview deployments.
+then runs `void deploy --platform cloudflare` from `tools/deploy`. Forwarded Void
+CLI flags reach `void deploy`.

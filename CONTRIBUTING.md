@@ -43,8 +43,8 @@ vp run bench:parse
 `vp run deploy#docs` builds the docs site and deploys `docs/dist/docs` to Void.
 It builds with `OX_CONTENT_DOCS_BASE=/` and
 `OX_CONTENT_DOCS_SITE_URL=https://ox-content.void.app` by default so asset URLs
-resolve from the Void domain root. It uses the `VOID_PROJECT` environment
-variable when set, otherwise it targets the `ox-content` Void project. Pass
+resolve from the domain root. It deploys directly to the Cloudflare account in
+`CLOUDFLARE_ACCOUNT_ID` with `void deploy --platform cloudflare`. Pass
 additional Void CLI flags after the task specifier, for example
 `vp run deploy#docs --debug`.
 
