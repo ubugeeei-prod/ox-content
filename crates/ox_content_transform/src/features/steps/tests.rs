@@ -210,3 +210,34 @@ fn preprocess_emits_blank_lines_so_inner_markdown_parses() {
     assert!(source.contains("Run **build**"), "{source}");
     assert!(!source.contains("1. Run"), "{source}");
 }
+
+#[test]
+fn code_spans_are_escaped_once() {
+    let source =
+        "::: steps\n\n1. Choose `File > Open` & ``a ` <b>``.\n\n:::\n\nOutside: `File > Open`\n";
+    let html = transform_html(source, steps_on());
+    assert_eq!(html.matches("<code>File &gt; Open</code>").count(), 2, "{html}");
+    assert!(html.contains("<code>a ` &lt;b&gt;</code>"), "{html}");
+    assert!(html.contains(" &amp; "), "{html}");
+    assert!(!html.contains("&amp;gt;"), "{html}");
+}
+
+#[test]
+fn code_span_in_preamble_is_escaped_once() {
+    let html = transform_html("::: steps\nUse `a < b`:\n\n1. First\n:::\n", steps_on());
+    assert!(html.contains("<code>a &lt; b</code>"), "{html}");
+}
+
+#[test]
+fn text_around_unmatched_backticks_is_still_escaped() {
+    let html = transform_html("::: steps\n1. `<script>\n\n   </script>`\n:::\n", steps_on());
+    assert!(!html.contains("<script>"), "{html}");
+    assert!(!html.contains("</script>"), "{html}");
+}
+
+#[test]
+fn preamble_code_span_cannot_emit_raw_html() {
+    let html = transform_html("::: steps\nSee `<script>`\n\n1. First\n:::\n", steps_on());
+    assert!(!html.contains("<script>"), "{html}");
+    assert!(html.contains("<code>&lt;script&gt;</code>"), "{html}");
+}

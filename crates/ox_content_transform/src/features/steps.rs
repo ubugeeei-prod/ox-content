@@ -6,10 +6,11 @@
 
 use crate::StepsOptions;
 
-use super::escape_html_text;
-
+mod markdown_escape;
 #[cfg(test)]
 mod tests;
+
+use markdown_escape::escape_markdown_text;
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub(super) struct ResolvedStepsOptions;
@@ -115,6 +116,7 @@ fn emit_steps(out: &mut String, body: &str) {
     out.push_str("<div class=\"ox-steps\">\n");
     if !items.is_empty() && !preamble.trim().is_empty() {
         let escaped_preamble = escape_item_markdown(&preamble);
+        out.push('\n');
         out.push_str(escaped_preamble.trim_end());
         out.push_str("\n\n");
     }
@@ -250,6 +252,7 @@ fn escape_item_markdown(source: &str) -> String {
     let mut in_fence = false;
     let mut fence_char = b'\0';
     let mut fence_len = 0usize;
+    let mut text = String::new();
 
     for line_with_end in source.split_inclusive('\n') {
         let (line, ending) = split_ending(line_with_end);
@@ -265,13 +268,16 @@ fn escape_item_markdown(source: &str) -> String {
             in_fence = true;
             fence_char = open.0;
             fence_len = open.1;
+            escape_markdown_text(&text, &mut out);
+            text.clear();
             out.push_str(line);
             out.push_str(ending);
             continue;
         }
-        escape_html_text(line, &mut out);
-        out.push_str(ending);
+        text.push_str(line);
+        text.push_str(ending);
     }
+    escape_markdown_text(&text, &mut out);
     out
 }
 
