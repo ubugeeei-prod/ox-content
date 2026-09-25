@@ -22,7 +22,8 @@ Runtime matters for CLIs, dev servers, editor integrations, and batch builds.
 Output weight matters for documentation sites because generated HTML, CSS, and
 JS are what users fetch on every navigation. Absolute ceilings live in
 [`tools/benchmarks/perf-budgets.json`](https://github.com/ubugeeei-prod/ox-content/blob/main/tools/benchmarks/perf-budgets.json).
-Relative base/head deltas still use the PR Benchmark comment.
+Relative base/head deltas use the PR Benchmark comment when the
+`full-benchmark` label is applied.
 
 ### Out of scope
 

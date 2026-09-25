@@ -20,7 +20,7 @@ Ox Content には性能の面が 4 つあり、どれも pull request で報告�
 
 実行時は CLI、開発サーバ、エディタ連携、バッチビルドで効きます。出力の重さはドキュメントサイトで効きます。生成 HTML、CSS、JS が、遷移のたびに利用者が取るものだからです。絶対上限は
 [`tools/benchmarks/perf-budgets.json`](https://github.com/ubugeeei-prod/ox-content/blob/main/tools/benchmarks/perf-budgets.json)
-にあります。base / head の相対差は、これまでどおり PR Benchmark コメントです。
+にあります。`full-benchmark` ラベルを付けた PR では、base / head の相対差を PR Benchmark コメントで確認できます。
 
 ### 対象外
 

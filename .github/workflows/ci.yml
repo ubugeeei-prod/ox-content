@@ -246,10 +246,9 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os:
-          - blacksmith-32vcpu-ubuntu-2404
-          - macos-latest
-          - windows-2025
+        # Windows is covered on main pushes and release validation. Its cold
+        # native build takes longer than the entire pull request feedback loop.
+        os: ${{ fromJSON(github.event_name == 'pull_request' && '["blacksmith-32vcpu-ubuntu-2404","macos-latest"]' || '["blacksmith-32vcpu-ubuntu-2404","macos-latest","windows-2025"]') }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:

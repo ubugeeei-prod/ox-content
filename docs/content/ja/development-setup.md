@@ -193,7 +193,7 @@ node tools/benchmarks/bundle-size/measure.mjs --json /tmp/bundle.json
 node tools/benchmarks/bundle-size/check-budgets.mjs --bundle /tmp/bundle.json
 ```
 
-PR Benchmark ジョブは head の測定に対してこの検査を走らせます。意図した増大は同じ PR で天井を上げるか、`benchmark-regression-accepted` ラベルを付けます。[パフォーマンス](./performance.md) を見てください。
+PR に `full-benchmark` ラベルを付けると base/head の完全な比較が走り、head の測定に対してこの検査も実行します。意図した増大は同じ PR で天井を上げるか、`benchmark-regression-accepted` ラベルを付けます。[パフォーマンス](./performance.md) を見てください。
 
 コミットするベンチマーク表とチャートには、手元のマシンではなく Blacksmith ベースの docs 更新ワークフローを使ってください。
 

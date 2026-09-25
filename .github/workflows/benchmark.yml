@@ -3,6 +3,7 @@ name: Benchmark
 on:
   pull_request:
     branches: [main]
+    types: [opened, synchronize, reopened, labeled]
 
 permissions:
   contents: read
@@ -20,6 +21,9 @@ env:
 jobs:
   benchmark:
     name: Benchmark
+    # Full base/head comparisons are intentionally opt-in: both builds and
+    # runtime suites take substantially longer than the normal PR checks.
+    if: ${{ contains(github.event.pull_request.labels.*.name, 'full-benchmark') }}
     runs-on: blacksmith-32vcpu-ubuntu-2404
     env:
       CARGO_TARGET_DIR: /tmp/ox-content-cargo-target
