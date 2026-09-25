@@ -209,6 +209,15 @@ mod tests {
     use pulldown_cmark::{Event, Tag};
 
     #[test]
+    fn arena_reserve_covers_node_dense_sample() {
+        let input = vec![SAMPLE_MARKDOWN; 100].join("\n\n");
+        let allocator = ox_content_allocator::Allocator::for_source_len(input.len());
+        let document = ox_content_parser::Parser::new(&allocator, &input).parse().unwrap();
+        assert!(!document.children.is_empty());
+        assert!(allocator.bump().allocated_bytes() < input.len() * 12);
+    }
+
+    #[test]
     fn renderers_agree_on_benchmark_sample() {
         for repeats in [1, 10] {
             let input = vec![SAMPLE_MARKDOWN; repeats].join("\n\n");
