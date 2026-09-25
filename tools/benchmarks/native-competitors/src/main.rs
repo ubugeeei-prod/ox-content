@@ -163,7 +163,7 @@ fn ox_content_render_html(input: &str) -> usize {
 /// only. Timing its `parse` against the other engines' parse rows would be
 /// comparing a full compile to a tree build.
 fn render_ferromark_html(input: &str) -> String {
-    ferromark::to_html(input)
+    ferromark::to_html(input).expect("benchmark sample must render")
 }
 
 fn run_benchmarks(sizes: &[(&'static str, usize, u32)], runs: u32) -> SuiteResults {

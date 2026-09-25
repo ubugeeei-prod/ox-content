@@ -115,7 +115,12 @@ fn render_grok(markdown: &str) -> String {
 /// harness error.
 /// ferromark compiles straight to HTML in one pass.
 fn render_ferromark(markdown: &str) -> String {
-    ferromark::to_html(markdown)
+    ferromark::to_html_with_options(
+        markdown,
+        ferromark::ParserOptions::commonmark(),
+        ferromark::HtmlRendererOptions::commonmark(),
+    )
+    .expect("CommonMark example must render")
 }
 
 pub fn run(spec_path: &str) -> Result<String, String> {

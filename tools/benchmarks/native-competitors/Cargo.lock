@@ -50,15 +50,17 @@ checksum = "877a4ace8713b0bcf2a4e7eec82529c029f1d0619886d18145fea96c3ffe5c0f"
 
 [[package]]
 name = "ferromark"
-version = "0.7.0"
+version = "2.1.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f26bc33597a3dede0e3c54e0a8ca200c7e94a6ecc69b4d4092896937ee1fa5dd"
+checksum = "9f275a8406e56fe370888c0ef4b7faf8fe063ca2d01241abb9c4b7857557b22e"
 dependencies = [
- "html-escape",
+ "bumpalo",
+ "compact_str",
  "memchr",
  "rustc-hash",
+ "serde_json",
  "smallvec",
- "unicode-ident",
+ "thiserror",
 ]
 
 [[package]]
@@ -75,12 +77,6 @@ name = "hashbrown"
 version = "0.17.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "ed5909b6e89a2db4456e54cd5f673791d7eca6732202bbf2a9cc504fe2f9b84a"
-
-[[package]]
-name = "html-escape"
-version = "0.2.15"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c9356095b4b41197bba32173600e1582792cda618f65d12f68e2e77d273413c5"
 
 [[package]]
 name = "indexmap"
@@ -119,21 +115,21 @@ dependencies = [
 
 [[package]]
 name = "ox_content_allocator"
-version = "3.2.8"
+version = "3.2.9"
 dependencies = [
  "bumpalo",
 ]
 
 [[package]]
 name = "ox_content_ast"
-version = "3.2.8"
+version = "3.2.9"
 dependencies = [
  "ox_content_allocator",
 ]
 
 [[package]]
 name = "ox_content_parser"
-version = "3.2.8"
+version = "3.2.9"
 dependencies = [
  "compact_str",
  "memchr",
@@ -146,7 +142,7 @@ dependencies = [
 
 [[package]]
 name = "ox_content_renderer"
-version = "3.2.8"
+version = "3.2.9"
 dependencies = [
  "compact_str",
  "memchr",
