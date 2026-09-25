@@ -22,6 +22,8 @@ pub(super) fn trim_block_content(content: &str) -> &str {
 
 #[cfg(test)]
 mod tests {
+    #![allow(clippy::disallowed_macros)]
+
     use super::trim_block_content;
 
     #[test]
