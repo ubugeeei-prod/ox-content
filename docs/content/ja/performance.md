@@ -38,6 +38,8 @@ Ox Content は文書生成器でもあり、高性能 Markdown ツールキッ�
 
 速さは公平な比較の半分にすぎません。Markdown エンジンは CommonMark の実装範囲が違い、仕様カバーをスループットと意図して交換するものもあります。だから各行は速さの横に、測った CommonMark 適合率を持ちます。仕様挙動を飛ばして速いエンジンは、単に上位に並ぶのではなく、そう見えるようにします。Ox Content の点数と測り方は [CommonMark 適合](#commonmark-適合) を見てください。
 
+[英語版のベンチ表](../performance.md) にある Ferromark v2.1.2 は [Ox Content v3.2.3 のソースを基に派生した実装](https://github.com/sebastian-software/ferromark/blob/v2.1.2/UPSTREAM.md) です。この行は関連する実装の測定値であり、独立した設計のパーサとの比較ではありません。
+
 <!-- benchmark:tables:start -->
 
 _2026-08-17 生成のベンチマーク掃引（7 回の中央値）。数字はホスト機に追従します。エンジン間の相対順位が安定した信号です。`tools/scripts/render-benchmark-tables.mjs` で再生成します。_

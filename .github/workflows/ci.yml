@@ -272,7 +272,7 @@ jobs:
           target: target
 
       - name: Cache cargo
-        if: runner.os != 'Windows' && !startsWith(matrix.os, 'blacksmith-')
+        if: ${{ !startsWith(matrix.os, 'blacksmith-') }}
         uses: Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6 # v2
 
       # Debug build: the smoke test only verifies the binding loads and that

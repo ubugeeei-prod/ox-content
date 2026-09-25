@@ -85,7 +85,9 @@ PATH, skipped otherwise):
   strikethrough demoted.
 - **`ferromark`** (parse and render) — builds its arena AST for the parse row
   and uses its default HTML conversion for the render row. Both paths use a
-  fresh arena for each call, like the native Ox Content rows.
+  fresh arena for each call, like the native Ox Content rows. Ferromark v2
+  [derives from Ox Content v3.2.3](https://github.com/sebastian-software/ferromark/blob/v2.1.2/UPSTREAM.md),
+  so this is a related implementation rather than an independent parser design.
 - **`pulldown-cmark`** (parse) — plain pulldown-cmark event draining under the
   same option set, isolating the wrapper's overhead.
 - **`pulldown-cmark + push_html`** (render) — parse plus
