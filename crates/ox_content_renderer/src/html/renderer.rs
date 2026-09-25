@@ -30,6 +30,11 @@ use crate::render::{RenderResult, Renderer};
 
 pub use hooks::{HtmlRenderContext, HtmlRenderControl, HtmlRenderHooks, NoHtmlRenderHooks};
 
+// Most pages have fewer than 64 distinct heading IDs. Reserving for every
+// heading wastes space when a long document repeats the same heading text;
+// the map can still grow when the IDs really are distinct.
+const INITIAL_HEADING_ID_RESERVE_LIMIT: usize = 64;
+
 /// Stateful HTML renderer for Markdown AST documents.
 ///
 /// A renderer instance owns reusable buffers for heading IDs, inline table-of-contents
@@ -192,7 +197,8 @@ impl HtmlRenderer {
             collect_inline_toc_entries(document, self.options.toc_max_depth, &mut self.toc_entries);
         }
         self.heading_id_counts.clear();
-        self.heading_id_counts.reserve(document_scan.heading_count);
+        self.heading_id_counts
+            .reserve(document_scan.heading_count.min(INITIAL_HEADING_ID_RESERVE_LIMIT));
         self.clear_footnote_state();
         // Build the autolink first-byte index once per render. It depends only
         // on the immutable pattern list, not on the text node being rendered,

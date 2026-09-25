@@ -239,6 +239,18 @@ mod tests {
     use super::*;
     use pulldown_cmark::{Event, Tag};
 
+    #[test]
+    fn renderers_agree_on_benchmark_sample() {
+        for repeats in [1, 10] {
+            let input = vec![SAMPLE_MARKDOWN; repeats].join("\n\n");
+            let arena = ox_content_allocator::Allocator::for_source_len(input.len());
+            let document = ox_content_parser::Parser::new(&arena, &input).parse().unwrap();
+            let ox = ox_content_renderer::HtmlRenderer::new().render(&document);
+            let other = render_ferromark_html(&input);
+            assert_eq!(ox, other, "rendered output differs for {repeats} repeats");
+        }
+    }
+
     fn grok_strike_starts(text: &str) -> usize {
         xai_grok_markdown_core::offset_events(text)
             .filter(|(event, _)| matches!(event, Event::Start(Tag::Strikethrough)))
