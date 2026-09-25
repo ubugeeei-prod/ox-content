@@ -154,7 +154,7 @@ const DEFAULT_SOFT_BREAK: &str = "\n";
 const DEFAULT_HARD_BREAK: &str = "<br>\n";
 const DEFAULT_BASE_URL: &str = "/";
 const DEFAULT_CODE_ANNOTATION_META_KEY: &str = "annotate";
-const DEFAULT_AUTOLINK_PATTERNS: [&str; 2] = ["http://", "https://"];
+pub(super) const DEFAULT_AUTOLINK_PATTERNS: [&str; 2] = ["http://", "https://"];
 
 /// Allocation-free internal form of [`HtmlRendererOptions`].
 ///

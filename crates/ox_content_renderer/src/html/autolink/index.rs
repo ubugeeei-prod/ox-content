@@ -8,7 +8,7 @@ use std::sync::LazyLock;
 
 use memchr::memmem;
 
-use super::super::options::AutolinkPatterns;
+use super::super::options::{AutolinkPatterns, DEFAULT_AUTOLINK_PATTERNS};
 
 /// Process-wide finder for the default autolink gate (`://`).
 ///
@@ -17,6 +17,9 @@ use super::super::options::AutolinkPatterns;
 /// restarted on every `Note:` / `Listing 3-2:` colon that is not a URL.
 static COLON_SLASH_SLASH: LazyLock<memmem::Finder<'static>> =
     LazyLock::new(|| memmem::Finder::new(b"://"));
+
+static DEFAULT_AUTOLINK_INDEX: LazyLock<FirstByteIndex> =
+    LazyLock::new(|| FirstByteIndex::from_pattern_slice(&DEFAULT_AUTOLINK_PATTERNS));
 
 /// Case-insensitive index over the first byte of every registered autolink
 /// pattern, used to skip the long runs of text that can't begin a URL.
@@ -27,6 +30,7 @@ static COLON_SLASH_SLASH: LazyLock<memmem::Finder<'static>> =
 /// testing the word-boundary + prefix at every byte. Up to three distinct
 /// leading bytes keep the SIMD `memchr` fast path; beyond that (rare, only
 /// with many custom schemes) it falls back to a 256-entry lookup table.
+#[derive(Clone, Copy)]
 pub(in crate::html) struct FirstByteIndex {
     table: [bool; 256],
     needles: [u8; 3],
@@ -70,7 +74,7 @@ impl FirstByteIndex {
     /// pattern sets keep correctness by falling back to the table scan.
     pub(in crate::html) fn from_patterns(patterns: AutolinkPatterns<'_>) -> Self {
         match patterns {
-            AutolinkPatterns::Defaults(patterns) => Self::from_pattern_slice(patterns),
+            AutolinkPatterns::Defaults(_) => *DEFAULT_AUTOLINK_INDEX,
             AutolinkPatterns::Custom(patterns) => Self::from_pattern_slice(patterns),
         }
     }
