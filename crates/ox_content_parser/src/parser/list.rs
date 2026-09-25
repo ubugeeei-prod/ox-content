@@ -17,7 +17,6 @@ impl<'a> Parser<'a> {
         start: usize,
         baseline_indent: usize,
         first_item: ParsedListItem<'a>,
-        first_line_len: usize,
     ) -> ParseResult<Option<Node<'a>>> {
         profile_span!("parser::parse_list");
 
@@ -30,11 +29,10 @@ impl<'a> Parser<'a> {
 
         let mut children: Vec<'a, ListItem<'a>> = self.allocator.new_vec();
         let mut list_spread = false;
-        let mut first_line_len = Some(first_line_len);
-
         loop {
             let line_start = self.position;
-            let line_len = first_line_len.take().unwrap_or_else(|| self.line_at(line_start).len());
+            // The recognizer already bounded the marker line for every item.
+            let line_len = item.content_source_end - line_start;
 
             // Consume the marker line.
             self.position += line_len;

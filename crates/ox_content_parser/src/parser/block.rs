@@ -69,7 +69,7 @@ impl<'a> Parser<'a> {
                 if let Some(first_item) =
                     self.parse_list_item_line_from_trimmed(start, line, trimmed)
                 {
-                    return self.parse_list(start, line_indent, first_item, line.len());
+                    return self.parse_list(start, line_indent, first_item);
                 }
             }
             b'_' if Self::try_parse_thematic_break_line(self.line_at(start)) => {
@@ -121,7 +121,7 @@ impl<'a> Parser<'a> {
                 if let Some(first_item) =
                     self.parse_list_item_line_from_trimmed(start, line, trimmed)
                 {
-                    return self.parse_list(start, line_indent, first_item, line.len());
+                    return self.parse_list(start, line_indent, first_item);
                 }
             }
             b'i' | b'e' => {
