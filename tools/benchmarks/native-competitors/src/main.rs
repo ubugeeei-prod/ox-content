@@ -20,6 +20,7 @@ mod bench;
 mod cli;
 mod conformance;
 mod json;
+mod sample;
 
 use std::hint::black_box;
 use std::process::ExitCode;
@@ -29,45 +30,7 @@ use pulldown_cmark::{html, Parser};
 use crate::bench::bench;
 use crate::cli::{parse_args, print_usage, CliAction};
 use crate::json::{render_json, SuiteResults};
-
-/// Byte-for-byte copy of `sampleMarkdown` in `parse-benchmark-bun.mjs`,
-/// including the leading and trailing newline. The JS harness derives
-/// throughput from `input.length` (UTF-16 code units), which equals the byte
-/// length here because the sample is pure ASCII.
-const SAMPLE_MARKDOWN: &str = r#"
-# Heading 1
-
-This is a paragraph with **bold** and *italic* text.
-
-## Heading 2
-
-- List item 1
-- List item 2
-  - Nested item
-- List item 3
-
-### Code Block
-
-```javascript
-function hello() {
-  console.log("Hello, World!");
-}
-```
-
-> This is a blockquote
-> with multiple lines
-
-| Header 1 | Header 2 |
-|----------|----------|
-| Cell 1   | Cell 2   |
-| Cell 3   | Cell 4   |
-
-Here's a [link](https://example.com) and an image: ![alt](image.png)
-
----
-
-Final paragraph with `inline code` and more text.
-"#;
+use crate::sample::SAMPLE_MARKDOWN;
 
 /// `(size name, sample repeats, timed iterations)` in harness order. Matches
 /// the JS sizes (small/medium/large/huge = 1/10/100/2150 repeats joined with

@@ -101,6 +101,7 @@ describe("run-pr-benchmark", () => {
       "native-competitors/src/conformance.rs",
       "native-competitors/src/json.rs",
       "native-competitors/src/main.rs",
+      "native-competitors/src/sample.rs",
     ]) {
       writeFile(join(source, "tools/benchmarks", file), "");
     }
