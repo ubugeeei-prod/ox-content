@@ -113,7 +113,7 @@ fn render_grok(markdown: &str) -> String {
 /// A panicking engine scores the example as a failure instead of aborting:
 /// refusing to parse an input the spec defines is a conformance result, not a
 /// harness error.
-/// ferromark compiles straight to HTML in one pass.
+/// Render with the strict CommonMark parser and HTML profiles.
 fn render_ferromark(markdown: &str) -> String {
     ferromark::to_html_with_options(
         markdown,

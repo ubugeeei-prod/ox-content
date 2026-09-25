@@ -158,10 +158,15 @@ fn ox_content_render_html(input: &str) -> usize {
     renderer.render(&document).len()
 }
 
-/// ferromark compiles straight to HTML — its `parse` returns rendered HTML
-/// too, so it has no parse-only step to time and appears in the render rows
-/// only. Timing its `parse` against the other engines' parse rows would be
-/// comparing a full compile to a tree build.
+/// Build the arena AST without rendering, matching the native parse row.
+fn ferromark_parse(input: &str) {
+    let allocator = ferromark::Allocator::for_source_len(input.len());
+    let document =
+        ferromark::Parser::new(&allocator, input).parse().expect("benchmark sample must parse");
+    black_box(document.children.len());
+}
+
+/// Parse and render HTML with the default settings.
 fn render_ferromark_html(input: &str) -> String {
     ferromark::to_html(input).expect("benchmark sample must render")
 }
@@ -182,6 +187,7 @@ fn run_benchmarks(sizes: &[(&'static str, usize, u32)], runs: u32) -> SuiteResul
                     runs,
                     bytes,
                 ),
+                bench("ferromark", || ferromark_parse(&content), iterations, runs, bytes),
                 bench(
                     "xai-grok-markdown-core (Grok Build)",
                     || drain_grok_events(&content),
@@ -308,6 +314,7 @@ mod tests {
             parse_names,
             [
                 Some("ox-content (native)"),
+                Some("ferromark"),
                 Some("xai-grok-markdown-core (Grok Build)"),
                 Some("pulldown-cmark")
             ]

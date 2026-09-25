@@ -83,6 +83,9 @@ PATH, skipped otherwise):
   (Apache-2.0, pinned to rev `98c3b2438aa922fbbe6178a5c0a4c48f85edc8ce`): a
   lean wrapper around pulldown-cmark with Grok's option set and single-tilde
   strikethrough demoted.
+- **`ferromark`** (parse and render) — builds its arena AST for the parse row
+  and uses its default HTML conversion for the render row. Both paths use a
+  fresh arena for each call, like the native Ox Content rows.
 - **`pulldown-cmark`** (parse) — plain pulldown-cmark event draining under the
   same option set, isolating the wrapper's overhead.
 - **`pulldown-cmark + push_html`** (render) — parse plus
