@@ -219,7 +219,7 @@ mod tests {
 
     #[test]
     fn renderers_agree_on_benchmark_sample() {
-        for repeats in [1, 10] {
+        for repeats in [1, 10, 100, 2150] {
             let input = vec![SAMPLE_MARKDOWN; repeats].join("\n\n");
             let arena = ox_content_allocator::Allocator::for_source_len(input.len());
             let document = ox_content_parser::Parser::new(&arena, &input).parse().unwrap();
