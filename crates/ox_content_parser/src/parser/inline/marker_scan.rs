@@ -45,44 +45,59 @@ impl ForwardScan {
 /// every x4 of input. Caching both scans costs two words and removes the
 /// repeat.
 pub(super) struct InlineMarkerScan {
+    special: ForwardScan,
+    optional: Option<OptionalMarkerScans>,
+}
+
+struct OptionalMarkerScans {
     brace: ForwardScan,
     caret: ForwardScan,
     dollar: ForwardScan,
     math: bool,
     mdx: bool,
-    special: ForwardScan,
     superscript: bool,
 }
 
 impl InlineMarkerScan {
     pub(super) const fn new(mdx: bool, superscript: bool, math: bool) -> Self {
         Self {
-            brace: ForwardScan::new(),
-            caret: ForwardScan::new(),
-            dollar: ForwardScan::new(),
-            math,
-            mdx,
             special: ForwardScan::new(),
-            superscript,
+            // Default CommonMark parsing needs only the core marker cursor.
+            // Keep extension cursors dormant until an option enables them.
+            optional: if mdx || superscript || math {
+                Some(OptionalMarkerScans {
+                    brace: ForwardScan::new(),
+                    caret: ForwardScan::new(),
+                    dollar: ForwardScan::new(),
+                    math,
+                    mdx,
+                    superscript,
+                })
+            } else {
+                None
+            },
         }
     }
 
     pub(super) fn next(&mut self, bytes: &[u8], from: usize) -> usize {
         let mut special = self.special.hit(from, |at| next_inline_special(bytes, at));
-        if self.mdx {
-            let brace = self
+        let Some(optional) = self.optional.as_mut() else {
+            return special;
+        };
+        if optional.mdx {
+            let brace = optional
                 .brace
                 .hit(from, |at| memchr(b'{', &bytes[at..]).map_or(bytes.len(), |rel| at + rel));
             special = special.min(brace);
         }
-        if self.superscript {
-            let caret = self
+        if optional.superscript {
+            let caret = optional
                 .caret
                 .hit(from, |at| memchr(b'^', &bytes[at..]).map_or(bytes.len(), |rel| at + rel));
             special = special.min(caret);
         }
-        if self.math {
-            let dollar = self
+        if optional.math {
+            let dollar = optional
                 .dollar
                 .hit(from, |at| memchr(b'$', &bytes[at..]).map_or(bytes.len(), |rel| at + rel));
             special = special.min(dollar);
