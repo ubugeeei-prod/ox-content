@@ -147,7 +147,10 @@ impl<'a> Parser<'a> {
 
             let continuation_start = self.position;
             let continuation_line = self.line_at(continuation_start);
-            let continuation_next = self.next_line_start(continuation_start);
+            let continuation_next = line_terminator_end(
+                self.source.as_bytes(),
+                continuation_start + continuation_line.len(),
+            );
 
             if continuation_line.trim().is_empty() {
                 let mut lookahead = continuation_next;
@@ -158,7 +161,7 @@ impl<'a> Parser<'a> {
                         break;
                     }
                     blank_count += 1;
-                    lookahead = self.next_line_start(lookahead);
+                    lookahead = line_terminator_end(self.source.as_bytes(), lookahead + line.len());
                 }
 
                 if lookahead >= self.source.len() {
