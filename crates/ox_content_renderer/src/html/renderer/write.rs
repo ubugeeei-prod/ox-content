@@ -246,18 +246,28 @@ impl HtmlRenderer {
         } else {
             self.output.push_str(&self.heading_id_scratch);
         }
-        if self.heading_text_scratch.is_empty() {
+        let heading_text = match heading.children.as_slice() {
+            [Node::Text(text)] => text.value,
+            _ => self.heading_text_scratch.as_str(),
+        };
+        if heading_text.is_empty() {
             self.output.push_str("\" aria-label=\"Permalink to this section\">#</a>");
             return;
         }
         self.output.push_str("\" aria-label=\"Permalink to &quot;");
-        write_escaped_into(&mut self.output, &self.heading_text_scratch);
+        write_escaped_into(&mut self.output, heading_text);
         self.output.push_str("&quot;\">#</a>");
     }
 
     fn prepare_heading_id(&mut self, heading: &Heading<'_>) {
         self.heading_text_scratch.clear();
-        collect_heading_text_into(&heading.children, &mut self.heading_text_scratch);
+        let single_text = match heading.children.as_slice() {
+            [Node::Text(text)] => Some(text.value),
+            _ => None,
+        };
+        if single_text.is_none() && (heading.id.is_none() || self.options.heading_permalinks) {
+            collect_heading_text_into(&heading.children, &mut self.heading_text_scratch);
+        }
         if let Some(id) = heading.id {
             self.heading_id_scratch.clear();
             self.heading_id_scratch.push_str(id);
@@ -269,7 +279,10 @@ impl HtmlRenderer {
             return;
         }
         self.heading_slug_scratch.clear();
-        slugify_heading_into(&self.heading_text_scratch, &mut self.heading_slug_scratch);
+        slugify_heading_into(
+            single_text.unwrap_or(&self.heading_text_scratch),
+            &mut self.heading_slug_scratch,
+        );
 
         self.heading_id_scratch.clear();
         if let Some(count) = self.heading_id_counts.get_mut(self.heading_slug_scratch.as_str()) {

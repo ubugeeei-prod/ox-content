@@ -138,12 +138,10 @@ impl HtmlRenderer {
             footnote_slug_counts: FxHashMap::default(),
             toc_entries: Vec::new(),
             document_has_toc_marker: false,
-            // Pre-size the heading scratch buffers: a typical heading text
-            // is well under 64 chars. Pre-allocating spares the first
-            // heading from a `String::with_capacity(0)` → `reserve(N)`
-            // round-trip without meaningful memory cost (these buffers
-            // live for the renderer's lifetime regardless).
-            heading_text_scratch: String::with_capacity(64),
+            // Most headings are a single text node and can borrow that text
+            // directly. Allocate a collection buffer only for mixed content.
+            heading_text_scratch: String::new(),
+            // The slug and ID buffers are used for every generated heading.
             heading_slug_scratch: String::with_capacity(64),
             heading_id_scratch: String::with_capacity(64),
             code_block_index: 0,
