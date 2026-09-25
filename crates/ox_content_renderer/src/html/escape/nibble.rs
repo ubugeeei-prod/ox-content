@@ -134,6 +134,11 @@ pub(super) fn first_flagged_simd(
     from: usize,
     tables: &NibbleTables,
 ) -> Option<usize> {
+    // Short text nodes use the word scanner. Check before CPU feature
+    // detection, which otherwise runs for every such node on x86-64.
+    if bytes.len() < 16 {
+        return None;
+    }
     #[cfg(target_arch = "aarch64")]
     {
         first_flagged_vector(bytes, from, tables)

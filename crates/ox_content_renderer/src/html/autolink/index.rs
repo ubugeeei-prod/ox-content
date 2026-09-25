@@ -58,6 +58,7 @@ pub(in crate::html) struct FirstByteIndex {
     /// rejects all of those with a two-byte compare.
     gate_tail: [u8; 2],
     gate_tail_len: usize,
+    min_pattern_len: usize,
 }
 
 /// Sentinel in `FirstByteIndex::second`: no single second byte filters
@@ -80,6 +81,12 @@ impl FirstByteIndex {
     }
 
     fn from_pattern_slice<P: AsRef<str>>(patterns: &[P]) -> Self {
+        let min_pattern_len = patterns
+            .iter()
+            .map(|pattern| pattern.as_ref().len())
+            .filter(|&len| len != 0)
+            .min()
+            .unwrap_or(usize::MAX);
         let mut table = [false; 256];
         let mut needles = [0u8; 3];
         let mut needle_len = 0usize;
@@ -167,7 +174,17 @@ impl FirstByteIndex {
             }
         }
 
-        Self { table, needles, needle_len, overflow, second, gate, gate_tail, gate_tail_len }
+        Self {
+            table,
+            needles,
+            needle_len,
+            overflow,
+            second,
+            gate,
+            gate_tail,
+            gate_tail_len,
+            min_pattern_len,
+        }
     }
 
     /// Whether `haystack` can hold a pattern match at all.
@@ -176,6 +193,9 @@ impl FirstByteIndex {
     /// must follow it. With no gate byte configured this is vacuously true,
     /// and with no tail it degrades to exactly the old single-byte probe.
     pub(in crate::html) fn may_match(&self, haystack: &[u8]) -> bool {
+        if haystack.len() < self.min_pattern_len {
+            return false;
+        }
         let Some(gate) = self.gate else {
             return true;
         };
