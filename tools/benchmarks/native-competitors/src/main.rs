@@ -20,6 +20,7 @@ mod bench;
 mod cli;
 mod conformance;
 mod json;
+mod sample;
 
 use std::hint::black_box;
 use std::process::ExitCode;
@@ -29,45 +30,7 @@ use pulldown_cmark::{html, Parser};
 use crate::bench::bench;
 use crate::cli::{parse_args, print_usage, CliAction};
 use crate::json::{render_json, SuiteResults};
-
-/// Byte-for-byte copy of `sampleMarkdown` in `parse-benchmark-bun.mjs`,
-/// including the leading and trailing newline. The JS harness derives
-/// throughput from `input.length` (UTF-16 code units), which equals the byte
-/// length here because the sample is pure ASCII.
-const SAMPLE_MARKDOWN: &str = r#"
-# Heading 1
-
-This is a paragraph with **bold** and *italic* text.
-
-## Heading 2
-
-- List item 1
-- List item 2
-  - Nested item
-- List item 3
-
-### Code Block
-
-```javascript
-function hello() {
-  console.log("Hello, World!");
-}
-```
-
-> This is a blockquote
-> with multiple lines
-
-| Header 1 | Header 2 |
-|----------|----------|
-| Cell 1   | Cell 2   |
-| Cell 3   | Cell 4   |
-
-Here's a [link](https://example.com) and an image: ![alt](image.png)
-
----
-
-Final paragraph with `inline code` and more text.
-"#;
+use crate::sample::SAMPLE_MARKDOWN;
 
 /// `(size name, sample repeats, timed iterations)` in harness order. Matches
 /// the JS sizes (small/medium/large/huge = 1/10/100/2150 repeats joined with
@@ -144,26 +107,31 @@ fn ox_content_parse(input: &str) {
     let allocator = ox_content_allocator::Allocator::for_source_len(input.len());
     let parser = ox_content_parser::Parser::new(&allocator, input);
     let document = parser.parse().expect("benchmark sample must parse");
-    black_box(document.children.len());
+    black_box(&document);
 }
 
 /// ox-content parse + HTML render with the same defaults the
 /// `@ox-content/napi` `parseAndRender` row uses (default parser options,
 /// `HtmlRenderer::new()`), minus the napi string hand-off.
-fn ox_content_render_html(input: &str) -> usize {
+fn ox_content_render_html(input: &str) -> String {
     let allocator = ox_content_allocator::Allocator::for_source_len(input.len());
     let parser = ox_content_parser::Parser::new(&allocator, input);
     let document = parser.parse().expect("benchmark sample must parse");
     let mut renderer = ox_content_renderer::HtmlRenderer::new();
-    renderer.render(&document).len()
+    renderer.render(&document)
 }
 
-/// ferromark compiles straight to HTML — its `parse` returns rendered HTML
-/// too, so it has no parse-only step to time and appears in the render rows
-/// only. Timing its `parse` against the other engines' parse rows would be
-/// comparing a full compile to a tree build.
+/// Build the arena AST without rendering, matching the native parse row.
+fn ferromark_parse(input: &str) {
+    let allocator = ferromark::Allocator::for_source_len(input.len());
+    let document =
+        ferromark::Parser::new(&allocator, input).parse().expect("benchmark sample must parse");
+    black_box(&document);
+}
+
+/// Parse and render HTML with the default settings.
 fn render_ferromark_html(input: &str) -> String {
-    ferromark::to_html(input)
+    ferromark::to_html(input).expect("benchmark sample must render")
 }
 
 fn run_benchmarks(sizes: &[(&'static str, usize, u32)], runs: u32) -> SuiteResults {
@@ -182,6 +150,7 @@ fn run_benchmarks(sizes: &[(&'static str, usize, u32)], runs: u32) -> SuiteResul
                     runs,
                     bytes,
                 ),
+                bench("ferromark", || ferromark_parse(&content), iterations, runs, bytes),
                 bench(
                     "xai-grok-markdown-core (Grok Build)",
                     || drain_grok_events(&content),
@@ -213,7 +182,7 @@ fn run_benchmarks(sizes: &[(&'static str, usize, u32)], runs: u32) -> SuiteResul
                 bench(
                     "ferromark",
                     || {
-                        black_box(render_ferromark_html(&content).len());
+                        black_box(render_ferromark_html(&content));
                     },
                     iterations,
                     runs,
@@ -238,6 +207,27 @@ fn run_benchmarks(sizes: &[(&'static str, usize, u32)], runs: u32) -> SuiteResul
 mod tests {
     use super::*;
     use pulldown_cmark::{Event, Tag};
+
+    #[test]
+    fn arena_reserve_covers_node_dense_sample() {
+        let input = vec![SAMPLE_MARKDOWN; 100].join("\n\n");
+        let allocator = ox_content_allocator::Allocator::for_source_len(input.len());
+        let document = ox_content_parser::Parser::new(&allocator, &input).parse().unwrap();
+        assert!(!document.children.is_empty());
+        assert!(allocator.bump().allocated_bytes() < input.len() * 12);
+    }
+
+    #[test]
+    fn renderers_agree_on_benchmark_sample() {
+        for repeats in [1, 10, 100, 2150] {
+            let input = vec![SAMPLE_MARKDOWN; repeats].join("\n\n");
+            let arena = ox_content_allocator::Allocator::for_source_len(input.len());
+            let document = ox_content_parser::Parser::new(&arena, &input).parse().unwrap();
+            let ox = ox_content_renderer::HtmlRenderer::new().render(&document);
+            let other = render_ferromark_html(&input);
+            assert_eq!(ox, other, "rendered output differs for {repeats} repeats");
+        }
+    }
 
     fn grok_strike_starts(text: &str) -> usize {
         xai_grok_markdown_core::offset_events(text)
@@ -296,6 +286,7 @@ mod tests {
             parse_names,
             [
                 Some("ox-content (native)"),
+                Some("ferromark"),
                 Some("xai-grok-markdown-core (Grok Build)"),
                 Some("pulldown-cmark")
             ]

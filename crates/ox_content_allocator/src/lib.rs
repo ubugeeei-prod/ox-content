@@ -32,7 +32,7 @@ impl Allocator {
     }
 
     /// Creates a new allocator pre-sized for parsing a Markdown source of
-    /// the given length. The capacity is a heuristic (`source_len * 8`
+    /// the given length. The capacity is a heuristic (`source_len * 10`
     /// bytes, with a 16 KB floor) that covers the typical AST footprint
     /// for real-world Markdown without growing through bumpalo's
     /// chunk-doubling path — on a fresh [`Self::new`], that path accounts
@@ -53,12 +53,11 @@ impl Allocator {
     /// decide whether the retained chunk is still big enough for the next one.
     #[must_use]
     pub const fn capacity_for_source_len(source_len: usize) -> usize {
-        // The 8× factor is empirical: across the bundled corpora
-        // (rust-book / vite / vue / typescript-handbook) the AST + render
-        // output combined comes in between 5× and 7× of the source
-        // length. 8× errs slightly on the over-allocation side so the
-        // first chunk almost always suffices.
-        const BYTES_PER_INPUT_BYTE: usize = 8;
+        // The 10× factor covers node-dense Markdown that exceeds the
+        // previous 8× reservation. A fallback bump chunk increases
+        // peak arena memory and adds a large allocation on every parse;
+        // reserving a little more up front avoids that growth.
+        const BYTES_PER_INPUT_BYTE: usize = 10;
         // Small documents break the ratio: a 500-byte document still builds a
         // full block/inline tree, whose fixed per-node overhead lands nowhere
         // near 8× the source. Measured against the md4x bench fixture (494

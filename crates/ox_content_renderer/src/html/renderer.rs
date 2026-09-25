@@ -30,6 +30,11 @@ use crate::render::{RenderResult, Renderer};
 
 pub use hooks::{HtmlRenderContext, HtmlRenderControl, HtmlRenderHooks, NoHtmlRenderHooks};
 
+// Most pages have fewer than 64 distinct heading IDs. Reserving for every
+// heading wastes space when a long document repeats the same heading text;
+// the map can still grow when the IDs really are distinct.
+const INITIAL_HEADING_ID_RESERVE_LIMIT: usize = 64;
+
 /// Stateful HTML renderer for Markdown AST documents.
 ///
 /// A renderer instance owns reusable buffers for heading IDs, inline table-of-contents
@@ -98,11 +103,8 @@ pub struct HtmlRenderer {
     /// island writes its own non-executing JSON payload.
     in_mdx_island_children: bool,
     /// First-byte skip index for the autolink scanner. It depends only on
-    /// `options.autolink_patterns`, which is immutable for the duration of a
-    /// render, so it is built once at `render()` entry and reused for every
-    /// text node instead of being rebuilt per node (the prior behaviour zeroed
-    /// and filled a 256-byte table on the hottest inline path). `None` when
-    /// autolinking is disabled or there are no patterns.
+    /// immutable options, so it is initialized once with the renderer and
+    /// reused across renders. `None` when autolinking is disabled.
     autolink_index: Option<FirstByteIndex>,
 }
 
@@ -120,6 +122,12 @@ impl HtmlRenderer {
     }
 
     fn with_renderer_options(options: RendererOptions) -> Self {
+        let autolink_patterns = options.autolink_patterns();
+        let autolink_index = if options.autolink_urls && !autolink_patterns.is_empty() {
+            Some(FirstByteIndex::from_patterns(autolink_patterns))
+        } else {
+            None
+        };
         Self {
             options,
             output: String::new(),
@@ -130,18 +138,16 @@ impl HtmlRenderer {
             footnote_slug_counts: FxHashMap::default(),
             toc_entries: Vec::new(),
             document_has_toc_marker: false,
-            // Pre-size the heading scratch buffers: a typical heading text
-            // is well under 64 chars. Pre-allocating spares the first
-            // heading from a `String::with_capacity(0)` → `reserve(N)`
-            // round-trip without meaningful memory cost (these buffers
-            // live for the renderer's lifetime regardless).
-            heading_text_scratch: String::with_capacity(64),
+            // Most headings are a single text node and can borrow that text
+            // directly. Allocate a collection buffer only for mixed content.
+            heading_text_scratch: String::new(),
+            // The slug and ID buffers are used for every generated heading.
             heading_slug_scratch: String::with_capacity(64),
             heading_id_scratch: String::with_capacity(64),
             code_block_index: 0,
             in_link: false,
             in_mdx_island_children: false,
-            autolink_index: None,
+            autolink_index,
         }
     }
 
@@ -192,18 +198,9 @@ impl HtmlRenderer {
             collect_inline_toc_entries(document, self.options.toc_max_depth, &mut self.toc_entries);
         }
         self.heading_id_counts.clear();
-        self.heading_id_counts.reserve(document_scan.heading_count);
+        self.heading_id_counts
+            .reserve(document_scan.heading_count.min(INITIAL_HEADING_ID_RESERVE_LIMIT));
         self.clear_footnote_state();
-        // Build the autolink first-byte index once per render. It depends only
-        // on the immutable pattern list, not on the text node being rendered,
-        // so reusing it avoids rebuilding a 256-byte table on every inline
-        // text visit.
-        let autolink_patterns = self.options.autolink_patterns();
-        self.autolink_index = if self.options.autolink_urls && !autolink_patterns.is_empty() {
-            Some(FirstByteIndex::from_patterns(autolink_patterns))
-        } else {
-            None
-        };
         // HTML output is typically 2×–3× the markdown source (every
         // `**bold**` becomes `<strong>...</strong>` etc.) so the prior
         // 1.5× estimate kept undersizing the buffer and forcing 1–2

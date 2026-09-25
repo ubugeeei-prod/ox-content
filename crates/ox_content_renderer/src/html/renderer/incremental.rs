@@ -1,7 +1,6 @@
 use ox_content_ast::Document;
 
-use super::{HtmlRenderHooks, HtmlRenderer};
-use crate::html::autolink::FirstByteIndex;
+use super::{HtmlRenderHooks, HtmlRenderer, INITIAL_HEADING_ID_RESERVE_LIMIT};
 use crate::html::toc::{DocumentRenderScan, collect_inline_toc_entries, scan_document_for_render};
 
 impl HtmlRenderer {
@@ -86,7 +85,6 @@ impl HtmlRenderer {
         self.heading_text_scratch.clear();
         self.heading_slug_scratch.clear();
         self.in_link = false;
-        self.autolink_index = None;
     }
 
     fn render_fragment(&mut self, document: &Document<'_>) -> String {
@@ -116,13 +114,8 @@ impl HtmlRenderer {
         if self.document_has_toc_marker {
             collect_inline_toc_entries(document, self.options.toc_max_depth, &mut self.toc_entries);
         }
-        self.heading_id_counts.reserve(document_scan.heading_count);
-        let autolink_patterns = self.options.autolink_patterns();
-        self.autolink_index = if self.options.autolink_urls && !autolink_patterns.is_empty() {
-            Some(FirstByteIndex::from_patterns(autolink_patterns))
-        } else {
-            None
-        };
+        self.heading_id_counts
+            .reserve(document_scan.heading_count.min(INITIAL_HEADING_ID_RESERVE_LIMIT));
         self.in_link = false;
         let estimated_len = (document.span.len() as usize).saturating_mul(2);
         if self.output.capacity() < estimated_len {
@@ -145,13 +138,8 @@ impl HtmlRenderer {
         if self.document_has_toc_marker {
             collect_inline_toc_entries(document, self.options.toc_max_depth, &mut self.toc_entries);
         }
-        self.heading_id_counts.reserve(document_scan.heading_count);
-        let autolink_patterns = self.options.autolink_patterns();
-        self.autolink_index = if self.options.autolink_urls && !autolink_patterns.is_empty() {
-            Some(FirstByteIndex::from_patterns(autolink_patterns))
-        } else {
-            None
-        };
+        self.heading_id_counts
+            .reserve(document_scan.heading_count.min(INITIAL_HEADING_ID_RESERVE_LIMIT));
         self.in_link = false;
         let estimated_len = (document.span.len() as usize).saturating_mul(2);
         if self.output.capacity() < estimated_len {

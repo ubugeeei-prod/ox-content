@@ -12,6 +12,18 @@ fn test_autolink_enabled_by_default() {
 }
 
 #[test]
+fn test_autolink_survives_renderer_reuse_and_incremental_reset() {
+    let allocator = Allocator::new();
+    let doc = Parser::new(&allocator, "see http://example.com here").parse().unwrap();
+    let mut renderer = HtmlRenderer::new();
+    let expected = renderer.render(&doc);
+    assert!(expected.contains("<a href=\"http://example.com\""));
+    assert_eq!(renderer.render(&doc), expected);
+    renderer.reset_incremental_state();
+    assert_eq!(renderer.render_incremental_fragment(&doc), expected);
+}
+
+#[test]
 fn test_autolink_can_be_disabled() {
     let allocator = Allocator::new();
     let doc = Parser::new(&allocator, "see http://example.com here").parse().unwrap();

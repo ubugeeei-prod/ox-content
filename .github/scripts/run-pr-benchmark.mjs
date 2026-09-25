@@ -34,6 +34,7 @@ for (const file of [
   "native-competitors/src/conformance.rs",
   "native-competitors/src/json.rs",
   "native-competitors/src/main.rs",
+  "native-competitors/src/sample.rs",
 ]) {
   const from = join(sourceRoot, sourceBenchmarkRoot, file);
   const to = join(checkoutRoot, checkoutBenchmarkRoot, file);

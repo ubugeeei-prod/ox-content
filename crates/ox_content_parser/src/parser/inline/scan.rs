@@ -252,12 +252,20 @@ unsafe fn next_special_avx2(bytes: &[u8], from: usize) -> usize {
 #[cfg(target_arch = "aarch64")]
 #[inline]
 pub(super) fn next_inline_special(bytes: &[u8], from: usize) -> usize {
+    // Tiny tails occur after almost every inline marker. A table walk is
+    // cheaper than setting up a vector classifier for fewer than 16 bytes.
+    if bytes.len() - from < 16 {
+        return next_inline_special_scalar(bytes, from);
+    }
     next_special_neon(bytes, from)
 }
 
 #[cfg(target_arch = "x86_64")]
 #[inline]
 pub(super) fn next_inline_special(bytes: &[u8], from: usize) -> usize {
+    if bytes.len() - from < 16 {
+        return next_inline_special_scalar(bytes, from);
+    }
     // AVX2 / SSSE3 are not in the x86-64 baseline, so they are detected
     // rather than assumed. `is_x86_feature_detected!` caches its answer
     // in an atomic, and a machine without either keeps the scalar scan.

@@ -63,35 +63,33 @@ impl<'a> Parser<'a> {
     }
 
     /// Parses a fenced code block.
-    pub(super) fn parse_fenced_code(&mut self, start: usize) -> ParseResult<Option<Node<'a>>> {
+    pub(super) fn parse_fenced_code(
+        &mut self,
+        start: usize,
+        opening_indent: usize,
+    ) -> ParseResult<Option<Node<'a>>> {
         profile_span!("parser::parse_fenced_code");
-        let opening_indent = self.calc_indentation(start).min(3);
-        for _ in 0..opening_indent {
-            if self.peek() == Some(' ') {
-                self.advance();
-            }
-        }
+        let bytes = self.source.as_bytes();
+        // Block dispatch already measured an indent below four columns. It
+        // contains only spaces, so that count is also the byte offset.
+        self.position = start + opening_indent;
 
-        let Some(fence_char) = self.peek() else {
+        let Some(&fence_byte) = bytes.get(self.position) else {
             return Err(ParseError::UnexpectedEof { span: Span::new(start as u32, start as u32) });
         };
+        let fence_char = fence_byte as char;
         let mut fence_len = 0;
 
-        while self.peek() == Some(fence_char) {
+        while bytes.get(self.position) == Some(&fence_byte) {
             fence_len += 1;
-            self.advance();
+            self.position += 1;
         }
 
         // Parse info string (language)
         self.skip_whitespace();
         let info_start = self.position;
-        while let Some(ch) = self.peek() {
-            if matches!(ch, '\n' | '\r') {
-                break;
-            }
-            self.advance();
-        }
-        let info = self.source[info_start..self.position].trim();
+        let info_end = line_end(bytes, info_start);
+        let info = self.source[info_start..info_end].trim();
         let (lang, meta) = if info.is_empty() {
             (None, None)
         } else if let Some(space_idx) = info.find(' ') {
@@ -102,8 +100,7 @@ impl<'a> Parser<'a> {
         // Backslash escapes and entity references apply in info strings.
         let lang = lang.map(|lang| self.unescape_link_component(lang));
 
-        let bytes = self.source.as_bytes();
-        self.position = next_line_start(bytes, self.position);
+        self.position = line_terminator_end(bytes, info_end);
 
         // Fast path: when the opening fence has no indentation, the body
         // lines need no indent stripping — we can find the closing fence

@@ -178,6 +178,16 @@ impl<'a> Parser<'a> {
     /// costs O(n²). The position of the last closer settles it for every
     /// opener in the slice at once, so the run costs one scan in total.
     pub(super) fn has_closer_from(&self, content: &'a str, from: usize, closer: u8) -> bool {
+        // Short inline slices usually ask this once. A direct scan avoids a
+        // hash lookup and insertion for every link or image while bounding
+        // any repeated scan to a small fixed amount of text.
+        if content.len() <= 256 {
+            return content
+                .as_bytes()
+                .get(from..)
+                .is_some_and(|tail| memchr(closer, tail).is_some());
+        }
+
         let key = (content.as_ptr() as usize, content.len(), closer);
 
         let cached = self.last_closer.borrow().get(&key).copied();
