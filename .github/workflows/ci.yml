@@ -246,16 +246,16 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os:
-          - blacksmith-32vcpu-ubuntu-2404
-          - macos-latest
-          - windows-2025
+        # Windows is covered on main pushes and release validation. Its cold
+        # native build takes longer than the entire pull request feedback loop.
+        os: ${{ fromJSON(github.event_name == 'pull_request' && '["blacksmith-32vcpu-ubuntu-2404","macos-latest"]' || '["blacksmith-32vcpu-ubuntu-2404","macos-latest","windows-2025"]') }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
 
       - name: Setup Vite+
+        if: runner.os == 'Windows'
         uses: voidzero-dev/setup-vp@24d870228786dc83ae73482406bdd1e7befaec14 # v1.21.0
         with:
           cache: true
@@ -273,7 +273,7 @@ jobs:
           target: target
 
       - name: Cache cargo
-        if: runner.os != 'Windows' && !startsWith(matrix.os, 'blacksmith-')
+        if: ${{ !startsWith(matrix.os, 'blacksmith-') }}
         uses: Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6 # v2
 
       # Debug build: the smoke test only verifies the binding loads and that
@@ -281,7 +281,19 @@ jobs:
       # build validates the same ABI/load/correctness path far faster than the
       # release profile (fat LTO + codegen-units=1). Release artifacts are built
       # and verified separately in publish.yml.
+      - name: Build local NAPI binding with Cargo
+        if: runner.os != 'Windows'
+        shell: bash
+        run: |
+          cargo build -p ox_content_napi --lib
+          if [[ "$RUNNER_OS" == 'macOS' ]]; then
+            cp target/debug/libox_content_napi.dylib crates/ox_content_napi/ox-content.node
+          else
+            cp target/debug/libox_content_napi.so crates/ox_content_napi/ox-content.node
+          fi
+
       - name: Build local NAPI binding
+        if: runner.os == 'Windows'
         working-directory: crates/ox_content_napi
         run: vp exec -- napi build
 

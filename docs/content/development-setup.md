@@ -197,8 +197,9 @@ node tools/benchmarks/bundle-size/measure.mjs --json /tmp/bundle.json
 node tools/benchmarks/bundle-size/check-budgets.mjs --bundle /tmp/bundle.json
 ```
 
-The PR Benchmark job runs that checker on head measurements. Raise a ceiling
-in the same PR as the intentional growth, or apply the
+Add the `full-benchmark` label to a PR to run the full base/head comparison;
+it also checks these ceilings on head measurements. Raise a ceiling in the
+same PR as the intentional growth, or apply the
 `benchmark-regression-accepted` label. See [Performance](./performance.md).
 
 For committed benchmark tables and charts, use the Blacksmith-backed docs

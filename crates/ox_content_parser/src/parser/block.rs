@@ -9,6 +9,9 @@ use crate::error::{ParseError, ParseResult};
 #[allow(unused_imports)]
 use crate::{profile_span, profile_span_detail};
 
+mod trim;
+use trim::trim_block_content;
+
 impl<'a> Parser<'a> {
     pub(super) fn parse_block(&mut self) -> ParseResult<Option<Node<'a>>> {
         profile_span!("parser::parse_block");
@@ -66,7 +69,7 @@ impl<'a> Parser<'a> {
                 if let Some(first_item) =
                     self.parse_list_item_line_from_trimmed(start, line, trimmed)
                 {
-                    return self.parse_list(start, line_indent, first_item, line.len());
+                    return self.parse_list(start, line_indent, first_item);
                 }
             }
             b'_' if Self::try_parse_thematic_break_line(self.line_at(start)) => {
@@ -118,7 +121,7 @@ impl<'a> Parser<'a> {
                 if let Some(first_item) =
                     self.parse_list_item_line_from_trimmed(start, line, trimmed)
                 {
-                    return self.parse_list(start, line_indent, first_item, line.len());
+                    return self.parse_list(start, line_indent, first_item);
                 }
             }
             b'i' | b'e' => {
@@ -225,7 +228,7 @@ impl<'a> Parser<'a> {
             if let Some(depth) = self.setext_underline_depth(line_start, cursor) {
                 let heading_end = scan_next_line_start(bytes, line_start);
                 self.position = heading_end;
-                let content = self.source[start..content_end].trim();
+                let content = trim_block_content(&self.source[start..content_end]);
                 let (content, id, classes) = self.split_heading_attributes(content);
                 let children = self.parse_inline_block(content, start)?;
                 return Ok(Some(Node::Heading(self.allocator.boxed(Heading {
@@ -253,7 +256,7 @@ impl<'a> Parser<'a> {
             self.position = content_end;
         }
 
-        let content = self.source[start..content_end].trim();
+        let content = trim_block_content(&self.source[start..content_end]);
         if content.is_empty() {
             return Ok(None);
         }

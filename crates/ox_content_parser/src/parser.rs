@@ -33,6 +33,7 @@ mod reference;
 mod spans;
 mod table;
 mod table_cell_source;
+mod whitespace;
 
 #[cfg(test)]
 mod tests;

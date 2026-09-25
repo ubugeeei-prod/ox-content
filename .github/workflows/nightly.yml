@@ -6,9 +6,6 @@ on:
       - main
     tags:
       - "!**"
-  pull_request:
-    branches:
-      - main
   workflow_dispatch:
     inputs:
       skip_build:

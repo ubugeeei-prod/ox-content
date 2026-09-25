@@ -1,4 +1,5 @@
 use super::Parser;
+use super::whitespace::is_blank;
 #[allow(unused_imports)]
 use crate::profile_span_detail;
 
@@ -48,7 +49,7 @@ impl<'a> Parser<'a> {
     pub(super) fn try_parse_list_interrupt(trimmed: &str) -> bool {
         let bytes = trimmed.as_bytes();
         if matches!(bytes.first(), Some(b'-' | b'*' | b'+')) {
-            return matches!(bytes.get(1), Some(b' ' | b'\t')) && !trimmed[1..].trim().is_empty();
+            return matches!(bytes.get(1), Some(b' ' | b'\t')) && !is_blank(&trimmed[1..]);
         }
         let mut i = 0;
         while i < bytes.len() && bytes[i].is_ascii_digit() {
@@ -58,7 +59,7 @@ impl<'a> Parser<'a> {
             && trimmed[..i] == *"1"
             && matches!(bytes.get(i), Some(b'.' | b')'))
             && matches!(bytes.get(i + 1), Some(b' ' | b'\t'))
-            && !trimmed[i + 1..].trim().is_empty()
+            && !is_blank(&trimmed[i + 1..])
     }
 
     /// Calculates the indentation level (number of spaces) of the current line.
@@ -184,9 +185,8 @@ impl<'a> Parser<'a> {
         let mut content_offset = trimmed_offset + marker_width + content_skip;
         // Continuation indent counts the marker's own indent plus the
         // marker and its separating spaces; empty items count one column.
-        let content_indent = marker_indent
-            + marker_width
-            + if content.trim().is_empty() { 1 } else { content_skip.max(1) };
+        let content_indent =
+            marker_indent + marker_width + if is_blank(content) { 1 } else { content_skip.max(1) };
         let mut checked = None;
 
         if let Some((done, consumed)) = self.parse_task_list_prefix(content) {

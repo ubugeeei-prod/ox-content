@@ -5,6 +5,7 @@ use self::item_source::ListItemSource;
 use super::Parser;
 use super::line_scan::{is_line_ending_byte, line_terminator_end};
 use super::list_item::ParsedListItem;
+use super::whitespace::is_blank;
 use crate::error::ParseResult;
 #[allow(unused_imports)]
 use crate::{profile_span, profile_span_detail};
@@ -17,7 +18,6 @@ impl<'a> Parser<'a> {
         start: usize,
         baseline_indent: usize,
         first_item: ParsedListItem<'a>,
-        first_line_len: usize,
     ) -> ParseResult<Option<Node<'a>>> {
         profile_span!("parser::parse_list");
 
@@ -30,11 +30,10 @@ impl<'a> Parser<'a> {
 
         let mut children: Vec<'a, ListItem<'a>> = self.allocator.new_vec();
         let mut list_spread = false;
-        let mut first_line_len = Some(first_line_len);
-
         loop {
             let line_start = self.position;
-            let line_len = first_line_len.take().unwrap_or_else(|| self.line_at(line_start).len());
+            // The recognizer already bounded the marker line for every item.
+            let line_len = item.content_source_end - line_start;
 
             // Consume the marker line.
             self.position += line_len;
@@ -131,7 +130,7 @@ impl<'a> Parser<'a> {
     ) -> (bool, usize, Option<ListItemSource<'a>>, Option<ParsedListItem<'a>>) {
         profile_span_detail!("parser::list_item_continuation");
         let content_indent = item.content_indent;
-        let item_is_empty = item.content.trim().is_empty();
+        let item_is_empty = is_blank(item.content);
         let mut item_source = None;
         let mut item_end = self.position;
         let mut gap_spread = false;
@@ -147,18 +146,21 @@ impl<'a> Parser<'a> {
 
             let continuation_start = self.position;
             let continuation_line = self.line_at(continuation_start);
-            let continuation_next = self.next_line_start(continuation_start);
+            let continuation_next = line_terminator_end(
+                self.source.as_bytes(),
+                continuation_start + continuation_line.len(),
+            );
 
-            if continuation_line.trim().is_empty() {
+            if is_blank(continuation_line) {
                 let mut lookahead = continuation_next;
                 let mut blank_count = 1;
                 while lookahead < self.source.len() {
                     let line = self.line_at(lookahead);
-                    if !line.trim().is_empty() {
+                    if !is_blank(line) {
                         break;
                     }
                     blank_count += 1;
-                    lookahead = self.next_line_start(lookahead);
+                    lookahead = line_terminator_end(self.source.as_bytes(), lookahead + line.len());
                 }
 
                 if lookahead >= self.source.len() {

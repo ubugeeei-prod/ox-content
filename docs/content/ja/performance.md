@@ -20,7 +20,7 @@ Ox Content には性能の面が 4 つあり、どれも pull request で報告�
 
 実行時は CLI、開発サーバ、エディタ連携、バッチビルドで効きます。出力の重さはドキュメントサイトで効きます。生成 HTML、CSS、JS が、遷移のたびに利用者が取るものだからです。絶対上限は
 [`tools/benchmarks/perf-budgets.json`](https://github.com/ubugeeei-prod/ox-content/blob/main/tools/benchmarks/perf-budgets.json)
-にあります。base / head の相対差は、これまでどおり PR Benchmark コメントです。
+にあります。`full-benchmark` ラベルを付けた PR では、base / head の相対差を PR Benchmark コメントで確認できます。
 
 ### 対象外
 
@@ -37,6 +37,8 @@ Ox Content には性能の面が 4 つあり、どれも pull request で報告�
 Ox Content は文書生成器でもあり、高性能 Markdown ツールキットでもあります。下の数字は Markdown エンジン側に寄せています。
 
 速さは公平な比較の半分にすぎません。Markdown エンジンは CommonMark の実装範囲が違い、仕様カバーをスループットと意図して交換するものもあります。だから各行は速さの横に、測った CommonMark 適合率を持ちます。仕様挙動を飛ばして速いエンジンは、単に上位に並ぶのではなく、そう見えるようにします。Ox Content の点数と測り方は [CommonMark 適合](#commonmark-適合) を見てください。
+
+[英語版のベンチ表](../performance.md) にある Ferromark v2.1.2 は [Ox Content v3.2.3 のソースフォーク](https://github.com/sebastian-software/ferromark/blob/v2.1.2/UPSTREAM.md) です（Git 履歴は別）。この行は関連する実装の測定値であり、独立した設計のパーサとの比較ではありません。
 
 <!-- benchmark:tables:start -->
 

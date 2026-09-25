@@ -1,9 +1,10 @@
 use ox_content_ast::{BlockQuote, Node, Span};
 
 use super::Parser;
-use super::line_scan::{line_end as scan_line_end, next_line_start as scan_next_line_start};
+use super::line_scan::{line_end as scan_line_end, line_terminator_end};
 use super::reference::{closes_paragraph_context, fence_open, is_fence_close};
 use super::spans::SourceMap;
+use super::whitespace::is_blank;
 use crate::error::ParseResult;
 #[allow(unused_imports)]
 use crate::profile_span;
@@ -51,6 +52,7 @@ impl<'a> Parser<'a> {
             }
 
             let line_end = scan_line_end(bytes, line_start);
+            let line_next = line_terminator_end(bytes, line_end);
             let line = &self.source[line_start..line_end];
             let trimmed_offset = ws_cursor - line_start;
             let trimmed = &line[trimmed_offset..];
@@ -91,7 +93,6 @@ impl<'a> Parser<'a> {
                 inner.push('\n');
                 let content_start =
                     line_start + trimmed_offset + 1 + Self::quote_marker_space_bytes(after_gt);
-                let line_next = scan_next_line_start(bytes, line_start);
                 let source_len =
                     line_end.saturating_sub(content_start) + line_next.saturating_sub(line_end);
                 source_map.push_line(
@@ -114,7 +115,7 @@ impl<'a> Parser<'a> {
                 // and heading/thematic lines close it too. Deeper markers
                 // (nested quotes, list items) keep a paragraph open.
                 paragraph_open = fence.is_none()
-                    && !stripped_trimmed.trim().is_empty()
+                    && !is_blank(stripped_trimmed)
                     && indent_columns < 4
                     && !stripped_trimmed.starts_with('#')
                     && !closes_paragraph_context(stripped_trimmed);
@@ -135,7 +136,6 @@ impl<'a> Parser<'a> {
                 lazy_lines.insert(inner.len() as u32);
                 inner.push_str(line);
                 inner.push('\n');
-                let line_next = scan_next_line_start(bytes, line_start);
                 source_map.push_line(
                     generated_start,
                     line.len() + 1,
@@ -170,7 +170,7 @@ impl<'a> Parser<'a> {
         Self::try_parse_list_line(line) && {
             let after_digits = line.trim_start_matches(|ch: char| ch.is_ascii_digit());
             let after_marker = after_digits.trim_start_matches(['-', '*', '+', '.', ')']);
-            after_marker.trim().is_empty()
+            is_blank(after_marker)
         }
     }
 
