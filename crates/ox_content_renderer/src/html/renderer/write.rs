@@ -220,7 +220,12 @@ impl HtmlRenderer {
     pub(in crate::html::renderer) fn write_heading_id(&mut self, heading: &Heading<'_>) {
         crate::profile_span!("renderer::write_heading_id");
         self.prepare_heading_id(heading);
-        write_attribute_escaped_into(&mut self.output, &self.heading_id_scratch);
+        if heading.id.is_some() {
+            write_attribute_escaped_into(&mut self.output, &self.heading_id_scratch);
+        } else {
+            // Generated slugs contain only alphanumeric characters and '-'.
+            self.output.push_str(&self.heading_id_scratch);
+        }
     }
 
     pub(in crate::html::renderer) fn write_heading_permalink_if_needed(
@@ -236,7 +241,11 @@ impl HtmlRenderer {
         self.output.push_str("<a class=\"");
         self.output.push_str(HEADING_PERMALINK_CLASS);
         self.output.push_str("\" href=\"#");
-        write_attribute_escaped_into(&mut self.output, &self.heading_id_scratch);
+        if heading.id.is_some() {
+            write_attribute_escaped_into(&mut self.output, &self.heading_id_scratch);
+        } else {
+            self.output.push_str(&self.heading_id_scratch);
+        }
         if self.heading_text_scratch.is_empty() {
             self.output.push_str("\" aria-label=\"Permalink to this section\">#</a>");
             return;
