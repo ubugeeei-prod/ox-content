@@ -1,5 +1,12 @@
 # Changelog
 
+## [3.2.10] - 2026-09-25
+
+### Performance
+
+- reduce short-text processing overhead (#1445) _(affects: crates: ox_content_parser, ox_content_renderer; ci, docs, tooling)_
+- improve native parse and render throughput (#1444) _(affects: crates: ox_content_allocator, ox_content_parser, ox_content_renderer; ci, tooling)_
+
 ## [3.2.9] - 2026-09-24
 
 ### Features
