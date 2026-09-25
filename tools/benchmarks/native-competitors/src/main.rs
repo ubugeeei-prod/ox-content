@@ -107,18 +107,18 @@ fn ox_content_parse(input: &str) {
     let allocator = ox_content_allocator::Allocator::for_source_len(input.len());
     let parser = ox_content_parser::Parser::new(&allocator, input);
     let document = parser.parse().expect("benchmark sample must parse");
-    black_box(document.children.len());
+    black_box(&document);
 }
 
 /// ox-content parse + HTML render with the same defaults the
 /// `@ox-content/napi` `parseAndRender` row uses (default parser options,
 /// `HtmlRenderer::new()`), minus the napi string hand-off.
-fn ox_content_render_html(input: &str) -> usize {
+fn ox_content_render_html(input: &str) -> String {
     let allocator = ox_content_allocator::Allocator::for_source_len(input.len());
     let parser = ox_content_parser::Parser::new(&allocator, input);
     let document = parser.parse().expect("benchmark sample must parse");
     let mut renderer = ox_content_renderer::HtmlRenderer::new();
-    renderer.render(&document).len()
+    renderer.render(&document)
 }
 
 /// Build the arena AST without rendering, matching the native parse row.
@@ -126,7 +126,7 @@ fn ferromark_parse(input: &str) {
     let allocator = ferromark::Allocator::for_source_len(input.len());
     let document =
         ferromark::Parser::new(&allocator, input).parse().expect("benchmark sample must parse");
-    black_box(document.children.len());
+    black_box(&document);
 }
 
 /// Parse and render HTML with the default settings.
@@ -182,7 +182,7 @@ fn run_benchmarks(sizes: &[(&'static str, usize, u32)], runs: u32) -> SuiteResul
                 bench(
                     "ferromark",
                     || {
-                        black_box(render_ferromark_html(&content).len());
+                        black_box(render_ferromark_html(&content));
                     },
                     iterations,
                     runs,
