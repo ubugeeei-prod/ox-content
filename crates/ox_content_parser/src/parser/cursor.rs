@@ -53,8 +53,8 @@ impl<'a> Parser<'a> {
         self.position = pos;
     }
 
-    /// Skips blank lines.
-    pub(super) fn skip_blank_lines(&mut self) {
+    /// Skips blank lines and returns the first content byte on the next line.
+    pub(super) fn skip_blank_lines(&mut self) -> Option<usize> {
         let bytes = self.source.as_bytes();
         let mut pos = self.position;
         loop {
@@ -72,13 +72,13 @@ impl<'a> Parser<'a> {
                 // parser consumes, and the block loop — which runs until
                 // `is_at_end` — would spin forever.
                 self.position = pos;
-                return;
+                return None;
             } else {
                 // Content follows the indentation; rewind so the caller
                 // still sees the leading whitespace (indented code and
                 // list markers depend on it).
                 self.position = line_start;
-                return;
+                return Some(pos);
             }
         }
     }

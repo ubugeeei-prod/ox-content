@@ -12,11 +12,9 @@ use crate::{profile_span, profile_span_detail};
 impl<'a> Parser<'a> {
     pub(super) fn parse_block(&mut self) -> ParseResult<Option<Node<'a>>> {
         profile_span!("parser::parse_block");
-        self.skip_blank_lines();
-
-        if self.is_at_end() {
+        let Some(trimmed_start) = self.skip_blank_lines() else {
             return Ok(None);
-        }
+        };
 
         // `max_nesting_depth == 0` means unlimited. Every sub-source parser
         // is built one level deeper than its parent, so a positive cap
@@ -32,14 +30,6 @@ impl<'a> Parser<'a> {
 
         let start = self.position;
         let bytes = self.source.as_bytes();
-        let Some(trimmed_start) = self.first_non_whitespace_in_line(start) else {
-            // Nothing but whitespace remains on this line. `skip_blank_lines`
-            // normally consumes it, so reaching here means the line ends at
-            // EOF; advance past it regardless so the caller's
-            // `while !is_at_end` loop always makes progress.
-            self.position = self.source.len();
-            return Ok(None);
-        };
 
         // Four columns of indentation start an indented code block; no
         // other block construct can begin on such a line. (This runs at
@@ -65,7 +55,7 @@ impl<'a> Parser<'a> {
         // paragraph, so the two dispatchers must agree on block starts.
         match bytes[trimmed_start] {
             b'#' if self.try_parse_heading_start(start, trimmed_start) => {
-                return self.parse_heading(start);
+                return self.parse_heading(start, trimmed_start);
             }
             b'-' | b'*' => {
                 let line = self.line_at(start);
@@ -87,7 +77,7 @@ impl<'a> Parser<'a> {
                 let line = self.line_at(start);
                 let trimmed = &line[trimmed_start - start..];
                 if Self::try_parse_fenced_code_at(line, trimmed) {
-                    return self.parse_fenced_code(start);
+                    return self.parse_fenced_code(start, line_indent);
                 }
             }
             b'$' if self.options.math => {

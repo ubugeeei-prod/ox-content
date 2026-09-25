@@ -2,7 +2,7 @@ use ox_content_allocator::Vec as ArenaVec;
 use ox_content_ast::{Node, Span};
 
 use super::Parser;
-use super::line_scan::{line_end, next_line_start};
+use super::line_scan::{line_end, line_terminator_end};
 use crate::error::ParseResult;
 #[allow(unused_imports)]
 use crate::profile_span;
@@ -81,12 +81,16 @@ impl<'a> Parser<'a> {
     }
 
     /// Parses a heading.
-    pub(super) fn parse_heading(&mut self, start: usize) -> ParseResult<Option<Node<'a>>> {
+    pub(super) fn parse_heading(
+        &mut self,
+        start: usize,
+        trimmed_start: usize,
+    ) -> ParseResult<Option<Node<'a>>> {
         profile_span!("parser::parse_heading");
         let bytes = self.source.as_bytes();
         // Step over the (already validated, at most three columns of)
         // indentation before counting hashes.
-        self.skip_whitespace();
+        self.position = trimmed_start;
         let mut depth = 0u8;
         // `#` is ASCII, so count the leading run with direct byte compares
         // instead of routing each through `peek()`/`advance()`.
@@ -98,10 +102,10 @@ impl<'a> Parser<'a> {
         self.skip_whitespace();
 
         let content_start = self.position;
-        // The heading content runs to the end of the line; find it in one
-        // memchr scan rather than a per-char peek/advance walk.
+        // The heading content runs to the end of the line; find it once
+        // rather than re-scanning the same line to advance the cursor.
         let content_end = line_end(bytes, content_start);
-        self.position = next_line_start(bytes, content_start);
+        self.position = line_terminator_end(bytes, content_end);
 
         // A closing hash sequence only counts when preceded by a space or
         // tab (or when the heading is nothing but hashes); an escaped
