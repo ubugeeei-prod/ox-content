@@ -4,6 +4,7 @@ use super::Parser;
 use super::line_scan::{line_end as scan_line_end, line_terminator_end};
 use super::reference::{closes_paragraph_context, fence_open, is_fence_close};
 use super::spans::SourceMap;
+use super::whitespace::is_blank;
 use crate::error::ParseResult;
 #[allow(unused_imports)]
 use crate::profile_span;
@@ -114,7 +115,7 @@ impl<'a> Parser<'a> {
                 // and heading/thematic lines close it too. Deeper markers
                 // (nested quotes, list items) keep a paragraph open.
                 paragraph_open = fence.is_none()
-                    && !stripped_trimmed.trim().is_empty()
+                    && !is_blank(stripped_trimmed)
                     && indent_columns < 4
                     && !stripped_trimmed.starts_with('#')
                     && !closes_paragraph_context(stripped_trimmed);
@@ -169,7 +170,7 @@ impl<'a> Parser<'a> {
         Self::try_parse_list_line(line) && {
             let after_digits = line.trim_start_matches(|ch: char| ch.is_ascii_digit());
             let after_marker = after_digits.trim_start_matches(['-', '*', '+', '.', ')']);
-            after_marker.trim().is_empty()
+            is_blank(after_marker)
         }
     }
 

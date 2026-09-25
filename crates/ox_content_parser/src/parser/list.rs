@@ -5,6 +5,7 @@ use self::item_source::ListItemSource;
 use super::Parser;
 use super::line_scan::{is_line_ending_byte, line_terminator_end};
 use super::list_item::ParsedListItem;
+use super::whitespace::is_blank;
 use crate::error::ParseResult;
 #[allow(unused_imports)]
 use crate::{profile_span, profile_span_detail};
@@ -129,7 +130,7 @@ impl<'a> Parser<'a> {
     ) -> (bool, usize, Option<ListItemSource<'a>>, Option<ParsedListItem<'a>>) {
         profile_span_detail!("parser::list_item_continuation");
         let content_indent = item.content_indent;
-        let item_is_empty = item.content.trim().is_empty();
+        let item_is_empty = is_blank(item.content);
         let mut item_source = None;
         let mut item_end = self.position;
         let mut gap_spread = false;
@@ -150,12 +151,12 @@ impl<'a> Parser<'a> {
                 continuation_start + continuation_line.len(),
             );
 
-            if continuation_line.trim().is_empty() {
+            if is_blank(continuation_line) {
                 let mut lookahead = continuation_next;
                 let mut blank_count = 1;
                 while lookahead < self.source.len() {
                     let line = self.line_at(lookahead);
-                    if !line.trim().is_empty() {
+                    if !is_blank(line) {
                         break;
                     }
                     blank_count += 1;
