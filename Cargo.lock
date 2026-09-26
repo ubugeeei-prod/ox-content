@@ -1355,21 +1355,21 @@ checksum = "d211803b9b6b570f68772237e415a029d5a50c65d382910b879fb19d3271f94d"
 
 [[package]]
 name = "ox_content_allocator"
-version = "3.2.10"
+version = "3.2.11"
 dependencies = [
  "bumpalo",
 ]
 
 [[package]]
 name = "ox_content_ast"
-version = "3.2.10"
+version = "3.2.11"
 dependencies = [
  "ox_content_allocator",
 ]
 
 [[package]]
 name = "ox_content_component_resolver"
-version = "3.2.10"
+version = "3.2.11"
 dependencies = [
  "corsa_client",
  "insta",
@@ -1381,7 +1381,7 @@ dependencies = [
 
 [[package]]
 name = "ox_content_docs"
-version = "3.2.10"
+version = "3.2.11"
 dependencies = [
  "criterion",
  "insta",
@@ -1408,7 +1408,7 @@ dependencies = [
 
 [[package]]
 name = "ox_content_highlight"
-version = "3.2.10"
+version = "3.2.11"
 dependencies = [
  "tree-sitter",
  "tree-sitter-bash",
@@ -1458,7 +1458,7 @@ dependencies = [
 
 [[package]]
 name = "ox_content_i18n"
-version = "3.2.10"
+version = "3.2.11"
 dependencies = [
  "insta",
  "miette",
@@ -1471,7 +1471,7 @@ dependencies = [
 
 [[package]]
 name = "ox_content_i18n_checker"
-version = "3.2.10"
+version = "3.2.11"
 dependencies = [
  "insta",
  "miette",
@@ -1488,7 +1488,7 @@ dependencies = [
 
 [[package]]
 name = "ox_content_i18n_cli"
-version = "3.2.10"
+version = "3.2.11"
 dependencies = [
  "clap",
  "miette",
@@ -1499,7 +1499,7 @@ dependencies = [
 
 [[package]]
 name = "ox_content_i18n_lsp"
-version = "3.2.10"
+version = "3.2.11"
 dependencies = [
  "ox_content_i18n",
  "ox_content_i18n_checker",
@@ -1513,7 +1513,7 @@ dependencies = [
 
 [[package]]
 name = "ox_content_incremental"
-version = "3.2.10"
+version = "3.2.11"
 dependencies = [
  "compact_str 0.10.0",
  "criterion",
@@ -1526,7 +1526,7 @@ dependencies = [
 
 [[package]]
 name = "ox_content_link_checker"
-version = "3.2.10"
+version = "3.2.11"
 dependencies = [
  "clap",
  "insta",
@@ -1540,7 +1540,7 @@ dependencies = [
 
 [[package]]
 name = "ox_content_lsp"
-version = "3.2.10"
+version = "3.2.11"
 dependencies = [
  "compact_str 0.10.0",
  "insta",
@@ -1565,7 +1565,7 @@ dependencies = [
 
 [[package]]
 name = "ox_content_markdown_lint"
-version = "3.2.10"
+version = "3.2.11"
 dependencies = [
  "compact_str 0.10.0",
  "ox_content_allocator",
@@ -1580,7 +1580,7 @@ dependencies = [
 
 [[package]]
 name = "ox_content_mdast"
-version = "3.2.10"
+version = "3.2.11"
 dependencies = [
  "ox_content_allocator",
  "ox_content_ast",
@@ -1590,7 +1590,7 @@ dependencies = [
 
 [[package]]
 name = "ox_content_mdc_checker"
-version = "3.2.10"
+version = "3.2.11"
 dependencies = [
  "clap",
  "insta",
@@ -1601,11 +1601,11 @@ dependencies = [
 
 [[package]]
 name = "ox_content_mermaid"
-version = "3.2.10"
+version = "3.2.11"
 
 [[package]]
 name = "ox_content_napi"
-version = "3.2.10"
+version = "3.2.11"
 dependencies = [
  "criterion",
  "insta",
@@ -1639,7 +1639,7 @@ dependencies = [
 
 [[package]]
 name = "ox_content_og_image"
-version = "3.2.10"
+version = "3.2.11"
 dependencies = [
  "insta",
  "serde",
@@ -1649,7 +1649,7 @@ dependencies = [
 
 [[package]]
 name = "ox_content_parser"
-version = "3.2.10"
+version = "3.2.11"
 dependencies = [
  "compact_str 0.10.0",
  "criterion",
@@ -1666,7 +1666,7 @@ dependencies = [
 
 [[package]]
 name = "ox_content_profile_cli"
-version = "3.2.10"
+version = "3.2.11"
 dependencies = [
  "clap",
  "ox_content_allocator",
@@ -1679,7 +1679,7 @@ dependencies = [
 
 [[package]]
 name = "ox_content_profiler"
-version = "3.2.10"
+version = "3.2.11"
 dependencies = [
  "insta",
  "serde",
@@ -1688,7 +1688,7 @@ dependencies = [
 
 [[package]]
 name = "ox_content_renderer"
-version = "3.2.10"
+version = "3.2.11"
 dependencies = [
  "compact_str 0.10.0",
  "criterion",
@@ -1706,7 +1706,7 @@ dependencies = [
 
 [[package]]
 name = "ox_content_search"
-version = "3.2.10"
+version = "3.2.11"
 dependencies = [
  "compact_str 0.10.0",
  "insta",
@@ -1721,7 +1721,7 @@ dependencies = [
 
 [[package]]
 name = "ox_content_ssg"
-version = "3.2.10"
+version = "3.2.11"
 dependencies = [
  "askama",
  "insta",
@@ -1734,7 +1734,7 @@ dependencies = [
 
 [[package]]
 name = "ox_content_theme_generator"
-version = "3.2.10"
+version = "3.2.11"
 dependencies = [
  "regex",
  "serde",
@@ -1743,7 +1743,7 @@ dependencies = [
 
 [[package]]
 name = "ox_content_transform"
-version = "3.2.10"
+version = "3.2.11"
 dependencies = [
  "compact_str 0.10.0",
  "insta",
@@ -1762,7 +1762,7 @@ dependencies = [
 
 [[package]]
 name = "ox_content_vite"
-version = "3.2.10"
+version = "3.2.11"
 dependencies = [
  "insta",
  "ox_content_allocator",
@@ -1776,7 +1776,7 @@ dependencies = [
 
 [[package]]
 name = "ox_content_wasm"
-version = "3.2.10"
+version = "3.2.11"
 dependencies = [
  "js-sys",
  "ox_content_allocator",
