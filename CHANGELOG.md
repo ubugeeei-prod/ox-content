@@ -1,5 +1,11 @@
 # Changelog
 
+## [3.2.11] - 2026-09-26
+
+### Features
+
+- support Flow-typed sources (#1448) _(affects: crates: ox_content_docs; docs)_
+
 ## [3.2.10] - 2026-09-25
 
 ### Performance
