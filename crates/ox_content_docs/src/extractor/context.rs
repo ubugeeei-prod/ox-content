@@ -35,11 +35,20 @@ impl<'a> DocVisitor<'a> {
             items: Vec::new(),
             type_alias_function_metadata: FxHashMap::default(),
             has_default_export: false,
+            flow: crate::flow::is_flow_source(file_path, source),
         }
     }
 
     pub(super) fn slice(&self, start: u32, end: u32) -> String {
-        self.source[start as usize..end as usize].to_string()
+        let mut start = start as usize;
+        // Flow `?Type` parses with the `?` blanked, so the type's span starts
+        // after it. Reattach it so docs keep the maybe type.
+        if self.flow {
+            while start > 0 && self.source.as_bytes()[start - 1] == b'?' {
+                start -= 1;
+            }
+        }
+        self.source[start..end as usize].to_string()
     }
 
     pub(super) fn line_number(&self, position: u32) -> u32 {

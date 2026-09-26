@@ -8,6 +8,14 @@ use super::DocVisitor;
 impl<'a> DocVisitor<'a> {
     /// Format a TypeScript type.
     pub(super) fn format_ts_type(&self, ts_type: &TSType) -> String {
+        // Flow types parse through a TypeScript rewrite, so the AST drops
+        // Flow-only notation (`?T`, `{| |}`, `$Keys<T>` stays). Show the
+        // original source instead; type literals are still formatted
+        // structurally so member JSDoc comments stay out of the type text.
+        if self.flow && !matches!(ts_type, TSType::TSTypeLiteral(_)) {
+            let span = ts_type.span();
+            return self.format_type_span(span.start, span.end);
+        }
         match ts_type {
             TSType::TSAnyKeyword(_) => "any".to_string(),
             TSType::TSBooleanKeyword(_) => "boolean".to_string(),
@@ -97,6 +105,20 @@ impl<'a> DocVisitor<'a> {
         self.format_type_span(ts_type.span().start, ts_type.span().end)
     }
 
+    /// The Flow variance sigil (`+`/`-`) blanked in front of a member.
+    fn flow_variance(&self, member_start: u32) -> Option<char> {
+        if !self.flow {
+            return None;
+        }
+        let start = member_start as usize;
+        let at = |index: usize| self.source.as_bytes().get(index).copied();
+        [at(start), start.checked_sub(1).and_then(at)]
+            .into_iter()
+            .flatten()
+            .find(|byte| matches!(byte, b'+' | b'-'))
+            .map(char::from)
+    }
+
     fn format_span(&self, start: u32, end: u32) -> String {
         self.slice(start, end).split_whitespace().collect::<Vec<_>>().join(" ").trim().to_string()
     }
@@ -145,7 +167,14 @@ impl<'a> DocVisitor<'a> {
             .filter(|member| !member.is_empty())
             .collect::<Vec<_>>();
 
-        if members.is_empty() { "{}".to_string() } else { join3("{ ", &members.join("; "), " }") }
+        let exact = self.flow
+            && self.source.as_bytes().get(type_literal.span.start as usize + 1) == Some(&b'|');
+        let (open, close) = if exact { ("{| ", " |}") } else { ("{ ", " }") };
+        if members.is_empty() {
+            if exact { "{||}".to_string() } else { "{}".to_string() }
+        } else {
+            join3(open, &members.join("; "), close)
+        }
     }
 
     fn format_type_literal_member(&self, member: &TSSignature<'a>) -> String {
@@ -161,6 +190,9 @@ impl<'a> DocVisitor<'a> {
                 let mut out = StringBuilder::with_capacity(name.len() + type_annotation.len() + 16);
                 if prop.readonly {
                     out.push_str("readonly ");
+                }
+                if let Some(variance) = self.flow_variance(prop.span.start) {
+                    out.push_char(variance);
                 }
                 out.push_str(&name);
                 if prop.optional {
