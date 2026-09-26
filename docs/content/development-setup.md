@@ -174,7 +174,7 @@ vp run deploy#docs
 ```
 
 The task builds the Rust workspace and local npm packages before running
-`void deploy`, and it uses a root base path so assets resolve correctly on
+`void deploy --platform cloudflare`, and it uses a root base path so assets resolve correctly on
 `https://ox-content.void.app`.
 
 See [Docs Deployment](./deployment.md) for environment variables and overrides.

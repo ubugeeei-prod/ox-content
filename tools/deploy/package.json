@@ -5,5 +5,8 @@
   "type": "module",
   "scripts": {
     "docs": "node ../scripts/deploy-docs-to-void.mjs"
+  },
+  "devDependencies": {
+    "void": "0.20.3"
   }
 }

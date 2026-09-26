@@ -32,9 +32,11 @@ catalog:
   vite-plus: 0.3.2
 
 allowBuilds:
+  better-sqlite3: true
   esbuild: true
   sharp: true
   puppeteer: true
+  workerd: true
 
 packageExtensions:
   "@voidzero-dev/vite-plus-core@0.1.21":
@@ -67,3 +69,9 @@ peerDependencyRules:
     vitest: "*"
 minimumReleaseAgeExclude:
   - "@mizchi/markdown@0.8.3"
+  - "@void/deploy-cloudflare@0.20.3"
+  - "@void/deploy-core@0.20.3"
+  - "@void/edge@0.20.3"
+  - "@void/isr@0.20.3"
+  - "@void/platform@0.20.3"
+  - void@0.20.3

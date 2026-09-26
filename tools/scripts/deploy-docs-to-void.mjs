@@ -4,7 +4,6 @@ import { fileURLToPath } from "node:url";
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..", "..");
 const extraArgs = process.argv.slice(2);
-const defaultProject = process.env.VOID_PROJECT || "ox-content";
 const docsBase = process.env.OX_CONTENT_DOCS_BASE || "/";
 const docsSiteUrl = process.env.OX_CONTENT_DOCS_SITE_URL || "https://ox-content.void.app";
 
@@ -49,21 +48,16 @@ const run = (command, args, options = {}) => {
   }
 };
 
-// pnpm 12 fails an install whose dependencies carry unapproved build
-// scripts, and `pnpm dlx` runs outside the workspace, so the `allowBuilds`
-// list in pnpm-workspace.yaml never reaches it. The approval is only
-// accepted as a CLI flag — `npm_config_*` is ignored — and `vpx` has no way
-// to pass one through, so the dlx call is spelled out below.
-const voidBuildDependencies = ["better-sqlite3", "esbuild", "workerd"];
-
-const voidArgs = ["void@0.10.8", "deploy"];
-
-if (!hasOption(extraArgs, "--project")) {
-  voidArgs.push("--project", defaultProject);
-}
+// The docs are a pre-built static directory deployed straight to the
+// Cloudflare account in CLOUDFLARE_ACCOUNT_ID. `void` is a devDependency of
+// tools/deploy, which also holds the wrangler.jsonc that names the Worker, so
+// the deploy runs from there. The static edge Worker imports `void/edge`,
+// which only resolves when `void` is installed next to that config.
+const deployDir = "tools/deploy";
+const voidArgs = ["deploy", "--platform", "cloudflare"];
 
 if (!hasOption(extraArgs, "--dir")) {
-  voidArgs.push("--dir", "docs/dist/docs");
+  voidArgs.push("--dir", resolve(root, "docs/dist/docs"));
 }
 
 voidArgs.push(...extraArgs);
@@ -80,12 +74,4 @@ run("vp", ["build"], {
     OX_CONTENT_DOCS_SITE_URL: docsSiteUrl,
   },
 });
-run("vp", [
-  "exec",
-  "--",
-  "pnpm",
-  "dlx",
-  "--yes",
-  ...voidBuildDependencies.flatMap((name) => ["--allow-build", name]),
-  ...voidArgs,
-]);
+run("void", voidArgs, { cwd: deployDir });

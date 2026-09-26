@@ -5,9 +5,9 @@ description: Deploy the Ox Content documentation site to Void.
 
 # Docs Deployment
 
-The repository deploys the docs site to Void from GitHub Actions on pushes to
-`main`. The workflow uses GitHub OIDC, so it does not require a long-lived
-`VOID_TOKEN` secret.
+The repository deploys the docs site with Void from GitHub Actions on pushes to
+`main`. `void deploy --platform cloudflare` uploads the static site directly to
+the project's Cloudflare account as a Worker with static assets.
 
 For local deployments, the same deploy path is exposed as a dedicated workspace
 task:
@@ -30,14 +30,16 @@ whatever is already published to the registry.
 4. `vp pack` in `npm/vite-plugin-ox-content`
 5. `vp run build` in `npm/ox-content-code-play`
 6. `vp build` in `docs`
-7. `vpx void@0.10.8 deploy`
+7. `void deploy --platform cloudflare` in `tools/deploy`
 
-The deploy command defaults to the Void project and docs output directory used
-by this repository.
+`void` is pinned as a devDependency of `tools/deploy`, next to the
+`wrangler.jsonc` that names the `ox-content` Worker. The Cloudflare account is
+read from `CLOUDFLARE_ACCOUNT_ID`.
 
 | Setting                    | Default                       | Purpose                                     |
 | -------------------------- | ----------------------------- | ------------------------------------------- |
-| `VOID_PROJECT`             | `ox-content`                  | Passed to `void deploy --project`.          |
+| `CLOUDFLARE_ACCOUNT_ID`    | none                          | Cloudflare account that hosts the Worker.   |
+| `CLOUDFLARE_API_TOKEN`     | none (browser login locally)  | API token used for non-interactive deploys. |
 | `OX_CONTENT_DOCS_BASE`     | `/`                           | Vite base path for the Void-hosted site.    |
 | `OX_CONTENT_DOCS_SITE_URL` | `https://ox-content.void.app` | Absolute site URL used for metadata and OG. |
 | Deploy directory           | `docs/dist/docs`              | Passed to `void deploy --dir`.              |
@@ -46,33 +48,23 @@ Void hosts `https://ox-content.void.app` at the root path, so the deploy task
 sets the docs base to `/` by default. A normal production docs build without
 that override still uses the GitHub Pages base configured in `docs/vite.config.ts`.
 
-## GitHub Actions OIDC
+## GitHub Actions
 
-The tokenless deploy workflow lives at `.github/workflows/void-deploy.yml`.
-It grants `id-token: write` and runs `tools/scripts/deploy-docs-to-void.mjs`
-directly from the GitHub Actions shell step, which lets `void deploy` exchange
-GitHub OIDC for a short-lived Void deploy token at run time.
+The deploy workflow lives at `.github/workflows/void-deploy.yml` and runs
+`tools/scripts/deploy-docs-to-void.mjs` directly from the GitHub Actions shell
+step. It needs these repository settings:
 
-The repository must be connected to the Void project once:
+| Name                       | Kind     | Purpose                                                  |
+| -------------------------- | -------- | -------------------------------------------------------- |
+| `CLOUDFLARE_API_TOKEN`     | Secret   | API token with Workers Scripts: Edit on the account.     |
+| `CLOUDFLARE_ACCOUNT_ID`    | Secret   | Cloudflare account that hosts the `ox-content` Worker.   |
+| `OX_CONTENT_DOCS_SITE_URL` | Variable | Optional. Overrides the absolute site URL for the build. |
 
-```bash
-vpx void@0.10.8 github connect ox-content \
-  --repo ubugeeei-prod/ox-content \
-  --branch main \
-  --executor github_actions \
-  --workflow .github/workflows/void-deploy.yml
-```
-
-If the GitHub App is not installed for the organization yet, run
-`vpx void@0.10.8 github install` first.
+The Cloudflare secrets are only exposed to the deploy step.
 
 ## Overrides
 
 Use environment variables for common deployment targets:
-
-```bash
-VOID_PROJECT=ox-content-preview vp run deploy#docs
-```
 
 ```bash
 OX_CONTENT_DOCS_BASE=/ \
@@ -80,11 +72,11 @@ OX_CONTENT_DOCS_SITE_URL=https://ox-content.void.app \
 vp run deploy#docs
 ```
 
-Extra arguments are forwarded to `void deploy`, so the project or directory can
-also be overridden from the command line:
+Extra arguments are forwarded to `void deploy`, so the directory can also be
+overridden from the command line:
 
 ```bash
-vp run deploy#docs -- --project ox-content-preview --dir docs/dist/docs
+vp run deploy#docs -- --dir docs/dist/docs --debug
 ```
 
 ## CSS and Asset Paths

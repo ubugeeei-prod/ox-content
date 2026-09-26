@@ -1,0 +1,5 @@
+// Direct Cloudflare target for `void deploy --platform cloudflare`.
+// The account comes from CLOUDFLARE_ACCOUNT_ID so it is not committed here.
+{
+  "name": "ox-content",
+}
