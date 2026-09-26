@@ -100,6 +100,19 @@ signature, and members. The following JSDoc tags are recognised:
 Types are read from the TypeScript annotations themselves, so `@param {Type}`
 JSDoc type syntax is not required.
 
+## Flow
+
+[Flow](https://flow.org)-typed sources are documented too. A file is read as
+Flow when it is a `*.js.flow` declaration file, or a `.js`/`.jsx`/`.mjs`/`.cjs`
+file with an `@flow` (or `@noflow`) pragma in its leading comments. Types are
+shown in Flow's own notation — `?string`, `{| +label: string |}`,
+`$ReadOnly<Props>` — exactly as written in the source.
+
+Flow syntax that has no TypeScript counterpart the parser can read (`hook`
+declarations and `match` expressions, for example) is skipped statement by
+statement, so the rest of the module is still documented. `*.js.flow` files are
+not in the default `include` patterns; add `'**/*.js.flow'` when you want them.
+
 ## Entry points and re-exports
 
 By default, docs are grouped by source file. If your package re-exports its

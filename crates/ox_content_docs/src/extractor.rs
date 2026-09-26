@@ -55,6 +55,8 @@ struct DocVisitor<'a> {
     type_alias_function_metadata: FxHashMap<String, FunctionTypeMetadata>,
     /// Track default export
     has_default_export: bool,
+    /// Whether the source is Flow, parsed through [`crate::flow`].
+    flow: bool,
 }
 
 #[cfg(test)]

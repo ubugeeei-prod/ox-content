@@ -2,7 +2,7 @@
 //!
 //! This crate provides functionality similar to `cargo doc`,
 //! generating documentation from source code using OXC parser
-//! for JavaScript/TypeScript files.
+//! for JavaScript/TypeScript/Flow files.
 
 #![deny(clippy::disallowed_macros)]
 #![cfg_attr(test, allow(clippy::disallowed_macros))]
@@ -31,6 +31,7 @@ pub(crate) use profile_span;
 mod config;
 mod data;
 mod extractor;
+mod flow;
 mod generator;
 mod graph;
 mod markdown;

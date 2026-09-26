@@ -96,6 +96,17 @@ export default defineConfig({
 
 型は TypeScript の注釈そのものから読むので、`@param {Type}` の JSDoc 型構文は不要です。
 
+## Flow
+
+[Flow](https://flow.org) で型付けされたソースも文書化できます。`*.js.flow` 宣言ファイル、
+または先頭のコメントに `@flow`（または `@noflow`）プラグマを持つ `.js` / `.jsx` / `.mjs` /
+`.cjs` ファイルを Flow として読みます。型は `?string`、`{| +label: string |}`、
+`$ReadOnly<Props>` のように、ソースに書かれた Flow の表記のまま表示します。
+
+パーサーが読める TypeScript の対応物がない Flow 構文（たとえば `hook` 宣言や `match` 式）は
+文単位でスキップするので、モジュールの残りは引き続き文書化されます。`*.js.flow` ファイルは
+既定の `include` パターンに含まれないため、必要なら `'**/*.js.flow'` を追加してください。
+
 ## 入口と再エクスポート
 
 既定では、ドキュメントはソースファイルごとにまとまります。パッケージが公開 API を

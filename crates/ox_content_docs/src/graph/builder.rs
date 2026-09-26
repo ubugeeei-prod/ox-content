@@ -2,7 +2,6 @@ use std::path::{Path, PathBuf};
 
 use oxc_allocator::Allocator;
 use oxc_ast::ast::{ExportDefaultDeclarationKind, Statement};
-use oxc_parser::Parser;
 use oxc_span::SourceType;
 use rustc_hash::{FxHashMap, FxHashSet};
 
@@ -79,7 +78,7 @@ impl GraphBuilder {
         let source_type = SourceType::from_path(path).unwrap_or_default();
         let ret = {
             profile_span!("docs::graph_oxc_parse");
-            Parser::new(&allocator, source, source_type).parse()
+            crate::flow::parse(&allocator, source, &path.to_string_lossy(), source_type)
         };
         if !ret.diagnostics.is_empty() {
             let message = ret

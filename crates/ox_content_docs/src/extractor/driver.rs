@@ -3,7 +3,6 @@ use std::path::Path;
 use oxc_allocator::Allocator;
 use oxc_ast::ast::Comment;
 use oxc_ast_visit::Visit;
-use oxc_parser::Parser;
 use oxc_span::{GetSpan, SourceType};
 
 use super::jsdoc::build_jsdoc_cache;
@@ -88,7 +87,7 @@ impl DocExtractor {
         let extension = path.extension().and_then(|e| e.to_str()).unwrap_or("");
 
         match extension {
-            "ts" | "tsx" | "js" | "jsx" | "mts" | "mjs" | "cts" | "cjs" => {
+            "ts" | "tsx" | "js" | "jsx" | "mts" | "mjs" | "cts" | "cjs" | "flow" => {
                 self.extract_js_ts(allocator, path)
             }
             _ => Err(ExtractError::UnsupportedFile(extension.to_string())),
@@ -96,6 +95,9 @@ impl DocExtractor {
     }
 
     /// Extracts documentation from source code string.
+    ///
+    /// Flow sources (`*.js.flow`, or JavaScript with an `@flow` pragma) are
+    /// detected from `file_path` and the leading comments.
     pub fn extract_source(
         &self,
         source: &str,
@@ -122,7 +124,7 @@ impl DocExtractor {
         allocator.reset();
         let ret = {
             profile_span!("docs::oxc_parse");
-            Parser::new(&*allocator, source, source_type).parse()
+            crate::flow::parse(&*allocator, source, file_path, source_type)
         };
 
         if !ret.diagnostics.is_empty() {
