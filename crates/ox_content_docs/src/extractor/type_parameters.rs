@@ -1,5 +1,3 @@
-use oxc_span::GetSpan;
-
 use crate::string_builder::StringBuilder;
 
 use super::{DocVisitor, TypeParamDoc};
@@ -35,11 +33,11 @@ impl<'a> DocVisitor<'a> {
                 constraint: param
                     .constraint
                     .as_ref()
-                    .map(|constraint| self.slice(constraint.span().start, constraint.span().end)),
+                    .map(|constraint| self.format_type_parameter_type(constraint)),
                 default: param
                     .default
                     .as_ref()
-                    .map(|default| self.slice(default.span().start, default.span().end)),
+                    .map(|default| self.format_type_parameter_type(default)),
                 description: String::new(),
             })
             .collect()

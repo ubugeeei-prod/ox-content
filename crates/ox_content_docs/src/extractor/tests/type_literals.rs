@@ -123,3 +123,170 @@ export type CommandOptions = {
     assert_eq!(member.params.len(), 1);
     assert_eq!(member.params[0].description.as_deref(), Some("Runtime context"));
 }
+
+fn param_types(source: &str) -> Vec<String> {
+    let extractor = DocExtractor::new();
+    let items = extractor.extract_source(source, "use.ts", SourceType::ts()).unwrap();
+    // A parameter of an object literal type also gives a row per member (`flat.args`).
+    items[0]
+        .params
+        .iter()
+        .filter(|param| !param.name.contains('.'))
+        .map(|param| param.type_annotation.clone().unwrap_or_default())
+        .collect()
+}
+
+#[test]
+fn keeps_the_members_of_a_type_literal_inside_a_type_apart() {
+    let source = r"
+/**
+ * Use.
+ */
+export function useIt(
+  list: Array<{
+    args: Args
+    label: string
+  }>,
+  cond: Args extends object
+    ? {
+        args: Args
+        label: string
+      }
+    : never,
+  map: {
+    [K in keyof Args]: {
+      args: Args
+      label: string
+    }
+  },
+  pair: [first: {
+    args: Args
+    label: string
+  }],
+): void {}
+";
+    assert_eq!(
+        param_types(source),
+        [
+            "Array<{ args: Args; label: string }>",
+            "Args extends object ? { args: Args; label: string } : never",
+            "{ [K in keyof Args]: { args: Args; label: string } }",
+            "[first: { args: Args; label: string }]",
+        ]
+    );
+}
+
+#[test]
+fn leaves_member_comments_out_of_a_type_literal_inside_a_type() {
+    let source = r"
+/**
+ * Use.
+ */
+export function useIt(
+  list: Array<{
+    /** The args. */
+    args: Args, label: string
+  }>,
+  flat: {
+    /** The args. */
+    args: Args, label: string
+  },
+): void {}
+";
+    assert_eq!(
+        param_types(source),
+        ["Array<{ args: Args; label: string }>", "{ args: Args; label: string }"]
+    );
+}
+
+#[test]
+fn keeps_the_members_of_a_type_literal_inside_a_type_as_their_source() {
+    let source = r#"
+/**
+ * Use.
+ */
+export function useIt(
+  literals: Array<{
+    sep: "\\"
+    quote: '"'
+    code: -1 | 1n
+  }>,
+  keys: Partial<{
+    'content-type': string,
+    <E>(event: E): void
+    new (value: string): Args
+  }>,
+  functions: Partial<{
+    map: <U extends Args>(value: U) => U
+    onClick(this: Args, [first]: Args[]): void
+    pick<U extends { a: string
+      b: number }>(value: U): U
+  }>,
+  accessors: Array<{
+    get size(): number
+    set size(value: number)
+    loose()
+    any
+  }>,
+): void {}
+"#;
+    assert_eq!(
+        param_types(source),
+        [
+            r#"Array<{ sep: "\\"; quote: '"'; code: -1 | 1n }>"#,
+            "Partial<{ 'content-type': string; <E>(event: E): void; new (value: string): Args }>",
+            "Partial<{ map: <U extends Args>(value: U) => U; onClick(this: Args, [first]: Args[]): void; pick<U extends { a: string; b: number }>(value: U): U }>",
+            "Array<{ get size(): number; set size(value: number); loose(); any }>",
+        ]
+    );
+}
+
+#[test]
+fn keeps_a_type_without_a_type_literal_as_its_source() {
+    let source = r"
+/**
+ * Use.
+ */
+export function useIt(
+  map: Map<
+    string,
+    number
+  >,
+  cond: Args extends object ? 'yes' : 'no',
+): void {}
+";
+    assert_eq!(param_types(source), ["Map<string, number>", "Args extends object ? 'yes' : 'no'"]);
+}
+
+#[test]
+fn keeps_the_members_of_a_type_parameter_constraint_apart() {
+    let source = r"
+/**
+ * Params.
+ */
+export interface Params<
+  P extends {
+    args?: Args
+    label?: string
+  } = {
+    args: Args
+    label: string
+  },
+  Q extends Record<
+    string,
+    unknown
+  > = {}
+> {
+  params: P
+}
+";
+    let extractor = DocExtractor::new();
+    let items = extractor.extract_source(source, "params.ts", SourceType::ts()).unwrap();
+    let type_parameters = &items[0].type_parameters;
+
+    assert_eq!(type_parameters.len(), 2);
+    assert_eq!(type_parameters[0].constraint.as_deref(), Some("{ args?: Args; label?: string }"));
+    assert_eq!(type_parameters[0].default.as_deref(), Some("{ args: Args; label: string }"));
+    assert_eq!(type_parameters[1].constraint.as_deref(), Some("Record<string, unknown>"));
+    assert_eq!(type_parameters[1].default.as_deref(), Some("{}"));
+}
