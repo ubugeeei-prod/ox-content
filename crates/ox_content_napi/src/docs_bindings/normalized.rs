@@ -49,7 +49,7 @@ fn map_normalized_member(member: NormalizedMember) -> JsDocMember {
         readonly: member.readonly.then_some(true),
         r#static: member.r#static.then_some(true),
         private: member.private.then_some(true),
-        tags: (!member.tags.is_empty()).then(|| member.tags.into_iter().collect()),
+        tags: (!member.tags.is_empty()).then_some(member.tags),
         implementation_of: None,
         line: member.line,
         end_line: member.end_line,
@@ -67,7 +67,7 @@ pub fn map_normalized_doc_entry(entry: NormalizedDocEntry) -> JsDocEntry {
         throws: (!entry.throws.is_empty())
             .then(|| entry.throws.into_iter().map(map_normalized_throws_doc).collect()),
         examples: (!entry.examples.is_empty()).then_some(entry.examples),
-        tags: (!entry.tags.is_empty()).then(|| entry.tags.into_iter().collect()),
+        tags: (!entry.tags.is_empty()).then_some(entry.tags),
         private: entry.private,
         file: entry.file,
         line: entry.line,

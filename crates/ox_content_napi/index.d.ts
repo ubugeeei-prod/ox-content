@@ -651,6 +651,7 @@ export interface JsDocEntry {
   returns?: JsDocReturn
   throws?: Array<JsDocThrows>
   examples?: Array<string>
+  /** Custom JSDoc tags by name, with the first value of a repeated tag. */
   tags?: Record<string, string>
   private: boolean
   file: string
@@ -685,6 +686,7 @@ export interface JsDocMember {
   readonly?: boolean
   static?: boolean
   private?: boolean
+  /** Custom JSDoc tags by name, with the first value of a repeated tag. */
   tags?: Record<string, string>
   implementationOf?: Array<string>
   line: number

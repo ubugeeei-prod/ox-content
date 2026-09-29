@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use std::collections::BTreeMap;
 
 use napi_derive::napi;
 
@@ -43,7 +43,6 @@ pub struct JsTypeParam {
 /// Normalized member documentation used by generated API docs.
 #[napi(object)]
 #[derive(Clone)]
-#[allow(clippy::disallowed_types)]
 pub struct JsDocMember {
     pub name: String,
     pub kind: String,
@@ -60,7 +59,8 @@ pub struct JsDocMember {
     pub readonly: Option<bool>,
     pub r#static: Option<bool>,
     pub private: Option<bool>,
-    pub tags: Option<HashMap<String, String>>,
+    /// Custom JSDoc tags by name, with the first value of a repeated tag.
+    pub tags: Option<BTreeMap<String, String>>,
     pub implementation_of: Option<Vec<String>>,
     pub line: u32,
     pub end_line: u32,
@@ -95,7 +95,6 @@ impl Default for JsDocMember {
 /// Normalized documentation entry used by generated API docs.
 #[napi(object)]
 #[derive(Clone)]
-#[allow(clippy::disallowed_types)]
 pub struct JsDocEntry {
     pub name: String,
     pub kind: String,
@@ -104,7 +103,8 @@ pub struct JsDocEntry {
     pub returns: Option<JsDocReturn>,
     pub throws: Option<Vec<JsDocThrows>>,
     pub examples: Option<Vec<String>>,
-    pub tags: Option<HashMap<String, String>>,
+    /// Custom JSDoc tags by name, with the first value of a repeated tag.
+    pub tags: Option<BTreeMap<String, String>>,
     pub private: bool,
     pub file: String,
     pub line: u32,

@@ -651,6 +651,59 @@ export type CommandOptions = {
 
     expect(markdown["command.md"]).toMatchSnapshot();
   });
+
+  it("keeps the keys of extracted tags in tag name order", async () => {
+    const srcDir = await fs.mkdtemp(path.join(os.tmpdir(), "ox-content-docs-src-"));
+    tempDirs.push(srcDir);
+
+    await fs.writeFile(
+      path.join(srcDir, "command.ts"),
+      `/**
+ * Runs the command.
+ *
+ * @since 1.0.0
+ * @see https://example.com/command
+ * @remarks Runs once.
+ * @license MIT
+ * @beta
+ * @category Commands
+ * @author ox-content
+ * @alpha
+ */
+export function run(): void {}
+
+/** A command. */
+export class Command {
+  /**
+   * Executes the command.
+   *
+   * @since 1.0.0
+   * @see https://example.com/execute
+   * @remarks Runs once.
+   * @license MIT
+   * @beta
+   * @category Commands
+   * @author ox-content
+   * @alpha
+   */
+  execute(): void {}
+}
+`,
+      "utf-8",
+    );
+
+    const docs = await extractDocs([srcDir], resolveDocsOptions({ include: ["**/*.ts"] })!);
+    const entries = docs[0]?.entries ?? [];
+    const run = entries.find((entry) => entry.name === "run");
+    const execute = entries
+      .find((entry) => entry.name === "Command")
+      ?.members?.find((member) => member.name === "execute");
+    const names = ["alpha", "author", "beta", "category", "license", "remarks", "see", "since"];
+
+    // Two tag maps of eight tags, so that an unordered map is not sorted by chance.
+    expect(Object.keys(run?.tags ?? {})).toEqual(names);
+    expect(Object.keys(execute?.tags ?? {})).toEqual(names);
+  });
 });
 
 describe("generateMarkdown entry points", () => {
