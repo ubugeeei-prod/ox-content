@@ -1,5 +1,11 @@
 # Changelog
 
+## [3.2.13] - 2026-09-29
+
+### Features
+
+- keep repeated JSDoc tags and every extracted field in plugin docs (#1458) _(affects: crates: ox_content_docs, ox_content_napi, ox_content_profile_cli; npm: @ox-content/napi, @ox-content/vite-plugin; docs, tooling)_
+
 ## [3.2.12] - 2026-09-29
 
 ### Bug Fixes
