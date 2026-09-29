@@ -190,3 +190,20 @@ fn typedoc_does_not_link_type_parameters_of_an_overload() {
         &[markdown_table(), html_table()],
     );
 }
+
+#[test]
+fn typedoc_does_not_link_type_variables_declared_in_a_type() {
+    // The key of a mapped type and an inferred type are declared by the type
+    // itself, so neither they nor their later uses link; `Options` still does.
+    let mut make = test_entry("make", "function", "/repo/src/make.ts", "Make.");
+    make.params = vec![
+        param("a", "{ [K in keyof Options]?: Options }"),
+        param("b", "Options extends Array<infer U> ? U : never"),
+        param("c", "{ [K in keyof Options]: Options[K] }"),
+    ];
+    assert_format_snapshots(
+        "typedoc_does_not_link_type_variables_declared_in_a_type",
+        &type_parameter_module(vec![make]),
+        &[markdown_table()],
+    );
+}

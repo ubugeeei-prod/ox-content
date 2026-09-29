@@ -155,6 +155,16 @@ fn is_declared_name(value: &str, start: usize, end: usize) -> bool {
     }
 }
 
+/// Whether the identifier at `start..end` declares a type variable of the annotation
+/// itself: the key of a mapped type (`[K in keyof T]`) or an inferred type
+/// (`infer U`). Its later uses refer to it, not to a symbol of the same name.
+fn declares_type_variable(value: &str, start: usize, end: usize) -> bool {
+    let bytes = value.as_bytes();
+    let before = skip_spaces_backward(bytes, start);
+    (before > 0 && bytes[before - 1] == b'[' && word_after(value, end) == Some("in"))
+        || matches!(word_before(value, start), Some((_, "infer")))
+}
+
 /// Tokenizes a TypeScript type annotation and resolves its identifiers against the
 /// symbol map. Returns `None` when no identifier resolves to a link, so callers can
 /// keep their existing single-code-span rendering (zero output churn for unlinkable
@@ -172,6 +182,8 @@ pub(super) fn resolve_type_fragments(
     let mut text_start = 0;
     let mut index = 0;
     let mut has_link = false;
+    // Type variables the annotation declares itself (`[K in …]`, `infer U`).
+    let mut type_variables: Vec<&str> = Vec::new();
 
     while index < bytes.len() {
         let byte = bytes[index];
@@ -209,15 +221,19 @@ pub(super) fn resolve_type_fragments(
             if !skip.contains(ident)
                 && !TS_INTRINSIC_TYPES.contains(ident)
                 && !context.type_parameters.contains(&ident)
+                && !type_variables.contains(&ident)
                 && let Some(location) = resolve_symbol_location(ident, context)
-                && !is_declared_name(value, start, index)
             {
-                fragments.push(TypeFragment::Link {
-                    name: ident.to_string(),
-                    href: format_symbol_href(context, location),
-                });
-                has_link = true;
-                continue;
+                if declares_type_variable(value, start, index) {
+                    type_variables.push(ident);
+                } else if !is_declared_name(value, start, index) {
+                    fragments.push(TypeFragment::Link {
+                        name: ident.to_string(),
+                        href: format_symbol_href(context, location),
+                    });
+                    has_link = true;
+                    continue;
+                }
             }
             fragments.push(TypeFragment::Code(ident.to_string()));
             continue;
