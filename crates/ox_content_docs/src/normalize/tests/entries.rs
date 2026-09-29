@@ -133,3 +133,52 @@ export class DefaultTranslation implements TranslationAdapter {}
     assert_eq!(adapter.extends, vec!["BaseAdapter"]);
     assert_eq!(implementation.implements, vec!["TranslationAdapter"]);
 }
+
+#[test]
+fn keeps_every_value_of_a_repeated_tag_in_source_order() {
+    let source = r"
+/**
+ * Transform a value.
+ *
+ * @typeParam T - The input.
+ * @param value - The value.
+ * @see https://example.com/first
+ * @since 1.0.0
+ * @returns The output.
+ * @see https://example.com/second
+ * @throws {TypeError} When the value is invalid.
+ * @typeParam U - The output.
+ */
+export function map<T, U>(value: T): U {}
+";
+    let extractor = DocExtractor::new();
+    let normalize = |type_parameters| {
+        let items = extractor.extract_source(source, "map.ts", SourceType::ts()).unwrap();
+        normalize_doc_items(items, type_parameters).remove(0)
+    };
+    let tag_list = |entry: &NormalizedDocEntry| {
+        entry.tag_list.iter().map(|tag| format!("@{} {}", tag.tag, tag.value)).collect::<Vec<_>>()
+    };
+
+    let entry = normalize(false);
+    assert_eq!(
+        tag_list(&entry),
+        [
+            "@typeParam T - The input.",
+            "@see https://example.com/first",
+            "@since 1.0.0",
+            "@see https://example.com/second",
+            "@typeParam U - The output.",
+        ]
+    );
+    // The tag map keeps the first value of a repeated tag.
+    assert_eq!(entry.tags.get("see").map(String::as_str), Some("https://example.com/first"));
+    assert_eq!(entry.tags.get("typeParam").map(String::as_str), Some("T - The input."));
+
+    // With type parameter docs, `@typeParam` describes the type parameters instead.
+    let entry = normalize(true);
+    assert_eq!(
+        tag_list(&entry),
+        ["@see https://example.com/first", "@since 1.0.0", "@see https://example.com/second"]
+    );
+}

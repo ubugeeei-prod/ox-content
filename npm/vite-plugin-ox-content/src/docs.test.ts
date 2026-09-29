@@ -651,6 +651,108 @@ export type CommandOptions = {
 
     expect(markdown["command.md"]).toMatchSnapshot();
   });
+
+  it("keeps the keys of extracted tags in tag name order", async () => {
+    const srcDir = await fs.mkdtemp(path.join(os.tmpdir(), "ox-content-docs-src-"));
+    tempDirs.push(srcDir);
+
+    await fs.writeFile(
+      path.join(srcDir, "command.ts"),
+      `/**
+ * Runs the command.
+ *
+ * @since 1.0.0
+ * @see https://example.com/command
+ * @remarks Runs once.
+ * @license MIT
+ * @beta
+ * @category Commands
+ * @author ox-content
+ * @alpha
+ */
+export function run(): void {}
+
+/** A command. */
+export class Command {
+  /**
+   * Executes the command.
+   *
+   * @since 1.0.0
+   * @see https://example.com/execute
+   * @remarks Runs once.
+   * @license MIT
+   * @beta
+   * @category Commands
+   * @author ox-content
+   * @alpha
+   */
+  execute(): void {}
+}
+`,
+      "utf-8",
+    );
+
+    const docs = await extractDocs([srcDir], resolveDocsOptions({ include: ["**/*.ts"] })!);
+    const entries = docs[0]?.entries ?? [];
+    const run = entries.find((entry) => entry.name === "run");
+    const execute = entries
+      .find((entry) => entry.name === "Command")
+      ?.members?.find((member) => member.name === "execute");
+    const names = ["alpha", "author", "beta", "category", "license", "remarks", "see", "since"];
+
+    // Two tag maps of eight tags, so that an unordered map is not sorted by chance.
+    expect(Object.keys(run?.tags ?? {})).toEqual(names);
+    expect(Object.keys(execute?.tags ?? {})).toEqual(names);
+  });
+
+  it("renders every value of a repeated tag", async () => {
+    const srcDir = await fs.mkdtemp(path.join(os.tmpdir(), "ox-content-docs-src-"));
+    tempDirs.push(srcDir);
+
+    await fs.writeFile(
+      path.join(srcDir, "parser.ts"),
+      `/**
+ * Parses a value.
+ *
+ * @see https://example.com/first
+ * @see https://example.com/second
+ */
+export function parse(value: string): number {
+  return Number(value);
+}
+
+/** A parser. */
+export interface Parser {
+  /**
+   * Parses a value.
+   *
+   * @param value - The value.
+   * @see https://example.com/parse-first
+   * @see https://example.com/parse-second
+   */
+  parse(value: string): number;
+}
+`,
+      "utf-8",
+    );
+
+    const docs = await extractDocs([srcDir], resolveDocsOptions({ include: ["**/*.ts"] })!);
+    const parse = docs[0]?.entries.find((entry) => entry.name === "parse");
+
+    expect(parse?.tags).toEqual({ see: "https://example.com/first" });
+    expect(parse?.tagList).toEqual([
+      { tag: "see", value: "https://example.com/first" },
+      { tag: "see", value: "https://example.com/second" },
+    ]);
+
+    const markdown = Object.values(
+      generateMarkdown(docs, resolveDocsOptions({ renderStyle: "markdown" })!),
+    ).join("\n");
+
+    for (const page of ["first", "second", "parse-first", "parse-second"]) {
+      expect(markdown).toContain(`https://example.com/${page}`);
+    }
+  });
 });
 
 describe("generateMarkdown entry points", () => {
@@ -694,6 +796,44 @@ export interface Options {
     expect(docs).toHaveLength(1);
     expect(docs[0]?.file).toBe("default");
     expect(docs[0]?.entries.map((entry) => entry.name)).toEqual(["sum", "Options"]);
+  });
+
+  it("keeps every value of a repeated module tag", async () => {
+    const srcDir = await fs.mkdtemp(path.join(os.tmpdir(), "ox-content-docs-src-"));
+    tempDirs.push(srcDir);
+
+    await fs.writeFile(
+      path.join(srcDir, "index.ts"),
+      `/**
+ * The parsers.
+ *
+ * @see https://example.com/first
+ * @constructor
+ * @see https://example.com/second
+ * @module
+ */
+/** Parses a value. */
+export function parse(value: string): number {
+  return Number(value);
+}
+`,
+      "utf-8",
+    );
+
+    const docs = await extractDocs(
+      [],
+      resolveDocsOptions({
+        entryPoints: [{ path: path.join(srcDir, "index.ts"), name: "default" }],
+      })!,
+    );
+
+    // `constructor` is also the name of an `Object.prototype` member.
+    expect(docs[0]?.tags).toEqual({ see: "https://example.com/first", constructor: "" });
+    expect(docs[0]?.tagList).toEqual([
+      { tag: "see", value: "https://example.com/first" },
+      { tag: "constructor", value: "" },
+      { tag: "see", value: "https://example.com/second" },
+    ]);
   });
 
   it("excludes internal docs unless explicitly included", async () => {
@@ -802,5 +942,84 @@ export interface RenderContext<TValue extends Record<string, unknown> = Record<s
     const markdown = generateMarkdown(docs, resolveDocsOptions({})!);
 
     expect(markdown).toMatchSnapshot();
+  });
+
+  it("renders the type parameters, throws, heritage and overloads of extracted entries", async () => {
+    const srcDir = await fs.mkdtemp(path.join(os.tmpdir(), "ox-content-docs-src-"));
+    tempDirs.push(srcDir);
+
+    await fs.writeFile(
+      path.join(srcDir, "index.ts"),
+      `/**
+ * Parses a value.
+ *
+ * @typeParam T - The value type.
+ * @param value - The value.
+ * @returns The parsed value.
+ * @throws {TypeError} When the value is invalid.
+ */
+export function parse<T>(value: T): T {
+  return value;
+}
+
+/** A base. */
+export class Base {}
+
+/** A contract. */
+export interface Contract {
+  /** Runs. */
+  run(): void;
+}
+
+/** A derived class. */
+export class Derived extends Base implements Contract {
+  /** Runs. */
+  run(): void {}
+}
+
+/** Picks a string. */
+export function pick(x: string): string;
+/** Picks a number. */
+export function pick(x: number): number;
+export function pick(x: unknown): unknown {
+  return x;
+}
+`,
+      "utf-8",
+    );
+
+    const options = resolveDocsOptions({
+      renderStyle: "markdown",
+      pathStrategy: "typedoc",
+      typeParameters: true,
+      entryPoints: [{ path: path.join(srcDir, "index.ts"), name: "default" }],
+    })!;
+    const docs = await extractDocs([], options);
+    const markdown = generateMarkdown(docs, options);
+
+    expect(markdown["default/functions/parse.md"]).toContain("## Type Parameters");
+    expect(markdown["default/functions/parse.md"]).toContain("## Throws");
+    expect(markdown["default/classes/Derived.md"]).toContain("## Extends");
+    expect(markdown["default/classes/Derived.md"]).toContain("## Implements");
+    expect(markdown["default/classes/Derived.md"]).toContain("Implementation of");
+    // The implementation signature of an overload set is not a call signature.
+    expect(markdown["default/functions/pick.md"]?.match(/## Call Signature/g)).toHaveLength(2);
+
+    const outDir = await fs.mkdtemp(path.join(os.tmpdir(), "ox-content-docs-"));
+    tempDirs.push(outDir);
+    await writeDocs(markdown, outDir, docs, options);
+    const docsJson = JSON.parse(await fs.readFile(path.join(outDir, "docs.json"), "utf-8")) as {
+      modules: Array<{ entries: Array<Record<string, unknown>> }>;
+    };
+    const entries = docsJson.modules[0]?.entries ?? [];
+
+    expect(entries.find((entry) => entry.name === "parse")).toMatchObject({
+      typeParameters: [{ name: "T", description: "The value type." }],
+      throws: [{ type: "TypeError", description: "When the value is invalid." }],
+    });
+    expect(entries.find((entry) => entry.name === "Derived")).toMatchObject({
+      extends: ["Base"],
+      implements: ["Contract"],
+    });
   });
 });

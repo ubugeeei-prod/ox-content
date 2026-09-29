@@ -12,6 +12,7 @@ use super::{
     TYPE_PARAM_TAG_NAMES,
 };
 use crate::extractor::{DocTag, TypeParamDoc};
+use crate::model::ApiDocTag;
 
 pub(super) struct NormalizedDocMetadata {
     pub(super) params: Vec<NormalizedParamDoc>,
@@ -19,6 +20,7 @@ pub(super) struct NormalizedDocMetadata {
     pub(super) throws: Vec<NormalizedThrowsDoc>,
     pub(super) examples: Vec<String>,
     pub(super) tags: BTreeMap<String, String>,
+    pub(super) tag_list: Vec<ApiDocTag>,
     pub(super) type_param_descriptions: BTreeMap<String, String>,
     pub(super) private: bool,
 }
@@ -35,6 +37,7 @@ pub(super) fn normalize_doc_metadata(
     let mut throws = Vec::new();
     let mut examples = Vec::new();
     let mut normalized_tags = BTreeMap::new();
+    let mut tag_list = Vec::new();
     let mut type_param_descriptions = BTreeMap::new();
     let mut private = false;
 
@@ -64,7 +67,7 @@ pub(super) fn normalize_doc_metadata(
                 private = true;
             }
             // TSDoc `@typeParam` / `@template`: only handled specially when opted
-            // in. Otherwise it falls through to the generic tag map (JSDoc default).
+            // in. Otherwise it falls through to the generic tags (JSDoc default).
             tag_name if type_parameters && TYPE_PARAM_TAG_NAMES.contains(tag_name) => {
                 if let Some((name, description)) = parse_type_param_tag(tag) {
                     type_param_descriptions.entry(name).or_insert(description);
@@ -72,6 +75,7 @@ pub(super) fn normalize_doc_metadata(
             }
             tag_name => {
                 normalized_tags.entry(tag_name.to_string()).or_insert_with(|| tag.value.clone());
+                tag_list.push(ApiDocTag { tag: tag_name.to_string(), value: tag.value.clone() });
             }
         }
     }
@@ -82,6 +86,7 @@ pub(super) fn normalize_doc_metadata(
         throws,
         examples,
         tags: normalized_tags,
+        tag_list,
         type_param_descriptions,
         private,
     }

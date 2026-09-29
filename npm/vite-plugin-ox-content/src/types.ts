@@ -4632,6 +4632,17 @@ export interface GeneratedOpenApiDocs {
 }
 
 /**
+ * A JSDoc tag with its value, such as `@see https://example.com`.
+ */
+export interface DocTag {
+  /** Tag name without `@`. */
+  tag: string;
+
+  /** Tag value. */
+  value: string;
+}
+
+/**
  * A single documentation entry extracted from source.
  *
  * Entries represent top-level declarations such as functions, classes,
@@ -4660,8 +4671,17 @@ export interface DocEntry {
   /** Code examples collected from `@example` tags. */
   examples?: string[];
 
-  /** Additional tags preserved by tag name after known tags are normalized. */
+  /**
+   * Additional tags by tag name after known tags are normalized, with the first
+   * value of a repeated tag.
+   */
   tags?: Record<string, string>;
+
+  /**
+   * Every additional tag in source order, with each value of a repeated tag. The
+   * generated docs use it instead of `tags`.
+   */
+  tagList?: DocTag[];
 
   /** True when the entry is marked private or matched by private filtering. */
   private?: boolean;
@@ -4680,6 +4700,18 @@ export interface DocEntry {
 
   /** Members belonging to classes, interfaces, object types, and enums. */
   members?: DocMember[];
+
+  /** Declaration type parameters, extracted when `typeParameters` is enabled. */
+  typeParameters?: TypeParamDoc[];
+
+  /** Extended base class or interface names. */
+  extends?: string[];
+
+  /** Implemented interface names. */
+  implements?: string[];
+
+  /** Whether a function declaration has a body (`false` for overload signatures). */
+  hasBody?: boolean;
 }
 
 /**
@@ -4725,8 +4757,17 @@ export interface DocMember {
   /** True when the member is marked private or matched by private filtering. */
   private?: boolean;
 
-  /** Additional tags preserved by tag name after known tags are normalized. */
+  /**
+   * Additional tags by tag name after known tags are normalized, with the first
+   * value of a repeated tag.
+   */
   tags?: Record<string, string>;
+
+  /**
+   * Every additional tag in source order, with each value of a repeated tag. The
+   * generated docs use it instead of `tags`.
+   */
+  tagList?: DocTag[];
 
   /** 1-based start line of the member declaration. */
   line: number;
@@ -4778,6 +4819,23 @@ export interface ThrowsDoc {
 }
 
 /**
+ * Type parameter documentation (`<T extends C = D>`).
+ */
+export interface TypeParamDoc {
+  /** Type parameter name, such as `T`. */
+  name: string;
+
+  /** Constraint after `extends`, when present. */
+  constraint?: string;
+
+  /** Default type after `=`, when present. */
+  default?: string;
+
+  /** Description from a `@typeParam` / `@template` tag (left out of `docs.json` when empty). */
+  description: string;
+}
+
+/**
  * Extracted documentation for a single file.
  */
 export interface ExtractedDocs {
@@ -4793,8 +4851,14 @@ export interface ExtractedDocs {
   /** Module-level examples collected from a file header comment. */
   examples?: string[];
 
-  /** Module-level tags preserved by tag name. */
+  /** Module-level tags by tag name, with the first value of a repeated tag. */
   tags?: Record<string, string>;
+
+  /**
+   * Every module-level tag in source order, with each value of a repeated tag. The
+   * generated docs use it instead of `tags`.
+   */
+  tagList?: DocTag[];
 
   /** Top-level documented declarations found in this module. */
   entries: DocEntry[];

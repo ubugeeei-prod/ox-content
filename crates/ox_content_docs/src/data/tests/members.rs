@@ -239,3 +239,36 @@ fn member_tag_objects_serialize_in_tag_name_order() {
         "tag keys should be sorted: {tags}"
     );
 }
+
+#[test]
+fn repeated_tags_keep_their_first_value_in_docs_json() {
+    let docs = vec![ApiDocModule {
+        file: "/repo/src/map.ts".to_string(),
+        entries: vec![ApiDocEntry {
+            name: "map".to_string(),
+            kind: "function".to_string(),
+            file: "/repo/src/map.ts".to_string(),
+            tags: vec![
+                ApiDocTag {
+                    tag: "see".to_string(),
+                    value: "https://example.com/first".to_string(),
+                },
+                ApiDocTag { tag: "since".to_string(), value: "1.0.0".to_string() },
+                ApiDocTag {
+                    tag: "see".to_string(),
+                    value: "https://example.com/second".to_string(),
+                },
+            ],
+            ..ApiDocEntry::default()
+        }],
+        ..ApiDocModule::default()
+    }];
+
+    let json = generate_docs_data_json(&docs, "2026-09-29T00:00:00.000Z").unwrap();
+    let value: Value = serde_json::from_str(&json).unwrap();
+
+    assert_eq!(
+        value["modules"][0]["entries"][0]["tags"],
+        serde_json::json!({ "see": "https://example.com/first", "since": "1.0.0" })
+    );
+}

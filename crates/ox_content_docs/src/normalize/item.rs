@@ -5,6 +5,7 @@ use super::member::NormalizedMember;
 use super::merge::{merge_extracted_params, merge_extracted_return};
 use super::metadata::{build_type_parameters, normalize_doc_metadata};
 use crate::extractor::{DocItem, DocTag};
+use crate::model::ApiDocTag;
 
 pub(super) fn normalize_member(item: DocItem, type_parameters: bool) -> Option<NormalizedMember> {
     let include_type_parameters = type_parameters;
@@ -12,7 +13,7 @@ pub(super) fn normalize_member(item: DocItem, type_parameters: bool) -> Option<N
     let mut metadata = normalize_doc_metadata(&item.tags, type_parameters);
     let default_value = member_default_value_from_tags(&item.tags);
     if default_value.is_some() {
-        remove_member_default_tags(&mut metadata.tags);
+        remove_member_default_tags(&mut metadata.tags, &mut metadata.tag_list);
     }
     let has_extracted_params = !item.params.is_empty();
     let has_extracted_return = item.return_type.is_some() || !item.return_members.is_empty();
@@ -74,6 +75,7 @@ pub(super) fn normalize_member(item: DocItem, type_parameters: bool) -> Option<N
         r#static: item.r#static,
         private: metadata.private,
         tags: metadata.tags,
+        tag_list: metadata.tag_list,
         line: item.line,
         end_line: item.end_line,
     })
@@ -100,8 +102,9 @@ fn member_default_value_from_tags(tags: &[DocTag]) -> Option<String> {
     None
 }
 
-fn remove_member_default_tags(tags: &mut BTreeMap<String, String>) {
+fn remove_member_default_tags(tags: &mut BTreeMap<String, String>, tag_list: &mut Vec<ApiDocTag>) {
     tags.remove("default");
     tags.remove("defaultValue");
     tags.remove("defaultvalue");
+    tag_list.retain(|tag| !matches!(tag.tag.as_str(), "default" | "defaultValue" | "defaultvalue"));
 }

@@ -1,5 +1,5 @@
 use ox_content_docs::{
-    ApiDocEntry, ApiDocMember, ApiDocModule, ApiDocTag, ApiParamDoc, ApiReturnDoc, ApiThrowsDoc,
+    ApiDocEntry, ApiDocMember, ApiDocModule, ApiParamDoc, ApiReturnDoc, ApiThrowsDoc,
     ApiTypeParamDoc, ExtractedDocModule, NormalizedDocEntry, NormalizedMember, NormalizedParamDoc,
     NormalizedReturnDoc, NormalizedThrowsDoc, NormalizedTypeParam,
 };
@@ -30,7 +30,7 @@ fn to_api_entry(entry: NormalizedDocEntry) -> ApiDocEntry {
         returns: entry.returns.map(to_api_return),
         throws: entry.throws.into_iter().map(to_api_throws).collect(),
         examples: entry.examples,
-        tags: entry.tags.into_iter().map(|(tag, value)| ApiDocTag { tag, value }).collect(),
+        tags: entry.tag_list,
         private: entry.private,
         file: entry.file,
         line: entry.line,
@@ -61,7 +61,7 @@ fn to_api_member(member: NormalizedMember) -> ApiDocMember {
         readonly: member.readonly,
         r#static: member.r#static,
         private: member.private,
-        tags: member.tags.into_iter().map(|(tag, value)| ApiDocTag { tag, value }).collect(),
+        tags: member.tag_list,
         implementation_of: Vec::new(),
         line: member.line,
         end_line: member.end_line,

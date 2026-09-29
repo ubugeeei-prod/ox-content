@@ -203,11 +203,16 @@ fn type_param_to_json(type_param: &ApiTypeParamDoc) -> Value {
     Value::Object(value)
 }
 
-/// Sort tag keys so `docs.json` stays stable across HashMap NAPI round-trips.
+/// Sort tag keys so `docs.json` does not depend on the order the tags come in. A
+/// repeated tag keeps its first value, as the tag map of an extracted entry does.
 fn tags_object(tags: &[ApiDocTag]) -> Value {
     let mut ordered: Vec<_> = tags.iter().collect();
-    ordered.sort_unstable_by(|left, right| left.tag.cmp(&right.tag));
-    Value::Object(ordered.into_iter().map(|tag| (tag.tag.clone(), json!(tag.value))).collect())
+    ordered.sort_by(|left, right| left.tag.cmp(&right.tag));
+    let mut object = serde_json::Map::new();
+    for tag in ordered {
+        object.entry(tag.tag.clone()).or_insert_with(|| json!(tag.value));
+    }
+    Value::Object(object)
 }
 
 fn normalize_doc_file_path(file_path: &str) -> String {

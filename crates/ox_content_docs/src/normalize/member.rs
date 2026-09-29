@@ -6,6 +6,7 @@ use super::kind::NormalizedMemberKind;
 use super::model::{
     NormalizedParamDoc, NormalizedReturnDoc, NormalizedThrowsDoc, NormalizedTypeParam,
 };
+use crate::model::ApiDocTag;
 
 /// Normalized documentation for a member of a class/interface/type/enum entry.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -50,9 +51,13 @@ pub struct NormalizedMember {
     /// Whether the member is marked private.
     #[serde(default)]
     pub private: bool,
-    /// Custom JSDoc tags.
+    /// Custom JSDoc tags, with the first value of a repeated tag (`tag_list` has
+    /// every value).
     #[serde(default)]
     pub tags: BTreeMap<String, String>,
+    /// Custom JSDoc tags in source order, with every value of a repeated tag.
+    #[serde(default)]
+    pub tag_list: Vec<ApiDocTag>,
     /// Declaration start line.
     pub line: u32,
     /// Declaration end line.
@@ -78,6 +83,7 @@ impl Default for NormalizedMember {
             r#static: false,
             private: false,
             tags: BTreeMap::new(),
+            tag_list: Vec::new(),
             line: 1,
             end_line: 1,
         }

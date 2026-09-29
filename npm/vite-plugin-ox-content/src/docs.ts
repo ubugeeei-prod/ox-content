@@ -190,6 +190,7 @@ export async function extractDocs(
       sourcePath: doc.sourcePath,
       examples: doc.examples,
       tags: toTagRecord(doc.tags),
+      tagList: doc.tags?.length ? doc.tags : undefined,
       entries: doc.entries,
     }));
   }
@@ -421,23 +422,13 @@ export function toRustDocsModules(docs: ExtractedDocs[]) {
     description: doc.description,
     sourcePath: doc.sourcePath,
     examples: doc.examples,
-    tags: doc.tags ? Object.entries(doc.tags).map(([tag, value]) => ({ tag, value })) : undefined,
+    tags: doc.tagList ?? toTagList(doc.tags),
+    // Pass every extracted field (`throws`, `typeParameters`, `extends`, `hasBody`, …);
+    // only the tags change, to the list that the renderer takes.
     entries: doc.entries.map((entry) => ({
-      name: entry.name,
-      kind: entry.kind,
-      description: entry.description,
-      params: entry.params,
-      returns: entry.returns,
-      examples: entry.examples,
-      tags: entry.tags
-        ? Object.entries(entry.tags).map(([tag, value]) => ({ tag, value }))
-        : undefined,
+      ...entry,
+      tags: entry.tagList ?? toTagList(entry.tags),
       private: entry.private ?? false,
-      file: entry.file,
-      line: entry.line,
-      endLine: entry.endLine,
-      signature: entry.signature,
-      members: entry.members,
     })),
   }));
 }
@@ -446,7 +437,19 @@ function toTagRecord(tags: NapiMarkdownTag[] | undefined) {
   if (!tags?.length) {
     return undefined;
   }
-  return Object.fromEntries(tags.map(({ tag, value }) => [tag, value]));
+  // A repeated tag keeps its first value, as the tag record of an extracted entry does.
+  // A Map, so that tags named like `Object.prototype` members (`@constructor`) are kept.
+  const first = new Map<string, string>();
+  for (const { tag, value } of tags) {
+    if (!first.has(tag)) {
+      first.set(tag, value);
+    }
+  }
+  return Object.fromEntries(first);
+}
+
+function toTagList(tags: Record<string, string> | undefined) {
+  return tags ? Object.entries(tags).map(([tag, value]) => ({ tag, value })) : undefined;
 }
 
 /**
