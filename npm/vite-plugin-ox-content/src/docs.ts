@@ -422,22 +422,14 @@ export function toRustDocsModules(docs: ExtractedDocs[]) {
     sourcePath: doc.sourcePath,
     examples: doc.examples,
     tags: doc.tags ? Object.entries(doc.tags).map(([tag, value]) => ({ tag, value })) : undefined,
+    // Pass every extracted field (`throws`, `typeParameters`, `extends`, `hasBody`, …);
+    // only the tags change, to the list that the renderer takes.
     entries: doc.entries.map((entry) => ({
-      name: entry.name,
-      kind: entry.kind,
-      description: entry.description,
-      params: entry.params,
-      returns: entry.returns,
-      examples: entry.examples,
+      ...entry,
       tags: entry.tags
         ? Object.entries(entry.tags).map(([tag, value]) => ({ tag, value }))
         : undefined,
       private: entry.private ?? false,
-      file: entry.file,
-      line: entry.line,
-      endLine: entry.endLine,
-      signature: entry.signature,
-      members: entry.members,
     })),
   }));
 }

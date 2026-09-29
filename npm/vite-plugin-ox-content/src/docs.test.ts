@@ -856,4 +856,83 @@ export interface RenderContext<TValue extends Record<string, unknown> = Record<s
 
     expect(markdown).toMatchSnapshot();
   });
+
+  it("renders the type parameters, throws, heritage and overloads of extracted entries", async () => {
+    const srcDir = await fs.mkdtemp(path.join(os.tmpdir(), "ox-content-docs-src-"));
+    tempDirs.push(srcDir);
+
+    await fs.writeFile(
+      path.join(srcDir, "index.ts"),
+      `/**
+ * Parses a value.
+ *
+ * @typeParam T - The value type.
+ * @param value - The value.
+ * @returns The parsed value.
+ * @throws {TypeError} When the value is invalid.
+ */
+export function parse<T>(value: T): T {
+  return value;
+}
+
+/** A base. */
+export class Base {}
+
+/** A contract. */
+export interface Contract {
+  /** Runs. */
+  run(): void;
+}
+
+/** A derived class. */
+export class Derived extends Base implements Contract {
+  /** Runs. */
+  run(): void {}
+}
+
+/** Picks a string. */
+export function pick(x: string): string;
+/** Picks a number. */
+export function pick(x: number): number;
+export function pick(x: unknown): unknown {
+  return x;
+}
+`,
+      "utf-8",
+    );
+
+    const options = resolveDocsOptions({
+      renderStyle: "markdown",
+      pathStrategy: "typedoc",
+      typeParameters: true,
+      entryPoints: [{ path: path.join(srcDir, "index.ts"), name: "default" }],
+    })!;
+    const docs = await extractDocs([], options);
+    const markdown = generateMarkdown(docs, options);
+
+    expect(markdown["default/functions/parse.md"]).toContain("## Type Parameters");
+    expect(markdown["default/functions/parse.md"]).toContain("## Throws");
+    expect(markdown["default/classes/Derived.md"]).toContain("## Extends");
+    expect(markdown["default/classes/Derived.md"]).toContain("## Implements");
+    expect(markdown["default/classes/Derived.md"]).toContain("Implementation of");
+    // The implementation signature of an overload set is not a call signature.
+    expect(markdown["default/functions/pick.md"]?.match(/## Call Signature/g)).toHaveLength(2);
+
+    const outDir = await fs.mkdtemp(path.join(os.tmpdir(), "ox-content-docs-"));
+    tempDirs.push(outDir);
+    await writeDocs(markdown, outDir, docs, options);
+    const docsJson = JSON.parse(await fs.readFile(path.join(outDir, "docs.json"), "utf-8")) as {
+      modules: Array<{ entries: Array<Record<string, unknown>> }>;
+    };
+    const entries = docsJson.modules[0]?.entries ?? [];
+
+    expect(entries.find((entry) => entry.name === "parse")).toMatchObject({
+      typeParameters: [{ name: "T", description: "The value type." }],
+      throws: [{ type: "TypeError", description: "When the value is invalid." }],
+    });
+    expect(entries.find((entry) => entry.name === "Derived")).toMatchObject({
+      extends: ["Base"],
+      implements: ["Contract"],
+    });
+  });
 });

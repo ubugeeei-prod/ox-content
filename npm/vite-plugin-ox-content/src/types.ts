@@ -4680,6 +4680,18 @@ export interface DocEntry {
 
   /** Members belonging to classes, interfaces, object types, and enums. */
   members?: DocMember[];
+
+  /** Declaration type parameters, extracted when `typeParameters` is enabled. */
+  typeParameters?: TypeParamDoc[];
+
+  /** Extended base class or interface names. */
+  extends?: string[];
+
+  /** Implemented interface names. */
+  implements?: string[];
+
+  /** Whether a function declaration has a body (`false` for overload signatures). */
+  hasBody?: boolean;
 }
 
 /**
@@ -4774,6 +4786,23 @@ export interface ThrowsDoc {
   type?: string;
 
   /** Prose extracted from `@throws` / `@exception` documentation. */
+  description: string;
+}
+
+/**
+ * Type parameter documentation (`<T extends C = D>`).
+ */
+export interface TypeParamDoc {
+  /** Type parameter name, such as `T`. */
+  name: string;
+
+  /** Constraint after `extends`, when present. */
+  constraint?: string;
+
+  /** Default type after `=`, when present. */
+  default?: string;
+
+  /** Description from a `@typeParam` / `@template` tag (left out of `docs.json` when empty). */
   description: string;
 }
 

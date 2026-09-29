@@ -139,6 +139,7 @@ export type {
   ParamDoc,
   ReturnDoc,
   ExtractedDocs,
+  TypeParamDoc,
   SsgOptions,
   ResolvedSsgOptions,
   MarkdownSourceOptions,
