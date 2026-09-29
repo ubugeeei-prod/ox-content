@@ -208,6 +208,7 @@ pub(super) fn resolve_type_fragments(
 
             if !skip.contains(ident)
                 && !TS_INTRINSIC_TYPES.contains(ident)
+                && !context.type_parameters.contains(&ident)
                 && let Some(location) = resolve_symbol_location(ident, context)
                 && !is_declared_name(value, start, index)
             {

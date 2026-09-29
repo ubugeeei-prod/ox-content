@@ -80,6 +80,7 @@ pub(super) fn generate_entry_markdown(
             current_file_name,
             current_module_name,
             symbol_map,
+            type_parameters: &[],
         },
     );
     let link_context = link_context.as_ref();

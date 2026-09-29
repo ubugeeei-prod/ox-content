@@ -79,6 +79,9 @@ fn push_return_member_signature_html(
         }
         return;
     }
+    let names = type_parameter_scope(link_context, &member.type_parameters);
+    let scoped = link_context.map(|context| context.with_type_parameters(&names));
+    let link_context = scoped.as_ref();
 
     if member.readonly {
         out.push_str("readonly ");

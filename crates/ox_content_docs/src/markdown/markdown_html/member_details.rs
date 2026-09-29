@@ -1,6 +1,9 @@
 use rustc_hash::FxHashSet;
 
-use super::{MarkdownDocsOptions, MarkdownLinkContext, MarkdownPathStrategy, member_anchor};
+use super::{
+    MarkdownDocsOptions, MarkdownLinkContext, MarkdownPathStrategy, member_anchor,
+    type_parameter_scope,
+};
 use super::{
     escape_html, render_code_block_html, render_doc_inline_html, render_member_params_html,
     render_member_type_parameters_html, render_return_members_html, render_throws_list_html,
@@ -18,6 +21,9 @@ pub(super) fn render_callable_member_group_html(
 ) -> String {
     let mut details = StringBuilder::new();
     for member in members {
+        let names = type_parameter_scope(context, &member.type_parameters);
+        let scoped = context.map(|context| context.with_type_parameters(&names));
+        let context = scoped.as_ref();
         details.push_str("<section id=\"");
         details.push_str(&escape_html(&member_anchor(
             &entry.name,

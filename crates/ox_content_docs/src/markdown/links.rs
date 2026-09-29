@@ -7,6 +7,7 @@ use rustc_hash::FxHashMap;
 use super::options::MarkdownDocsOptions;
 use super::paths::doc_page_href_from;
 use super::regex_cache::{RegexCache, cached_regex};
+use crate::model::ApiTypeParamDoc;
 use crate::string_builder::{join2, join3, join5};
 
 #[derive(Debug, Clone)]
@@ -25,6 +26,36 @@ pub(super) struct MarkdownLinkContext<'a> {
     pub(super) current_file_name: &'a str,
     pub(super) current_module_name: &'a str,
     pub(super) symbol_map: &'a FxHashMap<String, Vec<SymbolLocation>>,
+    /// Type parameters in scope: the entry's or an overload's, and a generic
+    /// member's. Type annotations never link them, even when an exported symbol
+    /// has the same name (`U` in `id<U>(x: U)` next to a type `U`).
+    pub(super) type_parameters: &'a [&'a str],
+}
+
+impl MarkdownLinkContext<'_> {
+    /// This context with `names` as the type parameters in scope.
+    pub(super) fn with_type_parameters<'b>(
+        &'b self,
+        names: &'b [&'b str],
+    ) -> MarkdownLinkContext<'b> {
+        MarkdownLinkContext { type_parameters: names, ..*self }
+    }
+}
+
+/// The type parameter names in scope once `type_parameters` are declared: the
+/// ones already in scope (the entry's, for a generic method) and these. Borrows
+/// the names in scope when `type_parameters` is empty.
+pub(super) fn type_parameter_scope<'b>(
+    context: Option<&MarkdownLinkContext<'b>>,
+    type_parameters: &'b [ApiTypeParamDoc],
+) -> Cow<'b, [&'b str]> {
+    let in_scope = context.map_or(&[][..], |context| context.type_parameters);
+    if type_parameters.is_empty() {
+        return Cow::Borrowed(in_scope);
+    }
+    let mut names = in_scope.to_vec();
+    names.extend(type_parameters.iter().map(|type_param| type_param.name.as_str()));
+    Cow::Owned(names)
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]

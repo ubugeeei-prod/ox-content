@@ -1,4 +1,4 @@
-use super::super::{process_doc_text, rendered_throws};
+use super::super::{process_doc_text, rendered_throws, type_parameter_scope};
 use super::{
     lifecycle::{push_lifecycle_alerts, render_since_section},
     member_groups::MemberGroupRenderContext,
@@ -20,6 +20,9 @@ pub(super) fn render_callable_member_details_pure(
     let detail_heading = "#".repeat(context.parameter_section_level + 1);
 
     for (index, member) in members.iter().enumerate() {
+        let names = type_parameter_scope(context.link_context, &member.type_parameters);
+        let scoped = context.link_context.map(|context| context.with_type_parameters(&names));
+        let link_context = scoped.as_ref();
         if index > 0 {
             out.push_str("***\n\n");
         }
@@ -34,44 +37,38 @@ pub(super) fn render_callable_member_details_pure(
             out.push_str("\n```\n\n");
         }
 
-        push_lifecycle_alerts(out, &member.tags, context.link_context);
+        push_lifecycle_alerts(out, &member.tags, link_context);
 
-        let description = process_doc_text(&member.description, context.link_context);
+        let description = process_doc_text(&member.description, link_context);
         let description = description.trim();
         if !description.is_empty() {
             out.push_str(description);
             out.push_str("\n\n");
         }
 
-        out.push_str(&render_since_section(&member.tags, context.link_context, &detail_heading));
+        out.push_str(&render_since_section(&member.tags, link_context, &detail_heading));
         push_type_parameters(
             out,
             &member.type_parameters,
             context.options,
-            context.link_context,
+            link_context,
             &detail_heading,
         );
-        push_parameters(
-            out,
-            &member.params,
-            context.options,
-            context.link_context,
-            &detail_heading,
-        );
+        push_parameters(out, &member.params, context.options, link_context, &detail_heading);
         if let Some(returns) = &member.returns {
-            push_returns(out, returns, context.link_context, &detail_heading);
+            push_returns(out, returns, link_context, &detail_heading);
         } else if member.kind == "constructor" {
             let returns = ApiReturnDoc {
                 type_annotation: context.entry_name.to_string(),
                 description: String::new(),
                 members: Vec::new(),
             };
-            push_returns(out, &returns, context.link_context, &detail_heading);
+            push_returns(out, &returns, link_context, &detail_heading);
         }
         let throws = rendered_throws(&member.throws, &member.tags);
-        push_throws(out, throws.as_ref(), context.link_context, &detail_heading);
+        push_throws(out, throws.as_ref(), link_context, &detail_heading);
         push_implementation_of(out, &member.implementation_of, &detail_heading);
-        push_generic_tags(out, &member.tags, context.link_context, &detail_heading);
+        push_generic_tags(out, &member.tags, link_context, &detail_heading);
     }
 }
 

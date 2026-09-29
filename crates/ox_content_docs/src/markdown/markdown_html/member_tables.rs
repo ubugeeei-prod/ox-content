@@ -15,6 +15,9 @@ pub(super) fn render_member_table_html(
 
     let mut rows = StringBuilder::new();
     for member in members {
+        let names = type_parameter_scope(context, &member.type_parameters);
+        let scoped = context.map(|context| context.with_type_parameters(&names));
+        let context = scoped.as_ref();
         if !rows.is_empty() {
             rows.push_char('\n');
         }
@@ -97,6 +100,9 @@ pub(super) fn render_member_list_html(
 
     let mut items = StringBuilder::new();
     for member in members {
+        let names = type_parameter_scope(context, &member.type_parameters);
+        let scoped = context.map(|context| context.with_type_parameters(&names));
+        let context = scoped.as_ref();
         if !items.is_empty() {
             items.push_char('\n');
         }

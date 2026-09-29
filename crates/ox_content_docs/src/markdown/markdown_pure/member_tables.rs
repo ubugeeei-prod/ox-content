@@ -1,4 +1,7 @@
-use super::super::{MarkdownDisplayFormat, effective_members_format, member_table_includes_kind};
+use super::super::{
+    MarkdownDisplayFormat, effective_members_format, member_table_includes_kind,
+    type_parameter_scope,
+};
 use super::format::{linked_type_cell, linked_type_span, push_table_cell};
 use super::member_bits::{member_description, member_name_cell, member_name_span, member_type};
 use super::member_details::{is_callable_member, render_callable_member_details_pure};
@@ -30,6 +33,9 @@ pub(super) fn render_member_group_pure(
         == MarkdownDisplayFormat::List
     {
         for member in members {
+            let names = type_parameter_scope(context.link_context, &member.type_parameters);
+            let scoped = context.link_context.map(|context| context.with_type_parameters(&names));
+            let link_context = scoped.as_ref();
             // Append straight into `out`; the row is always emitted, so an
             // intermediate per-member `String` would just be an extra alloc.
             out.push_str("- ");
@@ -40,9 +46,9 @@ pub(super) fn render_member_group_pure(
             let member_type = member_type(member);
             if !member_type.is_empty() {
                 out.push(' ');
-                out.push_str(&linked_type_span(member_type, context.link_context));
+                out.push_str(&linked_type_span(member_type, link_context));
             }
-            let description = member_description(member, context.link_context, false);
+            let description = member_description(member, link_context, false);
             if !description.is_empty() {
                 out.push_str(" - ");
                 out.push_str(&description);
@@ -57,6 +63,9 @@ pub(super) fn render_member_group_pure(
             out.push_str("| Name | Type | Description |\n| --- | --- | --- |\n");
         }
         for member in members {
+            let names = type_parameter_scope(context.link_context, &member.type_parameters);
+            let scoped = context.link_context.map(|context| context.with_type_parameters(&names));
+            let link_context = scoped.as_ref();
             out.push_str("| ");
             out.push_str(&member_name_cell(member));
             out.push_str(" | ");
@@ -64,9 +73,9 @@ pub(super) fn render_member_group_pure(
                 push_table_cell(out, &member.kind);
                 out.push_str(" | ");
             }
-            out.push_str(&linked_type_cell(member_type(member), context.link_context));
+            out.push_str(&linked_type_cell(member_type(member), link_context));
             out.push_str(" | ");
-            push_table_cell(out, &member_description(member, context.link_context, false));
+            push_table_cell(out, &member_description(member, link_context, false));
             out.push_str(" |\n");
         }
     }

@@ -5,6 +5,10 @@ fn render_entry_body_html(
     options: &MarkdownDocsOptions,
     link_context: Option<&MarkdownLinkContext<'_>>,
 ) -> String {
+    // The entry's type parameters are never linked in its type annotations.
+    let names = type_parameter_scope(link_context, &entry.type_parameters);
+    let scoped = link_context.map(|context| context.with_type_parameters(&names));
+    let link_context = scoped.as_ref();
     let processed_description = process_doc_text(&entry.description, link_context);
     // Entries with an empty `file` (e.g. symbols re-exported from an external
     // package) have no source in the consumer's repo, so emit no source link.
@@ -199,6 +203,9 @@ pub fn render_overload_body_html(
     }
 
     for signature in public {
+        let names = type_parameter_scope(link_context, &signature.type_parameters);
+        let scoped = link_context.map(|context| context.with_type_parameters(&names));
+        let link_context = scoped.as_ref();
         out.push_str(
             "<div class=\"ox-api-entry__section ox-api-entry__section--call-signature\">
 <h4>Call Signature</h4>

@@ -1,6 +1,6 @@
 use super::super::{
     MarkdownDocsOptions, MarkdownLinkContext, generate_source_href, process_doc_text,
-    rendered_throws,
+    rendered_throws, type_parameter_scope,
 };
 use super::lifecycle::{push_lifecycle_alerts, render_since_section};
 use super::member_groups::render_members_pure;
@@ -25,6 +25,10 @@ pub(in crate::markdown) fn render_entry_body_pure(
 ) -> String {
     let mut out = String::new();
     let heading = "#".repeat(section_level);
+    // The entry's type parameters are never linked in its type annotations.
+    let names = type_parameter_scope(context, &entry.type_parameters);
+    let scoped = context.map(|context| context.with_type_parameters(&names));
+    let context = scoped.as_ref();
 
     // Lifecycle tags (`@experimental` / `@deprecated`) render as GitHub alerts
     // near the summary instead of a generic `## Tags` entry.
@@ -118,6 +122,9 @@ pub(in crate::markdown) fn render_overload_body_pure(
     // One `## Call Signature` per public overload; its own sections nest at the
     // next heading level (`### Type Parameters` / `### Parameters` / `### Returns`).
     for entry in public {
+        let names = type_parameter_scope(context, &entry.type_parameters);
+        let scoped = context.map(|context| context.with_type_parameters(&names));
+        let context = scoped.as_ref();
         out.push_str(&heading);
         out.push_str(" Call Signature\n\n");
         if let Some(signature) = &entry.signature {

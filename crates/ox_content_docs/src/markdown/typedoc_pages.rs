@@ -157,6 +157,7 @@ fn generate_typedoc_entry_page_grouped(
         current_file_name: file_name,
         current_module_name: module_name,
         symbol_map,
+        type_parameters: &[],
     };
     // The H1 title is name + kind only (functions render `Function: name()` with no
     // generics), so any overload yields the same title. The body is rendered in the
@@ -203,6 +204,7 @@ fn generate_typedoc_entry_page(
         current_file_name,
         current_module_name: module_name,
         symbol_map,
+        type_parameters: &[],
     };
     // TypeDoc-style H1 includes the declaration kind (and generics / `()`),
     // e.g. `# Function: cli()`, `# Interface: Command<G>`.
