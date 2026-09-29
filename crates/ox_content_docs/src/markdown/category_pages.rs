@@ -24,6 +24,7 @@ pub(super) fn generate_category_markdown(
         current_file_name: &category_file_name,
         current_module_name: "",
         symbol_map,
+        type_parameters: &[],
     };
     let kind_title = plural_kind_title(kind);
     let mut builder = StringBuilder::with_capacity(kind_title.len() + 4);
@@ -85,6 +86,7 @@ pub(super) fn generate_category_index(
         current_file_name: "index",
         current_module_name: "",
         symbol_map,
+        type_parameters: &[],
     };
     let mut markdown = "# API Documentation\n\n".to_string();
     push_generated_by(&mut markdown, options);

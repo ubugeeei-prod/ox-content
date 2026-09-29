@@ -40,7 +40,7 @@ use file_pages::{generate_file_markdown, generate_index};
 pub use group_order::{order_by_group_title, ordered_entry_kinds};
 use implementation::annotate_implementation_relationships;
 use labels::{format_count_label, format_kind_label, normalize_signature};
-use links::{MarkdownLinkContext, SymbolLocation, process_doc_text};
+use links::{MarkdownLinkContext, SymbolLocation, process_doc_text, type_parameter_scope};
 pub use options::{
     DOC_KIND_ORDER, MarkdownDisplayFormat, MarkdownDocsOptions, MarkdownLinkStyle,
     MarkdownPathStrategy, MarkdownRenderStyle, MarkdownSingleEntryRoot,

@@ -76,6 +76,7 @@ pub(super) fn generate_index(
         current_file_name: "index",
         current_module_name: "",
         symbol_map,
+        type_parameters: &[],
     });
     let mut markdown = "# API Documentation\n\n".to_string();
     push_generated_by(&mut markdown, options);

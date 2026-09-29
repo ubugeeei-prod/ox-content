@@ -1,9 +1,56 @@
 use oxc_ast::ast::{TSSignature, TSTupleElement, TSType, TSTypeLiteral, TSTypeName};
+use oxc_ast_visit::Visit;
 use oxc_span::GetSpan;
 
 use crate::string_builder::{StringBuilder, join2, join3};
 
 use super::DocVisitor;
+
+/// Rebuilds a type from its source, with each type literal in it rebuilt from
+/// the source of its members, joined by `; `. Members that the source separates
+/// by line breaks alone keep a separator once whitespace is collapsed, and the
+/// comments between members stay out of the type text.
+struct TypeLiteralsInSource<'v, 'a> {
+    visitor: &'v DocVisitor<'a>,
+    out: String,
+    cursor: u32,
+}
+
+impl<'v, 'a> TypeLiteralsInSource<'v, 'a> {
+    fn new(visitor: &'v DocVisitor<'a>, start: u32) -> Self {
+        Self { visitor, out: String::new(), cursor: start }
+    }
+
+    /// The rebuilt source, up to `end`.
+    fn finish(mut self, end: u32) -> String {
+        self.out.push_str(&self.visitor.slice(self.cursor, end));
+        self.out
+    }
+}
+
+impl<'a> Visit<'a> for TypeLiteralsInSource<'_, 'a> {
+    fn visit_ts_type_literal(&mut self, it: &TSTypeLiteral<'a>) {
+        self.out.push_str(&self.visitor.slice(self.cursor, it.span.start));
+        let members = it
+            .members
+            .iter()
+            .map(|member| {
+                let span = member.span();
+                let mut literals = TypeLiteralsInSource::new(self.visitor, span.start);
+                literals.visit_ts_signature(member);
+                let member = literals.finish(span.end);
+                member.trim().trim_end_matches([';', ',']).trim_end().to_string()
+            })
+            .filter(|member| !member.is_empty())
+            .collect::<Vec<_>>();
+        if members.is_empty() {
+            self.out.push_str("{}");
+        } else {
+            self.out.push_str(&join3("{ ", &members.join("; "), " }"));
+        }
+        self.cursor = it.span.end;
+    }
+}
 
 impl<'a> DocVisitor<'a> {
     /// Format a TypeScript type.
@@ -29,9 +76,7 @@ impl<'a> DocVisitor<'a> {
             TSType::TSSymbolKeyword(_) => "symbol".to_string(),
             TSType::TSObjectKeyword(_) => "object".to_string(),
             TSType::TSUnknownKeyword(_) => "unknown".to_string(),
-            TSType::TSTypeReference(ref_type) => {
-                self.format_type_span(ref_type.span().start, ref_type.span().end)
-            }
+            TSType::TSTypeReference(_) => self.format_type_with_literals(ts_type),
             TSType::TSArrayType(arr) => join2(&self.format_ts_type(&arr.element_type), "[]"),
             TSType::TSTypeOperatorType(op) => {
                 let inner = self.format_ts_type(&op.type_annotation);
@@ -82,7 +127,7 @@ impl<'a> DocVisitor<'a> {
                 oxc_ast::ast::TSLiteral::BooleanLiteral(b) => b.value.to_string(),
                 _ => "literal".to_string(),
             },
-            _ => self.format_type_from_span(ts_type),
+            _ => self.format_type_with_literals(ts_type),
         }
     }
 
@@ -101,8 +146,28 @@ impl<'a> DocVisitor<'a> {
         }
     }
 
-    fn format_type_from_span(&self, ts_type: &TSType) -> String {
-        self.format_type_span(ts_type.span().start, ts_type.span().end)
+    /// Formats a type from its source, with the type literals in it rebuilt from
+    /// the source of their members (see `TypeLiteralsInSource`). Without a type
+    /// literal, it is the source as `format_type_span()` formats it.
+    fn format_type_with_literals(&self, ts_type: &TSType<'a>) -> String {
+        let span = ts_type.span();
+        let mut literals = TypeLiteralsInSource::new(self, span.start);
+        literals.visit_ts_type(ts_type);
+        if literals.cursor == span.start {
+            return self.format_type_span(span.start, span.end);
+        }
+        Self::collapse_type_annotation_text(&literals.finish(span.end))
+    }
+
+    /// Formats the constraint or the default of a type parameter. Flow keeps the
+    /// source as written, since Flow-only notation does not survive the
+    /// TypeScript rewrite (see `format_ts_type()`).
+    pub(super) fn format_type_parameter_type(&self, ts_type: &TSType<'a>) -> String {
+        if self.flow {
+            let span = ts_type.span();
+            return self.slice(span.start, span.end);
+        }
+        self.format_type_with_literals(ts_type)
     }
 
     /// The Flow variance sigil (`+`/`-`) blanked in front of a member.

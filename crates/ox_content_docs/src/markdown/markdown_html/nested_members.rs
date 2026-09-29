@@ -116,6 +116,9 @@ fn render_nested_member_type_html(
     member: &ApiDocMember,
     link_context: Option<&MarkdownLinkContext<'_>>,
 ) -> String {
+    let names = type_parameter_scope(link_context, &member.type_parameters);
+    let scoped = link_context.map(|context| context.with_type_parameters(&names));
+    let link_context = scoped.as_ref();
     let Some(member_type) = member
         .type_annotation
         .as_deref()

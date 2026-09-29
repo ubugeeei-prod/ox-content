@@ -25,6 +25,7 @@ mod render_style;
 mod return_members;
 mod stats_options;
 mod type_links;
+mod type_parameter_links;
 mod type_parameters;
 mod typedoc_indexes;
 mod typedoc_pages;

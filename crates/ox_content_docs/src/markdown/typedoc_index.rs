@@ -29,6 +29,7 @@ pub(super) fn generate_typedoc_root_index(
         current_file_name: "index",
         current_module_name: "",
         symbol_map,
+        type_parameters: &[],
     };
     let mut markdown = "# API Documentation\n\n".to_string();
     push_generated_by(&mut markdown, options);
@@ -128,6 +129,7 @@ pub(super) fn generate_typedoc_module_index_for_file(
         current_file_name: page.current_file_name,
         current_module_name: module_name,
         symbol_map,
+        type_parameters: &[],
     };
     let mut builder = StringBuilder::with_capacity(page.title.len() + 4);
     builder.push_str("# ");
