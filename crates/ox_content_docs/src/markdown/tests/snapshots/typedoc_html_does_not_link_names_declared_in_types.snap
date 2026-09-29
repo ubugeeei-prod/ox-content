@@ -1,0 +1,203 @@
+---
+source: crates/ox_content_docs/src/markdown/tests/helpers/assertions.rs
+---
+===== combinators/functions/Mixin.md =====
+# Function: Mixin()
+
+<div id="mixin" class="ox-api-entry ox-api-entry--page">
+<div class="ox-api-entry__section ox-api-entry__section--signature">
+<h4>Signature</h4>
+<pre><code class="language-typescript">export function Mixin(): void</code></pre>
+</div>
+</div>
+===== combinators/functions/first.md =====
+# Function: first()
+
+<div id="first" class="ox-api-entry ox-api-entry--page">
+<div class="ox-api-entry__section ox-api-entry__section--signature">
+<h4>Signature</h4>
+<pre><code class="language-typescript">export function first(): void</code></pre>
+</div>
+</div>
+===== combinators/functions/input.md =====
+# Function: input()
+
+<div id="input" class="ox-api-entry ox-api-entry--page">
+<div class="ox-api-entry__section ox-api-entry__section--signature">
+<h4>Signature</h4>
+<pre><code class="language-typescript">export function input(): void</code></pre>
+</div>
+</div>
+===== combinators/functions/key.md =====
+# Function: key()
+
+<div id="key" class="ox-api-entry ox-api-entry--page">
+<div class="ox-api-entry__section ox-api-entry__section--signature">
+<h4>Signature</h4>
+<pre><code class="language-typescript">export function key(): void</code></pre>
+</div>
+</div>
+===== combinators/functions/label.md =====
+# Function: label()
+
+<div id="label" class="ox-api-entry ox-api-entry--page">
+<div class="ox-api-entry__section ox-api-entry__section--signature">
+<h4>Signature</h4>
+<pre><code class="language-typescript">export function label(): void</code></pre>
+</div>
+</div>
+===== combinators/functions/make.md =====
+# Function: make()
+
+<div id="make" class="ox-api-entry ox-api-entry--page">
+<span class="ox-api-entry__meta"><span class="ox-api-badge">4 params</span></span>
+<div class="ox-api-entry__prose">
+<p>Make.</p>
+</div>
+<div class="ox-api-entry__section ox-api-entry__section--signature">
+<h4>Signature</h4>
+<pre><code class="language-typescript">export function make(): void</code></pre>
+</div>
+<div class="ox-api-entry__section ox-api-entry__section--params">
+<h4>Parameters</h4>
+<ul class="ox-api-entry__params">
+<li class="ox-api-entry__param">
+  <div class="ox-api-entry__param-heading">
+    <code class="ox-api-entry__param-name">a</code>
+    <code class="ox-api-entry__param-type">{ description?: string; required: R }</code>
+  </div>
+</li>
+<li class="ox-api-entry__param">
+  <div class="ox-api-entry__param-heading">
+    <code class="ox-api-entry__param-name">b</code>
+    <code class="ox-api-entry__param-type">(value: string) =&gt; void</code>
+  </div>
+</li>
+<li class="ox-api-entry__param">
+  <div class="ox-api-entry__param-heading">
+    <code class="ox-api-entry__param-name">c</code>
+    <code class="ox-api-entry__param-type">{ parse(input: string): <a href="../type-aliases/Options.md">Options</a> }</code>
+  </div>
+</li>
+<li class="ox-api-entry__param">
+  <div class="ox-api-entry__param-heading">
+    <code class="ox-api-entry__param-name">d</code>
+    <code class="ox-api-entry__param-type">value is <a href="../type-aliases/Options.md">Options</a></code>
+  </div>
+</li>
+</ul>
+</div>
+</div>
+===== combinators/functions/parse.md =====
+# Function: parse()
+
+<div id="parse" class="ox-api-entry ox-api-entry--page">
+<div class="ox-api-entry__section ox-api-entry__section--signature">
+<h4>Signature</h4>
+<pre><code class="language-typescript">export function parse(): void</code></pre>
+</div>
+</div>
+===== combinators/functions/required.md =====
+# Function: required()
+
+<div id="required" class="ox-api-entry ox-api-entry--page">
+<div class="ox-api-entry__section ox-api-entry__section--signature">
+<h4>Signature</h4>
+<pre><code class="language-typescript">export function required(): void</code></pre>
+</div>
+</div>
+===== combinators/functions/value.md =====
+# Function: value()
+
+<div id="value" class="ox-api-entry ox-api-entry--page">
+<div class="ox-api-entry__section ox-api-entry__section--signature">
+<h4>Signature</h4>
+<pre><code class="language-typescript">export function value(): void</code></pre>
+</div>
+</div>
+===== combinators/index.md =====
+# combinators
+
+<div class="ox-api-stats" aria-label="API reference summary">
+<span class="ox-api-stat">
+  <strong>11</strong>
+  <span>symbols</span>
+</span>
+<span class="ox-api-stat">
+  <strong>9</strong>
+  <span>functions</span>
+</span>
+<span class="ox-api-stat">
+  <strong>2</strong>
+  <span>types</span>
+</span>
+<span class="ox-api-stat">
+  <strong>4</strong>
+  <span>parameters</span>
+</span>
+</div>
+
+## Functions
+
+| Function | Description |
+| ------ | ------ |
+| [first](./functions/first.md) |  |
+| [input](./functions/input.md) |  |
+| [key](./functions/key.md) |  |
+| [label](./functions/label.md) |  |
+| [make](./functions/make.md) | Make. |
+| [Mixin](./functions/Mixin.md) |  |
+| [parse](./functions/parse.md) |  |
+| [required](./functions/required.md) |  |
+| [value](./functions/value.md) |  |
+
+## Type Aliases
+
+| Type Alias | Description |
+| ------ | ------ |
+| [Base](./type-aliases/Base.md) |  |
+| [Options](./type-aliases/Options.md) |  |
+
+===== combinators/type-aliases/Base.md =====
+# Type Alias: Base
+
+<div id="base" class="ox-api-entry ox-api-entry--page">
+
+</div>
+===== combinators/type-aliases/Options.md =====
+# Type Alias: Options
+
+<div id="options" class="ox-api-entry ox-api-entry--page">
+
+</div>
+===== index.md =====
+# API Documentation
+
+Generated by [Ox Content](https://github.com/ubugeeei-prod/ox-content)
+
+<div class="ox-api-stats" aria-label="API reference summary">
+<span class="ox-api-stat">
+  <strong>1</strong>
+  <span>modules</span>
+</span>
+<span class="ox-api-stat">
+  <strong>11</strong>
+  <span>symbols</span>
+</span>
+<span class="ox-api-stat">
+  <strong>9</strong>
+  <span>functions</span>
+</span>
+<span class="ox-api-stat">
+  <strong>2</strong>
+  <span>types</span>
+</span>
+<span class="ox-api-stat">
+  <strong>4</strong>
+  <span>parameters</span>
+</span>
+</div>
+
+## Modules
+
+- [combinators](./combinators/index.md)
