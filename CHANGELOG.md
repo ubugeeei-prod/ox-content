@@ -1,5 +1,12 @@
 # Changelog
 
+## [3.2.12] - 2026-09-29
+
+### Bug Fixes
+
+- stop linking declared names in type annotations and keep type literal separators (#1454) _(affects: crates: ox_content_docs)_
+- update fast-uri security override (#1455) _(affects: workspace metadata)_
+
 ## [3.2.11] - 2026-09-26
 
 ### Features
