@@ -56,8 +56,9 @@ overrides:
   vite@8: "8.0.16"
   # GHSA-r28c-9q8g-f849, GHSA-fxqj-8p7j-g6m6: postcss, patched in 8.5.23.
   postcss@8: "8.5.26"
-  # GHSA-5jgf-p345-68v8, GHSA-f65p-4m7j-42xc, GHSA-fph4-wmhf-6fwf, GHSA-jqff-g426-hqxp: fast-uri, patched in 3.1.6.
-  fast-uri: "3.1.6"
+  # GHSA-5jgf-p345-68v8, GHSA-f65p-4m7j-42xc, GHSA-fph4-wmhf-6fwf, GHSA-jqff-g426-hqxp,
+  # GHSA-58mr-gqgx-xq4g, GHSA-qw65-cvwx-89v3: fast-uri, patched in 3.1.8.
+  fast-uri: "3.1.8"
 peerDependencyRules:
   allowAny:
     - vite
