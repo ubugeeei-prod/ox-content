@@ -75,13 +75,17 @@ fn convert_markdown_member(member: JsDocMember) -> ApiDocMember {
         readonly: member.readonly.unwrap_or(false),
         r#static: member.r#static.unwrap_or(false),
         private: member.private.unwrap_or(false),
-        // The tag map iterates in tag name order.
-        tags: member
-            .tags
-            .unwrap_or_default()
-            .into_iter()
-            .map(|(tag, value)| ApiDocTag { tag, value })
-            .collect(),
+        // Every value of a repeated tag is in `tag_list`; the tag map, in tag name
+        // order, is for callers that build members by hand.
+        tags: match member.tag_list {
+            Some(tag_list) => tag_list.into_iter().map(convert_markdown_tag).collect(),
+            None => member
+                .tags
+                .unwrap_or_default()
+                .into_iter()
+                .map(|(tag, value)| ApiDocTag { tag, value })
+                .collect(),
+        },
         implementation_of: member.implementation_of.unwrap_or_default(),
         line: member.line,
         end_line: member.end_line,

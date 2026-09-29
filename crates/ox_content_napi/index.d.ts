@@ -653,6 +653,8 @@ export interface JsDocEntry {
   examples?: Array<string>
   /** Custom JSDoc tags by name, with the first value of a repeated tag. */
   tags?: Record<string, string>
+  /** Every custom JSDoc tag in source order, as `generateDocsMarkdown` takes tags. */
+  tagList?: Array<JsDocsMarkdownTag>
   private: boolean
   file: string
   line: number
@@ -688,6 +690,8 @@ export interface JsDocMember {
   private?: boolean
   /** Custom JSDoc tags by name, with the first value of a repeated tag. */
   tags?: Record<string, string>
+  /** Every custom JSDoc tag in source order; `generateDocsMarkdown` prefers it. */
+  tagList?: Array<JsDocsMarkdownTag>
   implementationOf?: Array<string>
   line: number
   endLine: number

@@ -61,6 +61,8 @@ pub struct JsDocMember {
     pub private: Option<bool>,
     /// Custom JSDoc tags by name, with the first value of a repeated tag.
     pub tags: Option<BTreeMap<String, String>>,
+    /// Every custom JSDoc tag in source order; `generateDocsMarkdown` prefers it.
+    pub tag_list: Option<Vec<JsDocsMarkdownTag>>,
     pub implementation_of: Option<Vec<String>>,
     pub line: u32,
     pub end_line: u32,
@@ -85,6 +87,7 @@ impl Default for JsDocMember {
             r#static: None,
             private: None,
             tags: None,
+            tag_list: None,
             implementation_of: None,
             line: 1,
             end_line: 1,
@@ -105,6 +108,8 @@ pub struct JsDocEntry {
     pub examples: Option<Vec<String>>,
     /// Custom JSDoc tags by name, with the first value of a repeated tag.
     pub tags: Option<BTreeMap<String, String>>,
+    /// Every custom JSDoc tag in source order, as `generateDocsMarkdown` takes tags.
+    pub tag_list: Option<Vec<JsDocsMarkdownTag>>,
     pub private: bool,
     pub file: String,
     pub line: u32,
@@ -130,6 +135,7 @@ impl Default for JsDocEntry {
             throws: None,
             examples: None,
             tags: None,
+            tag_list: None,
             private: false,
             file: String::new(),
             line: 1,

@@ -64,8 +64,8 @@ pub fn normalize_doc_items(items: Vec<DocItem>, type_parameters: bool) -> Vec<No
 ///
 /// `type_parameters` opts in to TSDoc-style type-parameter docs: when `true`,
 /// `@typeParam` / `@template` tags are merged into structured type parameters and
-/// removed from the generic tag map; when `false` they remain generic tags and
-/// `type_parameters` stays empty (default JSDoc behavior).
+/// removed from the generic tags (`tags` and `tag_list`); when `false` they remain
+/// generic tags and `type_parameters` stays empty (default JSDoc behavior).
 #[must_use]
 pub fn normalize_doc_item(item: DocItem, type_parameters: bool) -> Option<NormalizedDocEntry> {
     let kind = NormalizedDocKind::from_doc_item_kind(item.kind)?;
@@ -98,6 +98,7 @@ pub fn normalize_doc_item(item: DocItem, type_parameters: bool) -> Option<Normal
         throws: metadata.throws,
         examples: metadata.examples,
         tags: metadata.tags,
+        tag_list: metadata.tag_list,
         private: metadata.private,
         file: item.source_path,
         line: item.line,

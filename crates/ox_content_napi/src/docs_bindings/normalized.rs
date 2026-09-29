@@ -3,6 +3,7 @@ use ox_content_docs::{
     NormalizedThrowsDoc, NormalizedTypeParam,
 };
 
+use super::map_api_doc_tag;
 use crate::{JsDocEntry, JsDocMember, JsDocParam, JsDocReturn, JsDocThrows, JsTypeParam};
 
 fn map_normalized_param_doc(param: NormalizedParamDoc) -> JsDocParam {
@@ -50,6 +51,8 @@ fn map_normalized_member(member: NormalizedMember) -> JsDocMember {
         r#static: member.r#static.then_some(true),
         private: member.private.then_some(true),
         tags: (!member.tags.is_empty()).then_some(member.tags),
+        tag_list: (!member.tag_list.is_empty())
+            .then(|| member.tag_list.into_iter().map(map_api_doc_tag).collect()),
         implementation_of: None,
         line: member.line,
         end_line: member.end_line,
@@ -68,6 +71,8 @@ pub fn map_normalized_doc_entry(entry: NormalizedDocEntry) -> JsDocEntry {
             .then(|| entry.throws.into_iter().map(map_normalized_throws_doc).collect()),
         examples: (!entry.examples.is_empty()).then_some(entry.examples),
         tags: (!entry.tags.is_empty()).then_some(entry.tags),
+        tag_list: (!entry.tag_list.is_empty())
+            .then(|| entry.tag_list.into_iter().map(map_api_doc_tag).collect()),
         private: entry.private,
         file: entry.file,
         line: entry.line,

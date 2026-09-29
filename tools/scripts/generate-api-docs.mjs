@@ -33,9 +33,7 @@ const modules = extracted.map((doc) => ({
   file: doc.file,
   entries: doc.entries.map((entry) => ({
     ...entry,
-    tags: entry.tags
-      ? Object.entries(entry.tags).map(([tag, value]) => ({ tag, value }))
-      : undefined,
+    tags: entry.tagList,
   })),
 }));
 const generated = napi.generateDocsMarkdown(modules, {

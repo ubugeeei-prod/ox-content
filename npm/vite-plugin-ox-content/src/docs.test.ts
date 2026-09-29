@@ -704,6 +704,55 @@ export class Command {
     expect(Object.keys(run?.tags ?? {})).toEqual(names);
     expect(Object.keys(execute?.tags ?? {})).toEqual(names);
   });
+
+  it("renders every value of a repeated tag", async () => {
+    const srcDir = await fs.mkdtemp(path.join(os.tmpdir(), "ox-content-docs-src-"));
+    tempDirs.push(srcDir);
+
+    await fs.writeFile(
+      path.join(srcDir, "parser.ts"),
+      `/**
+ * Parses a value.
+ *
+ * @see https://example.com/first
+ * @see https://example.com/second
+ */
+export function parse(value: string): number {
+  return Number(value);
+}
+
+/** A parser. */
+export interface Parser {
+  /**
+   * Parses a value.
+   *
+   * @param value - The value.
+   * @see https://example.com/parse-first
+   * @see https://example.com/parse-second
+   */
+  parse(value: string): number;
+}
+`,
+      "utf-8",
+    );
+
+    const docs = await extractDocs([srcDir], resolveDocsOptions({ include: ["**/*.ts"] })!);
+    const parse = docs[0]?.entries.find((entry) => entry.name === "parse");
+
+    expect(parse?.tags).toEqual({ see: "https://example.com/first" });
+    expect(parse?.tagList).toEqual([
+      { tag: "see", value: "https://example.com/first" },
+      { tag: "see", value: "https://example.com/second" },
+    ]);
+
+    const markdown = Object.values(
+      generateMarkdown(docs, resolveDocsOptions({ renderStyle: "markdown" })!),
+    ).join("\n");
+
+    for (const page of ["first", "second", "parse-first", "parse-second"]) {
+      expect(markdown).toContain(`https://example.com/${page}`);
+    }
+  });
 });
 
 describe("generateMarkdown entry points", () => {
@@ -747,6 +796,44 @@ export interface Options {
     expect(docs).toHaveLength(1);
     expect(docs[0]?.file).toBe("default");
     expect(docs[0]?.entries.map((entry) => entry.name)).toEqual(["sum", "Options"]);
+  });
+
+  it("keeps every value of a repeated module tag", async () => {
+    const srcDir = await fs.mkdtemp(path.join(os.tmpdir(), "ox-content-docs-src-"));
+    tempDirs.push(srcDir);
+
+    await fs.writeFile(
+      path.join(srcDir, "index.ts"),
+      `/**
+ * The parsers.
+ *
+ * @see https://example.com/first
+ * @constructor
+ * @see https://example.com/second
+ * @module
+ */
+/** Parses a value. */
+export function parse(value: string): number {
+  return Number(value);
+}
+`,
+      "utf-8",
+    );
+
+    const docs = await extractDocs(
+      [],
+      resolveDocsOptions({
+        entryPoints: [{ path: path.join(srcDir, "index.ts"), name: "default" }],
+      })!,
+    );
+
+    // `constructor` is also the name of an `Object.prototype` member.
+    expect(docs[0]?.tags).toEqual({ see: "https://example.com/first", constructor: "" });
+    expect(docs[0]?.tagList).toEqual([
+      { tag: "see", value: "https://example.com/first" },
+      { tag: "constructor", value: "" },
+      { tag: "see", value: "https://example.com/second" },
+    ]);
   });
 
   it("excludes internal docs unless explicitly included", async () => {

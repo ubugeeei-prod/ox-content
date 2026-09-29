@@ -96,6 +96,9 @@ export default defineConfig({
 
 型は TypeScript の注釈そのものから読むので、`@param {Type}` の JSDoc 型構文は不要です。
 
+`@see` のように専用の節がないタグは、エントリの **Tags** に書いた順で並びます。
+同じタグを 2 回書くと、両方とも並びます。`docs.json` には、タグごとに最初の値が入ります。
+
 ## Flow
 
 [Flow](https://flow.org) で型付けされたソースも文書化できます。`*.js.flow` 宣言ファイル、

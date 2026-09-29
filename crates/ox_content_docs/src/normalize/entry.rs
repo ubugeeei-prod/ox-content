@@ -7,6 +7,7 @@ use super::member::NormalizedMember;
 use super::model::{
     NormalizedParamDoc, NormalizedReturnDoc, NormalizedThrowsDoc, NormalizedTypeParam,
 };
+use crate::model::ApiDocTag;
 
 /// Normalized documentation entry consumed by generated API docs.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -26,8 +27,13 @@ pub struct NormalizedDocEntry {
     pub throws: Vec<NormalizedThrowsDoc>,
     /// Example blocks.
     pub examples: Vec<String>,
-    /// Custom JSDoc tags.
+    /// Custom JSDoc tags, with the first value of a repeated tag (`tag_list` has
+    /// every value).
     pub tags: BTreeMap<String, String>,
+    /// Custom JSDoc tags in source order, with every value of a repeated tag
+    /// (two `@see` tags are two items).
+    #[serde(default)]
+    pub tag_list: Vec<ApiDocTag>,
     /// Whether the entry is marked private.
     pub private: bool,
     /// Source file path.
@@ -69,6 +75,7 @@ impl Default for NormalizedDocEntry {
             throws: Vec::new(),
             examples: Vec::new(),
             tags: BTreeMap::new(),
+            tag_list: Vec::new(),
             private: false,
             file: String::new(),
             line: 1,

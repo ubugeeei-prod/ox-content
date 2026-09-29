@@ -100,6 +100,10 @@ signature, and members. The following JSDoc tags are recognised:
 Types are read from the TypeScript annotations themselves, so `@param {Type}`
 JSDoc type syntax is not required.
 
+Tags that have no section of their own, such as `@see`, are listed under the
+entry's **Tags** in the order they are written, and a tag written twice is
+listed twice. `docs.json` keeps the first value of each tag.
+
 ## Flow
 
 [Flow](https://flow.org)-typed sources are documented too. A file is read as

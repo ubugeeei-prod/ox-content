@@ -136,6 +136,7 @@ export type {
   DocsNavigationItem,
   GeneratedOpenApiDocs,
   DocEntry,
+  DocTag,
   ParamDoc,
   ReturnDoc,
   ExtractedDocs,

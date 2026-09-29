@@ -33,12 +33,7 @@ pub(super) fn resolve_entrypoint_module_metadata(
 }
 
 fn module_tags_from_normalized_entry(entry: &NormalizedDocEntry) -> Vec<ApiDocTag> {
-    entry
-        .tags
-        .iter()
-        .filter(|(tag, _)| tag.as_str() != "module")
-        .map(|(tag, value)| ApiDocTag { tag: tag.clone(), value: value.clone() })
-        .collect()
+    entry.tag_list.iter().filter(|tag| tag.tag != "module").cloned().collect()
 }
 
 fn explicit_module_name_from_tags(

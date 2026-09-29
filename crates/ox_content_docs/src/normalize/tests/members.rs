@@ -184,3 +184,30 @@ export interface PluginContext {
     assert!(member.readonly);
     assert!(member.returns.is_none());
 }
+
+#[test]
+fn member_tags_keep_every_value_of_a_repeated_tag() {
+    let source = r"
+/** Options. */
+export interface Options {
+    /**
+     * The mode.
+     * @see https://example.com/first
+     * @default 'strict'
+     * @see https://example.com/second
+     */
+    mode?: string;
+}
+";
+
+    let extractor = DocExtractor::new();
+    let items = extractor.extract_source(source, "options.ts", SourceType::ts()).unwrap();
+    let entries = normalize_doc_items(items, false);
+    let member = &entries[0].members[0];
+    let tag_list: Vec<_> =
+        member.tag_list.iter().map(|tag| format!("@{} {}", tag.tag, tag.value)).collect();
+
+    assert_eq!(tag_list, ["@see https://example.com/first", "@see https://example.com/second"]);
+    assert_eq!(member.default_value.as_deref(), Some("'strict'"));
+    assert_eq!(member.tags.get("see").map(String::as_str), Some("https://example.com/first"));
+}
