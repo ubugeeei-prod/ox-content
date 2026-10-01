@@ -60,6 +60,7 @@ docs/content/api/
 *.tmp
 *.temp
 .cache/
+.wrangler/
 
 # Benchmark results
 /criterion

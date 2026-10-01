@@ -11,14 +11,13 @@ import { docsEmbedProviders } from "./embed-providers.config";
  * Dogfooding: Using ox-content to build ox-content's own documentation.
  * Uses SSG to generate static HTML from Markdown files.
  */
-export default defineConfig(({ mode }) => {
-  const isProd = mode === "production";
-  const base = process.env.OX_CONTENT_DOCS_BASE ?? (isProd ? "/ox-content/" : "/");
-  const siteUrl = process.env.OX_CONTENT_DOCS_SITE_URL ?? "https://ubugeeei-prod.github.io";
+export default defineConfig(() => {
+  const base = process.env.OX_CONTENT_DOCS_BASE ?? "/";
+  const siteUrl = process.env.OX_CONTENT_DOCS_SITE_URL ?? "https://ox-content.dev";
   const ogImage = new URL("og-image.png", siteUrl.replace(/\/?$/, base)).href;
 
   return {
-    base, // Site base path: GitHub Pages uses /ox-content/, Void uses /.
+    base,
 
     plugins: [
       // The gallery lives in public/ but is generated and gitignored, so a

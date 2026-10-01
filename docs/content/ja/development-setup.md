@@ -165,15 +165,15 @@ vp run playground
 
 ドキュメントサイトは [http://127.0.0.1:4173](http://127.0.0.1:4173)、プレイグラウンドは [http://127.0.0.1:5173](http://127.0.0.1:5173) を開いてください。
 
-## ドキュメントを Void へデプロイする
+## ドキュメントを Cloudflare へデプロイする
 
-ドキュメントサイトを Void へデプロイするには:
+ドキュメントサイトを Cloudflare へデプロイするには:
 
 ```bash
 vp run deploy#docs
 ```
 
-このタスクは `void deploy` の前に Rust ワークスペースとローカル npm パッケージをビルドし、`https://ox-content.void.app` でアセットが正しく解決されるようルートの base パスを使います。
+このタスクは `wrangler deploy` の前に Rust ワークスペースとローカル npm パッケージをビルドし、`https://ox-content.dev` でアセットが正しく解決されるようルートの base パスを使います。
 
 環境変数と上書きは [ドキュメントのデプロイ](./deployment.md) を見てください。
 

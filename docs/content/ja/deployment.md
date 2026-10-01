@@ -1,86 +1,101 @@
 ---
 title: ドキュメントのデプロイ
-description: Ox Content のドキュメントサイトを Void へデプロイします。
+description: Ox Content のドキュメントを Cloudflare へ直接デプロイし、ox-content.dev で公開します。
 ---
 
 # ドキュメントのデプロイ
 
-このリポジトリは、`main` への push で GitHub Actions からドキュメントサイトを Void へデプロイします。ワークフローは GitHub OIDC を使うので、長寿命の `VOID_TOKEN` シークレットは不要です。
+ドキュメントは [https://ox-content.dev](https://ox-content.dev) で公開します。
+`main` への push を契機に、GitHub Actions から Cloudflare の公式 CLI である
+Wrangler を使い、Cloudflare Workers Static Assets へ直接デプロイします。
 
-ローカルデプロイでは、同じデプロイ経路が専用のワークスペースタスクとして公開されています。
+ドキュメントは `/`、Rust API は `/api/`、Playground は `/playground/` に配置します。
+`wrangler.jsonc` に `ox-content-docs` Worker と `ox-content.dev` の Custom Domain を定義しています。
+
+## ローカルからのデプロイ
+
+依存関係をインストールし、一度認証します。
+
+```bash
+vp install
+vp run deploy#cf login
+vp run deploy#cf whoami
+```
+
+リポジトリのルートからビルドとデプロイを実行します。
 
 ```bash
 vp run deploy#docs
 ```
 
-このタスクはデプロイ前にローカルリポジトリからビルドするので、公開されるサイトは、レジストリにすでに公開されているものではなく、現在の Rust crate とローカル npm ワークスペースパッケージを使います。
+このタスクは `vp run build` で Rust、Code Play を含むローカル npm パッケージ、
+ドキュメント、Playground、Rust API ドキュメントをビルドします。
+出力を `dist/` にまとめて `wrangler deploy` を実行します。
+Wrangler は `4.145.0` に固定し、pnpm 12 が必要とするビルド承認も CLI ラッパーで渡します。
 
-## タスクが実行すること
-
-`vp run deploy#docs` は `tools/scripts/deploy-docs-to-void.mjs` を実行し、次を回します。
-
-1. `cargo build --workspace`
-2. `crates/ox_content_napi` で `napi build --release`
-3. `npm/ox-content-islands` で `vp pack`
-4. `npm/vite-plugin-ox-content` で `vp pack`
-5. `npm/ox-content-code-play` で `vp run build`
-6. `docs` で `vp build`
-7. `vpx void@0.10.8 deploy`
-
-デプロイコマンドの既定値は、このリポジトリが使う Void プロジェクトと docs 出力ディレクトリです。
-
-| 設定                       | 既定                          | 目的                                         |
-| -------------------------- | ----------------------------- | -------------------------------------------- |
-| `VOID_PROJECT`             | `ox-content`                  | `void deploy --project` に渡します。         |
-| `OX_CONTENT_DOCS_BASE`     | `/`                           | Void ホスト向けサイトの Vite base パスです。 |
-| `OX_CONTENT_DOCS_SITE_URL` | `https://ox-content.void.app` | メタデータと OG に使う絶対サイト URL です。  |
-| デプロイディレクトリ       | `docs/dist/docs`              | `void deploy --dir` に渡します。             |
-
-Void は `https://ox-content.void.app` をルートパスでホストするので、デプロイタスクは docs の base を既定で `/` にします。その上書きなしの通常の本番 docs ビルドは、いまも `docs/vite.config.ts` で設定した GitHub Pages の base を使います。
-
-## GitHub Actions OIDC
-
-トークンなしデプロイのワークフローは `.github/workflows/void-deploy.yml` にあります。
-`id-token: write` を付与し、GitHub Actions のシェルステップから `tools/scripts/deploy-docs-to-void.mjs` を直接実行します。これにより `void deploy` は実行時に GitHub OIDC を短寿命の Void デプロイトークンへ交換できます。
-
-リポジトリは一度 Void プロジェクトへ接続する必要があります。
+追加の引数は Wrangler に転送します。公開せずにビルドと設定を検証するには、認証不要の dry-run を使います。
 
 ```bash
-vpx void@0.10.8 github connect ox-content \
-  --repo ubugeeei-prod/ox-content \
-  --branch main \
-  --executor github_actions \
-  --workflow .github/workflows/void-deploy.yml
+vp run deploy#docs -- --dry-run
 ```
 
-組織向けの GitHub App がまだ入っていない場合は、先に `vpx void@0.10.8 github install` を実行してください。
-
-## 上書き
-
-よく使うデプロイ先には環境変数を使います。
+同じ CLI ラッパーから Wrangler を直接実行できます。
 
 ```bash
-VOID_PROJECT=ox-content-preview vp run deploy#docs
+vp run deploy#cf -- dev --local
+vp run deploy#cf -- deploy --dry-run
 ```
+
+どちらもルートの `wrangler.jsonc` を読み込みます。ローカルプレビューの前に docs タスクで `dist/` を作成してください。
+
+## GitHub Actions の設定
+
+デプロイ変更をマージする前に、次の repository Actions secrets を登録してください。
+
+| Secret                  | 用途                                                       |
+| ----------------------- | ---------------------------------------------------------- |
+| `CLOUDFLARE_ACCOUNT_ID` | `ox-content.dev` の zone を所有する account。              |
+| `CLOUDFLARE_API_TOKEN`  | Worker のデプロイと Custom Domain の管理を許可する token。 |
+
+**Edit Cloudflare Workers** テンプレートで token を作成し、対象 account と
+`ox-content.dev` の zone に範囲を限定します。**Account / Workers Scripts / Edit**、
+**Zone / Workers Routes / Edit**、
+**Zone / Zone / Read** の権限が必要です。
+[Cloudflare の認証手順](https://developers.cloudflare.com/workers/ci-cd/external-cicd/github-actions/) を参照してください。
+
+GitHub CLI で登録できます。対話入力を使うため token はシェル履歴に残りません。
 
 ```bash
-OX_CONTENT_DOCS_BASE=/ \
-OX_CONTENT_DOCS_SITE_URL=https://ox-content.void.app \
-vp run deploy#docs
+gh secret set CLOUDFLARE_API_TOKEN --repo ubugeeei-prod/ox-content
+gh secret set CLOUDFLARE_ACCOUNT_ID --repo ubugeeei-prod/ox-content
 ```
 
-余分な引数は `void deploy` へ転送されるので、プロジェクトやディレクトリはコマンドラインからも上書きできます。
+ワークフローは `.github/workflows/deploy.yml` です。デプロイ設定を変更する PR では、
+認証情報を渡さずにビルドと `wrangler deploy --dry-run` を実行します。
+公開するのは `main` への push または `main` 上の手動実行だけです。
+認証情報は公開ステップだけに渡し、secrets 未設定の場合は設定手順を示して失敗します。
 
-```bash
-vp run deploy#docs -- --project ox-content-preview --dir docs/dist/docs
-```
+## Custom Domain
 
-## CSS とアセットパス
+`ox-content.dev` の zone は Wrangler が使う account 内で active になっている必要があります。
+設定の `custom_domain: true` により Wrangler がドメインを接続し、Cloudflare が DNS と
+HTTPS 証明書を管理します。別の origin server は不要です。
+[Cloudflare Custom Domains](https://developers.cloudflare.com/workers/configuration/routing/custom-domains/) を参照してください。
 
-デプロイしたサイトで HTML は読み込めるのに CSS やクライアントアセットが欠けている場合は、まず base パスを確認してください。Void へのデプロイは次でビルドします。
+同じホスト名に既存の CNAME があると Custom Domain を作成できません。
+初回デプロイ前に競合するレコードを確認してください。
+dry-run はビルドと設定の検証であり、account の権限とドメイン登録は初回の認証付きデプロイで確認します。
 
-```bash
-OX_CONTENT_DOCS_BASE=/ vp run deploy#docs
-```
+## URL とアセットパス
 
-生成 HTML は `/ox-content/assets/index.css` ではなく、`/assets/index.css` のようなルート相対アセットを参照する必要があります。
+docs ビルドの既定値は `OX_CONTENT_DOCS_BASE=/` と
+`OX_CONTENT_DOCS_SITE_URL=https://ox-content.dev` です。
+Playground の本番 base は `/playground/` です。
+メタデータ、sitemap、feed、OG 画像、アセットはこのドメインとルート相対パスを使います。
+
+別のビルド先には `OX_CONTENT_DOCS_BASE`、`OX_CONTENT_DOCS_SITE_URL`、
+`OX_CONTENT_PLAYGROUND_BASE` を指定できます。別ドメインへのデプロイは専用の
+Wrangler 設定を作り、`--config` で指定してください。
+
+Cloudflare は `auto-trailing-slash` でディレクトリの index と拡張子なしの HTML ルートを解決します。
+存在しないページは、生成された `404.html` を HTTP 404 で返します。

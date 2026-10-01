@@ -2,8 +2,8 @@ import { describe, expect, it } from "vite-plus/test";
 import { resolvePlaygroundBase } from "./vite.config";
 
 describe("resolvePlaygroundBase", () => {
-  it("targets the GitHub Pages playground directory for production builds", () => {
-    expect(resolvePlaygroundBase("production")).toBe("/ox-content/playground/");
+  it("targets the custom-domain playground directory for production builds", () => {
+    expect(resolvePlaygroundBase("production")).toBe("/playground/");
   });
 
   it("keeps the development server rooted at the origin", () => {

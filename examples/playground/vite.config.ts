@@ -1,9 +1,9 @@
 import { defineConfig } from "vite-plus";
 
-const githubPagesBase = "/ox-content/playground/";
+const productionBase = "/playground/";
 
 export function resolvePlaygroundBase(mode: string, configuredBase?: string): string {
-  return configuredBase ?? (mode === "production" ? githubPagesBase : "/");
+  return configuredBase ?? (mode === "production" ? productionBase : "/");
 }
 
 export default defineConfig(({ mode }) => ({
