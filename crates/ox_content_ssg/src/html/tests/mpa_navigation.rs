@@ -55,6 +55,25 @@ fn default_theme_bootstraps_before_styles_and_enables_mpa_transitions() {
 }
 
 #[test]
+fn production_asset_extraction_keeps_navigation_bootstrap_inline() {
+    let result = crate::externalize_shared_page_assets(
+        vec![crate::GeneratedHtmlPage {
+            input_path: "stable.md".to_string(),
+            output_path: "/site/stable/index.html".to_string(),
+            html: generate_html(&page(), &[], &config(None)),
+        }],
+        "/site",
+        "/",
+    );
+
+    let html = &result.pages[0].html;
+    assert!(html.contains("<style>@media (prefers-reduced-motion: no-preference)"));
+    assert!(html.contains("@view-transition"));
+    assert!(html.contains("ox-content-core-"));
+    assert!(!result.assets.iter().any(|asset| asset.content.contains("@view-transition")));
+}
+
+#[test]
 fn theme_can_disable_cross_document_transitions_without_disabling_prepaint_theme() {
     let theme = ThemeConfig { view_transitions: Some(false), ..ThemeConfig::default() };
     let html = generate_html(&page(), &[], &config(Some(theme)));

@@ -53,7 +53,11 @@ pub(super) fn build_style_replacement(
         let has_relative_urls = has_relative_css_urls(&section.content);
         let should_inline_theme = section.name == "theme"
             && (has_relative_urls || section.content.len() <= THEME_INLINE_CSS_MAX_BYTES);
-        if should_inline_theme || has_relative_urls {
+        // The incoming document must opt in before its first rendering
+        // opportunity. An external @view-transition rule can arrive too late,
+        // aborting navigation and exposing an empty frame instead of a snapshot.
+        let is_navigation_bootstrap = section.name == "mpa-navigation";
+        if is_navigation_bootstrap || should_inline_theme || has_relative_urls {
             fragments.push(format!("  <style>{}</style>", section.content));
             continue;
         }
