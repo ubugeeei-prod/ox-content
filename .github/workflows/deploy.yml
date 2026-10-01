@@ -1,19 +1,32 @@
-name: Deploy
+name: Validate Cloudflare docs
 
 on:
   push:
     branches: [main]
+  pull_request:
+    branches: [main]
+    paths:
+      - .github/workflows/deploy.yml
+      - pnpm-lock.yaml
+      - pnpm-workspace.yaml
+      - tools/deploy/**
+      - tools/scripts/*cloudflare*
+      - tools/scripts/build-docs-on-cloudflare.sh
+      - tools/scripts/prepare-docs-deployment*
+      - docs/vite.config.ts
+      - examples/playground/vite.config.ts
   workflow_dispatch:
 
 permissions:
   contents: read
 
 concurrency:
-  group: pages
-  cancel-in-progress: false
+  group: cloudflare-docs-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
-  build:
+  deploy:
+    name: Cloudflare docs
     runs-on: blacksmith-32vcpu-ubuntu-2404
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -37,44 +50,17 @@ jobs:
           target: target
           browsers: "true"
 
-      - name: Install browsers for docs rendering
-        run: |
-          vp exec --filter @ox-content/vite-plugin -- playwright install chromium
-          vp exec --filter @ox-content/vite-plugin -- puppeteer browsers install chrome-headless-shell
+      - name: Check TypeScript for native Node execution
+        run: vp run deploy#check
 
-      - name: Build
-        run: vp run build
+      - name: Check deployment bundle preparation
+        run: node --test tools/scripts/prepare-docs-deployment.test.ts
 
-      - name: Prepare deployment directory
-        run: |
-          mkdir -p dist
-          # Copy docs site to root
-          cp -r docs/dist/docs/* dist/
-          # Copy Rust API docs
-          cp -r target/doc dist/api
-          # Copy playground
-          cp -r examples/playground/dist dist/playground
-          # Add .nojekyll
-          touch dist/.nojekyll
+      - name: Check Cloudflare CLI argument forwarding
+        run: vp run deploy#cf -- --version
 
-      - name: Setup Pages
-        uses: actions/configure-pages@45bfe0192ca1faeb007ade9deae92b16b8254a0d # v6.0.0
+      - name: Build with the Workers Builds entry point
+        run: bash tools/scripts/build-docs-on-cloudflare.sh
 
-      - name: Upload artifact
-        uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5.0.0
-        with:
-          path: dist
-
-  deploy:
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-    runs-on: blacksmith-32vcpu-ubuntu-2404
-    needs: build
-    permissions:
-      pages: write
-      id-token: write
-    steps:
-      - name: Deploy to GitHub Pages
-        id: deployment
-        uses: actions/deploy-pages@368f82528645a54fb793d4d04e342629a3f51346 # v5.0.1
+      - name: Validate Cloudflare deployment without credentials
+        run: vp run deploy#cf -- deploy --prebuilt --mode production --dry-run

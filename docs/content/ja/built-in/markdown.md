@@ -82,12 +82,12 @@ Ox Content is ~~slow~~ fast.
 裸の URL はリンクになります。既定は `gfm` に従うので、`autolinks: false` で GFM の残りを捨てずにオプトアウトできます。
 
 ```md
-Docs live at https://ubugeeei-prod.github.io/ox-content/
+Docs live at https://ox-content.dev/
 ```
 
 描画:
 
-Docs live at https://ubugeeei-prod.github.io/ox-content/
+Docs live at https://ox-content.dev/
 
 自動リンクされた URL は新しいタブで開き、`rel="noopener noreferrer"` が付きます。
 

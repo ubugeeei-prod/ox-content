@@ -12,9 +12,9 @@
 </p>
 
 <p align="center">
-  <a href="https://ubugeeei-prod.github.io/ox-content/">Documentation</a> •
-  <a href="https://ubugeeei-prod.github.io/ox-content/getting-started">Getting Started</a> •
-  <a href="https://ubugeeei-prod.github.io/ox-content/playground/">Playground</a> •
+  <a href="https://ox-content.dev/">Documentation</a> •
+  <a href="https://ox-content.dev/getting-started">Getting Started</a> •
+  <a href="https://ox-content.dev/playground/">Playground</a> •
   <a href="./SECURITY.md">Security</a>
 </p>
 
@@ -204,7 +204,7 @@ To preview a generated Open Graph image as SVG:
 vpx oxct og-preview --title "My Docs" --description "Fast content tooling" --out og.svg
 ```
 
-**[Read the full documentation →](https://ubugeeei-prod.github.io/ox-content/)**
+**[Read the full documentation →](https://ox-content.dev/)**
 
 ## Performance
 
@@ -334,9 +334,9 @@ Ox Content targets full CommonMark conformance. The engine is checked against th
 
 Where the two Ox Content rows in the tables differ: `ox-content (native)` is the core profile and scores 100%, while `@ox-content/napi` scores 99.5% because its defaults enable the bare-URL autolinking builtin, which linkifies examples 602, 608, and 611. Pass `autolinkUrls: false` to turn it off. The `@mizchi/markdown` JS, Wasm, and native rows likewise disable their default autolink and tagfilter extensions for the CommonMark column; the speed rows keep runtime defaults.
 
-Extensions beyond CommonMark — GFM tables, task lists, strikethrough, footnotes, and the built-in embeds — are opt-out rather than opt-in, so a document that uses none of them renders exactly as the specification requires. [Markdown Baseline](https://ubugeeei-prod.github.io/ox-content/built-in/markdown/) lists each toggle.
+Extensions beyond CommonMark — GFM tables, task lists, strikethrough, footnotes, and the built-in embeds — are opt-out rather than opt-in, so a document that uses none of them renders exactly as the specification requires. [Markdown Baseline](https://ox-content.dev/built-in/markdown/) lists each toggle.
 
-One deliberate deviation is available opt-in. CommonMark's flanking rules leave `**` immediately inside CJK punctuation (`A**強調。**B`) as literal text, which bites CJK prose constantly because punctuation is set directly against the preceding word. Enabling [`cjkEmphasis`](https://ubugeeei-prod.github.io/ox-content/examples/cjk-emphasis/) makes those runs pair; halfwidth ASCII punctuation is untouched, so Latin documents parse identically. It is off by default so the shipped default stays spec-conformant.
+One deliberate deviation is available opt-in. CommonMark's flanking rules leave `**` immediately inside CJK punctuation (`A**強調。**B`) as literal text, which bites CJK prose constantly because punctuation is set directly against the preceding word. Enabling [`cjkEmphasis`](https://ox-content.dev/examples/cjk-emphasis/) makes those runs pair; halfwidth ASCII punctuation is untouched, so Latin documents parse identically. It is off by default so the shipped default stays spec-conformant.
 
 ## Development
 
@@ -353,7 +353,7 @@ The dev shell is pinned in `flake.nix`, the workspace task graph lives in `vite.
 
 See [CONTRIBUTING.md](./CONTRIBUTING.md) for branch, commit, PR, testing, and release-note guidance.
 
-See the [documentation](https://ubugeeei-prod.github.io/ox-content/) for more details.
+See the [documentation](https://ox-content.dev/) for more details.
 
 ## Community Credits
 

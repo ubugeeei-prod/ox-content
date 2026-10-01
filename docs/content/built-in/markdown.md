@@ -93,12 +93,12 @@ Bare URLs become links. The default follows `gfm`, so `autolinks: false` opts
 out without giving up the rest of GFM.
 
 ```md
-Docs live at https://ubugeeei-prod.github.io/ox-content/
+Docs live at https://ox-content.dev/
 ```
 
 Rendered:
 
-Docs live at https://ubugeeei-prod.github.io/ox-content/
+Docs live at https://ox-content.dev/
 
 Auto-linked URLs open in a new tab with `rel="noopener noreferrer"`.
 

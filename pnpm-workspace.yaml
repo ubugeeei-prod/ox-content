@@ -35,6 +35,7 @@ allowBuilds:
   esbuild: true
   sharp: true
   puppeteer: true
+  workerd: true
 
 packageExtensions:
   "@voidzero-dev/vite-plus-core@0.1.21":
@@ -43,9 +44,11 @@ packageExtensions:
 overrides:
   vite: "catalog:"
   vitest: "catalog:"
-  # GHSA-rgw5-rvv9-x895: ReDoS in brace-expansion, patched in 2.1.4 and 5.0.9.
-  brace-expansion@2: "2.1.4"
-  brace-expansion@5: "5.0.9"
+  # GHSA-6j4f-fj2g-mc7p and GHSA-qhr7-859c-m2p7: brace-expansion recursion DoS.
+  brace-expansion@2: "2.1.7"
+  brace-expansion@5: "5.0.12"
+  # GHSA-rfgv-xxqx-mfg5, GHSA-vp8m-p9jh-q5pm, GHSA-w293-vg96-wgc3: fixed in 8.10.2.
+  undici@8: "8.10.2"
   # GHSA-28wg-ghj8-5hjv, GHSA-2v37-7h3g-55p8: nanoid, patched in 3.3.17.
   nanoid@3: "3.3.18"
   # GHSA-2883-xcg3-v3hh: js-yaml, patched in 4.3.2.
@@ -68,3 +71,16 @@ peerDependencyRules:
     vitest: "*"
 minimumReleaseAgeExclude:
   - "@mizchi/markdown@0.8.3"
+  # Pin the newly launched cf CLI and its matching Cloudflare packages.
+  - "@cloudflare/build-output-utils@0.8.4"
+  - "@cloudflare/codemods@0.3.0"
+  - "@cloudflare/config@0.22.0"
+  - "@cloudflare/runtime-types@0.1.6"
+  - "@cloudflare/workerd-darwin-64@1.20260930.2"
+  - "@cloudflare/workerd-darwin-arm64@1.20260930.2"
+  - "@cloudflare/workerd-linux-64@1.20260930.2"
+  - "@cloudflare/workerd-linux-arm64@1.20260930.2"
+  - "@cloudflare/workerd-windows-64@1.20260930.2"
+  - cf@1.0.0-beta.9
+  - miniflare@5.20260930.0-alpha
+  - workerd@1.20260930.2

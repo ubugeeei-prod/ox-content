@@ -26,12 +26,6 @@ describe("publish workflow targets", () => {
     });
   });
 
-  it("builds @ox-content/code-play before the Void docs site", () => {
-    const script = readFileSync("tools/scripts/deploy-docs-to-void.mjs", "utf8");
-    expect(script).toContain('cwd: "npm/ox-content-code-play"');
-    expect(script).toMatch(/ox-content-code-play[\s\S]*docs/);
-  });
-
   it("fails when an npm workspace dir is missing from the workflow", () => {
     expect(() =>
       verifyPublishWorkflow({

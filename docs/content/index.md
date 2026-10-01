@@ -95,7 +95,7 @@ Under the hood, Ox Content is not only a docs theme. It also exposes the Markdow
 - [unplugin markdown-it Token Bridge](./examples/unplugin-markdown-it-token-bridge.md) - `markdown-it` plugins plus downstream unified token access
 - [Development Setup](./development-setup.md) - Build ox-content itself and work on the repo
 - [Release Operations](./release.md) - Cut releases, recover failed publishes, and handle first-time crates
-- [Docs Deployment](./deployment.md) - Deploy the documentation site to Void with `vp run deploy#docs`
+- [Docs Deployment](./deployment.md) - Deploy the documentation site to Cloudflare with `vp run deploy#docs`
 - [Editor Extension Roadmap](./editor-extension-roadmap.md) - VS Code and Neovim plan, PR-by-PR
 - [Code Play Roadmap](./code-play-roadmap.md) - Opt-in `@ox-content/code-play` plugin plan
 - [Ox Content 3.0 Roadmap](./v3-roadmap.md) - Theme packages, MDX, Code Play, built-ins, tree-sitter highlighting

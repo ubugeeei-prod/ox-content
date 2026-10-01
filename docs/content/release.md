@@ -183,6 +183,7 @@ root:
 vp run deploy#docs
 ```
 
-The task builds the local workspace, builds docs with the Void base path, and
-then runs `vpx void@0.10.8 deploy`. Use `VOID_PROJECT` or forwarded Void CLI
-flags for preview deployments.
+The task builds the local workspace and deploys the docs, Rust API reference,
+and playground to `https://ox-content.dev` using the `cf` CLI. Run
+`vp run deploy#docs -- --dry-run` to validate without publishing. See
+[Docs Deployment](./deployment.md) for authentication and GitHub Actions setup.
