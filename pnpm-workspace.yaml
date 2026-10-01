@@ -11,10 +11,10 @@ packages:
   - tools/benchmarks/bundle-size/apps/*
 
 catalog:
-  "@solidjs/vite-plugin": ^3.0.0-next.43
-  "@solidjs/web": ^2.0.0-rc.8
-  "@sveltejs/vite-plugin-svelte": ^7.2.0
-  "@types/node": ^26.6.1
+  "@solidjs/vite-plugin": ^3.0.0-next.46
+  "@solidjs/web": ^2.0.0-rc.11
+  "@sveltejs/vite-plugin-svelte": ^7.3.1
+  "@types/node": ^26.6.3
   "@types/react": ^19.3.0
   "@types/react-dom": ^19.3.0
   "@vitejs/plugin-react": ^6.1.1
@@ -23,13 +23,13 @@ catalog:
   esbuild: ^0.28.1
   react: ^19.3.0
   react-dom: ^19.3.0
-  solid-js: ^2.0.0-rc.8
+  solid-js: ^2.0.0-rc.11
   svelte: ^5.57.0
   typescript: ^7.0.2
   vite: npm:@voidzero-dev/vite-plus-core@0.3.2
-  vitest: 4.1.11
+  vitest: 5.0.2
   vue: ^3.5.43
-  vite-plus: 0.3.2
+  vite-plus: 1.0.0
 
 allowBuilds:
   esbuild: true
