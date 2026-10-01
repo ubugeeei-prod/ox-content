@@ -56,6 +56,9 @@ jobs:
       - name: Check deployment bundle preparation
         run: node --test tools/scripts/prepare-docs-deployment.test.mjs
 
+      - name: Check Cloudflare CLI argument forwarding
+        run: vp run deploy#cf -- --version
+
       - name: Build and validate Cloudflare deployment
         run: vp run deploy#docs -- --dry-run
 

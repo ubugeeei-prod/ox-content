@@ -4,6 +4,10 @@ import { fileURLToPath } from "node:url";
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..", "..");
 
+// Vite+ includes its argument separator in the task's argv. Consume it before
+// forwarding options so `deploy#docs -- --dry-run` cannot publish accidentally.
+export const forwardCliArgs = (args) => (args[0] === "--" ? args.slice(1) : args);
+
 const commandName = (command) => (process.platform === "win32" ? `${command}.cmd` : command);
 
 const childEnv = (cwd, overrides = {}) => {
@@ -59,5 +63,5 @@ export const runWrangler = (args) =>
   ]);
 
 if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
-  runWrangler(process.argv.slice(2));
+  runWrangler(forwardCliArgs(process.argv.slice(2)));
 }
