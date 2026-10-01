@@ -1,12 +1,5 @@
-import { dirname, resolve } from "node:path";
-import { fileURLToPath } from "node:url";
-import { prepareCloudflareBuildOutput } from "../deploy/build-output.mjs";
-import { forwardCliArgs, run, runCf } from "./cloudflare-cli.mjs";
-import { prepareDocsDeployment } from "./prepare-docs-deployment.mjs";
+import { buildDocsForCloudflare } from "./build-docs-for-cloudflare.mjs";
+import { forwardCliArgs, runCf } from "./cloudflare-cli.mjs";
 
-const root = resolve(dirname(fileURLToPath(import.meta.url)), "..", "..");
-
-run("vp", ["run", "build"]);
-prepareDocsDeployment(root);
-await prepareCloudflareBuildOutput(root);
+await buildDocsForCloudflare();
 runCf(["deploy", "--prebuilt", "--mode", "production", ...forwardCliArgs(process.argv.slice(2))]);

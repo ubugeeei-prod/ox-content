@@ -6,8 +6,8 @@ description: Ox Content のドキュメントを Cloudflare へ直接デプロ�
 # ドキュメントのデプロイ
 
 ドキュメントは [https://ox-content.dev](https://ox-content.dev) で公開します。
-`main` への push を契機に、GitHub Actions から Cloudflare の公式 CLI である
-`cf` を使い、Cloudflare Workers Static Assets へ直接デプロイします。
+`main` への push を契機に、Cloudflare Workers Builds が公式 CLI の `cf` を使って
+Workers Static Assets へデプロイします。GitHub Actions は認証不要の dry-run で検証します。
 
 ドキュメントは `/`、Rust API は `/api/`、Playground は `/playground/` に配置します。
 `tools/deploy/cloudflare.config.ts` に `ox-content-docs` Worker と `ox-content.dev` の Custom Domain を定義しています。
@@ -41,6 +41,12 @@ deploy ワークスペースの `cf` パッケージは `1.0.0-beta.9` に固定
 vp run deploy#docs -- --dry-run
 ```
 
+デプロイコマンドを実行せず、同じ Build Output を準備するには次を使います。
+
+```bash
+vp run deploy#docs:build
+```
+
 成果物の準備後、同じ CLI ラッパーから `cf` を直接実行できます。
 
 ```bash
@@ -52,32 +58,48 @@ CLI ラッパーは `tools/deploy` で実行します。準備済みの成果物
 `--prebuilt --mode production` を指定してください。ローカルプレビューは `vp run dev:docs` を使います。
 [Cloudflare の prebuilt デプロイ](https://developers.cloudflare.com/cf/projects/#deploy-a-prebuilt-build) も参照してください。
 
-## GitHub Actions の設定
+## Workers Builds の設定
 
-デプロイ変更をマージする前に、次の repository Actions secrets を登録してください。
+Cloudflare のダッシュボードで `ox-content-docs` Worker を作成または選択し、
+Git integration から `ubugeeei-prod/ox-content` を接続します。
+[Cloudflare Workers and Pages GitHub App](https://github.com/apps/cloudflare-workers-and-pages)
+を organization にインストールし、このリポジトリへのアクセスを許可してください。
 
-| Secret                  | 用途                                                       |
-| ----------------------- | ---------------------------------------------------------- |
-| `CLOUDFLARE_ACCOUNT_ID` | `ox-content.dev` の zone を所有する account。              |
-| `CLOUDFLARE_API_TOKEN`  | Worker のデプロイと Custom Domain の管理を許可する token。 |
+ビルド設定は次の値にします。
 
-**Edit Cloudflare Workers** テンプレートで token を作成し、対象 account と
-`ox-content.dev` の zone に範囲を限定します。**Account / Workers Scripts / Edit**、
-**Zone / Workers Routes / Edit**、
-**Zone / Zone / Read** の権限が必要です。
-[`cf` の CI 手順](https://developers.cloudflare.com/cf/ci/) を参照してください。
+| 設定                                | 値                                                                  |
+| ----------------------------------- | ------------------------------------------------------------------- |
+| Production branch                   | `main`                                                              |
+| Root directory                      | リポジトリのルート (`/`)                                            |
+| Build command                       | `bash tools/scripts/build-docs-on-cloudflare.sh`                    |
+| Deploy command                      | `pnpm exec vp run deploy#cf -- deploy --prebuilt --mode production` |
+| 本番以外の branch builds / previews | 無効                                                                |
+| API token                           | Cloudflare が自動生成する既定のもの                                 |
 
-GitHub CLI で登録できます。対話入力を使うため token はシェル履歴に残りません。
+次の **build variables** を設定します。バージョンとインストール方法の指定であり、secrets ではありません。
 
-```bash
-gh secret set CLOUDFLARE_API_TOKEN --repo ubugeeei-prod/ox-content
-gh secret set CLOUDFLARE_ACCOUNT_ID --repo ubugeeei-prod/ox-content
-```
+| 変数                      | 値       |
+| ------------------------- | -------- |
+| `NODE_VERSION`            | `26`     |
+| `PNPM_VERSION`            | `12.1.0` |
+| `SKIP_DEPENDENCY_INSTALL` | `1`      |
 
-ワークフローは `.github/workflows/deploy.yml` です。デプロイ設定を変更する PR では、
-認証情報を渡さずにビルドと `cf deploy --prebuilt --mode production --dry-run` を実行します。
-公開するのは `main` への push または `main` 上の手動実行だけです。
-認証情報は公開ステップだけに渡し、secrets 未設定の場合は設定手順を示して失敗します。
+ビルドスクリプトはリポジトリの Rust toolchain、固定した pnpm 依存関係、
+ドキュメント描画用ブラウザーをインストールします。`vp run deploy#docs:build` で
+CI と同じ Build Output を生成し、別の deploy command が固定した `cf` で公開します。
+
+デプロイ用の認証情報は Workers Builds が Cloudflare 内で自動生成して保持します。
+GitHub Actions に `CLOUDFLARE_API_TOKEN` や `CLOUDFLARE_ACCOUNT_ID` の secrets を
+作成・コピーする必要はなく、GitHub にトークンを登録・更新する運用も不要です。
+GitHub Actions の OIDC 認証ではなく、Cloudflare の Git integration を使う構成です。
+[Workers Builds の設定](https://developers.cloudflare.com/workers/ci-cd/builds/configuration/) と
+[build image の設定](https://developers.cloudflare.com/workers/ci-cd/builds/build-image/) を参照してください。
+
+`.github/workflows/deploy.yml` は、デプロイ関連の PR、`main` への push、手動実行で
+認証情報を使わずビルドと `cf deploy --prebuilt --mode production --dry-run` を検証します。
+本番公開は Workers Builds の production branch への push または Cloudflare 上の再実行で行います。
+これらのコマンドが `main` に入ってから自動ビルドを有効にし、初回の本番ビルド成功と
+公開 URL を確認してからホスティングの移行完了としてください。
 
 ## Custom Domain
 

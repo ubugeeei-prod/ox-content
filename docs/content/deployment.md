@@ -6,8 +6,9 @@ description: Deploy the Ox Content documentation directly to Cloudflare at ox-co
 # Docs Deployment
 
 The documentation lives at [https://ox-content.dev](https://ox-content.dev).
-GitHub Actions builds and deploys it directly to Cloudflare Workers Static
-Assets using Cloudflare's `cf` CLI on pushes to `main`.
+Cloudflare Workers Builds builds and deploys it to Workers Static Assets using
+the `cf` CLI on pushes to `main`. GitHub Actions validates the deployment with
+an unauthenticated dry-run and does not publish the site.
 
 The deployment includes the docs at `/`, Rust API documentation at `/api/`,
 and the playground at `/playground/`. `tools/deploy/cloudflare.config.ts` declares the
@@ -43,6 +44,12 @@ publishing or needing Cloudflare credentials:
 vp run deploy#docs -- --dry-run
 ```
 
+To prepare the same Build Output without running a deployment command:
+
+```bash
+vp run deploy#docs:build
+```
+
 Run `cf` directly through the same pinned CLI after preparing the build:
 
 ```bash
@@ -54,33 +61,52 @@ The CLI wrapper runs in `tools/deploy`. Always use `--prebuilt --mode production
 when deploying the prepared output. Use `vp run dev:docs` to preview the docs locally.
 See [Cloudflare prebuilt deployments](https://developers.cloudflare.com/cf/projects/#deploy-a-prebuilt-build).
 
-## GitHub Actions Setup
+## Workers Builds Setup
 
-Configure these repository Actions secrets before merging the deployment change:
+In the Cloudflare dashboard, create or select the `ox-content-docs` Worker and
+connect `ubugeeei-prod/ox-content` through its Git integration. Install the
+[Cloudflare Workers and Pages GitHub App](https://github.com/apps/cloudflare-workers-and-pages)
+for the organization with access to this repository.
 
-| Secret                  | Purpose                                                            |
-| ----------------------- | ------------------------------------------------------------------ |
-| `CLOUDFLARE_ACCOUNT_ID` | The account that owns the `ox-content.dev` zone.                   |
-| `CLOUDFLARE_API_TOKEN`  | A token allowed to deploy the Worker and manage its Custom Domain. |
+Use these build settings:
 
-Create a token using the **Edit Cloudflare Workers** template, scoped to the
-correct account and the `ox-content.dev` zone. It needs **Account / Workers
-Scripts / Edit**, **Zone / Workers Routes / Edit**, and **Zone / Zone / Read**
-permissions. Follow the
-[Cloudflare CLI CI instructions](https://developers.cloudflare.com/cf/ci/)
-for creating the token and finding the account ID.
+| Setting                                 | Value                                                               |
+| --------------------------------------- | ------------------------------------------------------------------- |
+| Production branch                       | `main`                                                              |
+| Root directory                          | Repository root (`/`)                                               |
+| Build command                           | `bash tools/scripts/build-docs-on-cloudflare.sh`                    |
+| Deploy command                          | `pnpm exec vp run deploy#cf -- deploy --prebuilt --mode production` |
+| Non-production branch builds / previews | Disabled                                                            |
+| API token                               | Use Cloudflare's automatically generated default                    |
 
-Set the secrets with GitHub CLI; the token prompt keeps it out of shell history:
+Set these **build variables**, which are ordinary version and installation
+settings rather than secrets:
 
-```bash
-gh secret set CLOUDFLARE_API_TOKEN --repo ubugeeei-prod/ox-content
-gh secret set CLOUDFLARE_ACCOUNT_ID --repo ubugeeei-prod/ox-content
-```
+| Variable                  | Value    |
+| ------------------------- | -------- |
+| `NODE_VERSION`            | `26`     |
+| `PNPM_VERSION`            | `12.1.0` |
+| `SKIP_DEPENDENCY_INSTALL` | `1`      |
 
-The workflow is `.github/workflows/deploy.yml`. Pull requests affecting deployment
-configuration build and run `cf deploy --prebuilt --mode production --dry-run` without credentials.
-Only pushes or manual runs on `main` publish the site. Credentials are supplied
-only to the publishing step; missing secrets fail that step with setup guidance.
+The build script installs the repository's Rust toolchain, the frozen pnpm
+dependencies, and the browsers needed to render documentation. It runs
+`vp run deploy#docs:build` to assemble the same Build Output validated in CI.
+The separate deploy command uses the pinned `cf` CLI without rebuilding.
+
+Workers Builds automatically generates and stores its deployment credential
+inside Cloudflare. No `CLOUDFLARE_API_TOKEN` or `CLOUDFLARE_ACCOUNT_ID` GitHub
+Actions secrets need to be created, copied, or rotated by repository maintainers.
+This is Cloudflare Git integration, not GitHub Actions OIDC authentication.
+See [Workers Builds configuration](https://developers.cloudflare.com/workers/ci-cd/builds/configuration/)
+and [build image settings](https://developers.cloudflare.com/workers/ci-cd/builds/build-image/).
+
+The `.github/workflows/deploy.yml` workflow builds and runs
+`cf deploy --prebuilt --mode production --dry-run` without credentials on
+deployment-related pull requests, pushes to `main`, and manual runs. Production
+publishing happens only in Workers Builds after a push to its production branch
+or a manual retry in Cloudflare. Enable automatic builds once these commands
+are available on `main`, and check the first successful production build and
+the public URLs before considering the hosting migration complete.
 
 ## Custom Domain
 

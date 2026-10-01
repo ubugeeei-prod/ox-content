@@ -36,6 +36,7 @@ vp run ready
 vp run doc:cargo
 vp run dev:docs
 vp run dev:playground
+vp run deploy#docs:build
 vp run deploy#docs
 vp run bench:parse
 ```
@@ -45,7 +46,10 @@ reference, and playground directly to Cloudflare with the `cf` CLI. The default
 site is `https://ox-content.dev`, with docs at `/` and the playground at
 `/playground/`. Run `vp run deploy#cf -- auth login` once for local authentication.
 Use `vp run deploy#docs -- --dry-run` to build and validate without publishing.
-See [Docs Deployment](./docs/content/deployment.md) for GitHub Actions secrets
+Production deployments run in Cloudflare Workers Builds through the GitHub
+integration; GitHub Actions only validates the build and needs no Cloudflare
+secrets. Use `vp run deploy#docs:build` to prepare the bundle without publishing.
+See [Docs Deployment](./docs/content/deployment.md) for Workers Builds
 and custom domain setup.
 
 For allocation-aware performance work, use the in-tree profiler. It installs

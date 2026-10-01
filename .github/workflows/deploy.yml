@@ -1,4 +1,4 @@
-name: Deploy docs to Cloudflare
+name: Validate Cloudflare docs
 
 on:
   push:
@@ -11,6 +11,7 @@ on:
       - pnpm-workspace.yaml
       - tools/deploy/**
       - tools/scripts/*cloudflare*
+      - tools/scripts/build-docs-on-cloudflare.sh
       - tools/scripts/prepare-docs-deployment*
       - docs/vite.config.ts
       - examples/playground/vite.config.ts
@@ -49,28 +50,14 @@ jobs:
           target: target
           browsers: "true"
 
-      - name: Install browsers for docs rendering
-        run: |
-          vp exec --filter @ox-content/vite-plugin -- playwright install chromium
-          vp exec --filter @ox-content/vite-plugin -- puppeteer browsers install chrome-headless-shell
-
       - name: Check deployment bundle preparation
         run: node --test tools/scripts/prepare-docs-deployment.test.mjs
 
       - name: Check Cloudflare CLI argument forwarding
         run: vp run deploy#cf -- --version
 
-      - name: Build and validate Cloudflare deployment
-        run: vp run deploy#docs -- --dry-run
+      - name: Build with the Workers Builds entry point
+        run: bash tools/scripts/build-docs-on-cloudflare.sh
 
-      - name: Deploy to ox-content.dev
-        if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
-        env:
-          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-        run: |
-          if [ -z "$CLOUDFLARE_API_TOKEN" ] || [ -z "$CLOUDFLARE_ACCOUNT_ID" ]; then
-            echo "::error::Set CLOUDFLARE_API_TOKEN and CLOUDFLARE_ACCOUNT_ID repository secrets. See docs/content/deployment.md."
-            exit 1
-          fi
-          node tools/scripts/cloudflare-cli.mjs deploy --prebuilt --mode production
+      - name: Validate Cloudflare deployment without credentials
+        run: vp run deploy#cf -- deploy --prebuilt --mode production --dry-run
