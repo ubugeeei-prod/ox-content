@@ -3,6 +3,7 @@ import type { BrowserContext, Page, TestInfo } from "@playwright/test";
 import { generateHtmlPage } from "../../src/ssg";
 import { resolveTheme } from "../../src/theme";
 import type { NavGroup } from "../../src/ssg";
+import { importNapiModule } from "../../src/napi";
 
 const origin = "http://docs.test";
 
@@ -38,9 +39,30 @@ async function buildPages(viewTransitions = true) {
       theme,
     );
 
+  // Exercise production asset extraction as well as HTML generation. Keeping
+  // all CSS inline here hid navigation opt-in failures in deployed builds.
+  const generated = [
+    {
+      inputPath: "alpha.md",
+      outputPath: "/site/alpha.html",
+      html: await render("Alpha", "alpha", "First generated page"),
+    },
+    {
+      inputPath: "beta.md",
+      outputPath: "/site/beta.html",
+      html: await render("Beta", "beta", "Second generated page"),
+    },
+  ];
+  const { pages, assets } = (await importNapiModule()).externalizeSsgAssets(
+    generated,
+    "/site",
+    "/",
+  );
   return {
-    "/alpha.html": await render("Alpha", "alpha", "First generated page"),
-    "/beta.html": await render("Beta", "beta", "Second generated page"),
+    pages: Object.fromEntries(
+      pages.map((page) => [page.outputPath.slice("/site".length), page.html]),
+    ),
+    assets: new Map(assets.map((asset) => [asset.publicPath, asset.content])),
   };
 }
 
@@ -73,7 +95,16 @@ async function routeFixture(page: Page, pages: Awaited<ReturnType<typeof buildPa
       return;
     }
 
-    const body = pages[url.pathname as keyof typeof pages];
+    const stylesheet = pages.assets.get(url.pathname);
+    if (stylesheet !== undefined) {
+      await route.fulfill({
+        contentType: url.pathname.endsWith(".css") ? "text/css" : "text/javascript",
+        body: stylesheet,
+      });
+      return;
+    }
+
+    const body = pages.pages[url.pathname];
     if (body) {
       await route.fulfill({
         contentType: "text/html",
