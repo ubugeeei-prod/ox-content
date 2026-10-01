@@ -7,10 +7,10 @@ description: Deploy the Ox Content documentation directly to Cloudflare at ox-co
 
 The documentation lives at [https://ox-content.dev](https://ox-content.dev).
 GitHub Actions builds and deploys it directly to Cloudflare Workers Static
-Assets using Cloudflare's Wrangler CLI on pushes to `main`.
+Assets using Cloudflare's `cf` CLI on pushes to `main`.
 
 The deployment includes the docs at `/`, Rust API documentation at `/api/`,
-and the playground at `/playground/`. `wrangler.jsonc` declares the
+and the playground at `/playground/`. `tools/deploy/cloudflare.config.ts` declares the
 `ox-content-docs` Worker and its `ox-content.dev` Custom Domain.
 
 ## Local Deployment
@@ -19,8 +19,8 @@ Install workspace dependencies and authenticate once:
 
 ```bash
 vp install
-vp run deploy#cf login
-vp run deploy#cf whoami
+vp run deploy#cf -- auth login
+vp run deploy#cf -- auth whoami
 ```
 
 Build and deploy from the repository root:
@@ -31,25 +31,28 @@ vp run deploy#docs
 
 The task builds Rust, local npm packages (including Code Play), docs, the
 playground, and Rust API documentation with `vp run build`. It assembles their
-output into `dist/` and runs `wrangler deploy`. Wrangler is pinned to `4.145.0`;
-the CLI wrapper supplies the build approvals required by pnpm 12.
+output into `dist/`, then uses Cloudflare's `@cloudflare/build-output-utils`
+to write native Build Output under `tools/deploy/.cloudflare/output/v0/`.
+It runs `cf deploy --prebuilt --mode production` against that output.
+The `cf` package is pinned to `1.0.0-beta.9` in the deployment workspace.
 
-Extra arguments are forwarded to Wrangler. Validate the full build without
+Extra arguments are forwarded to `cf deploy`. Validate the full build without
 publishing or needing Cloudflare credentials:
 
 ```bash
 vp run deploy#docs -- --dry-run
 ```
 
-Run Wrangler directly through the same pinned CLI:
+Run `cf` directly through the same pinned CLI after preparing the build:
 
 ```bash
-vp run deploy#cf -- dev --local
-vp run deploy#cf -- deploy --dry-run
+vp run deploy#cf -- deploy --prebuilt --mode production --dry-run
+vp run deploy#cf -- deploy --prebuilt --mode production
 ```
 
-These commands read `wrangler.jsonc` from the repository root. Build the
-`dist/` bundle with the docs task before starting local preview.
+The CLI wrapper runs in `tools/deploy`. Always use `--prebuilt --mode production`
+when deploying the prepared output. Use `vp run dev:docs` to preview the docs locally.
+See [Cloudflare prebuilt deployments](https://developers.cloudflare.com/cf/projects/#deploy-a-prebuilt-build).
 
 ## GitHub Actions Setup
 
@@ -64,7 +67,7 @@ Create a token using the **Edit Cloudflare Workers** template, scoped to the
 correct account and the `ox-content.dev` zone. It needs **Account / Workers
 Scripts / Edit**, **Zone / Workers Routes / Edit**, and **Zone / Zone / Read**
 permissions. Follow the
-[Cloudflare authentication instructions](https://developers.cloudflare.com/workers/ci-cd/external-cicd/github-actions/)
+[Cloudflare CLI CI instructions](https://developers.cloudflare.com/cf/ci/)
 for creating the token and finding the account ID.
 
 Set the secrets with GitHub CLI; the token prompt keeps it out of shell history:
@@ -75,14 +78,14 @@ gh secret set CLOUDFLARE_ACCOUNT_ID --repo ubugeeei-prod/ox-content
 ```
 
 The workflow is `.github/workflows/deploy.yml`. Pull requests affecting deployment
-configuration build and run `wrangler deploy --dry-run` without credentials.
+configuration build and run `cf deploy --prebuilt --mode production --dry-run` without credentials.
 Only pushes or manual runs on `main` publish the site. Credentials are supplied
 only to the publishing step; missing secrets fail that step with setup guidance.
 
 ## Custom Domain
 
 The `ox-content.dev` zone must be active in the same Cloudflare account used by
-Wrangler. The config sets `custom_domain: true`, so Wrangler configures the
+`cf`. The config sets `worker.domains: ["ox-content.dev"]`, so `cf` configures the
 domain and Cloudflare manages DNS and HTTPS certificates. No separate origin
 server is needed. See [Cloudflare Custom Domains](https://developers.cloudflare.com/workers/configuration/routing/custom-domains/).
 
@@ -100,7 +103,8 @@ and client assets therefore use the custom domain and root-relative paths.
 
 `OX_CONTENT_DOCS_BASE`, `OX_CONTENT_DOCS_SITE_URL`, and
 `OX_CONTENT_PLAYGROUND_BASE` remain available for alternate build targets.
-Use a separate Wrangler config with `--config` when deploying to another domain.
+For another deployment target, update the Worker name and domains in
+`tools/deploy/cloudflare.config.ts`, then rebuild before deploying.
 
 Cloudflare serves directory indexes and extensionless HTML routes with
 `auto-trailing-slash` handling. Missing pages use the generated `404.html` with

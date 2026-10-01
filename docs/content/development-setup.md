@@ -174,7 +174,7 @@ vp run deploy#docs
 ```
 
 The task builds the Rust workspace and local npm packages before running
-`wrangler deploy`, and it uses a root base path so assets resolve correctly on
+`cf deploy --prebuilt --mode production`, and it uses a root base path so assets resolve correctly on
 `https://ox-content.dev`.
 
 See [Docs Deployment](./deployment.md) for environment variables and overrides.

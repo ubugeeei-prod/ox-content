@@ -41,9 +41,9 @@ vp run bench:parse
 ```
 
 `vp run deploy#docs` builds the local workspace and deploys the docs, Rust API
-reference, and playground directly to Cloudflare with Wrangler. The default
+reference, and playground directly to Cloudflare with the `cf` CLI. The default
 site is `https://ox-content.dev`, with docs at `/` and the playground at
-`/playground/`. Run `vp run deploy#cf login` once for local authentication.
+`/playground/`. Run `vp run deploy#cf -- auth login` once for local authentication.
 Use `vp run deploy#docs -- --dry-run` to build and validate without publishing.
 See [Docs Deployment](./docs/content/deployment.md) for GitHub Actions secrets
 and custom domain setup.

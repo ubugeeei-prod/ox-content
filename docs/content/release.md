@@ -184,6 +184,6 @@ vp run deploy#docs
 ```
 
 The task builds the local workspace and deploys the docs, Rust API reference,
-and playground to `https://ox-content.dev` using Wrangler. Run
+and playground to `https://ox-content.dev` using the `cf` CLI. Run
 `vp run deploy#docs -- --dry-run` to validate without publishing. See
 [Docs Deployment](./deployment.md) for authentication and GitHub Actions setup.

@@ -46,22 +46,8 @@ export const run = (command, args, options = {}) => {
   }
 };
 
-export const runWrangler = (args) =>
-  // dlx runs outside the workspace, so pnpm 12 needs explicit build approvals.
-  run("vp", [
-    "exec",
-    "--",
-    "pnpm",
-    "dlx",
-    "--yes",
-    "--allow-build",
-    "esbuild",
-    "--allow-build",
-    "workerd",
-    "wrangler@4.145.0",
-    ...args,
-  ]);
+export const runCf = (args) => run("cf", args, { cwd: "tools/deploy" });
 
 if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
-  runWrangler(forwardCliArgs(process.argv.slice(2)));
+  runCf(forwardCliArgs(process.argv.slice(2)));
 }

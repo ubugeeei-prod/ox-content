@@ -35,6 +35,7 @@ allowBuilds:
   esbuild: true
   sharp: true
   puppeteer: true
+  workerd: true
 
 packageExtensions:
   "@voidzero-dev/vite-plus-core@0.1.21":
@@ -70,3 +71,16 @@ peerDependencyRules:
     vitest: "*"
 minimumReleaseAgeExclude:
   - "@mizchi/markdown@0.8.3"
+  # Pin the newly launched cf CLI and its matching Cloudflare packages.
+  - "@cloudflare/build-output-utils@0.8.4"
+  - "@cloudflare/codemods@0.3.0"
+  - "@cloudflare/config@0.22.0"
+  - "@cloudflare/runtime-types@0.1.6"
+  - "@cloudflare/workerd-darwin-64@1.20260930.2"
+  - "@cloudflare/workerd-darwin-arm64@1.20260930.2"
+  - "@cloudflare/workerd-linux-64@1.20260930.2"
+  - "@cloudflare/workerd-linux-arm64@1.20260930.2"
+  - "@cloudflare/workerd-windows-64@1.20260930.2"
+  - cf@1.0.0-beta.9
+  - miniflare@5.20260930.0-alpha
+  - workerd@1.20260930.2

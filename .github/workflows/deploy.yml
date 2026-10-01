@@ -7,7 +7,8 @@ on:
     branches: [main]
     paths:
       - .github/workflows/deploy.yml
-      - wrangler.jsonc
+      - pnpm-lock.yaml
+      - pnpm-workspace.yaml
       - tools/deploy/**
       - tools/scripts/*cloudflare*
       - tools/scripts/prepare-docs-deployment*
@@ -72,4 +73,4 @@ jobs:
             echo "::error::Set CLOUDFLARE_API_TOKEN and CLOUDFLARE_ACCOUNT_ID repository secrets. See docs/content/deployment.md."
             exit 1
           fi
-          node tools/scripts/cloudflare-cli.mjs deploy
+          node tools/scripts/cloudflare-cli.mjs deploy --prebuilt --mode production

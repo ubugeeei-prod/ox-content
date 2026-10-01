@@ -173,7 +173,7 @@ vp run playground
 vp run deploy#docs
 ```
 
-このタスクは `wrangler deploy` の前に Rust ワークスペースとローカル npm パッケージをビルドし、`https://ox-content.dev` でアセットが正しく解決されるようルートの base パスを使います。
+このタスクは `cf deploy --prebuilt --mode production` の前に Rust ワークスペースとローカル npm パッケージをビルドし、`https://ox-content.dev` でアセットが正しく解決されるようルートの base パスを使います。
 
 環境変数と上書きは [ドキュメントのデプロイ](./deployment.md) を見てください。
 

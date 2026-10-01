@@ -3,6 +3,7 @@ import { mkdtempSync, mkdirSync, readFileSync, rmSync, writeFileSync, existsSync
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { test } from "node:test";
+import { prepareCloudflareBuildOutput } from "../deploy/build-output.mjs";
 import { prepareDocsDeployment } from "./prepare-docs-deployment.mjs";
 
 function fixture(t) {
@@ -27,9 +28,10 @@ function fixture(t) {
   return root;
 }
 
-test("stages docs, custom 404, assets, Rust API, and playground at their public paths", (t) => {
+test("stages docs, custom 404, assets, Rust API, and playground for cf deployment", async (t) => {
   const root = fixture(t);
   prepareDocsDeployment(root);
+  await prepareCloudflareBuildOutput(root);
   for (const [file, content] of [
     ["index.html", "docs"],
     ["404.html", "not found"],
@@ -38,6 +40,13 @@ test("stages docs, custom 404, assets, Rust API, and playground at their public 
     ["playground/index.html", "playground"],
   ]) {
     assert.equal(readFileSync(join(root, "dist", file), "utf8"), content);
+    assert.equal(
+      readFileSync(
+        join(root, "tools/deploy/.cloudflare/output/v0/workers/default/assets", file),
+        "utf8",
+      ),
+      content,
+    );
   }
 });
 

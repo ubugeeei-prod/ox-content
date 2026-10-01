@@ -60,7 +60,7 @@ docs/content/api/
 *.tmp
 *.temp
 .cache/
-.wrangler/
+.cloudflare/
 
 # Benchmark results
 /criterion
