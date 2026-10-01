@@ -34,6 +34,8 @@ vp run deploy#docs
 `tools/deploy/.cloudflare/output/v0/` にネイティブの Build Output を生成します。
 その成果物を `cf deploy --prebuilt --mode production` でデプロイします。
 deploy ワークスペースの `cf` パッケージは `1.0.0-beta.9` に固定しています。
+デプロイ用スクリプトは TypeScript で、Node 26 の stable type stripping により直接実行します。
+import は `.ts` を明記し、ローダーやトランスパイルは使いません。
 
 追加の引数は `cf deploy` に転送します。公開せずにビルドと設定を検証するには、認証不要の dry-run を使います。
 

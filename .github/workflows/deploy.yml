@@ -50,8 +50,11 @@ jobs:
           target: target
           browsers: "true"
 
+      - name: Check TypeScript for native Node execution
+        run: vp run deploy#check
+
       - name: Check deployment bundle preparation
-        run: node --test tools/scripts/prepare-docs-deployment.test.mjs
+        run: node --test tools/scripts/prepare-docs-deployment.test.ts
 
       - name: Check Cloudflare CLI argument forwarding
         run: vp run deploy#cf -- --version

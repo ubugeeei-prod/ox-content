@@ -2,11 +2,11 @@ import assert from "node:assert/strict";
 import { mkdtempSync, mkdirSync, readFileSync, rmSync, writeFileSync, existsSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { test } from "node:test";
-import { prepareCloudflareBuildOutput } from "../deploy/build-output.mjs";
-import { prepareDocsDeployment } from "./prepare-docs-deployment.mjs";
+import { test, type TestContext } from "node:test";
+import { prepareCloudflareBuildOutput } from "../deploy/build-output.ts";
+import { prepareDocsDeployment } from "./prepare-docs-deployment.ts";
 
-function fixture(t) {
+function fixture(t: TestContext): string {
   const root = mkdtempSync(join(tmpdir(), "ox-content-deploy-"));
   t.after(() => rmSync(root, { recursive: true, force: true }));
   for (const directory of [

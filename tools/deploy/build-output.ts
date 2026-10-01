@@ -8,7 +8,7 @@ import {
 } from "@cloudflare/build-output-utils";
 import config from "./cloudflare.config.ts";
 
-export async function prepareCloudflareBuildOutput(repositoryRoot) {
+export async function prepareCloudflareBuildOutput(repositoryRoot: string): Promise<void> {
   const root = resolve(repositoryRoot, "tools/deploy");
   await cleanBuildOutputDir(root);
   await writeAssets({ root, sourceDirectory: resolve(repositoryRoot, "dist") });

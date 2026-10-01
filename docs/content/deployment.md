@@ -36,6 +36,8 @@ output into `dist/`, then uses Cloudflare's `@cloudflare/build-output-utils`
 to write native Build Output under `tools/deploy/.cloudflare/output/v0/`.
 It runs `cf deploy --prebuilt --mode production` against that output.
 The `cf` package is pinned to `1.0.0-beta.9` in the deployment workspace.
+Deployment scripts are TypeScript executed directly by Node 26's stable type
+stripping, with explicit `.ts` imports and no loader or transpilation step.
 
 Extra arguments are forwarded to `cf deploy`. Validate the full build without
 publishing or needing Cloudflare credentials:

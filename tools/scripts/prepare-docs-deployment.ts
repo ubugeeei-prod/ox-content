@@ -1,7 +1,7 @@
 import { cpSync, rmSync, statSync } from "node:fs";
 import { resolve } from "node:path";
 
-export function prepareDocsDeployment(root) {
+export function prepareDocsDeployment(root: string): void {
   const sources = [
     ["docs/dist/docs", ""],
     ["target/doc", "api"],

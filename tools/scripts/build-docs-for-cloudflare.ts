@@ -1,12 +1,12 @@
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
-import { prepareCloudflareBuildOutput } from "../deploy/build-output.mjs";
-import { run } from "./cloudflare-cli.mjs";
-import { prepareDocsDeployment } from "./prepare-docs-deployment.mjs";
+import { prepareCloudflareBuildOutput } from "../deploy/build-output.ts";
+import { run } from "./cloudflare-cli.ts";
+import { prepareDocsDeployment } from "./prepare-docs-deployment.ts";
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..", "..");
 
-export async function buildDocsForCloudflare() {
+export async function buildDocsForCloudflare(): Promise<void> {
   run("vp", ["run", "build"]);
   prepareDocsDeployment(root);
   await prepareCloudflareBuildOutput(root);

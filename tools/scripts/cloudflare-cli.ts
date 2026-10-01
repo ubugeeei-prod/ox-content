@@ -6,12 +6,16 @@ const root = resolve(dirname(fileURLToPath(import.meta.url)), "..", "..");
 
 // Vite+ includes its argument separator in the task's argv. Consume it before
 // forwarding options so `deploy#docs -- --dry-run` cannot publish accidentally.
-export const forwardCliArgs = (args) => (args[0] === "--" ? args.slice(1) : args);
+export const forwardCliArgs = (args: string[]): string[] =>
+  args[0] === "--" ? args.slice(1) : args;
 
-const commandName = (command) => (process.platform === "win32" ? `${command}.cmd` : command);
+const commandName = (command: string): string =>
+  process.platform === "win32" ? `${command}.cmd` : command;
 
-const childEnv = (cwd, overrides = {}) => {
-  const env = { ...process.env, PWD: cwd, ...overrides };
+type RunOptions = { cwd?: string; env?: NodeJS.ProcessEnv };
+
+const childEnv = (cwd: string, overrides: NodeJS.ProcessEnv = {}): NodeJS.ProcessEnv => {
+  const env: NodeJS.ProcessEnv = { ...process.env, PWD: cwd, ...overrides };
 
   for (const key of Object.keys(env)) {
     if (key.startsWith("VP_")) {
@@ -28,7 +32,7 @@ const childEnv = (cwd, overrides = {}) => {
   return env;
 };
 
-export const run = (command, args, options = {}) => {
+export const run = (command: string, args: string[], options: RunOptions = {}): void => {
   const cwd = options.cwd ? resolve(root, options.cwd) : root;
 
   const result = spawnSync(commandName(command), args, {
@@ -46,7 +50,7 @@ export const run = (command, args, options = {}) => {
   }
 };
 
-export const runCf = (args) => run("cf", args, { cwd: "tools/deploy" });
+export const runCf = (args: string[]): void => run("cf", args, { cwd: "tools/deploy" });
 
 if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
   runCf(forwardCliArgs(process.argv.slice(2)));

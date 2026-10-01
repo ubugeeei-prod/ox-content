@@ -2516,6 +2516,9 @@ importers:
       '@cloudflare/build-output-utils':
         specifier: 0.8.4
         version: 0.8.4
+      '@types/node':
+        specifier: 'catalog:'
+        version: 26.6.2
       cf:
         specifier: 1.0.0-beta.9
         version: 1.0.0-beta.9(@types/node@26.6.2)
