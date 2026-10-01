@@ -57,7 +57,7 @@ jobs:
         run: node --test tools/scripts/prepare-docs-deployment.test.mjs
 
       - name: Build and validate Cloudflare deployment
-        run: node tools/scripts/deploy-docs-to-cloudflare.mjs --dry-run
+        run: vp run deploy#docs -- --dry-run
 
       - name: Deploy to ox-content.dev
         if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
