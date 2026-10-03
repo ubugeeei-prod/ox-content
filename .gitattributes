@@ -3,6 +3,9 @@
 /examples/** linguist-documentation=true
 /tools/benchmarks/** linguist-documentation=true
 
+# pnpm's patch parser requires LF filenames even on autocrlf Windows checkouts.
+*.patch text eol=lf
+
 # Generated API/reference artifacts.
 /docs/content/api/** linguist-generated=true
 /**/docs/api/** linguist-generated=true
