@@ -1,5 +1,19 @@
 # Changelog
 
+## [3.3.0] - 2026-10-03
+
+### Features
+
+- validate glob-specific schemas in builds and editors (#1472) _(affects: npm: @ox-content/vite-plugin, vscode-ox-content; docs, tooling, workspace metadata)_
+- add a modern interactive Markdown reader (#1471) _(affects: npm: @ox-content/vite-plugin; docs, tooling, workspace metadata)_
+- add guided project and IDE setup (#1470) _(affects: npm: @ox-content/vite-plugin, oxct; ci, docs, editor extensions, tooling, workspace metadata)_
+- add fast native Markdown lint (#1468) _(affects: crates: ox_content_lsp, ox_content_mermaid; npm: @ox-content/vite-plugin; docs, tooling, workspace metadata)_
+
+### Bug Fixes
+
+- repair first-package npm bootstrap and add preparation mode (#1474) _(affects: docs, tooling)_
+- keep navigation transition opt-in inline (#1462) _(affects: crates: ox_content_ssg; npm: @ox-content/vite-plugin)_
+
 ## [3.2.13] - 2026-09-29
 
 ### Features
