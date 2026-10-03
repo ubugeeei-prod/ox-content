@@ -16,6 +16,30 @@ PRs retain their existing CI and only add a lightweight release policy check.
 The `release-validation` label explicitly opts a tooling PR into the full matrix.
 Version changes are detected from manifests, so removing labels cannot skip them.
 
+New npm package names require a first authenticated publish before the registry
+name preflight can pass. Prepare the release PR and verify its build, package,
+native and editor results first. From that exact release branch, inspect the
+first package without changing the registry:
+
+```bash
+vp node tools/scripts/bootstrap-npm-package.mjs npm/oxct --pack-only
+```
+
+Once its tarball is ready, authenticate as the package owner and bootstrap it:
+
+```bash
+vp exec -- pnpm dlx npm@11.19.0 login
+vp node tools/scripts/bootstrap-npm-package.mjs npm/oxct
+```
+
+The helper checks the identity, builds/packs the workspace package, performs the
+first publish without provenance, and configures `publish.yml` in the `npm`
+environment as its trusted publisher. npm may require a browser/2FA operation.
+If publication succeeded but publisher registration failed, retry with
+`--register-only` to avoid republishing the immutable version. Rerun the release
+validation and resume the release command; registry checks remain required and
+the tag is created only after all exact-head release checks pass and the PR merges.
+
 If main advances, the command updates the PR and waits for the new checks. It
 checks the PR author's current repository role and requires successful CI and
 release validation for the exact head. GitHub also enforces an up-to-date branch
