@@ -3,6 +3,7 @@
  */
 
 import type { ThemeConfig, ResolvedThemeConfig } from "./theme";
+import type { FrontmatterSchemas } from "./frontmatter-schemas";
 import type {
   GitHubOptions,
   GraphvizOptions,
@@ -1478,6 +1479,8 @@ export interface ResolvedVersionEntry {
  * - an object enables the feature and overrides only the provided fields.
  */
 export interface OxContentOptions {
+  /** Source-relative globs validated through Standard Schema. First match wins. */
+  frontmatterSchemas?: FrontmatterSchemas;
   /**
    * Directory containing Markdown source files.
    *
@@ -2306,6 +2309,9 @@ export interface OxContentOptions {
  * Resolved options with all defaults applied.
  */
 export interface ResolvedOptions {
+  frontmatterSchemas?: FrontmatterSchemas;
+  /** Absolute content root set by the Vite configuration hook. */
+  frontmatterRoot?: string;
   srcDir: string;
   outDir: string;
   base: string;

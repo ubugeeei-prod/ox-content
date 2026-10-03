@@ -258,6 +258,7 @@ export function oxContent(options: OxContentOptions = {}): Plugin[] {
   const plugins: Plugin[] = [
     createMainPlugin(resolvedOptions, (resolvedConfig) => {
       config = resolvedConfig;
+      resolvedOptions.frontmatterRoot = path.resolve(resolvedConfig.root, resolvedOptions.srcDir);
     }),
     createEnvironmentPlugin(resolvedOptions),
     createDocsPlugin(resolvedOptions, getRoot),

@@ -34,6 +34,8 @@
  * ```
  */
 
+import { checkFrontmatter, formatFrontmatterDiagnostics } from "./frontmatter-check";
+import { resolve as resolveFrontmatterRoot } from "node:path";
 import type {
   MarkdownNode,
   MarkdownTransformer,
@@ -846,7 +848,15 @@ export async function transformMarkdown(
   let html = normalizeSelfClosingEmbeds(
     restoreGraphvizPlaceholders(result.html, graphviz.replacements),
   );
-  const frontmatter = parseFrontmatterJson(result.frontmatter);
+  const checked = await checkFrontmatter(
+    source,
+    filePath,
+    options.frontmatterSchemas,
+    options.frontmatterRoot ?? ssgOptions?.srcDir ?? resolveFrontmatterRoot(options.srcDir),
+  );
+  if (checked.diagnostics.length)
+    throw new Error(formatFrontmatterDiagnostics(checked.diagnostics));
+  const frontmatter = checked.value ?? parseFrontmatterJson(result.frontmatter);
 
   const toc = options.toc ? result.toc.map(normalizeTocEntry) : [];
 

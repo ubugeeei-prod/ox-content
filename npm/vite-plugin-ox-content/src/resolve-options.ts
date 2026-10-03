@@ -1,4 +1,5 @@
 import { resolveBlogOptions } from "./blog";
+import { defineFrontmatterSchemas } from "./frontmatter-schemas";
 import { resolveBudouxOptions } from "./budoux";
 import { resolveBuiltinEmbedOptions } from "./builtin-embed-options";
 import { resolveCardOptions } from "./card-options";
@@ -45,6 +46,9 @@ export { resolveBuiltinEmbedOptions } from "./builtin-embed-options";
 /** Resolves plugin options with defaults. */
 export function resolveOptions(options: OxContentOptions): ResolvedOptions {
   return {
+    frontmatterSchemas: options.frontmatterSchemas
+      ? defineFrontmatterSchemas(options.frontmatterSchemas)
+      : undefined,
     srcDir: options.srcDir ?? "content",
     outDir: options.outDir ?? "dist",
     base: options.base ?? "/",
