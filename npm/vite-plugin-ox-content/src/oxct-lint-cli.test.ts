@@ -3,6 +3,7 @@ import * as fs from "node:fs/promises";
 import * as os from "node:os";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
+import { performance } from "node:perf_hooks";
 import { afterEach, describe, expect, it } from "vite-plus/test";
 
 const bin = resolve(dirname(fileURLToPath(import.meta.url)), "../bin/oxct.mjs");
@@ -65,6 +66,35 @@ describe("oxct lint", () => {
     expect(report.checkedFileCount).toBe(1);
     expect(report.diagnostics.some((d: { file: string }) => d.file === "input.mdx")).toBe(true);
   });
+  it("expands explicit directories and deduplicates overlapping paths", async () => {
+    const cwd = await fixture();
+    const result = run([".", "b.md", "--format", "json", "--max-warnings", "10"], cwd);
+    expect(result.status).toBe(0);
+    expect(JSON.parse(result.stdout).checkedFileCount).toBe(2);
+  });
+  it("measures complete CLI throughput on a 1000-document corpus", async () => {
+    const cwd = await fixture();
+    const corpus = resolve(cwd, "corpus");
+    await fs.mkdir(corpus);
+    const source = "# Benchmark\n\n" + "Clear Markdown prose for content authors.\n\n".repeat(100);
+    await Promise.all(
+      Array.from({ length: 1000 }, (_, index) =>
+        fs.writeFile(resolve(corpus, `${index}.md`), source),
+      ),
+    );
+    const samples = [];
+    for (let index = 0; index < 3; index++) {
+      const started = performance.now();
+      const result = run(["corpus", "--format", "json"], cwd);
+      samples.push(performance.now() - started);
+      expect(result.status).toBe(0);
+      expect(JSON.parse(result.stdout).checkedFileCount).toBe(1000);
+    }
+    samples.sort((a, b) => a - b);
+    console.info(
+      `oxct lint throughput: 1000 x ${Buffer.byteLength(source)} bytes; median ${samples[1].toFixed(1)} ms including startup; ${(1000000 / samples[1]).toFixed(0)} files/s`,
+    );
+  }, 20000);
   it.each([
     ["--format", "xml"],
     ["--max-warnings", "NaN"],

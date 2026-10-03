@@ -71,15 +71,17 @@ sequenceDiagram
 
 ## Requirements
 
-Rendering shells out to the mermaid CLI (`mmdc`), so add it as a dev
-dependency:
+The plugin includes a Mermaid SVG renderer. Install its headless browser when
+your environment does not already provide one:
 
-<pm>npm install -D @mermaid-js/mermaid-cli</pm>
+<pm>npx puppeteer browsers install chrome-headless-shell</pm>
 
-If `mmdc` cannot be found, the build does not fail: mermaid fences are left as
-code blocks and a warning is printed once. This keeps CI images without the
-CLI (or without a headless browser) working while you decide whether diagrams
-are worth the dependency.
+Set `PUPPETEER_EXECUTABLE_PATH` to use an existing Chrome installation. Standard
+Mermaid diagrams work without installing `mmdc`. For additional CLI integrations,
+including ZenUML, install `@mermaid-js/mermaid-cli` in your project; Ox Content
+prefers that renderer when available.
+
+When rendering fails, the original code block remains and the build prints a warning.
 
 ## Related
 

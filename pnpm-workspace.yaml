@@ -42,6 +42,10 @@ packageExtensions:
     dependencies:
       picomatch: ^4.0.4
 overrides:
+  # Benchmark fixtures have no remote images; disable their optional remote-image cache.
+  "astro>http-cache-semantics": "-"
+  # Security fixes in devalue 5.9.3+, preserving the existing major version.
+  devalue@5: "5.9.4"
   vite: "catalog:"
   vitest: "catalog:"
   # GHSA-6j4f-fj2g-mc7p and GHSA-qhr7-859c-m2p7: brace-expansion recursion DoS.
@@ -84,3 +88,5 @@ minimumReleaseAgeExclude:
   - cf@1.0.0-beta.9
   - miniflare@5.20260930.0-alpha
   - workerd@1.20260930.2
+patchedDependencies:
+  astro@7.3.3: patches/astro@7.3.3.patch

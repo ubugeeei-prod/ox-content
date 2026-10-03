@@ -1,0 +1,66 @@
+diff --git a/dist/assets/build/remote.js b/dist/assets/build/remote.js
+index fdb5d4e65752ba9e883b77a1c692e5127db19b3c..d36f1b24fd0d6cc89adcf86e3b4d00160a8ea691 100644
+--- a/dist/assets/build/remote.js
++++ b/dist/assets/build/remote.js
+@@ -1,4 +1,3 @@
+-import CachePolicy from "http-cache-semantics";
+ import { fetchWithRedirects } from "../utils/redirectValidation.js";
+ async function loadRemoteImage(src, fetchFn = globalThis.fetch, imageConfig = { remotePatterns: [], domains: [] }) {
+   const res = await fetchWithRedirects({
+@@ -11,9 +10,9 @@ async function loadRemoteImage(src, fetchFn = globalThis.fetch, imageConfig = {
+       `Failed to load remote image ${src}. The request did not return a 200 OK response. (received ${res.status}))`
+     );
+   }
+-  const req = new Request(src);
+-  const policy = new CachePolicy(webToCachePolicyRequest(req), webToCachePolicyResponse(res));
+-  const expires = policy.storable() ? policy.timeToLive() : 0;
++  // Local benchmark fixtures do not use remote assets. Always revalidate
++  // optional remote images instead of importing the vulnerable cache policy.
++  const expires = 0;
+   return {
+     data: Buffer.from(await res.arrayBuffer()),
+     expires: Date.now() + expires,
+@@ -26,7 +25,6 @@ async function revalidateRemoteImage(src, revalidationData, fetchFn = globalThis
+     ...revalidationData.etag && { "If-None-Match": revalidationData.etag },
+     ...revalidationData.lastModified && { "If-Modified-Since": revalidationData.lastModified }
+   };
+-  const req = new Request(src, { headers, cache: "no-cache" });
+   const res = await fetchWithRedirects({
+     url: src,
+     headers: new Headers(headers),
+@@ -47,14 +45,7 @@ async function revalidateRemoteImage(src, revalidationData, fetchFn = globalThis
+   if (res.ok && !data.length) {
+     return await loadRemoteImage(src, fetchFn, imageConfig);
+   }
+-  const policy = new CachePolicy(
+-    webToCachePolicyRequest(req),
+-    webToCachePolicyResponse(
+-      res.ok ? res : new Response(null, { status: 200, headers: res.headers })
+-    )
+-    // 304 responses are not cacheable, so just use its headers to get the refreshed TTL
+-  );
+-  const expires = policy.storable() ? policy.timeToLive() : 0;
++  const expires = 0;
+   return {
+     data: res.ok ? data : null,
+     expires: Date.now() + expires,
+@@ -63,19 +54,6 @@ async function revalidateRemoteImage(src, revalidationData, fetchFn = globalThis
+     lastModified: res.headers.get("Last-Modified") ?? (res.ok ? void 0 : revalidationData.lastModified)
+   };
+ }
+-function webToCachePolicyRequest({ url, method, headers }) {
+-  return {
+-    method,
+-    url,
+-    headers: Object.fromEntries(headers.entries())
+-  };
+-}
+-function webToCachePolicyResponse({ status, headers }) {
+-  return {
+-    status,
+-    headers: Object.fromEntries(headers.entries())
+-  };
+-}
+ export {
+   loadRemoteImage,
+   revalidateRemoteImage

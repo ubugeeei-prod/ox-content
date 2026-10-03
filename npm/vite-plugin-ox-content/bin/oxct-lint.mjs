@@ -1,4 +1,4 @@
-import { readFile } from "node:fs/promises";
+import { readFile, stat } from "node:fs/promises";
 import { relative, resolve } from "node:path";
 import { performance } from "node:perf_hooks";
 import { loadNapi } from "./oxct-napi.mjs";
@@ -197,7 +197,15 @@ function validateConfig(config) {
 
 async function discoverFiles(options) {
   const { glob } = await import("glob");
-  const files = await glob(options.paths.length ? options.paths : ["**/*.{md,markdown,mdx,mdc}"], {
+  const patterns = await Promise.all(
+    (options.paths.length ? options.paths : ["**/*.{md,markdown,mdx,mdc}"]).map(async (path) => {
+      const info = await stat(resolve(path)).catch(() => null);
+      return info?.isDirectory()
+        ? `${path.replaceAll("\\", "/")}/**/*.{md,markdown,mdx,mdc}`
+        : path;
+    }),
+  );
+  const files = await glob(patterns, {
     cwd: process.cwd(),
     absolute: true,
     nodir: true,

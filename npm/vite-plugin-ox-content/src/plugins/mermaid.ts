@@ -8,6 +8,7 @@
 
 import { existsSync } from "node:fs";
 import { createRequire } from "node:module";
+import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
 import { importNapiModule } from "../napi";
 
@@ -67,6 +68,15 @@ function resolveMmdcPath(): string | null {
   if (existsSync(binPath)) {
     cachedMmdcPath = binPath;
     return cachedMmdcPath;
+  }
+
+  // Standard Mermaid diagrams use the bundled renderer without ZenUML build dependencies.
+  for (const relativePath of ["../bin/mermaid-render.mjs", "../../bin/mermaid-render.mjs"]) {
+    const bundled = fileURLToPath(new URL(relativePath, import.meta.url));
+    if (existsSync(bundled)) {
+      cachedMmdcPath = bundled;
+      return bundled;
+    }
   }
 
   cachedMmdcPath = null;

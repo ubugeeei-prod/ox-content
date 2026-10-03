@@ -126,7 +126,6 @@ fn skip_attribute_value(bytes: &[u8], mut cursor: usize) -> usize {
                 }
                 cursor += 1;
             }
-            cursor
         }
         Some(b'{') => {
             let mut depth = 1usize;
@@ -144,7 +143,6 @@ fn skip_attribute_value(bytes: &[u8], mut cursor: usize) -> usize {
                 }
                 cursor += 1;
             }
-            cursor
         }
         _ => {
             while cursor < bytes.len()
@@ -153,9 +151,9 @@ fn skip_attribute_value(bytes: &[u8], mut cursor: usize) -> usize {
             {
                 cursor += 1;
             }
-            cursor
         }
     }
+    cursor
 }
 
 #[must_use]

@@ -30,8 +30,7 @@ you need CSpell dictionary packages.
 The default warning budget is zero: diagnostics return exit code 1. Set
 `--max-warnings 10` to allow up to ten warnings. A clean run returns 0; invalid
 arguments, unreadable files, invalid configuration, and unmatched inputs return
-
-1. JSON output includes file counts, diagnostics, and elapsed milliseconds.
+exit code 1. JSON output includes file counts, diagnostics, and elapsed milliseconds.
 
 Pass a JSON configuration with `--config lint.json`:
 
