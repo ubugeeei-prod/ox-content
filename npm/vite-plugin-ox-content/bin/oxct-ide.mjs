@@ -13,6 +13,8 @@ export async function runIde(args) {
 
 Select IDEs, extension installation, and workspace configuration.
 Existing JSONC comments and unrelated settings are preserved; changed files are backed up.
+Workspace configuration enables Standard Schema validation by executing trusted project
+Vite configuration. VS Code requires Workspace Trust; Zed/Neovim use explicit --project.
 
 Options:
   --ide vscode|cursor|windsurf|vscodium|zed|neovim (repeatable)
@@ -49,7 +51,11 @@ Neovim installs the bundled plugin in your native pack directory and generates a
               label: "Install extensions",
               hint: "Includes user-level Zed / Neovim settings",
             },
-            { value: "config", label: "Create workspace configuration" },
+            {
+              value: "config",
+              label: "Create workspace configuration",
+              hint: "Enable trusted project schema validation",
+            },
           ],
           initialValues: ["extensions", "config"],
           required: true,
@@ -71,6 +77,9 @@ Neovim installs the bundled plugin in your native pack directory and generates a
     "nvim/site/pack/ox-content/start/ox-content",
   );
   const description = [
+    ...(options.config
+      ? ["Enable frontmatter validation from trusted project Vite configuration."]
+      : []),
     ...plans.map(
       (plan) =>
         `${plan.original === plan.content ? "Keep" : plan.original === undefined ? "Create" : "Merge and back up"}: ${plan.file}`,

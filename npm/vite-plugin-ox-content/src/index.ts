@@ -1433,3 +1433,18 @@ export type {
   WriteResourceFilesPage,
   WriteResourceFilesResult,
 } from "./ssg-output";
+export {
+  defineFrontmatterSchemas,
+  checkFrontmatterValue,
+  selectFrontmatterSchema,
+  frontmatterJsonSchema,
+} from "./frontmatter-schemas";
+export type {
+  FrontmatterSchema,
+  FrontmatterSchemas,
+  FrontmatterSchemaAdapter,
+  InferFrontmatter,
+  InferFrontmatterInput,
+} from "./frontmatter-schemas";
+export { checkFrontmatter, formatFrontmatterDiagnostics } from "./frontmatter-check";
+export type { FrontmatterDiagnostic } from "./frontmatter-check";

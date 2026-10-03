@@ -850,7 +850,7 @@ export async function transformMarkdown(
   );
   const checked = await checkFrontmatter(
     source,
-    filePath,
+    filePath.split(/[?#]/, 1)[0],
     options.frontmatterSchemas,
     options.frontmatterRoot ?? ssgOptions?.srcDir ?? resolveFrontmatterRoot(options.srcDir),
   );

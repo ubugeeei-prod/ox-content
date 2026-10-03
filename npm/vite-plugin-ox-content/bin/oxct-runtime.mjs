@@ -45,6 +45,11 @@ export async function main(args) {
     await runValidate(rest);
     return;
   }
+  if (command === "typecheck") {
+    const { runTypecheck } = await import("./oxct-frontmatter-project.mjs");
+    await runTypecheck(rest);
+    return;
+  }
   if (command === "link-check") {
     runLinkCheck(rest, (args) => {
       runRustCli({ binary: "ox-content-link-check", crate: "ox_content_link_checker", args });
@@ -58,7 +63,7 @@ export async function main(args) {
     return;
   }
   if (command === "lsp") {
-    runLsp(rest);
+    await runLsp(rest);
     return;
   }
   if (command === "migrate") {
@@ -73,12 +78,17 @@ export async function main(args) {
   throw new Error(`Unknown command: ${command}`);
 }
 
-function runLsp(args) {
+async function runLsp(args) {
   if (isExplicitHelp(args)) {
     printLspHelp();
     return;
   }
 
+  if (args.includes("--project") || args.includes("--config") || args.includes("-c")) {
+    const { runProjectLsp } = await import("./oxct-lsp-project.mjs");
+    await runProjectLsp(args);
+    return;
+  }
   if (args.length > 0) {
     throw new Error(`Unknown lsp option: ${args[0]}`);
   }
@@ -198,6 +208,7 @@ Commands:
   lint [files/globs]       Lint Markdown with the batched Rust engine
   i18n <command>           Check dictionaries and validate MessageFormat 2
   validate                 Run collection validate hooks without a full build
+  typecheck                Check glob-specific Standard Schema frontmatter
   link-check <files...>    Check Markdown/MDC local links
   migrate vitepress        Generate ox-content config from VitePress config
   mdc-check <files...>     Check MDC component syntax
@@ -209,9 +220,13 @@ function printLspHelp() {
   console.log(`oxct lsp
 
 Usage:
-  oxct lsp
+  oxct lsp [--project] [--config <path>]
 
-Runs the bundled Ox Content language server over stdio. Source checkouts can fall back to an ox-content-lsp binary from PATH or Cargo when the native binding is unavailable.`);
+Runs the bundled Ox Content language server over stdio. --project enables Vite config
+loading and Standard Schema frontmatter diagnostics/completion in a trusted project.
+Project configuration and validators execute JavaScript. Without --project or --config,
+the server does not load the project configuration. Source checkouts can fall back to
+an ox-content-lsp binary from PATH or Cargo when the native binding is unavailable.`);
 }
 
 function printMigrateHelp() {

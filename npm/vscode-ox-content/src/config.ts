@@ -1,4 +1,6 @@
 import * as fs from "node:fs";
+import { createRequire } from "node:module";
+import { dirname, resolve } from "node:path";
 import * as vscode from "vscode";
 import type { ServerOptions } from "vscode-languageclient/node";
 
@@ -18,9 +20,26 @@ export function resolveServerOptions(
   // The `OX_CONTENT_LSP_PATH` escape hatch lets CI and the integration
   // test runner point at a freshly built `target/release/ox-content-lsp`
   // without synthesizing a workspace `.vscode/settings.json`.
-  return selectServerCommand({
+  let projectCli: string | undefined;
+  if (
+    workspaceRoot &&
+    vscode.workspace.isTrusted &&
+    getConfig().get<boolean>("frontmatter.projectValidation", true)
+  ) {
+    try {
+      const entry = createRequire(resolve(workspaceRoot, "package.json")).resolve(
+        "@ox-content/vite-plugin/cli",
+      );
+      projectCli = resolve(dirname(entry), "oxct.mjs");
+    } catch {
+      /* Projects without the plugin use the bundled Rust server. */
+    }
+  }
+  const selected = selectServerCommand({
     configuredPath: configuredPath ? resolveFilePath(configuredPath, workspaceRoot) : undefined,
     envBinary: process.env.OX_CONTENT_LSP_PATH?.trim(),
+    projectCli,
+    workspaceTrusted: vscode.workspace.isTrusted,
     localCandidates: localServerBinaryCandidates({
       workspaceRoot,
       extensionPath: context.extensionPath,
@@ -28,6 +47,17 @@ export function resolveServerOptions(
     }),
     exists: fs.existsSync,
   });
+  if (selected.args[0] === projectCli && projectCli) {
+    return {
+      ...selected,
+      command: process.execPath,
+      options: {
+        cwd: workspaceRoot,
+        env: { ...process.env, ELECTRON_RUN_AS_NODE: "1" },
+      },
+    };
+  }
+  return selected;
 }
 
 export function resolveInitializationOptions(

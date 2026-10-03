@@ -21,6 +21,23 @@ const schemas = defineFrontmatterSchemas({
 });
 
 describe("Standard Schema frontmatter", () => {
+  it("reports validator exceptions as source diagnostics", async () => {
+    const throwing = defineFrontmatterSchemas({
+      "**/*.md": {
+        "~standard": {
+          version: 1,
+          vendor: "test",
+          validate() {
+            throw new Error("validation unavailable");
+          },
+        },
+      },
+    });
+    expect(
+      (await checkFrontmatter("---\ntitle: Hello\n---\n", `${root}/a.md`, throwing, root))
+        .diagnostics[0].message,
+    ).toContain("validation unavailable");
+  });
   it("preserves per-glob input and output inference", () => {
     expectTypeOf<InferFrontmatter<typeof schemas, "posts/**/*.md">>().toEqualTypeOf<{
       title: string;

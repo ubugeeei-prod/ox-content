@@ -23,6 +23,10 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
   // text change, and the panel reapplies the HTML. The extension no
   // longer needs `onDidChangeTextDocument` debouncing.
   context.subscriptions.push(
+    vscode.workspace.onDidGrantWorkspaceTrust(async () => {
+      await restartClient(context);
+      registerPreviewListeners(context);
+    }),
     vscode.commands.registerCommand(COMMAND_OPEN_PREVIEW, async () => {
       await openPreview(context);
     }),

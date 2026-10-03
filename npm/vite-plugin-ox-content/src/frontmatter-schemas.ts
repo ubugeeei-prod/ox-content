@@ -59,7 +59,12 @@ export async function checkFrontmatterValue(
   definition: FrontmatterSchema,
   value: unknown,
 ): Promise<{ value?: Record<string, unknown>; issues: FrontmatterIssue[] }> {
-  const result = await validator(definition)["~standard"].validate(value);
+  let result: StandardSchemaV1.Result<unknown>;
+  try {
+    result = await validator(definition)["~standard"].validate(value);
+  } catch (error) {
+    return { issues: [{ message: `Schema validation failed: ${String(error)}`, path: [] }] };
+  }
   if (result.issues)
     return {
       issues: result.issues.map((issue) => ({

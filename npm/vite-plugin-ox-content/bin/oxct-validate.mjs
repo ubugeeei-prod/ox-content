@@ -34,6 +34,7 @@ const directOptionKeys = new Set([
   "gfm",
   "mdx",
   "frontmatter",
+  "frontmatterSchemas",
 ]);
 
 export async function runValidate(args) {
@@ -84,9 +85,9 @@ function parseValidateOptions(args) {
   return options;
 }
 
-async function loadResolvedOptions(options, api) {
+export async function loadResolvedOptions(options, api) {
   const configPath = await resolveConfigPath(options.config, options.cwd);
-  const config = await loadConfig(configPath, options.cwd);
+  const { config, dependencies } = await loadConfig(configPath, options.cwd);
   const resolvedOptions = findResolvedOptions(config, api);
   if (!resolvedOptions) {
     throw new Error(`Could not find an oxContent() plugin or Ox Content options in ${configPath}.`);
@@ -95,13 +96,18 @@ async function loadResolvedOptions(options, api) {
   return {
     root: resolveConfigRoot(config, options.cwd),
     resolvedOptions,
+    configPath,
+    dependencies,
   };
 }
 
 async function loadConfig(configPath, cwd) {
   const vite = await import("vite");
   const loaded = await vite.loadConfigFromFile(createConfigEnv(), configPath, cwd, "silent");
-  return normalizeConfig(loaded?.config, configPath);
+  return {
+    config: normalizeConfig(loaded?.config, configPath),
+    dependencies: [...new Set([configPath, ...(loaded?.dependencies ?? [])])],
+  };
 }
 
 function findResolvedOptions(config, api) {
@@ -174,7 +180,7 @@ function selectCollections(options, requestedCollections) {
   };
 }
 
-async function loadPackageApi() {
+export async function loadPackageApi() {
   const entry = path.resolve(here, "../dist/index.mjs");
   try {
     return await import(pathToFileURL(entry).href);

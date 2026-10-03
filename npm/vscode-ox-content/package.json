@@ -80,6 +80,11 @@
           "default": "",
           "markdownDescription": "Optional absolute or workspace-relative path to the frontmatter schema file used for Markdown and `.mdc` frontmatter completion and diagnostics."
         },
+        "oxContent.frontmatter.projectValidation": {
+          "type": "boolean",
+          "default": true,
+          "markdownDescription": "Use the workspace's installed Ox Content plugin to execute Vite configuration and Standard Schema validators for glob-specific completion and diagnostics. Requires Workspace Trust. Explicit server paths take precedence."
+        },
         "oxContent.preview.autoRefresh": {
           "type": "boolean",
           "default": true,
@@ -144,5 +149,11 @@
   ],
   "engines": {
     "vscode": "^1.125.0"
+  },
+  "capabilities": {
+    "untrustedWorkspaces": {
+      "supported": "limited",
+      "description": "Project Standard Schema validators run only after workspace trust is granted."
+    }
   }
 }
