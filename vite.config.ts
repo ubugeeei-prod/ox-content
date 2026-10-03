@@ -149,10 +149,7 @@ export default defineConfig({
       "workspace:test": noopTask(["test:rust", "test:ts"]),
       "test:rust": task("cargo test --workspace"),
       "test:rust-verbose": uncachedTask("cargo test --workspace -- --nocapture"),
-      // `test:vscode` is intentionally NOT part of `test:ts`: it spins up a
-      // real VS Code Electron host and needs xvfb on Linux runners. CI
-      // exposes it via its own job; here we only chain the pure-node
-      // unit suite so `vp run test` stays headless.
+      // Electron integration tests require xvfb and run in their own CI job.
       "test:ts": noopTask([
         "test:ts-unit",
         "test:framework-integrations",
