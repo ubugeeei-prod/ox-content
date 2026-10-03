@@ -149,10 +149,7 @@ export default defineConfig({
       "workspace:test": noopTask(["test:rust", "test:ts"]),
       "test:rust": task("cargo test --workspace"),
       "test:rust-verbose": uncachedTask("cargo test --workspace -- --nocapture"),
-      // `test:vscode` is intentionally NOT part of `test:ts`: it spins up a
-      // real VS Code Electron host and needs xvfb on Linux runners. CI
-      // exposes it via its own job; here we only chain the pure-node
-      // unit suite so `vp run test` stays headless.
+      // Electron integration tests require xvfb and run in their own CI job.
       "test:ts": noopTask([
         "test:ts-unit",
         "test:framework-integrations",
@@ -166,11 +163,15 @@ export default defineConfig({
         "test:publish-targets",
         "test:benchmark-scripts",
         "test:editor-publish-scripts",
+        "test:cli-scaffold",
       ]),
       "test:vite-plugin": task("vp exec --filter @ox-content/vite-plugin -- vp test src", {
         dependsOn: ["build:vite-plugin"],
       }),
       "test:code-play": task("vp exec --filter @ox-content/code-play -- vp test src"),
+      "test:cli-scaffold": task(`vp test ${scriptPath("oxct-scaffold-build.test.mjs")}`, {
+        dependsOn: ["build:npm"],
+      }),
       "test:publish-targets": task(
         `vp test ${scriptPath("verify-publish-targets.test.ts")} ${scriptPath("release-policy.test.ts")} ${scriptPath("release-github.test.ts")} ${scriptPath("check-npm-licenses.test.mjs")} --exclude '.claude/**'`,
       ),

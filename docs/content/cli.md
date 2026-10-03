@@ -5,15 +5,56 @@ description: Native Markdown linting and content authoring tools.
 
 # Ox Content CLI
 
-The Vite plugin includes the `oxct` binary. In a project that already has
-`@ox-content/vite-plugin` installed, run:
+Run the standalone CLI with `vpx oxct`, including outside an existing project.
+The Vite plugin also includes the `oxct` binary for installed projects.
 
 ```bash
+vpx oxct new
+vpx oxct ide install
 vpx oxct lint
 vpx oxct lint 'content/**/*.{md,mdx}'
 vpx oxct lint --format json
 cat content/index.md | vpx oxct lint --stdin
 ```
+
+## Create a project
+
+`vpx oxct new` guides you through a directory, documentation / blog / minimal
+template, theme skin, color palette, package manager, and dependency installation.
+The generated project includes Vite configuration, Markdown examples, scripts,
+and a TypeScript configuration. Existing nonempty directories are preserved.
+
+For automation:
+
+```bash
+vpx oxct new my-docs --yes --template docs --skin editorial --palette nord --no-install
+vpx oxct new my-blog --yes --template blog --package-manager pnpm --install
+```
+
+Without a terminal, setup uses defaults and does not install dependencies unless
+you pass `--install`. Installation failures preserve the project so you can retry.
+
+## Set up an IDE
+
+`vpx oxct ide install` lets you select VS Code, Cursor, Windsurf, VSCodium, Zed,
+or Neovim, then choose extension installation, workspace configuration, or both.
+It shows the affected files and commands before applying the plan.
+Existing JSONC comments and unrelated settings are preserved; changed files get
+a backup alongside the original.
+
+```bash
+vpx oxct ide install --ide vscode --config-only --yes
+vpx oxct ide install --ide cursor --ide zed --dry-run
+vpx oxct ide install --ide neovim --yes
+```
+
+VS Code family installations use the IDE's CLI, which must be on PATH. Zed setup
+enables `auto_install_extensions` in user settings; Zed installs the extension
+on its next launch when available in the registry. Neovim setup installs the
+bundled plugin into its native pack directory and generates
+`.ox-content/neovim.lua`. Source it with `:luafile .ox-content/neovim.lua` on
+Neovim 0.11+. Existing plugin installations are preserved for your plugin manager
+to update. `--extensions-only` and `--config-only` keep the two actions separate.
 
 ## Markdown lint
 

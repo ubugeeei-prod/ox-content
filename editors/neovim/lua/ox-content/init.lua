@@ -50,6 +50,7 @@ function M.setup(opts)
       group = augroup,
       pattern = {
         "markdown",
+        "mdx",
         "javascript",
         "javascriptreact",
         "typescript",

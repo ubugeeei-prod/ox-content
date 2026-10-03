@@ -49,6 +49,11 @@ local function resolve_cmd(bufnr)
     end
   end
 
+  local vpx = vim.fn.exepath("vpx")
+  if vpx ~= "" then
+    return { vpx, "oxct", "lsp" }
+  end
+
   return {
     "cargo",
     "run",

@@ -1,0 +1,32 @@
+{
+  "name": "oxct",
+  "version": "3.2.13",
+  "description": "Ox Content authoring CLI: native Markdown lint, Vite projects, IDE setup, and terminal reading",
+  "license": "MIT",
+  "author": "ubugeeei",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ubugeeei-prod/ox-content.git",
+    "directory": "npm/oxct"
+  },
+  "bin": {
+    "oxct": "./bin/oxct.mjs"
+  },
+  "files": [
+    "bin"
+  ],
+  "type": "module",
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
+  },
+  "scripts": {
+    "build": "node --check bin/oxct.mjs"
+  },
+  "dependencies": {
+    "@ox-content/vite-plugin": "workspace:*"
+  },
+  "engines": {
+    "node": ">=22.0.0"
+  }
+}
