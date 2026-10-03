@@ -100,7 +100,7 @@ Options:
   }
   const runner = options.manager === "vp" ? "vp" : `${options.manager} run`;
   const steps = [
-    `cd ${JSON.stringify(options.directory)}`,
+    `cd '${options.directory.replaceAll("'", "'\\''")}'`,
     ...(!options.install ? [`${options.manager} install`] : []),
     `${runner} dev`,
   ];

@@ -110,6 +110,7 @@ export function projectFiles(name, options) {
   const docs = options.template === "docs";
   return {
     "package.json": JSON.stringify(pkg, null, 2) + "\n",
+    "index.html": `<!doctype html>\n<html lang="en">\n  <head>\n    <meta charset="UTF-8" />\n    <meta name="viewport" content="width=device-width, initial-scale=1.0" />\n    <title>Ox Content</title>\n  </head>\n  <body><!-- Ox Content generates the static pages. --></body>\n</html>\n`,
     "vite.config.ts": `import { defineConfig } from ${JSON.stringify(vitePlus ? "vite-plus" : "vite")};
 import { oxContent${blog ? ", defineCollections" : ""} } from "@ox-content/vite-plugin";
 import skin from "@ox-content/theme-${options.skin}";
