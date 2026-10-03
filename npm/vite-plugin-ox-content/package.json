@@ -179,14 +179,15 @@
     "./styles/not-by-ai.css": "./dist/styles/not-by-ai.css",
     "./styles/reader-chrome.css": "./dist/styles/reader-chrome.css",
     "./styles/mpa-navigation.css": "./dist/styles/mpa-navigation.css",
-    "./styles/theme-transition.css": "./dist/styles/theme-transition.css"
+    "./styles/theme-transition.css": "./dist/styles/theme-transition.css",
+    "./cli": "./bin/oxct-runtime.mjs"
   },
   "publishConfig": {
     "access": "public",
     "provenance": true
   },
   "scripts": {
-    "build": "vp pack && node ../../tools/scripts/stabilize-public-declaration-exports.mjs @ox-content/vite-plugin && node ../../tools/scripts/write-vite-plugin-virtual-declarations.mjs && node scripts/build-reader-chrome-types.mjs && node scripts/build-standalone-entries.mjs && node scripts/build-reader-chrome-client.mjs && node scripts/build-theme-transition-client.mjs && node scripts/build-twitter-client.mjs && node scripts/copy-component-styles.mjs",
+    "build": "vp pack && node ../../tools/scripts/stabilize-public-declaration-exports.mjs @ox-content/vite-plugin && node ../../tools/scripts/write-vite-plugin-virtual-declarations.mjs && node scripts/build-reader-chrome-types.mjs && node scripts/build-standalone-entries.mjs && node scripts/build-reader-chrome-client.mjs && node scripts/build-theme-transition-client.mjs && node scripts/build-twitter-client.mjs && node scripts/copy-component-styles.mjs && node scripts/build-cli-editor-assets.mjs",
     "build:styles": "node scripts/copy-component-styles.mjs",
     "dev": "vp pack --watch",
     "typecheck": "tsgo --noEmit",
@@ -194,6 +195,7 @@
     "test:vrt:update": "playwright test --update-snapshots"
   },
   "dependencies": {
+    "@clack/prompts": "^1.8.1",
     "@cspell/dict-de-de": "^4.1.2",
     "@cspell/dict-en_us": "^4.4.40",
     "@cspell/dict-fr-fr": "^2.3.2",
@@ -204,6 +206,7 @@
     "cspell-lib": "^10.3.3",
     "glob": "^13.0.6",
     "html-minifier-terser": "^7.2.0",
+    "jsonc-parser": "^3.3.1",
     "mermaid": "^11.14.0",
     "playwright": "^1.63.0",
     "puppeteer": "^25.11.0",

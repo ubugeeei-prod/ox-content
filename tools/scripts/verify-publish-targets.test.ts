@@ -15,6 +15,7 @@ describe("publish workflow targets", () => {
       npmPackages: [
         "npm/ox-content-islands",
         "npm/ox-content-code-play",
+        "npm/oxct",
         "npm/unplugin-ox-content",
         "npm/vite-plugin-ox-content",
         "npm/vite-plugin-ox-content-react",

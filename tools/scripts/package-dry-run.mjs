@@ -13,6 +13,7 @@ const packages = [
   "crates/ox_content_napi",
   "npm/ox-content-islands",
   "npm/ox-content-code-play",
+  "npm/oxct",
   "npm/vite-plugin-ox-content",
   "npm/unplugin-ox-content",
   "npm/vite-plugin-ox-content-vue",

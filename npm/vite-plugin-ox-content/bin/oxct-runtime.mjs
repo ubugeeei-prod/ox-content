@@ -17,6 +17,16 @@ export async function main(args) {
   }
 
   const [command, ...rest] = args;
+  if (command === "new") {
+    const { runNew } = await import("./oxct-new.mjs");
+    await runNew(rest);
+    return;
+  }
+  if (command === "ide") {
+    const { runIde } = await import("./oxct-ide.mjs");
+    await runIde(rest);
+    return;
+  }
   if (command === "lint") {
     const { runLint } = await import("./oxct-lint.mjs");
     await runLint(rest);
@@ -177,6 +187,8 @@ Usage:
   oxct <command> [options]
 
 Commands:
+  new [directory]         Create a Vite/Ox Content project interactively
+  ide install             Select IDE extensions and workspace configuration
   lint [files/globs]       Lint Markdown with the batched Rust engine
   i18n <command>           Check dictionaries and validate MessageFormat 2
   validate                 Run collection validate hooks without a full build

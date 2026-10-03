@@ -167,7 +167,7 @@ jobs:
         run: |
           shopt -s nullglob
           missing=()
-          for dir in npm/ox-content-islands npm/ox-content-code-play \
+          for dir in npm/oxct npm/ox-content-islands npm/ox-content-code-play \
                      npm/unplugin-ox-content npm/vite-plugin-ox-content \
                      npm/vite-plugin-ox-content-react npm/vite-plugin-ox-content-solid \
                      npm/vite-plugin-ox-content-svelte npm/vite-plugin-ox-content-vue \
@@ -254,6 +254,18 @@ jobs:
 
       - name: Publish @ox-content/vite-plugin
         working-directory: npm/vite-plugin-ox-content
+        run: |
+          PKG_NAME=$(node -p "require('./package.json').name")
+          PKG_VERSION=$(node -p "require('./package.json').version")
+          if npm view "${PKG_NAME}@${PKG_VERSION}" version >/dev/null 2>&1; then
+            echo "Skipping ${PKG_NAME}@${PKG_VERSION} (already published)"
+            exit 0
+          fi
+          TARBALL=$(vp exec -- pnpm pack --pack-destination /tmp | tail -1)
+          npm publish "$TARBALL" --provenance --access public --tag "$NPM_TAG"
+
+      - name: Publish oxct
+        working-directory: npm/oxct
         run: |
           PKG_NAME=$(node -p "require('./package.json').name")
           PKG_VERSION=$(node -p "require('./package.json').version")
