@@ -144,8 +144,15 @@ fn render_mermaid_with_mmdc(source: &str, mmdc_path: &str) -> std::result::Resul
     )
     .map_err(|e| format!("Failed to write puppeteer config: {e}"))?;
 
-    // Call mmdc CLI
-    let output = std::process::Command::new(mmdc_path)
+    // JavaScript renderers need Node on Windows, where shebangs are not executable.
+    let mut command = if mmdc_path.ends_with(".mjs") || mmdc_path.ends_with(".js") {
+        let mut command = std::process::Command::new("node");
+        command.arg(mmdc_path);
+        command
+    } else {
+        std::process::Command::new(mmdc_path)
+    };
+    let output = command
         .arg("-i")
         .arg(&input_path)
         .arg("-o")
@@ -157,7 +164,7 @@ fn render_mermaid_with_mmdc(source: &str, mmdc_path: &str) -> std::result::Resul
         .arg(&puppeteer_config_path)
         .output()
         .map_err(|e| {
-            format!("Failed to execute mmdc: {e}. Is @mermaid-js/mermaid-cli installed?")
+            format!("Failed to execute Mermaid renderer: {e}. Check Node and browser availability.")
         })?;
 
     // Clean up input and puppeteer config

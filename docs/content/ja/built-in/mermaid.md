@@ -69,11 +69,13 @@ sequenceDiagram
 
 ## 要件
 
-描画は mermaid CLI（`mmdc`）を起動するので、開発依存として足してください。
+プラグインには Mermaid の SVG レンダラーが含まれています。環境にブラウザがない場合は、ヘッドレスブラウザをインストールしてください。
 
-<pm>npm install -D @mermaid-js/mermaid-cli</pm>
+<pm>npx puppeteer browsers install chrome-headless-shell</pm>
 
-`mmdc` が見つからなくてもビルドは失敗しません。mermaid フェンスはコードブロックのまま残り、警告を一度だけ出します。CLI（またはヘッドレスブラウザ）のない CI イメージでも動き続け、図の依存を足すかどうかを後から決められます。
+既存の Chrome を使う場合は `PUPPETEER_EXECUTABLE_PATH` を指定します。標準の Mermaid 図は `mmdc` なしで描画できます。ZenUML など CLI の追加統合が必要な場合は、プロジェクトに `@mermaid-js/mermaid-cli` をインストールしてください。利用できる場合は、そのレンダラーを優先します。
+
+描画に失敗した場合は、元のコードブロックを残して警告を出します。
 
 ## 関連
 

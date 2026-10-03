@@ -17,6 +17,11 @@ export async function main(args) {
   }
 
   const [command, ...rest] = args;
+  if (command === "lint") {
+    const { runLint } = await import("./oxct-lint.mjs");
+    await runLint(rest);
+    return;
+  }
   if (command === "i18n") {
     runI18n(rest);
     return;
@@ -172,6 +177,7 @@ Usage:
   oxct <command> [options]
 
 Commands:
+  lint [files/globs]       Lint Markdown with the batched Rust engine
   i18n <command>           Check dictionaries and validate MessageFormat 2
   validate                 Run collection validate hooks without a full build
   link-check <files...>    Check Markdown/MDC local links
