@@ -166,11 +166,15 @@ export default defineConfig({
         "test:publish-targets",
         "test:benchmark-scripts",
         "test:editor-publish-scripts",
+        "test:cli-scaffold",
       ]),
       "test:vite-plugin": task("vp exec --filter @ox-content/vite-plugin -- vp test src", {
         dependsOn: ["build:vite-plugin"],
       }),
       "test:code-play": task("vp exec --filter @ox-content/code-play -- vp test src"),
+      "test:cli-scaffold": task(`vp test ${scriptPath("oxct-scaffold-build.test.mjs")}`, {
+        dependsOn: ["build:npm"],
+      }),
       "test:publish-targets": task(
         `vp test ${scriptPath("verify-publish-targets.test.ts")} ${scriptPath("release-policy.test.ts")} ${scriptPath("release-github.test.ts")} ${scriptPath("check-npm-licenses.test.mjs")} --exclude '.claude/**'`,
       ),

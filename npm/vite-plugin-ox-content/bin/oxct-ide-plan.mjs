@@ -37,15 +37,17 @@ export async function planIdeSetup(
     );
   }
   if (options.ides.includes("zed")) {
-    if (options.config)
+    if (options.config) {
+      const file = join(root, ".zed/settings.json");
+      const existing = parseConfig(await readOptional(file)).file_types?.Markdown ?? [];
+      if (!Array.isArray(existing) || existing.some((value) => typeof value !== "string"))
+        throw new Error(`Invalid Markdown file types in ${file}`);
       plans.push(
-        await planJsonEdit(join(root, ".zed/settings.json"), [
-          [
-            ["file_types", "Markdown"],
-            ["md", "markdown", "mdc", "mdx"],
-          ],
+        await planJsonEdit(file, [
+          [["file_types", "Markdown"], [...new Set([...existing, "md", "markdown", "mdc", "mdx"])]],
         ]),
       );
+    }
     if (options.extensions) {
       const settings =
         process.platform === "win32"
@@ -57,7 +59,20 @@ export async function planIdeSetup(
   if (options.ides.includes("neovim") && options.config) {
     const file = join(root, ".ox-content/neovim.lua");
     const original = await readOptional(file);
-    const content = `-- Ox Content project setup (Neovim 0.11+). Source with :luafile .ox-content/neovim.lua\nvim.lsp.config("ox_content", {\n  cmd = { "vpx", "oxct", "lsp" },\n  filetypes = { "markdown", "mdx" },\n  root_markers = { "vite.config.ts", "vite.config.mjs", ".git" },\n})\nvim.lsp.enable("ox_content")\n`;
+    const content = `-- Ox Content project setup (Neovim 0.11+). Source with :luafile .ox-content/neovim.lua
+local ok, plugin = pcall(require, "ox-content")
+if ok then
+  plugin.setup({ cmd = { "vpx", "oxct", "lsp" } })
+else
+  vim.filetype.add({ extension = { mdc = "markdown" } })
+  vim.lsp.config("ox-content-lsp", {
+    cmd = { "vpx", "oxct", "lsp" },
+    filetypes = { "markdown", "mdx" },
+    root_markers = { "vite.config.ts", "vite.config.mjs", "package.json", ".git" },
+  })
+  vim.lsp.enable("ox-content-lsp")
+end
+`;
     if (original !== undefined && original !== content)
       throw new Error(`Preserving existing ${file}. Move it before generating a replacement.`);
     plans.push({ file, original, content });

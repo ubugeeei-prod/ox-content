@@ -1,4 +1,4 @@
-import { mkdir, readFile, writeFile, rename, rm } from "node:fs/promises";
+import { mkdir, readFile, writeFile, rename, rm, stat } from "node:fs/promises";
 import { dirname } from "node:path";
 import { randomUUID } from "node:crypto";
 import { applyEdits, modify, parse } from "jsonc-parser";
@@ -43,7 +43,10 @@ export async function writePlan(plan) {
   else {
     const temp = `${plan.file}.oxct-${randomUUID()}.tmp`;
     try {
-      await writeFile(temp, plan.content, { flag: "wx" });
+      const { mode } = await stat(plan.file);
+      await writeFile(temp, plan.content, { flag: "wx", mode: mode & 0o777 });
+      if ((await readOptional(plan.file)) !== plan.original)
+        throw new Error(`Configuration changed during setup: ${plan.file}. Run setup again.`);
       await rename(temp, plan.file);
     } finally {
       await rm(temp, { force: true });
