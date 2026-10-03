@@ -76,7 +76,10 @@ describe("oxct lint", () => {
     const cwd = await fixture();
     const corpus = resolve(cwd, "corpus");
     await fs.mkdir(corpus);
-    const source = "# Benchmark\n\n" + "Clear Markdown prose for content authors.\n\n".repeat(100);
+    const source =
+      "# Benchmark\n\n" +
+      "Clear Markdown prose for content authors.\n\n".repeat(100).trimEnd() +
+      "\n";
     await Promise.all(
       Array.from({ length: 1000 }, (_, index) =>
         fs.writeFile(resolve(corpus, `${index}.md`), source),
@@ -87,7 +90,7 @@ describe("oxct lint", () => {
       const started = performance.now();
       const result = run(["corpus", "--format", "json"], cwd);
       samples.push(performance.now() - started);
-      expect(result.status).toBe(0);
+      expect(result.status, result.stderr || result.stdout.slice(0, 2000)).toBe(0);
       expect(JSON.parse(result.stdout).checkedFileCount).toBe(1000);
     }
     samples.sort((a, b) => a - b);
