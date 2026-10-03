@@ -82,6 +82,9 @@ export const publicDeclarationEntries = [
     runtimeLinks: [
       "@types/node",
       "@ox-content/napi",
+      "@standard-schema/spec",
+      "minimatch",
+      "yaml",
       "glob",
       "rehype-parse",
       "rehype-stringify",
@@ -152,6 +155,9 @@ export const publicDeclarationEntries = [
     runtimeLinks: [
       "@types/node",
       "@ox-content/napi",
+      "@standard-schema/spec",
+      "minimatch",
+      "yaml",
       "glob",
       "rehype-parse",
       "rehype-stringify",

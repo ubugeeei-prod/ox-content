@@ -115,3 +115,75 @@ Narrow terminals show navigation as a full-width pane.
 `--print` renders a document to stdout; non-interactive output uses this mode
 automatically. `--no-color` removes colors. The viewer strips control characters
 from Markdown, displays external links as text, and reads documents up to 4 MiB.
+
+## Frontmatter types and diagnostics
+
+Define ordered globs relative to `srcDir` in your Vite configuration. Each validator
+implements [Standard Schema](https://standardschema.dev/), so Zod, Valibot, ArkType,
+or a custom implementation can provide validation and inferred TypeScript types.
+The first matching glob wins; unmatched documents keep their existing behavior.
+
+```ts
+import { defineConfig } from "vite";
+import {
+  oxContent,
+  defineFrontmatterSchemas,
+  type InferFrontmatter,
+} from "@ox-content/vite-plugin";
+import { z } from "zod";
+
+export const schemas = defineFrontmatterSchemas({
+  "posts/**/*.md": z.object({
+    title: z.string(),
+    category: z.enum(["guide", "news"]),
+    draft: z.boolean().default(false),
+  }),
+  "guides/**/*.{md,mdc}": z.object({ title: z.string(), order: z.number() }),
+});
+
+export type PostFrontmatter = InferFrontmatter<typeof schemas, "posts/**/*.md">;
+// { title: string; category: "guide" | "news"; draft: boolean }
+
+export default defineConfig({
+  plugins: [oxContent({ srcDir: "content", frontmatterSchemas: schemas })],
+});
+```
+
+Run `vpx oxct typecheck` to check all matching Markdown/MDC/MDX documents without
+building the site, or `vpx oxct typecheck 'content/posts/**/*.md' --format json`.
+Use `--config path/to/vite.config.ts` for an alternate configuration. Schema errors
+report YAML line/column positions and fail both typecheck and the Vite build.
+Async refinements execute in both paths. Defaults and transforms become the
+frontmatter returned by the Vite transform; they do not rewrite source files.
+`InferFrontmatterInput` describes the YAML input before those defaults/transforms.
+
+`vpx oxct ide install` configures project schema support. The VS Code extension
+automatically uses the installed workspace plugin after Workspace Trust is granted;
+`oxContent.frontmatter.projectValidation` can disable it. Explicit server paths
+continue to take precedence. Other LSP clients can run `vpx oxct lsp --project`.
+This mode executes Vite configuration and validators, and should be enabled only
+for a trusted project. Plain `vpx oxct lsp` uses the bundled Rust server without
+evaluating project configuration.
+
+IDE diagnostics run the same async validators as builds and update on document or
+configuration changes. Completion and hover use the validator's **input** Standard
+JSON Schema conversion (supported by Zod 4). When a library has no converter or a
+schema cannot be converted, provide a shape explicitly:
+
+```ts
+defineFrontmatterSchemas({
+  "posts/**/*.md": {
+    schema: myStandardSchemaValidator,
+    jsonSchema: {
+      type: "object",
+      required: ["title"],
+      properties: { title: { type: "string", description: "Display title" } },
+    },
+  },
+});
+```
+
+The shape supplies key, enum, boolean, nested-object and array-item completions,
+descriptions and local JSON Schema references. Full validation always uses the
+Standard Schema validator, including constraints not expressible in JSON Schema.
+Without a completion shape, diagnostics and TypeScript inference still work.

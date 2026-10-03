@@ -18,7 +18,12 @@ export async function planIdeSetup(
   const plans = [];
   if (options.ides.some((ide) => ide in ideCommands) && options.config) {
     const settings = join(root, ".vscode/settings.json");
-    plans.push(await planJsonEdit(settings, [[["files.associations", "*.mdc"], "markdown"]]));
+    plans.push(
+      await planJsonEdit(settings, [
+        [["files.associations", "*.mdc"], "markdown"],
+        [["oxContent.frontmatter.projectValidation"], true],
+      ]),
+    );
     const extensions = join(root, ".vscode/extensions.json");
     const old = parseConfig(await readOptional(extensions));
     if (
@@ -45,6 +50,11 @@ export async function planIdeSetup(
       plans.push(
         await planJsonEdit(file, [
           [["file_types", "Markdown"], [...new Set([...existing, "md", "markdown", "mdc", "mdx"])]],
+          [["lsp", "ox-content-lsp", "binary", "path"], "vpx"],
+          [
+            ["lsp", "ox-content-lsp", "binary", "arguments"],
+            ["oxct", "lsp", "--project"],
+          ],
         ]),
       );
     }
@@ -62,11 +72,11 @@ export async function planIdeSetup(
     const content = `-- Ox Content project setup (Neovim 0.11+). Source with :luafile .ox-content/neovim.lua
 local ok, plugin = pcall(require, "ox-content")
 if ok then
-  plugin.setup({ cmd = { "vpx", "oxct", "lsp" } })
+  plugin.setup({ cmd = { "vpx", "oxct", "lsp", "--project" } })
 else
   vim.filetype.add({ extension = { mdc = "markdown" } })
   vim.lsp.config("ox-content-lsp", {
-    cmd = { "vpx", "oxct", "lsp" },
+    cmd = { "vpx", "oxct", "lsp", "--project" },
     filetypes = { "markdown", "mdx" },
     root_markers = { "vite.config.ts", "vite.config.mjs", "package.json", ".git" },
   })

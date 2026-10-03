@@ -19,6 +19,8 @@ export interface ServerCommandInputs {
   configuredPath?: string;
   /** `OX_CONTENT_LSP_PATH`, trimmed. */
   envBinary?: string;
+  projectCli?: string;
+  workspaceTrusted?: boolean;
   /** Ordered local-binary probe locations (debug, release, bundled). */
   localCandidates: string[];
   /** Existence predicate, injected so tests stay off the filesystem. */
@@ -40,6 +42,9 @@ export function selectServerCommand(inputs: ServerCommandInputs): ServerCommand 
   }
   if (envBinary && exists(envBinary)) {
     return { command: envBinary, args: [] };
+  }
+  if (inputs.workspaceTrusted && inputs.projectCli && exists(inputs.projectCli)) {
+    return { command: "node", args: [inputs.projectCli, "lsp", "--project"] };
   }
   const localBinary = localCandidates.find(exists);
   if (localBinary) {

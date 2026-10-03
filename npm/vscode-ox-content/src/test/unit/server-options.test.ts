@@ -17,6 +17,30 @@ const CARGO_FALLBACK = {
 };
 
 describe("selectServerCommand", () => {
+  it("uses the project CLI only in trusted workspaces and preserves explicit overrides", () => {
+    const inputs = {
+      projectCli: "/work/node_modules/@ox-content/vite-plugin/bin/oxct.mjs",
+      workspaceTrusted: true,
+      localCandidates: ["/bundled/lsp"],
+      exists: () => true,
+    };
+    expect(selectServerCommand(inputs)).toEqual({
+      command: "node",
+      args: [inputs.projectCli, "lsp", "--project"],
+    });
+    expect(selectServerCommand({ ...inputs, workspaceTrusted: false })).toEqual({
+      command: "/bundled/lsp",
+      args: [],
+    });
+    expect(selectServerCommand({ ...inputs, configuredPath: "/custom/lsp" })).toEqual({
+      command: "/custom/lsp",
+      args: [],
+    });
+    expect(selectServerCommand({ ...inputs, envBinary: "/env/lsp" })).toEqual({
+      command: "/env/lsp",
+      args: [],
+    });
+  });
   const localCandidates = [
     "/work/target/debug/ox-content-lsp",
     "/work/target/release/ox-content-lsp",

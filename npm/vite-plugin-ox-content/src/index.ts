@@ -258,6 +258,7 @@ export function oxContent(options: OxContentOptions = {}): Plugin[] {
   const plugins: Plugin[] = [
     createMainPlugin(resolvedOptions, (resolvedConfig) => {
       config = resolvedConfig;
+      resolvedOptions.frontmatterRoot = path.resolve(resolvedConfig.root, resolvedOptions.srcDir);
     }),
     createEnvironmentPlugin(resolvedOptions),
     createDocsPlugin(resolvedOptions, getRoot),
@@ -1432,3 +1433,18 @@ export type {
   WriteResourceFilesPage,
   WriteResourceFilesResult,
 } from "./ssg-output";
+export {
+  defineFrontmatterSchemas,
+  checkFrontmatterValue,
+  selectFrontmatterSchema,
+  frontmatterJsonSchema,
+} from "./frontmatter-schemas";
+export type {
+  FrontmatterSchema,
+  FrontmatterSchemas,
+  FrontmatterSchemaAdapter,
+  InferFrontmatter,
+  InferFrontmatterInput,
+} from "./frontmatter-schemas";
+export { checkFrontmatter, formatFrontmatterDiagnostics } from "./frontmatter-check";
+export type { FrontmatterDiagnostic } from "./frontmatter-check";
