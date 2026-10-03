@@ -82,7 +82,15 @@ parentPort.on("message", async (request) => {
   const current = epoch;
   try {
     const result = project ? await project.check(request.source, request.file) : undefined;
-    parentPort.postMessage({ type: "result", id: request.id, epoch: current, result });
+    // Validation outputs can contain functions or custom instances. The editor only
+    // needs diagnostics; keep validated page data inside the worker.
+    const diagnostics = result?.diagnostics.map(({ path, ...issue }) => issue);
+    parentPort.postMessage({
+      type: "result",
+      id: request.id,
+      epoch: current,
+      result: result ? { matched: result.matched, diagnostics } : undefined,
+    });
   } catch (error) {
     parentPort.postMessage({
       type: "result",

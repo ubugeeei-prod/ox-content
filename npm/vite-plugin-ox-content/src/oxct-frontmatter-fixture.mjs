@@ -16,7 +16,7 @@ const schema = { "~standard": { version: 1, vendor: "test", async validate(value
   if (value.title === "slow") await new Promise(resolve => setTimeout(resolve, 150));
   if (typeof value.title !== "string" || ["bad", "slow"].includes(value.title))
     return { issues: [{ message: "Title must be an accepted string", path: ["title"] }] };
-  return { value: { ...value, draft: value.draft ?? false } };
+  return { value: { ...value, draft: value.draft ?? false, render: () => "custom output" } };
 } } };
 export default { plugins: oxContent({ srcDir: "content", highlight: false, ssg: false,
   frontmatterSchemas: defineFrontmatterSchemas({ "posts/**/*.md": { schema,
