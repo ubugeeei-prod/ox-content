@@ -133,7 +133,7 @@ describe("Standard Schema project LSP", () => {
     expect(await exited).toBe(0);
   }, 25000);
 
-  it("rejects stale async results, reloads atomic config saves and clears closed documents", async () => {
+  it("accepts non-cloneable transform output, rejects stale results and reloads configuration", async () => {
     const client = await server();
     client.open("---\ntitle: slow\n---\n", 1);
     client.change("---\ntitle: good\n---\n", 2);
