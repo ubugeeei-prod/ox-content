@@ -92,3 +92,26 @@ patterns. Native custom dictionaries accept `words`, `ignoredWords`, and a
 `byLanguage` array with `{ "language": "en", "words": ["OxContent"] }` entries.
 For stdin, `--stdin-filepath article.mdx` selects MDX checking and sets the
 filename in diagnostics.
+
+## Terminal Markdown reader
+
+`vpx oxct tui` opens a full-screen reader with a file sidebar, heading outline,
+local Markdown links, styled GFM tables and task lists, code blocks, and a search
+bar. It wraps Japanese text and emoji by display width and follows editor saves.
+
+```bash
+vpx oxct tui content
+vpx oxct tui README.md --theme light
+vpx oxct tui 'content/**/*.md' --no-watch
+cat README.md | vpx oxct tui --stdin --width 80
+```
+
+Use Tab to switch between reader, files, outline, and links. Arrow keys or `j` / `k`
+move, Enter opens the selection, `/` searches, and `n` / `N` finds the next or
+previous match. `b` toggles zen mode, `t` changes theme, `r` reloads, and `?` shows
+help. Quit with `q` or Ctrl-C; the previous terminal screen and input mode are restored.
+Narrow terminals show navigation as a full-width pane.
+
+`--print` renders a document to stdout; non-interactive output uses this mode
+automatically. `--no-color` removes colors. The viewer strips control characters
+from Markdown, displays external links as text, and reads documents up to 4 MiB.

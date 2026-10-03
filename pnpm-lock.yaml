@@ -2082,6 +2082,9 @@ importers:
       jsonc-parser:
         specifier: ^3.3.1
         version: 3.3.1
+      marked:
+        specifier: ^18.0.13
+        version: 18.0.13
       mermaid:
         specifier: ^11.14.0
         version: 11.16.1
@@ -2112,6 +2115,9 @@ importers:
       satori-html:
         specifier: ^0.3.2
         version: 0.3.2
+      string-width:
+        specifier: ^8.2.2
+        version: 8.2.2
       svelte:
         specifier: ^5.0.0
         version: 5.57.1
@@ -2127,6 +2133,9 @@ importers:
       vue:
         specifier: ^3.4.0
         version: 3.5.43(typescript@7.0.2)
+      wrap-ansi:
+        specifier: ^9.0.2
+        version: 9.0.2
     devDependencies:
       '@playwright/test':
         specifier: ^1.63.0

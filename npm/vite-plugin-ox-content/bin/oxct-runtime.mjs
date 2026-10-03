@@ -17,6 +17,11 @@ export async function main(args) {
   }
 
   const [command, ...rest] = args;
+  if (command === "tui") {
+    const { runTui } = await import("./oxct-tui.mjs");
+    await runTui(rest);
+    return;
+  }
   if (command === "new") {
     const { runNew } = await import("./oxct-new.mjs");
     await runNew(rest);
@@ -187,6 +192,7 @@ Usage:
   oxct <command> [options]
 
 Commands:
+  tui [file/directory]     Read Markdown with a modern terminal viewer
   new [directory]         Create a Vite/Ox Content project interactively
   ide install             Select IDE extensions and workspace configuration
   lint [files/globs]       Lint Markdown with the batched Rust engine
