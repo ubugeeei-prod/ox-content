@@ -152,6 +152,9 @@ function prepareVitePluginConsumer({ pkg, tarball, packDir, name }) {
   for (const dependency of [
     "@types/node",
     "@ox-content/napi",
+    "@standard-schema/spec",
+    "minimatch",
+    "yaml",
     "glob",
     "rehype-parse",
     "rehype-stringify",

@@ -58,6 +58,9 @@ function checkSolidHtmlHostRegistryConsumer({ tarball, packDir, failures, packed
   const consumerRoot = prepareConsumer({ tarball, entry, packDir, packedPackages });
   for (const dependency of [
     "@ox-content/napi",
+    "@standard-schema/spec",
+    "minimatch",
+    "yaml",
     "glob",
     "rehype-parse",
     "rehype-stringify",

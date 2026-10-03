@@ -223,6 +223,7 @@ export async function runProjectLsp(args) {
         }
       }
       forward(message);
+      if (message.method === "exit") child.stdin.end();
     },
     fail,
   );

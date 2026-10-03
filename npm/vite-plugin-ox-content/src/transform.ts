@@ -852,7 +852,7 @@ export async function transformMarkdown(
     source,
     filePath.split(/[?#]/, 1)[0],
     options.frontmatterSchemas,
-    options.frontmatterRoot ?? ssgOptions?.srcDir ?? resolveFrontmatterRoot(options.srcDir),
+    options.frontmatterRoot ?? ssgOptions?.srcDir ?? resolveFrontmatterRoot(options.srcDir ?? "."),
   );
   if (checked.diagnostics.length)
     throw new Error(formatFrontmatterDiagnostics(checked.diagnostics));
