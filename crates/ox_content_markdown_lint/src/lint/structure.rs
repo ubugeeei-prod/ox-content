@@ -87,7 +87,9 @@ impl<'r, 's> Structure<'r, 's> {
 
     pub fn code(&self, node: &CodeBlock<'_>, span: Span, output: &mut Vec<MarkdownLintDiagnostic>) {
         let raw = &self.source.text[span.start as usize..span.end as usize];
-        let first = raw.lines().next().unwrap_or("").trim_start_matches([' ', '\t', '>']);
+        let mut lines = raw.lines();
+        let opening_line = lines.next().unwrap_or("");
+        let first = opening_line.trim_start_matches([' ', '\t', '>']);
         let Some(character @ ('`' | '~')) = first.chars().next() else {
             return;
         };
@@ -95,8 +97,16 @@ impl<'r, 's> Structure<'r, 's> {
         if length < 3 {
             return;
         }
-        let opening =
-            Span::new(span.start, span.start + raw.lines().next().unwrap_or("").len() as u32);
+        let (line_count, last) =
+            lines.fold((1, opening_line), |(count, _), line| (count + 1, line));
+        // Indented code retains its first line in the AST value. Fenced code
+        // omits the opener and, when closed, the closer. Counting these lines
+        // also works after list/quote prefixes have been remapped to source.
+        let body_lines = node.value.lines().count();
+        if body_lines >= line_count {
+            return;
+        }
+        let opening = Span::new(span.start, span.start + opening_line.len() as u32);
         if self.rules.structure.code_fence_language.unwrap_or(false)
             && node.lang.is_none_or(str::is_empty)
         {
@@ -107,10 +117,10 @@ impl<'r, 's> Structure<'r, 's> {
                 opening,
             );
         }
-        let last = raw.lines().last().unwrap_or("").trim_start_matches([' ', '\t', '>']);
+        let last = last.trim_start_matches([' ', '\t', '>']);
         let closing = last.bytes().take_while(|b| *b == character as u8).count();
         let closed =
-            raw.lines().count() > 1 && closing >= length && last[closing..].trim().is_empty();
+            line_count > body_lines + 1 && closing >= length && last[closing..].trim().is_empty();
         if self.rules.structure.code_fence_closed.unwrap_or(true) && !closed {
             self.report(
                 output,

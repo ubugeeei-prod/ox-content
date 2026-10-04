@@ -224,3 +224,25 @@ fn terminology_prefers_longest_match_and_config_accepts_severity_maps() {
     assert_eq!(fixed.applied_fixes, 2);
     assert!(fixed.result.diagnostics.is_empty());
 }
+
+#[test]
+fn indented_code_is_not_a_fence_and_indented_closers_remain_content() {
+    let mut config = options();
+    config.rules.as_mut().unwrap().code_fence_language = Some(true);
+    for source in [
+        "    ```\n    example\n",
+        "\t~~~\n\texample\n",
+        ">     ```\n>     example\n",
+        "- item\n\n      ```\n      example\n",
+    ] {
+        assert!(ids(source, config.clone()).is_empty(), "{source}");
+    }
+    for source in
+        ["```rust\n    ```\n", "> ```rust\n>     ```\n", "- item\n\n  ```rust\n      ```\n"]
+    {
+        assert_eq!(ids(source, config.clone()), ["code-fence-closed"], "{source}");
+    }
+    for source in ["```\n```\n", "- item\n\n    ```\n    ```\n", "> ```\r\n> ```\r\n"] {
+        assert_eq!(ids(source, config.clone()), ["code-fence-language"], "{source}");
+    }
+}

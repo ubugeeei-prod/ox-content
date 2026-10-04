@@ -101,7 +101,6 @@ Use HTML comments to suppress all rules or selected rule IDs:
 
 ```md
 <!-- oxlint-disable-next-line sentence-length -->
-
 This deliberately long sentence is exempt.
 
 <!-- oxlint-disable terminology, no-todo -->
