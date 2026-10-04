@@ -35,6 +35,7 @@ if baseline.exists():
     cli_base = json.loads(baseline.read_text())
     print("\n| CLI corpus | Engine | Threads | Median ms | JSON output bytes |")
     print("| --- | --- | ---: | ---: | ---: |")
+    speedups = []
     for name, key in (("Clean", None), ("8192 diagnostics", "diagnosticOutput")):
         before = cli_base if key is None else cli_base[key]
         after = rows["cli"] if key is None else rows["cli"][key]
@@ -43,7 +44,9 @@ if baseline.exists():
         for engine, case in (("Base", before), ("Head", after)):
             for row in case["runs"]:
                 print(f'| {name} | {engine} | {row["threads"]} | {row["medianMs"]:.2f} | {case["outputBytes"]} |')
-        print(f'\n{name} CLI serial speedup: {before["runs"][0]["medianMs"] / after["runs"][0]["medianMs"]:.2f}x.\n')
+        speedups.append((name, before["runs"][0]["medianMs"] / after["runs"][0]["medianMs"]))
+    for name, speedup in speedups:
+        print(f'\n{name} CLI serial speedup: {speedup:.2f}x.')
 # Allow runner noise, but catch meaningful throughput or allocation regressions.
 assert serial["medianMs"] <= base["medianMs"] * 1.25, "serial lint throughput regressed by more than 25%"
 assert serial["allocations"] <= base["allocations"], "lint allocation count regressed"

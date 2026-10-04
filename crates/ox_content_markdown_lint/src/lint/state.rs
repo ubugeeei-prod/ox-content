@@ -93,14 +93,14 @@ pub(super) fn collect_markdown_lint_state(
                 );
             }
             if options.rules.spellcheck || options.rules.repeated_words {
+                collect_tokens(masked, options, dictionary, &mut tokens);
                 collect_word_diagnostics(
                     &source,
                     line,
                     line_number,
-                    masked,
                     options,
                     dictionary,
-                    &mut tokens,
+                    &tokens,
                     &mut diagnostics,
                 );
             }
@@ -151,13 +151,11 @@ fn collect_word_diagnostics(
     source: &Source<'_>,
     line: &str,
     line_number: usize,
-    masked: &str,
     options: &InternalMarkdownLintOptions,
     dictionary: &DictionaryBundle,
-    tokens: &mut Vec<Token>,
+    tokens: &[Token],
     output: &mut Vec<MarkdownLintDiagnostic>,
 ) {
-    collect_tokens(masked, options, dictionary, tokens);
     let mut previous: Option<(&Token, usize)> = None;
     let mut cursor = line.char_indices().peekable();
     let mut scalar = 0;
