@@ -215,3 +215,12 @@ fn inline_html_does_not_hide_visible_prose_or_create_structural_fixes() {
     assert_eq!(fixed.output, "Prose.\n\n");
     assert!(fixed.result.diagnostics.is_empty());
 }
+
+#[test]
+fn terminology_prefers_longest_match_and_config_accepts_severity_maps() {
+    let config: MarkdownLintOptions = serde_json::from_str(r#"{"rules":{"spellcheck":false},"textRules":{"terminology":[{"term":"Java","replacement":"JVM"},{"term":"Javascript","replacement":"JavaScript"}]},"severities":{"terminology":"error"}}"#).unwrap();
+    let fixed = fix_markdown("Javascript Java\n", Some(config));
+    assert_eq!(fixed.output, "JavaScript JVM\n");
+    assert_eq!(fixed.applied_fixes, 2);
+    assert!(fixed.result.diagnostics.is_empty());
+}

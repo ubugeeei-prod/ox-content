@@ -17,11 +17,12 @@ pub(super) fn normalize_lint_options(
     if let Some(terms) = &mut text_rules.terminology {
         terms.retain(|v| !v.term.is_empty() && v.term != v.replacement);
     }
-    let terminology = text_rules
-        .terminology
-        .as_ref()
-        .filter(|v| !v.is_empty())
-        .and_then(|terms| aho_corasick::AhoCorasick::new(terms.iter().map(|v| &v.term)).ok());
+    let terminology = text_rules.terminology.as_ref().filter(|v| !v.is_empty()).and_then(|terms| {
+        aho_corasick::AhoCorasick::builder()
+            .match_kind(aho_corasick::MatchKind::LeftmostLongest)
+            .build(terms.iter().map(|v| &v.term))
+            .ok()
+    });
 
     InternalMarkdownLintOptions {
         dictionary: InternalMarkdownLintDictionary {
