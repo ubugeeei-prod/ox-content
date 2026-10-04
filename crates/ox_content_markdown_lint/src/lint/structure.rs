@@ -80,7 +80,7 @@ impl<'r, 's> Structure<'r, 's> {
                     span,
                 );
             } else {
-                self.seen.insert(label, self.source.position(span.start as usize).0);
+                self.seen.insert(label, self.source.line_index(span.start as usize) + 1);
             }
         }
     }

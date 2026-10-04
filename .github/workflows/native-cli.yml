@@ -69,9 +69,14 @@ jobs:
           LINT_BENCH_THREADS=1 cargo bench --manifest-path /tmp/ox-lint-base/Cargo.toml -p ox_content_markdown_lint --bench throughput > lint-perf/base-1.json
           LINT_BENCH_THREADS=1 cargo bench --locked -p ox_content_markdown_lint --bench throughput > lint-perf/head-1.json
           LINT_BENCH_THREADS=8 cargo bench --locked -p ox_content_markdown_lint --bench throughput > lint-perf/head-8.json
+          LINT_BENCH_CORPUS=japanese LINT_BENCH_THREADS=1 cargo bench --manifest-path /tmp/ox-lint-base/Cargo.toml -p ox_content_markdown_lint --bench throughput > lint-perf/japanese-base-1.json
+          LINT_BENCH_CORPUS=japanese LINT_BENCH_THREADS=1 cargo bench --locked -p ox_content_markdown_lint --bench throughput > lint-perf/japanese-head-1.json
+          LINT_BENCH_CORPUS=japanese LINT_BENCH_THREADS=8 cargo bench --locked -p ox_content_markdown_lint --bench throughput > lint-perf/japanese-head-8.json
 
       - name: Measure CLI including file reads and stdout
         run: |
+          cargo build --locked --release --manifest-path /tmp/ox-lint-base/Cargo.toml -p ox_content_cli --bin oxct
+          python3 tools/scripts/benchmark-markdown-lint.py /tmp/ox-lint-base/target/release/oxct > lint-perf/cli-base.json
           cargo build --locked --release -p ox_content_cli --bin oxct
           python3 tools/scripts/benchmark-markdown-lint.py target/release/oxct > lint-perf/cli.json
           python3 tools/scripts/report-lint-benchmark.py lint-perf >> "$GITHUB_STEP_SUMMARY"

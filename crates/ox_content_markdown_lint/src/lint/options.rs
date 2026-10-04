@@ -10,6 +10,16 @@ pub(super) fn normalize_lint_options(
         .into_iter()
         .filter(|language| is_supported_language(language))
         .collect::<Vec<_>>();
+    let languages = if languages.is_empty() {
+        DEFAULT_LANGUAGES.iter().map(ToString::to_string).collect()
+    } else {
+        dedupe_strings(languages)
+    };
+    let latin_languages = languages
+        .iter()
+        .filter(|language| language.as_str() != "ja" && language.as_str() != "zh")
+        .cloned()
+        .collect();
     let dictionary = options.dictionary.unwrap_or_default();
     let rules = options.rules.unwrap_or_default();
 
@@ -36,11 +46,8 @@ pub(super) fn normalize_lint_options(
                 .collect(),
             ignored_words: dictionary.ignored_words.unwrap_or_default(),
         },
-        languages: if languages.is_empty() {
-            DEFAULT_LANGUAGES.iter().map(ToString::to_string).collect()
-        } else {
-            dedupe_strings(languages)
-        },
+        languages,
+        latin_languages,
         mdx: options.mdx.unwrap_or(false),
         text_rules,
         terminology,

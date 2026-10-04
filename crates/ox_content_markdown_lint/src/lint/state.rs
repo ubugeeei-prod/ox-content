@@ -18,6 +18,8 @@ pub(super) fn collect_markdown_lint_state(
         if include_mask { String::with_capacity(source.text.len()) } else { String::new() };
     let mut blank_streak = 0_u32;
     let mut offset = 0;
+    let mut mask_buffer = String::new();
+    let mut tokens = Vec::new();
     for (index, raw) in source.text.split_inclusive('\n').enumerate() {
         let line = raw.strip_suffix('\n').unwrap_or(raw);
         let line = line.strip_suffix('\r').unwrap_or(line);
@@ -79,12 +81,12 @@ pub(super) fn collect_markdown_lint_state(
             offset += raw.len();
             continue;
         }
-        let masked = syntax.mask_line(line, offset);
+        let masked = syntax.mask_line(line, offset, &mut mask_buffer);
         if !skipped {
             if options.rules.repeated_punctuation {
                 collect_repeated_punctuation_diagnostics(
                     line,
-                    &masked,
+                    masked,
                     offset,
                     &source,
                     &mut diagnostics,
@@ -95,9 +97,10 @@ pub(super) fn collect_markdown_lint_state(
                     &source,
                     line,
                     line_number,
-                    &masked,
+                    masked,
                     options,
                     dictionary,
+                    &mut tokens,
                     &mut diagnostics,
                 );
             }
@@ -151,14 +154,15 @@ fn collect_word_diagnostics(
     masked: &str,
     options: &InternalMarkdownLintOptions,
     dictionary: &DictionaryBundle,
+    tokens: &mut Vec<Token>,
     output: &mut Vec<MarkdownLintDiagnostic>,
 ) {
-    let tokens = collect_tokens(masked, &options.languages, dictionary);
+    collect_tokens(masked, options, dictionary, tokens);
     let mut previous: Option<(&Token, usize)> = None;
     let mut cursor = line.char_indices().peekable();
     let mut scalar = 0;
     let base = source.lines[line_number - 1];
-    for token in &tokens {
+    for token in tokens.iter() {
         while scalar < token.start {
             cursor.next();
             scalar += 1;

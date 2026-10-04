@@ -6,64 +6,45 @@ use super::*;
 
 pub(super) fn collect_tokens(
     masked_line: &str,
-    languages: &[String],
+    options: &InternalMarkdownLintOptions,
     dictionary: &DictionaryBundle,
-) -> Vec<Token> {
-    let latin_tokens = collect_latin_tokens(masked_line, languages, dictionary);
-    let mut cjk_tokens = Vec::new();
+    tokens: &mut Vec<Token>,
+) {
+    tokens.clear();
+    collect_latin_tokens(masked_line, &options.latin_languages, dictionary, tokens);
+    if !options.languages.iter().any(|language| language == "ja" || language == "zh") {
+        return;
+    }
+    let latin_count = tokens.len();
 
     if let Some(cjk_run_pattern) = CJK_RUN_PATTERN.as_ref() {
         let mut cursor = CharIndexCursor::new(masked_line);
         for value in cjk_run_pattern.find_iter(masked_line) {
             let start = cursor.char_index(value.start());
-            cjk_tokens.extend(collect_cjk_tokens(value.as_str(), start, languages, dictionary));
+            tokens.extend(collect_cjk_tokens(
+                value.as_str(),
+                start,
+                &options.languages,
+                dictionary,
+            ));
         }
     }
 
-    merge_tokens(latin_tokens, cjk_tokens)
-}
-
-fn merge_tokens(left: Vec<Token>, right: Vec<Token>) -> Vec<Token> {
-    let mut merged = Vec::with_capacity(left.len() + right.len());
-    let mut left_iter = left.into_iter().peekable();
-    let mut right_iter = right.into_iter().peekable();
-
-    while left_iter.peek().is_some() || right_iter.peek().is_some() {
-        let take_left = match (left_iter.peek(), right_iter.peek()) {
-            (Some(left_token), Some(right_token)) => left_token.start <= right_token.start,
-            (Some(_), None) => true,
-            _ => false,
-        };
-
-        if take_left {
-            if let Some(token) = left_iter.next() {
-                merged.push(token);
-            }
-        } else if let Some(token) = right_iter.next() {
-            merged.push(token);
-        }
+    if latin_count > 0 && tokens.len() > latin_count {
+        tokens.sort_unstable_by_key(|token| token.start);
     }
-
-    merged
 }
 
 fn collect_latin_tokens(
     masked_line: &str,
     languages: &[String],
     dictionary: &DictionaryBundle,
-) -> Vec<Token> {
-    let latin_languages = languages
-        .iter()
-        .filter(|language| language.as_str() != "ja" && language.as_str() != "zh")
-        .cloned()
-        .collect::<Vec<_>>();
-
-    if latin_languages.is_empty() {
-        return Vec::new();
-    }
-
-    let fallback_language = CompactString::from(latin_languages[0].as_str());
-    let mut tokens = Vec::new();
+    tokens: &mut Vec<Token>,
+) {
+    let Some(language) = languages.first() else {
+        return;
+    };
+    let fallback_language = CompactString::from(language.as_str());
 
     if let Some(latin_word_pattern) = LATIN_WORD_PATTERN.as_ref() {
         let mut cursor = CharIndexCursor::new(masked_line);
@@ -75,7 +56,7 @@ fn collect_latin_tokens(
         }
     }
 
-    assign_latin_languages(tokens, &latin_languages, dictionary, &fallback_language)
+    assign_latin_languages(tokens, languages, dictionary, &fallback_language);
 }
 
 fn collect_cjk_tokens(
@@ -87,27 +68,18 @@ fn collect_cjk_tokens(
     let has_kana =
         run.chars().any(|value| matches!(value, '\u{3040}'..='\u{309F}' | '\u{30A0}'..='\u{30FF}'));
 
-    let mut candidates = Vec::new();
-
-    if has_kana && languages.iter().any(|language| language == "ja") {
-        candidates.push("ja".to_string());
+    let japanese = languages.iter().any(|language| language == "ja");
+    let chinese = languages.iter().any(|language| language == "zh");
+    let candidates = if has_kana && japanese {
+        [Some("ja"), None]
     } else {
-        if languages.iter().any(|language| language == "zh") {
-            candidates.push("zh".to_string());
-        }
-        if languages.iter().any(|language| language == "ja") {
-            candidates.push("ja".to_string());
-        }
-    }
-
-    if candidates.is_empty() {
-        return Vec::new();
-    }
+        [chinese.then_some("zh"), japanese.then_some("ja")]
+    };
 
     let mut best_candidate: Option<(usize, Vec<Token>)> = None;
 
-    for language in candidates {
-        let tokens = segment_cjk_run(run, start_offset, &language, dictionary);
+    for language in candidates.into_iter().flatten() {
+        let tokens = segment_cjk_run(run, start_offset, language, dictionary);
         let known_count = tokens.iter().filter(|token| is_known_token(token, dictionary)).count();
 
         match &best_candidate {

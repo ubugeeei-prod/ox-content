@@ -1,5 +1,6 @@
 use ox_content_markdown_lint::MarkdownLintDiagnostic;
 use serde::Serialize;
+use serde::ser::{SerializeSeq, Serializer};
 
 #[derive(Serialize)]
 pub(super) struct FileDiagnostic<'a> {
@@ -16,5 +17,21 @@ pub(super) struct Report<'a> {
     pub warning_count: u32,
     pub fixed_count: u32,
     pub duration_ms: f64,
-    pub diagnostics: Vec<FileDiagnostic<'a>>,
+    pub diagnostics: Diagnostics<'a>,
+}
+
+pub(super) struct Diagnostics<'a> {
+    pub entries: &'a [(usize, MarkdownLintDiagnostic)],
+    pub labels: &'a [String],
+}
+
+impl Serialize for Diagnostics<'_> {
+    fn serialize<S: Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
+        let mut sequence = serializer.serialize_seq(Some(self.entries.len()))?;
+        for (index, diagnostic) in self.entries {
+            sequence
+                .serialize_element(&FileDiagnostic { file: &self.labels[*index], diagnostic })?;
+        }
+        sequence.end()
+    }
 }
