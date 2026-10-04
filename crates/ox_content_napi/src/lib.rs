@@ -15,6 +15,7 @@
 )]
 
 mod checker_bindings;
+mod cli_bindings;
 mod collection_bindings;
 mod cross_reference_bindings;
 mod docs_bindings;
@@ -50,6 +51,7 @@ mod ssg_theme_types;
 mod transform_bindings;
 
 pub use checker_bindings::*;
+pub use cli_bindings::*;
 pub use collection_bindings::*;
 pub use cross_reference_bindings::*;
 pub use docs_bindings::{

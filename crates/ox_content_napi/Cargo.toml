@@ -19,6 +19,7 @@ workspace = true
 crate-type = ["cdylib", "rlib"]
 
 [dependencies]
+ox_content_cli = { workspace = true }
 ox_content_allocator = { workspace = true }
 ox_content_mdast = { workspace = true }
 ox_content_parser = { workspace = true }

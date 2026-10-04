@@ -76,6 +76,7 @@ use_self = "allow"
 
 [workspace.dependencies]
 # Internal crates (version is used for crates.io publish, path for local dev)
+ox_content_cli = { version = "3.2.13", path = "crates/ox_content_cli" }
 ox_content_allocator = { version = "3.2.13", path = "crates/ox_content_allocator" }
 ox_content_ast = { version = "3.2.13", path = "crates/ox_content_ast" }
 ox_content_parser = { version = "3.2.13", path = "crates/ox_content_parser" }

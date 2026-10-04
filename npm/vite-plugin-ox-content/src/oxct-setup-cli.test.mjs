@@ -5,7 +5,6 @@ import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { afterEach, describe, expect, it } from "vite-plus/test";
 import { parse } from "jsonc-parser";
-import { planJsonEdit, writePlan } from "../bin/oxct-config-files.mjs";
 
 const bin = fileURLToPath(new URL("../bin/oxct.mjs", import.meta.url));
 const wrapper = fileURLToPath(new URL("../../oxct/bin/oxct.mjs", import.meta.url));
@@ -107,18 +106,16 @@ describe("oxct project and IDE setup", () => {
     expect(await readdir(cwd)).toEqual([]);
   });
 
-  it("does not replace malformed or concurrently changed configuration", async () => {
+  it("does not replace malformed configuration", async () => {
     const cwd = await fixture();
-    const file = join(cwd, "settings.json");
-    await writeFile(file, '{ "broken": ');
-    await expect(planJsonEdit(file, [[["enabled"], true]])).rejects.toThrow(
-      "Invalid configuration",
-    );
-    await writeFile(file, "{}\n");
-    const plan = await planJsonEdit(file, [[["enabled"], true]]);
-    await writeFile(file, '{"concurrent":true}\n');
-    await expect(writePlan(plan)).rejects.toThrow("changed during setup");
-    expect(await readFile(file, "utf8")).toContain("concurrent");
+    await mkdir(join(cwd, ".vscode"));
+    const file = join(cwd, ".vscode/settings.json");
+    const original = '{ "broken": ';
+    await writeFile(file, original);
+    const result = run(["ide", "install", "--ide", "vscode", "--config-only", "--yes"], cwd);
+    expect(result.status).toBe(1);
+    expect(result.stderr).toContain("Invalid configuration");
+    expect(await readFile(file, "utf8")).toBe(original);
   });
 
   it.each([

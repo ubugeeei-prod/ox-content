@@ -1,0 +1,43 @@
+name: Native CLI
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  native-cli:
+    name: Native CLI - ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [blacksmith-32vcpu-ubuntu-2404, macos-latest, windows-latest]
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@89b12181fb390509a0842a86cc55eeb8eb928c1d # stable
+
+      - name: Cache Cargo
+        uses: Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6 # v2
+
+      - name: Test Rust authoring commands
+        run: cargo test --locked -p ox_content_cli
+
+      - name: Build Rust launcher
+        run: cargo build --locked -p ox_content_cli --bin oxct
+
+      - name: Verify terminal navigation and restoration
+        if: runner.os != 'Windows'
+        run: python3 tools/scripts/test-tui-pty.py target/debug/oxct

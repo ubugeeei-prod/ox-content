@@ -1,0 +1,19 @@
+---
+title: Getting started
+---
+
+# Getting started
+
+Edit a Markdown file and see it update immediately.
+
+## Code
+
+```ts
+const greeting = 'Hello, Ox Content';
+```
+
+## Next steps
+
+- Write your first page
+- Choose your theme
+- Build and publish your site

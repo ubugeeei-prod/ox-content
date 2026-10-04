@@ -106,6 +106,7 @@ fn javascript_wrapper_and_declarations_cover_expected_exports() {
         "resolveSsgNavigationGroups",
         "resolveSsgPageRoutes",
         "resolveSsgRoutePaths",
+        "runAuthoringCli",
         "runLspStdio",
         "sanitizeHtml",
         "searchIndex",

@@ -2043,9 +2043,6 @@ importers:
 
   npm/vite-plugin-ox-content:
     dependencies:
-      '@clack/prompts':
-        specifier: ^1.8.1
-        version: 1.8.1
       '@cspell/dict-de-de':
         specifier: ^4.1.2
         version: 4.1.2
@@ -2082,12 +2079,6 @@ importers:
       html-minifier-terser:
         specifier: ^7.2.0
         version: 7.2.0
-      jsonc-parser:
-        specifier: ^3.3.1
-        version: 3.3.1
-      marked:
-        specifier: ^18.0.13
-        version: 18.0.13
       mermaid:
         specifier: ^11.14.0
         version: 11.16.1
@@ -2121,9 +2112,6 @@ importers:
       satori-html:
         specifier: ^0.3.2
         version: 0.3.2
-      string-width:
-        specifier: ^8.2.2
-        version: 8.2.2
       svelte:
         specifier: ^5.0.0
         version: 5.57.1
@@ -2139,9 +2127,6 @@ importers:
       vue:
         specifier: ^3.4.0
         version: 3.5.43(typescript@7.0.2)
-      wrap-ansi:
-        specifier: ^9.0.2
-        version: 9.0.2
       yaml:
         specifier: ^2.9.0
         version: 2.9.0
@@ -2170,6 +2155,9 @@ importers:
       get-tsconfig:
         specifier: ^5.0.0-beta.4
         version: 5.0.0-beta.4
+      jsonc-parser:
+        specifier: ^3.3.1
+        version: 3.3.1
       katex:
         specifier: ^0.16.22
         version: 0.16.47
@@ -2950,16 +2938,8 @@ packages:
     resolution: {integrity: sha512-/kr3UWNtdJfxZtPgDqUOmG2pvwlmcLGheex5yiZKdwbzZJxhV+HMNR9QNmyY5cGwTNV6LrR7Jtp+KjhUAP1qBQ==}
     engines: {node: '>= 20.12.0'}
 
-  '@clack/core@1.5.1':
-    resolution: {integrity: sha512-iHTrHA8MtVuLl2TfZySmcKv1qO2PoyC9Z7pfSDozEuV5vtY3/wcOPKJXlqJ5Oq2Cx5DDGQGAMVx6HZfRRoVEbQ==}
-    engines: {node: '>= 20.12.0'}
-
   '@clack/prompts@1.7.0':
     resolution: {integrity: sha512-y7/yvZ2TPAnR9+jnc00klvNNLkJiXFFrQA/hlLCcxA9a2A4zQIOimyFQ9XfwYKiGD1fb5GY8vbKIIgO8d5Tb2A==}
-    engines: {node: '>= 20.12.0'}
-
-  '@clack/prompts@1.8.1':
-    resolution: {integrity: sha512-dlT1m5e/0yUL0kRNcQn7yGLVThkgbB0Ga/1AmfDDC/8ik6AIiSf2QLQO2zPYvefsHP0aFgxO93cVLCCfDp7kzQ==}
     engines: {node: '>= 20.12.0'}
 
   '@cloudflare/build-output-utils@0.8.4':
@@ -10126,21 +10106,9 @@ snapshots:
       fast-wrap-ansi: 0.2.2
       sisteransi: 1.0.5
 
-  '@clack/core@1.5.1':
-    dependencies:
-      fast-wrap-ansi: 0.2.2
-      sisteransi: 1.0.5
-
   '@clack/prompts@1.7.0':
     dependencies:
       '@clack/core': 1.4.3
-      fast-string-width: 3.0.2
-      fast-wrap-ansi: 0.2.2
-      sisteransi: 1.0.5
-
-  '@clack/prompts@1.8.1':
-    dependencies:
-      '@clack/core': 1.5.1
       fast-string-width: 3.0.2
       fast-wrap-ansi: 0.2.2
       sisteransi: 1.0.5

@@ -33,7 +33,7 @@ with tempfile.TemporaryDirectory(prefix="oxct-pty-") as directory:
         original = termios.tcgetattr(slave)
         fcntl.ioctl(slave, termios.TIOCSWINSZ, struct.pack("HHHH", 24, 100, 0, 0))
         process = subprocess.Popen(
-            [sys.argv[1], sys.argv[2], "tui", directory],
+            [*sys.argv[1:], "tui", directory],
             stdin=slave, stdout=slave, stderr=slave,
         )
         try:
