@@ -26,8 +26,8 @@ struct Options {
     stdin_filepath: String,
     #[arg(long)]
     spellcheck: bool,
-    #[arg(long, default_value_t = 0)]
-    max_warnings: u32,
+    #[arg(long, default_value_t = 0, value_parser = clap::value_parser!(u64).range(0..=9_007_199_254_740_991))]
+    max_warnings: u64,
     #[arg(long)]
     no_color: bool,
 }
@@ -94,7 +94,7 @@ pub fn run(args: &[String]) -> Result<i32> {
                 let file = if options.stdin {
                     batch[index].clone()
                 } else {
-                    files::slash(path.strip_prefix(&cwd).unwrap_or(path))
+                    files::slash(&files::relative(path, &cwd))
                 };
                 for diagnostic in result.diagnostics {
                     diagnostics.push((file.clone(), diagnostic));
@@ -136,7 +136,7 @@ pub fn run(args: &[String]) -> Result<i32> {
             paths.len()
         )?;
     }
-    Ok(i32::from(errors > 0 || warnings > options.max_warnings))
+    Ok(i32::from(errors > 0 || u64::from(warnings) > options.max_warnings))
 }
 
 fn diagnostic_json(file: &str, diagnostic: &MarkdownLintDiagnostic) -> Value {

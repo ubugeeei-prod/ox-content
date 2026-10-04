@@ -4,7 +4,7 @@ use unicode_width::UnicodeWidthStr;
 pub const THEMES: &[&str] = &["nord", "light", "mono"];
 
 pub fn clean(text: &str) -> String {
-    text.chars().filter(|ch| !ch.is_control() || matches!(ch, '\n' | '\r' | '\t')).collect()
+    text.chars().filter(|ch| !ch.is_control() || matches!(ch, '\n' | '\t')).collect()
 }
 
 pub fn width(text: &str) -> usize {

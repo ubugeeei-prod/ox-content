@@ -30,9 +30,9 @@ fn renders_markdown_and_navigation() {
 
 #[test]
 fn rejects_terminal_controls_and_keeps_graphemes() {
-    let doc = render("# Hello\x1b[2J\n\n<script>alert(1)</script>\n", 80);
+    let doc = render("# Hello\x1b[2J\rhidden\n\n<script>alert(1)</script>\n", 80);
     let text = doc.lines.join("\n");
-    assert!(!text.contains(['\x1b', '\x07', '\u{009b}']));
+    assert!(!text.contains(['\x1b', '\x07', '\u{009b}', '\r']));
     assert!(!text.contains("<script>"));
     assert_eq!(style::clip("日👩‍💻本", 4), "日👩‍💻");
     assert_eq!(style::width(&style::clip("日👩‍💻本", 4)), 4);

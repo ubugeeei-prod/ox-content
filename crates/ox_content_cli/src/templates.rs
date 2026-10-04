@@ -120,9 +120,9 @@ pub fn project_files(
             "vite.config.ts".to_string(),
             config
                 .replace("__OX_VITE__", if vite_plus { "vite-plus" } else { "vite" })
-                .replace("\"__OX_NAME__\"", &serde_json::to_string(name)?)
                 .replace("__OX_SKIN__", skin)
-                .replace("__OX_PALETTE__", palette),
+                .replace("__OX_PALETTE__", palette)
+                .replace("\"__OX_NAME__\"", &serde_json::to_string(name)?),
         ),
     ];
     let assets: &[(&str, &str)] = match template {

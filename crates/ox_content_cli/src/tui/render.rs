@@ -51,7 +51,7 @@ pub fn render(source: &str, columns: usize) -> Document {
         source,
         Options::ENABLE_TABLES | Options::ENABLE_STRIKETHROUGH | Options::ENABLE_TASKLISTS,
     ) {
-        let indent = "│ ".repeat(quote_depth);
+        let indent = "│ ".repeat(quote_depth) + &"  ".repeat(lists.len().saturating_sub(1));
         match event {
             Event::Start(Tag::Heading { level, .. }) => {
                 heading = Some(level as usize);
@@ -100,6 +100,11 @@ pub fn render(source: &str, columns: usize) -> Document {
                 quote_depth = quote_depth.saturating_sub(1);
             }
             Event::Start(Tag::List(start)) => {
+                if !text.is_empty() {
+                    put(&mut document, &(prefix.clone() + &text), &indent, columns);
+                    text.clear();
+                    prefix.clear();
+                }
                 lists.push(start);
             }
             Event::End(TagEnd::List(_)) => {
@@ -127,6 +132,8 @@ pub fn render(source: &str, columns: usize) -> Document {
                 link = Some(dest_url.into_string());
                 link_start = text.len();
             }
+            Event::Start(Tag::Image { .. }) => text.push_str("[image: "),
+            Event::End(TagEnd::Image) => text.push(']'),
             Event::End(TagEnd::Link) => {
                 if let Some(href) = link.take() {
                     document

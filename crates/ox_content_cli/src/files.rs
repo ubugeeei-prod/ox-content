@@ -29,6 +29,23 @@ pub fn slash(path: &Path) -> String {
     path.to_string_lossy().replace('\\', "/")
 }
 
+pub fn relative(path: &Path, base: &Path) -> PathBuf {
+    let path_parts: Vec<_> = path.components().collect();
+    let base_parts: Vec<_> = base.components().collect();
+    let common = path_parts.iter().zip(&base_parts).take_while(|(a, b)| a == b).count();
+    if common == 0 {
+        return path.to_path_buf();
+    }
+    let mut result = PathBuf::new();
+    for _ in common..base_parts.len() {
+        result.push("..");
+    }
+    for part in &path_parts[common..] {
+        result.push(part);
+    }
+    result
+}
+
 fn glob(patterns: &[String]) -> Result<GlobSet> {
     let mut builder = GlobSetBuilder::new();
     for pattern in patterns {
@@ -65,7 +82,10 @@ pub fn discover(paths: &[String], ignore: &[String]) -> Result<Vec<PathBuf>> {
                     .is_match(entry.path().strip_prefix(&cwd).unwrap_or_else(|_| entry.path()))
         }) {
             let entry = entry?;
-            if entry.file_type().is_file() && matcher.is_match(entry.path()) {
+            if (entry.file_type().is_file()
+                || (entry.file_type().is_symlink() && entry.path().is_file()))
+                && matcher.is_match(entry.path())
+            {
                 found.insert(entry.path().to_path_buf());
             }
         }
