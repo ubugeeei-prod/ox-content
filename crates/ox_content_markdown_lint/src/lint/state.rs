@@ -160,7 +160,7 @@ fn collect_word_diagnostics(
     let mut cursor = line.char_indices().peekable();
     let mut scalar = 0;
     let base = source.lines[line_number - 1];
-    for token in tokens.iter() {
+    for token in tokens {
         while scalar < token.start {
             cursor.next();
             scalar += 1;
