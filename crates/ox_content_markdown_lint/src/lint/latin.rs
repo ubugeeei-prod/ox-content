@@ -8,6 +8,9 @@ pub(super) fn assign_latin_languages(
     dictionary: &DictionaryBundle,
     fallback_language: &str,
 ) -> Vec<Token> {
+    if languages.len() <= 1 {
+        return tokens;
+    }
     let mut scores =
         languages.iter().map(|language| (language.clone(), 0_usize)).collect::<FxHashMap<_, _>>();
 
@@ -38,7 +41,9 @@ pub(super) fn assign_latin_languages(
                 .or_else(|| infer_latin_language_from_characters(&token.text, languages));
 
             Token {
-                language: inferred_language.unwrap_or_else(|| dominant_language.clone()),
+                language: CompactString::from(
+                    inferred_language.as_deref().unwrap_or(&dominant_language),
+                ),
                 ..token
             }
         })

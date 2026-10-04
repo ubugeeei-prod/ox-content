@@ -1,11 +1,25 @@
 import { createRequire } from "node:module";
 import type { CSpellUserSettings, SpellCheckFileOptions, ValidationIssue } from "cspell-lib";
 
+import {
+  STRUCTURE_DEFAULTS,
+  type MarkdownLintFix,
+  type MarkdownLintFixResult,
+  type MarkdownLintStructureRules,
+  type MarkdownLintTextRules,
+} from "./lint-extensions";
+export type {
+  MarkdownLintFix,
+  MarkdownLintFixResult,
+  MarkdownLintTextRules,
+} from "./lint-extensions";
+
 const require = createRequire(import.meta.url);
 
 const SUPPORTED_MARKDOWN_LINT_LANGUAGES = ["en", "ja", "zh", "fr", "de", "pl"] as const;
 const DEFAULT_LANGUAGES = ["en"] as const;
 const DEFAULT_RULES = {
+  ...STRUCTURE_DEFAULTS,
   duplicateHeadings: true,
   headingIncrement: true,
   maxConsecutiveBlankLines: 1,
@@ -101,7 +115,7 @@ export interface MarkdownLintDictionaryOptions {
 /**
  * Rule switches for Markdown linting.
  */
-export interface MarkdownLintRuleOptions {
+export interface MarkdownLintRuleOptions extends MarkdownLintStructureRules {
   /**
    * Report headings that repeat the same visible text.
    * @default true
@@ -178,6 +192,8 @@ export interface MarkdownLintOptions {
    * @default false for content APIs; inferred for file APIs
    */
   mdx?: boolean;
+  textRules?: MarkdownLintTextRules;
+  severities?: Partial<Record<string, MarkdownLintSeverity | "off">>;
 }
 
 /**
@@ -205,7 +221,7 @@ export interface MarkdownLintDiagnostic {
   line: number;
 
   /**
-   * 1-indexed start column.
+   * 1-indexed UTF-16 start column.
    */
   column: number;
 
@@ -215,7 +231,7 @@ export interface MarkdownLintDiagnostic {
   endLine: number;
 
   /**
-   * 1-indexed end column.
+   * 1-indexed UTF-16 end column.
    */
   endColumn: number;
 
@@ -228,6 +244,7 @@ export interface MarkdownLintDiagnostic {
    * Suggested replacements, when available.
    */
   suggestions?: string[];
+  fix?: MarkdownLintFix;
 }
 
 /**
@@ -268,6 +285,8 @@ interface InternalNormalizedMarkdownLintOptions {
   };
   languages: MarkdownLintLanguage[];
   mdx: boolean;
+  textRules?: MarkdownLintTextRules;
+  severities?: Partial<Record<string, MarkdownLintSeverity | "off">>;
   rules: Required<MarkdownLintRuleOptions>;
 }
 
@@ -284,6 +303,8 @@ interface NapiMarkdownLintOptions {
   };
   languages?: MarkdownLintLanguage[];
   mdx?: boolean;
+  textRules?: MarkdownLintTextRules;
+  severities?: Partial<Record<string, MarkdownLintSeverity | "off">>;
   rules?: Required<MarkdownLintRuleOptions>;
 }
 
@@ -292,6 +313,7 @@ interface NapiMarkdownLintResult extends MarkdownLintResult {
 }
 
 interface NapiMarkdownLintModule {
+  fixMarkdown: (source: string, options?: NapiMarkdownLintOptions) => MarkdownLintFixResult;
   lintMarkdownDocuments?: (
     sources: string[],
     options?: NapiMarkdownLintOptions,
@@ -311,6 +333,21 @@ export function lintMarkdown(
 ): MarkdownLintResult {
   const normalizedOptions = normalizeLintOptions(options);
   return lintMarkdownWithNormalizedOptions(source, normalizedOptions);
+}
+
+/** Applies safe native edits and returns diagnostics for the resulting document. */
+export function fixMarkdown(
+  source: string,
+  options: MarkdownLintOptions = {},
+): MarkdownLintFixResult {
+  const normalized = normalizeLintOptions(options);
+  if (normalized.dictionary.standard) {
+    throw new Error(
+      "[ox-content] fixMarkdown uses native rules; use lintMarkdownAsync for standard dictionaries.",
+    );
+  }
+  const fixed = loadNapiBindingSync().fixMarkdown(source, toNapiMarkdownLintOptions(normalized));
+  return { ...fixed, result: stripMaskedDocument(fixed.result as NapiMarkdownLintResult) };
 }
 
 /**
@@ -381,7 +418,16 @@ async function lintMarkdownDocumentsWithNormalizedOptions(
 
   return builtInResults.map((result, index) =>
     summarizeDiagnostics(
-      sortDiagnostics(result.diagnostics.concat(standardDiagnostics[index] ?? [])),
+      sortDiagnostics(
+        result.diagnostics.concat(
+          (standardDiagnostics[index] ?? []).flatMap((diagnostic) => {
+            const severity = normalizedOptions.severities?.spellcheck;
+            return severity === "off"
+              ? []
+              : [{ ...diagnostic, severity: severity ?? diagnostic.severity }];
+          }),
+        ),
+      ),
     ),
   );
 }
@@ -434,6 +480,8 @@ function toNapiMarkdownLintOptions(
     },
     languages: options.languages,
     mdx: options.mdx,
+    textRules: options.textRules,
+    severities: options.severities,
     rules: {
       ...options.rules,
       spellcheck: disableBuiltinSpellcheck ? false : options.rules.spellcheck,
@@ -474,7 +522,11 @@ function normalizeLintOptions(options: MarkdownLintOptions): InternalNormalizedM
     },
     languages: [...new Set(languages)],
     mdx: options.mdx ?? false,
+    textRules: options.textRules,
+    severities: options.severities,
     rules: {
+      ...STRUCTURE_DEFAULTS,
+      ...options.rules,
       duplicateHeadings: options.rules?.duplicateHeadings ?? DEFAULT_RULES.duplicateHeadings,
       headingIncrement: options.rules?.headingIncrement ?? DEFAULT_RULES.headingIncrement,
       maxConsecutiveBlankLines:

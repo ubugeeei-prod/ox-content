@@ -13,6 +13,10 @@ const DEFAULT_CONFIG_NAMES: &[&str] = &[".ox-content.json", "ox-content.json"];
 pub struct InitializationOptions {
     #[serde(rename = "configPath")]
     pub config_path: Option<String>,
+    #[serde(rename = "markdownLintEnabled")]
+    pub markdown_lint_enabled: Option<bool>,
+    #[serde(rename = "markdownLint")]
+    pub markdown_lint: Option<ox_content_markdown_lint::MarkdownLintOptions>,
     #[serde(rename = "frontmatterSchema")]
     pub frontmatter_schema: Option<String>,
     /// Opt-in for the textlint sidecar (off by default — textlint
@@ -38,6 +42,8 @@ pub struct InitializationOptions {
 #[derive(Clone, Debug, Default, Deserialize)]
 #[serde(default)]
 struct WorkspaceConfigFile {
+    #[serde(rename = "markdownLint")]
+    markdown_lint: Option<ox_content_markdown_lint::MarkdownLintOptions>,
     frontmatter: FrontmatterConfigFile,
     textlint: TextlintConfigFile,
     mdc: MdcConfigFile,
@@ -78,6 +84,7 @@ pub struct ResolvedConfig {
     pub textlint: crate::textlint::TextlintConfig,
     pub mdc_components: Option<PathBuf>,
     pub spacing: SpacingConfig,
+    pub markdown_lint: Option<crate::markdown_lint::Config>,
 }
 
 impl ResolvedConfig {
@@ -162,7 +169,15 @@ impl ResolvedConfig {
                 .is_ok_and(|value| matches!(value.as_str(), "1" | "true" | "yes"))
         };
 
+        let markdown_lint_options = init.markdown_lint.clone().or_else(|| {
+            workspace_file.as_ref().and_then(|(_, config)| config.markdown_lint.clone())
+        });
+        let markdown_lint = init
+            .markdown_lint_enabled
+            .unwrap_or_else(|| markdown_lint_options.is_some())
+            .then(|| crate::markdown_lint::Config::new(markdown_lint_options.unwrap_or_default()));
         Self {
+            markdown_lint,
             frontmatter_schema,
             textlint: crate::textlint::TextlintConfig {
                 enabled: textlint_enabled,

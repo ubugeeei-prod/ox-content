@@ -45,9 +45,8 @@ fn expected(visible: &str, blanks: usize, tail: &str) -> String {
 fn unpaired_reference_bracket_terminates() {
     let masked = within_timeout("lone `][`", 30, || mask_of("text ][ text"));
 
-    // Nothing here is a link, so only the bracket characters themselves are
-    // blanked (every masked line loses its `[]()` markers). Both words survive.
-    assert_eq!(masked, "text    text");
+    // Literal brackets are rendered prose and do not hide surrounding words.
+    assert_eq!(masked, "text ][ text");
 }
 
 #[test]
@@ -55,11 +54,8 @@ fn repeated_unpaired_reference_brackets_terminate() {
     let masked =
         within_timeout("repeated `][`", 30, || mask_of("prose ][ more ][ and ][ still going"));
 
-    // The first `][` finds its closing `]` in the *second* `][`, so the span
-    // between them is treated as a reference label and blanked; the third `][`
-    // never closes. What matters is that the scan terminates and the text past
-    // the last unpaired bracket still reaches the rules.
-    assert_eq!(masked, "prose            and    still going");
+    // Malformed references must not swallow the visible word "more".
+    assert_eq!(masked, "prose ][ more ][ and ][ still going");
 }
 
 #[test]
@@ -72,16 +68,16 @@ fn unpaired_reference_bracket_inside_a_large_document_terminates() {
     let masked = within_timeout("20k pathological lines", 60, move || mask_of(&source));
 
     assert_eq!(masked.lines().count(), line_count);
-    assert!(masked.lines().all(|line| line == "a    b"));
+    assert!(masked.lines().all(|line| line == "a ][ b"));
 }
 
 #[test]
-fn reference_labels_are_still_blanked() {
-    // The label must be blanked so the spellchecker never sees it, and the
-    // blanking must be length-preserving so diagnostic columns stay accurate.
-    assert_eq!(mask_of("[shown][hidden]"), expected(" shown", 9, ""));
-    assert_eq!(mask_of("see [shown][hidden] here"), expected("see  shown", 9, " here"));
-    assert!(!mask_of("[shown][hidden]").contains("hidden"));
+fn only_resolved_reference_labels_are_blanked() {
+    // Unresolved references render as literal text and must reach prose rules.
+    assert_eq!(mask_of("[shown][hidden]"), "[shown][hidden]");
+    let masked = mask_of("[shown][hidden]\n\n[hidden]: /url\n");
+    assert_eq!(masked.lines().next().unwrap(), expected(" shown", 9, ""));
+    assert!(!masked.contains("hidden"));
 }
 
 #[test]
@@ -147,5 +143,5 @@ fn multibyte_text_around_an_unpaired_bracket_terminates() {
     // indexing would panic rather than hang, so cover that too.
     let masked = within_timeout("multibyte `][`", 30, || mask_of("日本語 ][ の文章です"));
 
-    assert_eq!(masked, "日本語    の文章です");
+    assert_eq!(masked, "日本語 ][ の文章です");
 }

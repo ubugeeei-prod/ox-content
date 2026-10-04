@@ -10,9 +10,9 @@ pub(super) fn segment_cjk_run(
     let Some(words) = dictionary.cjk_segment_words.get(language) else {
         return vec![Token {
             end: start_offset + count_code_points(run),
-            language: language.to_string(),
+            language: CompactString::from(language),
             start: start_offset,
-            text: run.to_string(),
+            text: CompactString::from(run),
         }];
     };
 
@@ -36,9 +36,9 @@ pub(super) fn segment_cjk_run(
         if let Some(word) = best_match {
             tokens.push(Token {
                 end: start_offset + char_index + word.char_len,
-                language: language.to_string(),
+                language: CompactString::from(language),
                 start: start_offset + char_index,
-                text: word.text.clone(),
+                text: CompactString::from(word.text.as_str()),
             });
             char_index += word.char_len;
             continue;
@@ -48,9 +48,9 @@ pub(super) fn segment_cjk_run(
         let end_byte = char_boundaries[end_char];
         tokens.push(Token {
             end: start_offset + end_char,
-            language: language.to_string(),
+            language: CompactString::from(language),
             start: start_offset + char_index,
-            text: run[start_byte..end_byte].to_string(),
+            text: CompactString::from(&run[start_byte..end_byte]),
         });
         char_index = end_char;
     }
@@ -58,9 +58,9 @@ pub(super) fn segment_cjk_run(
     if tokens.iter().all(|token| count_code_points(&token.text) == 1) {
         return vec![Token {
             end: start_offset + count_code_points(run),
-            language: language.to_string(),
+            language: CompactString::from(language),
             start: start_offset,
-            text: run.to_string(),
+            text: CompactString::from(run),
         }];
     }
 

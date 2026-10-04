@@ -164,6 +164,19 @@ describe("buildInitializationOptions", () => {
     expect(options).toEqual({});
   });
 
+  it("preserves explicit native lint enable and disable", () => {
+    for (const enabled of [true, false]) {
+      expect(
+        buildInitializationOptions({
+          textlintEnabled: false,
+          spacingAutoFixOnSave: false,
+          markdownLintEnabled: enabled,
+          resolvePath,
+        }).markdownLintEnabled,
+      ).toBe(enabled);
+    }
+  });
+
   it("forwards spacing options", () => {
     const options = buildInitializationOptions({
       textlintEnabled: false,

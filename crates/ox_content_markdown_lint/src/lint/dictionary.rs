@@ -148,7 +148,7 @@ pub(super) fn should_spellcheck_token(token: &Token, dictionary: &DictionaryBund
         return false;
     }
 
-    if !dictionary.active_languages.contains(&token.language) {
+    if !dictionary.active_languages.contains(token.language.as_str()) {
         return false;
     }
 

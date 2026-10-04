@@ -964,10 +964,13 @@ export {
   writeDocs,
   resolveDocsOptions,
 } from "./docs";
-export { lintMarkdown, lintMarkdownAsync } from "./lint";
+export { lintMarkdown, lintMarkdownAsync, fixMarkdown } from "./lint";
 export { lintMarkdownFile, lintMarkdownFiles, shouldLintMarkdownFile } from "./lint-files";
 export type {
   MarkdownLintDiagnostic,
+  MarkdownLintFix,
+  MarkdownLintFixResult,
+  MarkdownLintTextRules,
   MarkdownLintDictionaryOptions,
   MarkdownLintLanguage,
   MarkdownLintOptions,

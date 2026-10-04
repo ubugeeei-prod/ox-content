@@ -59,6 +59,7 @@ getSsgPageLocale
 getSsgUrlPath
 isSafeRedirectDest
 lintCodeBlocks
+fixMarkdown
 lintMarkdown
 lintMarkdownDocuments
 loadDictionaries

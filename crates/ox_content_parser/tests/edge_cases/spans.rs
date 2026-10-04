@@ -261,3 +261,30 @@ fn assert_span_indexes_source(source: &str, span: Span) {
         "invalid span {span:?} for {source:?}"
     );
 }
+
+#[test]
+fn trimmed_prose_spans_point_to_visible_text() {
+    struct TextSpans<'s> {
+        source: &'s str,
+        count: usize,
+    }
+    impl<'a> ox_content_ast::Visit<'a> for TextSpans<'_> {
+        fn visit_text(&mut self, node: &ox_content_ast::Text<'a>) {
+            assert_eq!(node.span.source_text(self.source), node.value);
+            self.count += 1;
+        }
+    }
+    for source in [
+        "  visible visible\n",
+        "  Heading\n  =======\n",
+        "- Item\n\n    visible visible\n",
+        "-   visible\n",
+        ">   visible\n",
+    ] {
+        let allocator = Allocator::new();
+        let doc = parse_with_options(&allocator, source, ParserOptions::gfm());
+        let mut visitor = TextSpans { source, count: 0 };
+        ox_content_ast::Visit::visit_document(&mut visitor, &doc);
+        assert!(visitor.count > 0);
+    }
+}

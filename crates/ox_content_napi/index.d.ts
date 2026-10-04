@@ -164,6 +164,8 @@ export declare function extractTranslationKeys(source: string, filePath: string,
  */
 export declare function extractYoutubeVideoId(input: string): string | null
 
+export declare function fixMarkdown(source: string, options?: JsMarkdownLintOptions | undefined | null): JsMarkdownLintFixResult
+
 /** Formats a file or directory segment as an SSG title. */
 export declare function formatSsgTitle(name: string): string
 
@@ -1556,12 +1558,26 @@ export interface JsMarkdownLintDiagnostic {
   endColumn: number
   language?: string
   suggestions?: Array<string>
+  fix?: JsMarkdownLintFix
 }
 
 export interface JsMarkdownLintDictionaryOptions {
   words?: Array<string>
   byLanguage?: Array<JsMarkdownLintLanguageWords>
   ignoredWords?: Array<string>
+}
+
+export interface JsMarkdownLintFix {
+  /** UTF-8 byte offsets into the original document, end exclusive. */
+  start: number
+  end: number
+  text: string
+}
+
+export interface JsMarkdownLintFixResult {
+  output: string
+  appliedFixes: number
+  result: JsMarkdownLintResult
 }
 
 export interface JsMarkdownLintLanguageWords {
@@ -1575,6 +1591,8 @@ export interface JsMarkdownLintOptions {
   dictionary?: JsMarkdownLintDictionaryOptions
   /** Enable MDX-aware syntax masking while linting visible prose. */
   mdx?: boolean
+  textRules?: JsMarkdownLintTextRules
+  severities?: Record<string, string>
 }
 
 export interface JsMarkdownLintResult {
@@ -1593,6 +1611,27 @@ export interface JsMarkdownLintRuleOptions {
   repeatedWords?: boolean
   spellcheck?: boolean
   trailingSpaces?: boolean
+  emptyHeadings?: boolean
+  firstHeadingH1?: boolean
+  singleH1?: boolean
+  codeFenceLanguage?: boolean
+  codeFenceClosed?: boolean
+  emptyLinks?: boolean
+  imageAlt?: boolean
+  finalNewline?: boolean
+}
+
+export interface JsMarkdownLintTerm {
+  term: string
+  replacement: string
+}
+
+export interface JsMarkdownLintTextRules {
+  sentenceLength?: number
+  maxTen?: number
+  noExclamationQuestionMark?: boolean
+  noTodo?: boolean
+  terminology?: Array<JsMarkdownLintTerm>
 }
 
 /** Opt-in `$…$` inline and `$$…$$` block math. */

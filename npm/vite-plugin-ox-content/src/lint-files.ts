@@ -172,6 +172,8 @@ function resolveMarkdownLintFileOptions(
       languages: options.languages,
       mdx: options.mdx,
       rules: options.rules,
+      textRules: options.textRules,
+      severities: options.severities,
     },
   };
 }

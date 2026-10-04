@@ -65,6 +65,7 @@ export function resolveInitializationOptions(
 ): Record<string, string | boolean> {
   return buildInitializationOptions({
     schema: getConfig().get<string>("frontmatter.schema", "").trim(),
+    markdownLintEnabled: getConfig().get<boolean | null>("markdownLint.enabled") ?? undefined,
     textlintEnabled: getConfig().get<boolean>("textlint.enabled", false),
     textlintCommand: getConfig().get<string>("textlint.command", "").trim(),
     mdcComponents: getConfig().get<string>("mdc.components", "").trim(),

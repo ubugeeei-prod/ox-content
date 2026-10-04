@@ -1,9 +1,10 @@
 use crate::Result;
 use ox_content_markdown_lint::{
-    MarkdownLintDictionaryOptions, MarkdownLintLanguageWords, MarkdownLintOptions,
-    MarkdownLintRuleOptions,
+    MarkdownLintDictionaryOptions, MarkdownLintOptions, MarkdownLintRuleOptions,
+    MarkdownLintRuleSeverity, MarkdownLintSeverity, MarkdownLintTextRules,
 };
 use serde::Deserialize;
+use std::collections::BTreeMap;
 
 #[derive(Default, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
@@ -13,35 +14,10 @@ pub struct Config {
     #[serde(default)]
     pub ignore: Vec<String>,
     languages: Option<Vec<String>>,
-    rules: Option<Rules>,
-    dictionary: Option<Dictionary>,
-}
-
-#[derive(Default, Deserialize)]
-#[serde(rename_all = "camelCase", deny_unknown_fields)]
-struct Rules {
-    duplicate_headings: Option<bool>,
-    heading_increment: Option<bool>,
-    max_consecutive_blank_lines: Option<u32>,
-    repeated_punctuation: Option<bool>,
-    repeated_words: Option<bool>,
-    spellcheck: Option<bool>,
-    trailing_spaces: Option<bool>,
-}
-
-#[derive(Deserialize)]
-#[serde(rename_all = "camelCase", deny_unknown_fields)]
-struct Dictionary {
-    words: Option<Vec<String>>,
-    ignored_words: Option<Vec<String>>,
-    by_language: Option<Vec<LanguageWords>>,
-}
-
-#[derive(Deserialize)]
-#[serde(deny_unknown_fields)]
-struct LanguageWords {
-    language: String,
-    words: Vec<String>,
+    rules: Option<MarkdownLintRuleOptions>,
+    dictionary: Option<MarkdownLintDictionaryOptions>,
+    text_rules: Option<MarkdownLintTextRules>,
+    severities: Option<BTreeMap<String, MarkdownLintSeverity>>,
 }
 
 impl Config {
@@ -51,33 +27,33 @@ impl Config {
             .map_err(|error| format!("Invalid lint rule or configuration: {error}").into())
     }
 
-    pub fn native(&self, spellcheck: bool, mdx: bool) -> MarkdownLintOptions {
-        let defaults = Rules::default();
-        let rules = self.rules.as_ref().unwrap_or(&defaults);
+    pub fn native(&self, spellcheck: bool, mdx: bool, strict: bool) -> MarkdownLintOptions {
+        let mut rules = self.rules.clone().unwrap_or_default();
+        rules.spellcheck = Some(spellcheck || rules.spellcheck.unwrap_or(false));
+        if strict {
+            rules.empty_headings.get_or_insert(true);
+            rules.first_heading_h1.get_or_insert(true);
+            rules.single_h1.get_or_insert(true);
+            rules.code_fence_language.get_or_insert(true);
+            rules.code_fence_closed.get_or_insert(true);
+            rules.empty_links.get_or_insert(true);
+            rules.image_alt.get_or_insert(true);
+            rules.final_newline.get_or_insert(true);
+        }
         MarkdownLintOptions {
             languages: self.languages.clone(),
             mdx: Some(mdx),
-            rules: Some(MarkdownLintRuleOptions {
-                duplicate_headings: rules.duplicate_headings,
-                heading_increment: rules.heading_increment,
-                max_consecutive_blank_lines: rules.max_consecutive_blank_lines,
-                repeated_punctuation: rules.repeated_punctuation,
-                repeated_words: rules.repeated_words,
-                spellcheck: Some(spellcheck || rules.spellcheck.unwrap_or(false)),
-                trailing_spaces: rules.trailing_spaces,
-            }),
-            dictionary: self.dictionary.as_ref().map(|dictionary| MarkdownLintDictionaryOptions {
-                words: dictionary.words.clone(),
-                ignored_words: dictionary.ignored_words.clone(),
-                by_language: dictionary.by_language.as_ref().map(|entries| {
-                    entries
-                        .iter()
-                        .map(|entry| MarkdownLintLanguageWords {
-                            language: entry.language.clone(),
-                            words: entry.words.clone(),
-                        })
-                        .collect()
-                }),
+            rules: Some(rules),
+            dictionary: self.dictionary.clone(),
+            text_rules: self.text_rules.clone(),
+            severities: self.severities.as_ref().map(|entries| {
+                entries
+                    .iter()
+                    .map(|(rule, severity)| MarkdownLintRuleSeverity {
+                        rule_id: rule.clone(),
+                        severity: *severity,
+                    })
+                    .collect()
             }),
         }
     }

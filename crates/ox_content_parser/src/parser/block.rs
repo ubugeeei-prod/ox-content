@@ -230,7 +230,10 @@ impl<'a> Parser<'a> {
                 self.position = heading_end;
                 let content = trim_block_content(&self.source[start..content_end]);
                 let (content, id, classes) = self.split_heading_attributes(content);
-                let children = self.parse_inline_block(content, start)?;
+                let children = self.parse_inline_block(
+                    content,
+                    content.as_ptr().addr() - self.source.as_ptr().addr(),
+                )?;
                 return Ok(Some(Node::Heading(self.allocator.boxed(Heading {
                     depth,
                     id,
@@ -264,7 +267,8 @@ impl<'a> Parser<'a> {
         let span = Span::new(start as u32, content_end as u32);
 
         // Parse inline content
-        let children = self.parse_inline_block(content, start)?;
+        let children = self
+            .parse_inline_block(content, content.as_ptr().addr() - self.source.as_ptr().addr())?;
 
         Ok(Some(Node::Paragraph(self.allocator.boxed(Paragraph { children, span }))))
     }

@@ -58,6 +58,7 @@ export interface InitializationInputs {
   schema?: string;
   /** `oxContent.textlint.enabled`. */
   textlintEnabled: boolean;
+  markdownLintEnabled?: boolean;
   /** `oxContent.textlint.command`, trimmed. */
   textlintCommand?: string;
   /** `oxContent.mdc.components`, trimmed. */
@@ -81,6 +82,9 @@ export function buildInitializationOptions(
 ): Record<string, string | boolean> {
   const options: Record<string, string | boolean> = {};
 
+  if (inputs.markdownLintEnabled !== undefined) {
+    options.markdownLintEnabled = inputs.markdownLintEnabled;
+  }
   if (inputs.schema) {
     options.frontmatterSchema = inputs.resolvePath(inputs.schema);
   }

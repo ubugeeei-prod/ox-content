@@ -62,13 +62,13 @@ fn collect_latin_tokens(
         return Vec::new();
     }
 
-    let fallback_language = latin_languages[0].clone();
+    let fallback_language = CompactString::from(latin_languages[0].as_str());
     let mut tokens = Vec::new();
 
     if let Some(latin_word_pattern) = LATIN_WORD_PATTERN.as_ref() {
         let mut cursor = CharIndexCursor::new(masked_line);
         for value in latin_word_pattern.find_iter(masked_line) {
-            let text = value.as_str().to_string();
+            let text = CompactString::from(value.as_str());
             let start = cursor.char_index(value.start());
             let end = start + count_code_points(value.as_str());
             tokens.push(Token { end, language: fallback_language.clone(), start, text });

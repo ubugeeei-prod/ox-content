@@ -1496,6 +1496,7 @@ dependencies = [
  "ox_content_markdown_lint",
  "percent-encoding",
  "pulldown-cmark",
+ "rayon",
  "serde",
  "serde_json",
  "signal-hook",
@@ -1687,6 +1688,7 @@ dependencies = [
  "ox_content_i18n",
  "ox_content_i18n_checker",
  "ox_content_link_checker",
+ "ox_content_markdown_lint",
  "ox_content_mdc_checker",
  "ox_content_parser",
  "ox_content_renderer",
@@ -1705,10 +1707,12 @@ dependencies = [
 name = "ox_content_markdown_lint"
 version = "3.2.13"
 dependencies = [
+ "aho-corasick",
  "compact_str 0.10.0",
  "ox_content_allocator",
  "ox_content_ast",
  "ox_content_parser",
+ "rayon",
  "regex",
  "rustc-hash",
  "serde",

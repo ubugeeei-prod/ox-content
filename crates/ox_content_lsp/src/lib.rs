@@ -22,6 +22,7 @@ mod document_link;
 mod folding;
 mod frontmatter;
 mod i18n;
+mod markdown_lint;
 mod preview;
 mod selection_range;
 mod session;

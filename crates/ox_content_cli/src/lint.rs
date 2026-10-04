@@ -1,11 +1,13 @@
 mod config;
+mod report;
+mod worker;
 
-use crate::{Result, files, prompts};
+use crate::{Result, files};
 use clap::Parser;
-use ox_content_markdown_lint::{MarkdownLintDiagnostic, lint_markdown_documents};
-use serde_json::{Value, json};
+use ox_content_markdown_lint::MarkdownLinter;
+use rayon::prelude::*;
 use std::{
-    io::{IsTerminal, Read, Write},
+    io::{BufWriter, IsTerminal, Read, Write},
     path::Path,
     time::Instant,
 };
@@ -26,6 +28,12 @@ struct Options {
     stdin_filepath: String,
     #[arg(long)]
     spellcheck: bool,
+    #[arg(long)]
+    strict: bool,
+    #[arg(long, conflicts_with = "stdin")]
+    fix: bool,
+    #[arg(long, value_parser = clap::value_parser!(u16).range(1..=256))]
+    threads: Option<u16>,
     #[arg(long, default_value_t = 0, value_parser = clap::value_parser!(u64).range(0..=9_007_199_254_740_991))]
     max_warnings: u64,
     #[arg(long)]
@@ -37,8 +45,15 @@ pub fn run(args: &[String]) -> Result<i32> {
     let mut options = Options::try_parse_from(
         std::iter::once("oxct lint".to_string()).chain(args.iter().cloned()),
     )?;
-    let config =
-        options.config.as_deref().map(config::Config::read).transpose()?.unwrap_or_default();
+    let discovered =
+        [".oxlint.json", "oxlint.json"].into_iter().find(|path| Path::new(path).is_file());
+    let config = options
+        .config
+        .as_deref()
+        .or(discovered)
+        .map(config::Config::read)
+        .transpose()?
+        .unwrap_or_default();
     if options.paths.is_empty() {
         options.paths.clone_from(&config.include);
     }
@@ -59,57 +74,95 @@ pub fn run(args: &[String]) -> Result<i32> {
         std::io::stdin().read_to_string(&mut stdin)?;
     }
     let cwd = std::env::current_dir()?;
+    let labels: Vec<_> = paths
+        .iter()
+        .map(|path| {
+            if options.stdin {
+                path.clone()
+            } else {
+                files::slash(&files::relative(Path::new(path), &cwd))
+            }
+        })
+        .collect();
     let mut diagnostics = Vec::new();
     let mut errors = 0;
     let mut warnings = 0;
-    for batch in paths.chunks(128) {
-        let sources: Vec<String> = batch
-            .iter()
-            .map(
-                |path| {
-                    if options.stdin { Ok(stdin.clone()) } else { std::fs::read_to_string(path) }
-                },
-            )
-            .collect::<std::io::Result<_>>()?;
-        for mdx in [false, true] {
-            let indices: Vec<_> = batch
-                .iter()
-                .enumerate()
-                .filter_map(|(index, path)| {
-                    (Path::new(path).extension().is_some_and(|ext| ext.eq_ignore_ascii_case("mdx"))
-                        == mdx)
-                        .then_some(index)
+    let mut fixed_count = 0;
+    let markdown =
+        MarkdownLinter::new(Some(config.native(options.spellcheck, false, options.strict)));
+    let mdx = paths
+        .iter()
+        .any(|path| Path::new(path).extension().is_some_and(|ext| ext.eq_ignore_ascii_case("mdx")))
+        .then(|| {
+            MarkdownLinter::new(Some(config.native(options.spellcheck, true, options.strict)))
+        });
+    let mut builder = rayon::ThreadPoolBuilder::new();
+    if let Some(threads) = options.threads {
+        builder = builder.num_threads(usize::from(threads));
+    }
+    let pool = builder.build()?;
+    // Sources live only inside workers; keep diagnostic memory bounded by batches.
+    for (batch_index, batch) in paths.chunks(128).enumerate() {
+        let results: Vec<_> = pool.install(|| {
+            batch
+                .par_iter()
+                .map(|path| {
+                    let linter = if Path::new(path)
+                        .extension()
+                        .is_some_and(|ext| ext.eq_ignore_ascii_case("mdx"))
+                    {
+                        mdx.as_ref().unwrap_or(&markdown)
+                    } else {
+                        &markdown
+                    };
+                    worker::check(
+                        path,
+                        options.stdin.then_some(stdin.as_str()),
+                        linter,
+                        options.fix,
+                    )
+                    .map_err(|error| error.to_string())
                 })
-                .collect();
-            if indices.is_empty() {
-                continue;
-            }
-            let selected = indices.iter().map(|index| sources[*index].clone()).collect::<Vec<_>>();
-            let results =
-                lint_markdown_documents(&selected, Some(config.native(options.spellcheck, mdx)));
-            for (index, result) in indices.into_iter().zip(results) {
-                errors += result.error_count;
-                warnings += result.warning_count;
-                let path = Path::new(&batch[index]);
-                let file = if options.stdin {
-                    batch[index].clone()
-                } else {
-                    files::slash(&files::relative(path, &cwd))
-                };
-                for diagnostic in result.diagnostics {
-                    diagnostics.push((file.clone(), diagnostic));
-                }
+                .collect()
+        });
+        for (index, (path, checked)) in batch.iter().zip(results).enumerate() {
+            let (result, fixed) = checked.map_err(|error| format!("{path}: {error}"))?;
+            errors += result.error_count;
+            warnings += result.warning_count;
+            fixed_count += fixed;
+            for diagnostic in result.diagnostics {
+                diagnostics.push((batch_index * 128 + index, diagnostic));
             }
         }
     }
     diagnostics.sort_by(|(a_file, a), (b_file, b)| {
-        (a_file, a.line, a.column, &a.rule_id).cmp(&(b_file, b.line, b.column, &b.rule_id))
+        (&labels[*a_file], a.line, a.column, &a.rule_id).cmp(&(
+            &labels[*b_file],
+            b.line,
+            b.column,
+            &b.rule_id,
+        ))
     });
     let duration = (started.elapsed().as_secs_f64() * 100_000.0).round() / 100.0;
     if options.format == "json" {
-        let report = json!({"checkedFileCount": paths.len(), "errorCount": errors, "warningCount": warnings,
-            "diagnostics": diagnostics.iter().map(|(file, diagnostic)| diagnostic_json(file, diagnostic)).collect::<Vec<_>>(), "durationMs": duration});
-        prompts::print(&serde_json::to_string_pretty(&report)?)?;
+        let report = report::Report {
+            checked_file_count: paths.len(),
+            error_count: errors,
+            warning_count: warnings,
+            fixed_count,
+            duration_ms: duration,
+            diagnostics: diagnostics
+                .iter()
+                .map(|(index, diagnostic)| report::FileDiagnostic {
+                    file: &labels[*index],
+                    diagnostic,
+                })
+                .collect(),
+        };
+        let mut output = BufWriter::with_capacity(64 * 1024, std::io::stdout().lock());
+        serde_json::to_writer_pretty(&mut output, &report)?;
+        writeln!(output)?;
+        output.flush()?;
     } else {
         let color = !options.no_color
             && std::io::stdout().is_terminal()
@@ -117,9 +170,10 @@ pub fn run(args: &[String]) -> Result<i32> {
         let paint = |code, text: &str| {
             if color { format!("\x1b[{code}m{text}\x1b[0m") } else { text.to_string() }
         };
-        let mut output = std::io::stdout().lock();
+        let mut output = BufWriter::with_capacity(64 * 1024, std::io::stdout().lock());
         writeln!(output, "{}", paint("1;36", "◆ Ox Content · Markdown lint"))?;
-        for (file, diagnostic) in diagnostics {
+        for (index, diagnostic) in diagnostics {
+            let file = &labels[index];
             let severity = paint(
                 if diagnostic.severity == "error" { "31" } else { "33" },
                 &diagnostic.severity,
@@ -132,22 +186,10 @@ pub fn run(args: &[String]) -> Result<i32> {
         }
         writeln!(
             output,
-            "\n{} files · {errors} errors · {warnings} warnings · {duration}ms",
+            "\n{} files · {errors} errors · {warnings} warnings · {fixed_count} fixes · {duration}ms",
             paths.len()
         )?;
+        output.flush()?;
     }
     Ok(i32::from(errors > 0 || u64::from(warnings) > options.max_warnings))
-}
-
-fn diagnostic_json(file: &str, diagnostic: &MarkdownLintDiagnostic) -> Value {
-    let mut value = json!({"file": file, "ruleId": diagnostic.rule_id, "severity": diagnostic.severity,
-        "message": diagnostic.message, "line": diagnostic.line, "column": diagnostic.column,
-        "endLine": diagnostic.end_line, "endColumn": diagnostic.end_column});
-    if let Some(language) = &diagnostic.language {
-        value["language"] = json!(language);
-    }
-    if let Some(suggestions) = &diagnostic.suggestions {
-        value["suggestions"] = json!(suggestions);
-    }
-    value
 }

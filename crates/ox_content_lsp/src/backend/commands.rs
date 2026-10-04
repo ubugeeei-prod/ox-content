@@ -189,7 +189,8 @@ pub(super) fn quickfix_actions(uri: &Url, diagnostics: &[Diagnostic]) -> Vec<Cod
         .iter()
         .filter_map(|diagnostic| {
             let edit = crate::spacing::fix_edit_from_diagnostic(diagnostic)
-                .or_else(|| crate::textlint::fix_edit_from_diagnostic(diagnostic))?;
+                .or_else(|| crate::textlint::fix_edit_from_diagnostic(diagnostic))
+                .or_else(|| crate::markdown_lint::fix_edit_from_diagnostic(diagnostic))?;
             let title = match diagnostic.source.as_deref() {
                 Some(crate::spacing::SOURCE) => "Fix half/full-width spacing",
                 Some("textlint") => "Apply textlint fix",

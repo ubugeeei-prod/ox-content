@@ -71,6 +71,9 @@ to update. `--extensions-only` and `--config-only` keep the two actions separate
 
 ## Markdown lint
 
+See [Markdown lint](./markdown-lint.md) for structural rules, opt-in prose rules,
+safe fixes, suppression comments, and parallel performance measurements.
+
 `oxct lint` discovers Markdown, MDC, and MDX files in the current directory. The
 native Rust engine checks headings, repeated words, punctuation, blank lines,
 and trailing whitespace in bounded batches. MDX syntax is masked when checking

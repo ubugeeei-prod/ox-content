@@ -167,6 +167,7 @@ module.exports.IncrementalMarkdownRenderer = binding.IncrementalMarkdownRenderer
 module.exports.prepareSource = binding.prepareSource;
 module.exports.prepareSourceRaw = binding.prepareSourceRaw;
 module.exports.stringifyFrontmatter = binding.stringifyFrontmatter;
+module.exports.fixMarkdown = binding.fixMarkdown;
 module.exports.lintMarkdown = binding.lintMarkdown;
 module.exports.lintMarkdownDocuments = binding.lintMarkdownDocuments;
 module.exports.render = binding.render;

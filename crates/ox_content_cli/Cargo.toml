@@ -20,6 +20,7 @@ name = "oxct"
 path = "src/main.rs"
 
 [dependencies]
+rayon = { workspace = true }
 ox_content_markdown_lint = { workspace = true }
 clap = { workspace = true }
 serde = { workspace = true }
