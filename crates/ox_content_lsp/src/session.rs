@@ -69,6 +69,7 @@ pub struct DiagnosticCache {
     pub mdc: Vec<Diagnostic>,
     pub links: Vec<Diagnostic>,
     pub spacing: Vec<Diagnostic>,
+    pub markdown_lint: Vec<Diagnostic>,
 }
 
 impl DiagnosticCache {

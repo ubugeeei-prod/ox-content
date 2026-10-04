@@ -1,9 +1,12 @@
 use napi_derive::napi;
+mod extensions;
+pub use extensions::*;
 use ox_content_markdown_lint::{
     MarkdownLintDiagnostic, MarkdownLintDictionaryOptions, MarkdownLintLanguageWords,
     MarkdownLintOptions, MarkdownLintResult, MarkdownLintRuleOptions,
     lint_markdown as lint_markdown_core, lint_markdown_documents as lint_markdown_documents_core,
 };
+use std::collections::HashMap;
 
 #[napi(object)]
 #[derive(Clone)]
@@ -48,6 +51,14 @@ pub struct JsMarkdownLintRuleOptions {
     pub repeated_words: Option<bool>,
     pub spellcheck: Option<bool>,
     pub trailing_spaces: Option<bool>,
+    pub empty_headings: Option<bool>,
+    pub first_heading_h1: Option<bool>,
+    pub single_h1: Option<bool>,
+    pub code_fence_language: Option<bool>,
+    pub code_fence_closed: Option<bool>,
+    pub empty_links: Option<bool>,
+    pub image_alt: Option<bool>,
+    pub final_newline: Option<bool>,
 }
 
 impl From<JsMarkdownLintRuleOptions> for MarkdownLintRuleOptions {
@@ -60,6 +71,14 @@ impl From<JsMarkdownLintRuleOptions> for MarkdownLintRuleOptions {
             repeated_words: value.repeated_words,
             spellcheck: value.spellcheck,
             trailing_spaces: value.trailing_spaces,
+            empty_headings: value.empty_headings,
+            first_heading_h1: value.first_heading_h1,
+            single_h1: value.single_h1,
+            code_fence_language: value.code_fence_language,
+            code_fence_closed: value.code_fence_closed,
+            empty_links: value.empty_links,
+            image_alt: value.image_alt,
+            final_newline: value.final_newline,
         }
     }
 }
@@ -72,16 +91,21 @@ pub struct JsMarkdownLintOptions {
     pub dictionary: Option<JsMarkdownLintDictionaryOptions>,
     /// Enable MDX-aware syntax masking while linting visible prose.
     pub mdx: Option<bool>,
+    pub text_rules: Option<JsMarkdownLintTextRules>,
+    pub severities: Option<HashMap<String, String>>,
 }
 
-impl From<JsMarkdownLintOptions> for MarkdownLintOptions {
-    fn from(value: JsMarkdownLintOptions) -> Self {
-        Self {
+impl TryFrom<JsMarkdownLintOptions> for MarkdownLintOptions {
+    type Error = napi::Error;
+    fn try_from(value: JsMarkdownLintOptions) -> napi::Result<Self> {
+        Ok(Self {
             languages: value.languages,
             rules: value.rules.map(Into::into),
             dictionary: value.dictionary.map(Into::into),
             mdx: value.mdx,
-        }
+            text_rules: value.text_rules.map(Into::into),
+            severities: value.severities.map(extensions::severities).transpose()?,
+        })
     }
 }
 
@@ -97,6 +121,7 @@ pub struct JsMarkdownLintDiagnostic {
     pub end_column: u32,
     pub language: Option<String>,
     pub suggestions: Option<Vec<String>>,
+    pub fix: Option<JsMarkdownLintFix>,
 }
 
 impl From<MarkdownLintDiagnostic> for JsMarkdownLintDiagnostic {
@@ -111,6 +136,7 @@ impl From<MarkdownLintDiagnostic> for JsMarkdownLintDiagnostic {
             end_column: value.end_column,
             language: value.language,
             suggestions: value.suggestions,
+            fix: value.fix.map(Into::into),
         }
     }
 }
@@ -140,17 +166,26 @@ impl From<MarkdownLintResult> for JsMarkdownLintResult {
 pub fn lint_markdown(
     source: String,
     options: Option<JsMarkdownLintOptions>,
-) -> JsMarkdownLintResult {
-    lint_markdown_core(&source, options.map(Into::into)).into()
+) -> napi::Result<JsMarkdownLintResult> {
+    Ok(lint_markdown_core(&source, options.map(TryInto::try_into).transpose()?).into())
 }
 
 #[napi(js_name = "lintMarkdownDocuments")]
 pub fn lint_markdown_documents(
     sources: Vec<String>,
     options: Option<JsMarkdownLintOptions>,
-) -> Vec<JsMarkdownLintResult> {
-    lint_markdown_documents_core(&sources, options.map(Into::into))
+) -> napi::Result<Vec<JsMarkdownLintResult>> {
+    Ok(lint_markdown_documents_core(&sources, options.map(TryInto::try_into).transpose()?)
         .into_iter()
         .map(Into::into)
-        .collect()
+        .collect())
+}
+
+#[napi(js_name = "fixMarkdown")]
+pub fn fix_markdown(
+    source: String,
+    options: Option<JsMarkdownLintOptions>,
+) -> napi::Result<JsMarkdownLintFixResult> {
+    Ok(ox_content_markdown_lint::fix_markdown(&source, options.map(TryInto::try_into).transpose()?)
+        .into())
 }

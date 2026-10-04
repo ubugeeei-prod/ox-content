@@ -2,42 +2,32 @@ use super::utils::*;
 use super::*;
 
 pub(super) fn collect_repeated_punctuation_diagnostics(
-    line_number: usize,
-    masked_line: &str,
-) -> Vec<MarkdownLintDiagnostic> {
-    let chars = masked_line.chars().collect::<Vec<_>>();
-    let mut diagnostics = Vec::new();
-    let mut index = 0;
-
-    while index + 1 < chars.len() {
-        let value = chars[index];
-        if !is_repeated_punctuation_char(value) || chars[index + 1] != value {
-            index += 1;
+    line: &str,
+    masked: &str,
+    offset: usize,
+    source: &super::source::Source<'_>,
+    output: &mut Vec<MarkdownLintDiagnostic>,
+) {
+    let mut chars = line.char_indices().zip(masked.chars()).peekable();
+    while let Some(((start, _), c)) = chars.next() {
+        if !is_repeated_punctuation_char(c) || chars.peek().is_none_or(|(_, next)| *next != c) {
             continue;
         }
-
-        let start = index;
-        let mut end = index + 1;
-        while end < chars.len() && chars[end] == value {
-            end += 1;
+        let mut end = start;
+        while let Some(((byte, original), next)) = chars.peek() {
+            if *next != c {
+                break;
+            }
+            end = *byte + original.len_utf8();
+            chars.next();
         }
-
-        diagnostics.push(create_diagnostic(
+        output.push(source.diagnostic(
             "repeated-punctuation",
-            format!(
-                "Repeated punctuation \"{}\" looks accidental.",
-                chars[start..end].iter().collect::<String>()
-            ),
-            line_number,
-            start + 1,
-            end + 1,
-            None,
-            None,
+            format!("Repeated punctuation \"{}\" looks accidental.", &line[start..end]),
+            offset + start,
+            offset + end,
         ));
-        index = end;
     }
-
-    diagnostics
 }
 
 pub(super) fn should_ignore_repeated_word_token(token: &Token) -> bool {
@@ -45,7 +35,11 @@ pub(super) fn should_ignore_repeated_word_token(token: &Token) -> bool {
         return count_code_points(&token.text) <= 1;
     }
 
-    normalize_comparable_word(&token.text).chars().count() <= 1
+    if token.text.is_ascii() {
+        token.text.len() <= 1
+    } else {
+        normalize_comparable_word(&token.text).chars().count() <= 1
+    }
 }
 
 pub(super) fn summarize_diagnostics(
@@ -98,5 +92,6 @@ pub(super) fn create_diagnostic(
         end_column: end_column as u32,
         language,
         suggestions,
+        fix: None,
     }
 }

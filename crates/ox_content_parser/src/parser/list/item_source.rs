@@ -100,7 +100,10 @@ impl<'a> Parser<'a> {
             return Ok(children);
         }
 
-        let paragraph_children = self.parse_inline_block(inline, content_offset)?;
+        let paragraph_children = self.parse_inline_block(
+            inline,
+            content_offset + inline.as_ptr().addr() - content.as_ptr().addr(),
+        )?;
         children.push(Node::Paragraph(self.allocator.boxed(Paragraph {
             children: paragraph_children,
             span: Span::new(content_offset as u32, item_end as u32),

@@ -8,15 +8,22 @@ use serde::Deserialize;
 use unicode_normalization::UnicodeNormalization;
 
 mod cjk;
+mod controls;
 mod diagnostics;
 mod dictionary;
+mod extensions;
+mod fixes;
 mod latin;
 mod mask;
-mod mdx_mask;
 mod options;
 mod patterns;
+mod prose;
+mod source;
 mod state;
+mod structure;
+mod syntax;
 mod tokens;
+mod types;
 mod utils;
 
 use diagnostics::*;
@@ -112,58 +119,8 @@ static PREPARED_LINT_DICTIONARY_DATA: LazyLock<PreparedLintDictionaryData> = Laz
     PreparedLintDictionaryData { global_words, by_language }
 });
 
-#[derive(Clone)]
-pub struct MarkdownLintLanguageWords {
-    pub language: String,
-    pub words: Vec<String>,
-}
-
-#[derive(Default, Clone)]
-pub struct MarkdownLintDictionaryOptions {
-    pub words: Option<Vec<String>>,
-    pub by_language: Option<Vec<MarkdownLintLanguageWords>>,
-    pub ignored_words: Option<Vec<String>>,
-}
-
-#[derive(Default, Clone)]
-pub struct MarkdownLintRuleOptions {
-    pub duplicate_headings: Option<bool>,
-    pub heading_increment: Option<bool>,
-    pub max_consecutive_blank_lines: Option<u32>,
-    pub repeated_punctuation: Option<bool>,
-    pub repeated_words: Option<bool>,
-    pub spellcheck: Option<bool>,
-    pub trailing_spaces: Option<bool>,
-}
-
-#[derive(Default, Clone)]
-pub struct MarkdownLintOptions {
-    pub languages: Option<Vec<String>>,
-    pub rules: Option<MarkdownLintRuleOptions>,
-    pub dictionary: Option<MarkdownLintDictionaryOptions>,
-    pub mdx: Option<bool>,
-}
-
-#[derive(Clone)]
-pub struct MarkdownLintDiagnostic {
-    pub rule_id: String,
-    pub severity: String,
-    pub message: String,
-    pub line: u32,
-    pub column: u32,
-    pub end_line: u32,
-    pub end_column: u32,
-    pub language: Option<String>,
-    pub suggestions: Option<Vec<String>>,
-}
-
-pub struct MarkdownLintResult {
-    pub diagnostics: Vec<MarkdownLintDiagnostic>,
-    pub error_count: u32,
-    pub warning_count: u32,
-    pub info_count: u32,
-    pub masked_document: String,
-}
+pub use extensions::*;
+pub use types::*;
 
 #[derive(Clone)]
 struct InternalMarkdownLintOptions {
@@ -171,6 +128,9 @@ struct InternalMarkdownLintOptions {
     languages: Vec<String>,
     mdx: bool,
     rules: InternalMarkdownLintRules,
+    text_rules: MarkdownLintTextRules,
+    severities: FxHashMap<String, MarkdownLintSeverity>,
+    terminology: Option<aho_corasick::AhoCorasick>,
 }
 
 #[derive(Clone, Default)]
@@ -189,8 +149,10 @@ struct InternalMarkdownLintRules {
     repeated_words: bool,
     spellcheck: bool,
     trailing_spaces: bool,
+    structure: MarkdownLintRuleOptions,
 }
 
+#[derive(Default)]
 struct DictionaryBundle {
     active_languages: FxHashSet<String>,
     cjk_segment_words: FxHashMap<String, Vec<SegmentWord>>,
@@ -204,35 +166,74 @@ struct DictionaryBundle {
 #[derive(Clone)]
 struct Token {
     end: usize,
-    language: String,
+    language: CompactString,
     start: usize,
-    text: String,
+    text: CompactString,
+}
+
+/// Reusable options and dictionaries, shared without locks across worker threads.
+pub struct MarkdownLinter {
+    options: InternalMarkdownLintOptions,
+    dictionary: DictionaryBundle,
+}
+
+impl MarkdownLinter {
+    pub fn new(options: Option<MarkdownLintOptions>) -> Self {
+        let options = normalize_lint_options(options);
+        let dictionary = if options.rules.spellcheck
+            || (options.rules.repeated_words
+                && options.languages.iter().any(|v| v == "ja" || v == "zh"))
+        {
+            create_dictionary_bundle(&options)
+        } else {
+            DictionaryBundle::default()
+        };
+        Self { options, dictionary }
+    }
+
+    pub fn lint(&self, source: &str) -> MarkdownLintResult {
+        self.run(source, true)
+    }
+
+    /// Don't allocate an external spellcheck mask for CLI/editor consumers.
+    pub fn lint_without_mask(&self, source: &str) -> MarkdownLintResult {
+        self.run(source, false)
+    }
+
+    fn run(&self, source: &str, include_mask: bool) -> MarkdownLintResult {
+        let state =
+            collect_markdown_lint_state(source, &self.options, &self.dictionary, include_mask);
+        summarize_diagnostics(sort_diagnostics(state.diagnostics), state.masked_document)
+    }
+
+    pub fn fix(&self, source: &str) -> MarkdownLintFixResult {
+        let result = self.lint_without_mask(source);
+        let (output, applied_fixes) = fixes::apply(source, &result.diagnostics);
+        let result = if applied_fixes == 0 { result } else { self.lint_without_mask(&output) };
+        MarkdownLintFixResult { output, applied_fixes, result }
+    }
 }
 
 pub fn lint_markdown(source: &str, options: Option<MarkdownLintOptions>) -> MarkdownLintResult {
-    let normalized_options = normalize_lint_options(options);
-    let dictionary = create_dictionary_bundle(&normalized_options);
-    let state = collect_markdown_lint_state(source, &normalized_options, &dictionary);
-    summarize_diagnostics(sort_diagnostics(state.diagnostics), state.masked_lines.join("\n"))
+    MarkdownLinter::new(options).lint(source)
 }
 
+pub fn fix_markdown(source: &str, options: Option<MarkdownLintOptions>) -> MarkdownLintFixResult {
+    MarkdownLinter::new(options).fix(source)
+}
+
+/// Uses Rayon workers and preserves input order regardless of scheduling.
 pub fn lint_markdown_documents(
     sources: &[String],
     options: Option<MarkdownLintOptions>,
 ) -> Vec<MarkdownLintResult> {
-    let normalized_options = normalize_lint_options(options);
-    let dictionary = create_dictionary_bundle(&normalized_options);
-
-    sources
-        .iter()
-        .map(|source| {
-            let state = collect_markdown_lint_state(source, &normalized_options, &dictionary);
-            summarize_diagnostics(
-                sort_diagnostics(state.diagnostics),
-                state.masked_lines.join("\n"),
-            )
-        })
-        .collect()
+    use rayon::prelude::*;
+    let linter = MarkdownLinter::new(options);
+    if sources.len() < 8 {
+        sources.iter().map(|source| linter.lint(source)).collect()
+    } else {
+        sources.par_iter().map(|source| linter.lint(source)).collect()
+    }
 }
 
 #[cfg(test)]

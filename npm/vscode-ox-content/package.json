@@ -90,6 +90,14 @@
           "default": true,
           "description": "Automatically refresh the Ox Content preview when the document changes."
         },
+        "oxContent.markdownLint.enabled": {
+          "type": [
+            "boolean",
+            "null"
+          ],
+          "default": null,
+          "markdownDescription": "Enable native Markdown lint diagnostics and quick fixes. When unset, use markdownLint in .ox-content.json."
+        },
         "oxContent.textlint.enabled": {
           "type": "boolean",
           "default": false,

@@ -13,6 +13,16 @@ pub(super) fn normalize_lint_options(
     let dictionary = options.dictionary.unwrap_or_default();
     let rules = options.rules.unwrap_or_default();
 
+    let mut text_rules = options.text_rules.unwrap_or_default();
+    if let Some(terms) = &mut text_rules.terminology {
+        terms.retain(|v| !v.term.is_empty() && v.term != v.replacement);
+    }
+    let terminology = text_rules
+        .terminology
+        .as_ref()
+        .filter(|v| !v.is_empty())
+        .and_then(|terms| aho_corasick::AhoCorasick::new(terms.iter().map(|v| &v.term)).ok());
+
     InternalMarkdownLintOptions {
         dictionary: InternalMarkdownLintDictionary {
             words: dictionary.words.unwrap_or_default(),
@@ -31,6 +41,14 @@ pub(super) fn normalize_lint_options(
             dedupe_strings(languages)
         },
         mdx: options.mdx.unwrap_or(false),
+        text_rules,
+        terminology,
+        severities: options
+            .severities
+            .unwrap_or_default()
+            .into_iter()
+            .map(|v| (v.rule_id, v.severity))
+            .collect(),
         rules: InternalMarkdownLintRules {
             duplicate_headings: rules.duplicate_headings.unwrap_or(true),
             heading_increment: rules.heading_increment.unwrap_or(true),
@@ -39,6 +57,7 @@ pub(super) fn normalize_lint_options(
             repeated_words: rules.repeated_words.unwrap_or(true),
             spellcheck: rules.spellcheck.unwrap_or(true),
             trailing_spaces: rules.trailing_spaces.unwrap_or(true),
+            structure: rules,
         },
     }
 }

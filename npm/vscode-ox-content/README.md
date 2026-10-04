@@ -34,6 +34,13 @@ between `oxContent.server.path` and the local-binary probe. CI and the
 integration test runner use it so they can point at a freshly built
 `target/release/ox-content-lsp` without writing per-workspace settings.
 
+## Native Markdown lint
+
+Add `markdownLint` options to `.ox-content.json` to enable Rust diagnostics and
+quick fixes. Prose rules are opt-in through `textRules`. Set
+`oxContent.markdownLint.enabled` explicitly to override workspace configuration.
+See the [Markdown lint guide](../../docs/content/markdown-lint.md) for rules and configuration.
+
 ## textlint
 
 Set `oxContent.textlint.enabled: true` to have the LSP run textlint for

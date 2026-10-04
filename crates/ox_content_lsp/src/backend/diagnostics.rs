@@ -224,6 +224,7 @@ pub(super) fn collect_markdown_diagnostics(
         next.mdc.clone_from(&cache.mdc);
         next.links.clone_from(&cache.links);
         next.spacing.clone_from(&cache.spacing);
+        next.markdown_lint.clone_from(&cache.markdown_lint);
     } else {
         if job.is_cancelled() {
             return None;
@@ -234,7 +235,11 @@ pub(super) fn collect_markdown_diagnostics(
             .and_then(|path| path.extension().and_then(|ext| ext.to_str()).map(str::to_string))
             .is_some_and(|ext| ext == "mdc");
         let mdx = uri.to_file_path().is_ok_and(|path| crate::document::is_mdx_path(&path));
-        next.parse = markdown_parse_diagnostics(document, frontmatter.block.as_ref(), mdx);
+        if let Some(lint) = &config.markdown_lint {
+            next.markdown_lint = crate::markdown_lint::diagnostics(document, lint, mdx);
+        } else {
+            next.parse = markdown_parse_diagnostics(document, frontmatter.block.as_ref(), mdx);
+        }
         if is_mdc {
             next.mdc = mdc_diagnostics(document);
         }
@@ -249,6 +254,7 @@ pub(super) fn collect_markdown_diagnostics(
 
     let mut diagnostics = next.frontmatter.clone();
     diagnostics.extend(next.parse.iter().cloned());
+    diagnostics.extend(next.markdown_lint.iter().cloned());
     diagnostics.extend(next.mdc.iter().cloned());
     diagnostics.extend(next.spacing.iter().cloned());
     diagnostics.extend(next.links.iter().cloned());

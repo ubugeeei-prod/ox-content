@@ -78,6 +78,7 @@ fn javascript_wrapper_and_declarations_cover_expected_exports() {
         "getSsgUrlPath",
         "isSafeRedirectDest",
         "lintCodeBlocks",
+        "fixMarkdown",
         "lintMarkdown",
         "lintMarkdownDocuments",
         "loadDictionaries",
