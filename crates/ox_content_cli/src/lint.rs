@@ -123,6 +123,7 @@ pub fn run(args: &[String]) -> Result<i32> {
         } else {
             results.extend(batch.iter().map(check));
         }
+        #[allow(clippy::iter_with_drain, reason = "Reuse result capacity across worker batches.")]
         for (index, (path, checked)) in batch.iter().zip(results.drain(..)).enumerate() {
             let (result, fixed) = checked.map_err(|error| format!("{path}: {error}"))?;
             errors += result.error_count;
