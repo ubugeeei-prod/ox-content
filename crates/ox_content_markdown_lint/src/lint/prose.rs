@@ -114,10 +114,7 @@ pub(super) fn collect(
                 );
                 value.suggestions = Some(vec![term.replacement.clone()]);
                 // Replacement must remain literal prose and cannot create Markdown syntax.
-                if !term.replacement.contains([
-                    '\n', '\r', '`', '[', ']', '*', '_', '<', '>', '{', '}', '\\', '#', '|', '!',
-                    '~',
-                ]) {
+                if safe_replacement(&term.replacement) {
                     value.fix = Some(MarkdownLintFix {
                         start: (start + matched.start()) as u32,
                         end: (start + matched.end()) as u32,
@@ -176,4 +173,26 @@ impl Sentence {
             ));
         }
     }
+}
+
+fn safe_replacement(text: &str) -> bool {
+    if text.is_empty()
+        || text.trim() != text
+        || text.contains([
+            '\n', '\r', '\t', '`', '[', ']', '*', '_', '<', '>', '{', '}', '\\', '#', '|', '!',
+            '~', '&',
+        ])
+    {
+        return false;
+    }
+    if text.chars().all(|c| matches!(c, '-' | '=' | ' ')) {
+        return false;
+    }
+    let after_digits = text.trim_start_matches(|c: char| c.is_ascii_digit());
+    if after_digits.len() < text.len()
+        && (after_digits.starts_with(". ") || after_digits.starts_with(") "))
+    {
+        return false;
+    }
+    !text.starts_with("- ") && !text.starts_with("+ ")
 }

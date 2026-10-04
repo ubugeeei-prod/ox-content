@@ -41,6 +41,7 @@ fn main() {
         std::env::var("LINT_BENCH_THREADS").ok().and_then(|s| s.parse().ok()).unwrap_or(1);
     let pool = rayon::ThreadPoolBuilder::new().num_threads(threads).build().unwrap();
     let source = format!("# Guide\n\n{}", "This is clear prose with a [visible link](https://example.com) and `code`.\nA second line completes the paragraph.\n\n".repeat(120));
+    let source = format!("{}\n", source.trim_end_matches('\n'));
     let sources = vec![source; 128];
     let options = MarkdownLintOptions {
         rules: Some(MarkdownLintRuleOptions { spellcheck: Some(false), ..Default::default() }),

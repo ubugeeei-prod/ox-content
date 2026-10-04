@@ -194,3 +194,24 @@ fn entities_and_code_whitespace_are_excluded_from_prose_rules() {
     let result = lint_markdown("Hello &amp; world.\n", None);
     assert!(result.diagnostics.is_empty(), "{result:?}");
 }
+
+#[test]
+fn inline_html_does_not_hide_visible_prose_or_create_structural_fixes() {
+    assert_eq!(ids("Text <span>with with</span>\n", options()), ["repeated-word"]);
+    for replacement in ["- item", "1. item", "---", "", "  prose", "prose  ", "&amp;"] {
+        let mut config = options();
+        config.text_rules = Some(MarkdownLintTextRules {
+            terminology: Some(vec![MarkdownLintTerm {
+                term: "Original".into(),
+                replacement: replacement.into(),
+            }]),
+            ..Default::default()
+        });
+        let fixed = fix_markdown("Original\n", Some(config));
+        assert_eq!(fixed.applied_fixes, 0, "{replacement}");
+        assert_eq!(fixed.output, "Original\n");
+    }
+    let fixed = fix_markdown("Prose.\n\n   \n", Some(options()));
+    assert_eq!(fixed.output, "Prose.\n\n");
+    assert!(fixed.result.diagnostics.is_empty());
+}

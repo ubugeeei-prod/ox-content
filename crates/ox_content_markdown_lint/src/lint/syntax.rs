@@ -192,7 +192,12 @@ impl<'a> Visit<'a> for Analyzer<'_, '_> {
     fn visit_html(&mut self, node: &Html<'a>) {
         let span = self.span(node.span);
         self.syntax.controls.collect(self.source, span);
-        self.syntax.skipped.push(span);
+        self.syntax.hidden.push(span);
+        let line = self.source.position(span.start as usize).0 - 1;
+        let prefix = &self.source.text[self.source.lines[line]..span.start as usize];
+        if prefix.trim().is_empty() {
+            self.syntax.skipped.push(span);
+        }
     }
 
     fn visit_definition(&mut self, node: &ox_content_ast::Definition<'a>) {
