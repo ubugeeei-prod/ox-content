@@ -99,7 +99,7 @@ Remaining errors or warnings above `--max-warnings` return exit code 1.
 
 Use HTML comments to suppress all rules or selected rule IDs:
 
-```md
+```text
 <!-- oxlint-disable-next-line sentence-length -->
 This deliberately long sentence is exempt.
 
