@@ -142,9 +142,9 @@ pub(super) fn language_contains_word(
 }
 
 pub(super) fn should_spellcheck_token(token: &Token, dictionary: &DictionaryBundle) -> bool {
-    let normalized = normalize_word_for_set(&token.text);
+    let normalized = normalize_word_for_lookup(&token.text);
 
-    if normalized.is_empty() || dictionary.ignored_words.contains(&normalized) {
+    if normalized.is_empty() || dictionary.ignored_words.contains(normalized.as_ref()) {
         return false;
     }
 
@@ -172,12 +172,16 @@ pub(super) fn should_spellcheck_token(token: &Token, dictionary: &DictionaryBund
         return count_code_points(&token.text) > 1;
     }
 
-    normalize_comparable_word(&token.text).chars().count() > 2
+    if token.text.is_ascii() {
+        token.text.bytes().filter(|byte| !matches!(byte, b'\'' | b'-')).count() > 2
+    } else {
+        normalize_comparable_word(&token.text).chars().count() > 2
+    }
 }
 
 pub(super) fn is_known_token(token: &Token, dictionary: &DictionaryBundle) -> bool {
-    let normalized = normalize_word_for_set(&token.text);
-    if normalized.is_empty() || dictionary.ignored_words.contains(&normalized) {
+    let normalized = normalize_word_for_lookup(&token.text);
+    if normalized.is_empty() || dictionary.ignored_words.contains(normalized.as_ref()) {
         return true;
     }
 
@@ -185,7 +189,7 @@ pub(super) fn is_known_token(token: &Token, dictionary: &DictionaryBundle) -> bo
         return language_contains_word(token.language.as_str(), &normalized, dictionary);
     }
 
-    dictionary.latin_words.contains(&normalized)
+    dictionary.latin_words.contains(normalized.as_ref())
 }
 
 pub(super) fn suggest_latin_words(word: &str, candidates: &[String]) -> Vec<String> {

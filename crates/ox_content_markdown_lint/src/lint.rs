@@ -126,6 +126,7 @@ pub use types::*;
 struct InternalMarkdownLintOptions {
     dictionary: InternalMarkdownLintDictionary,
     languages: Vec<String>,
+    latin_languages: Vec<String>,
     mdx: bool,
     rules: InternalMarkdownLintRules,
     text_rules: MarkdownLintTextRules,

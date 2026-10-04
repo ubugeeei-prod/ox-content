@@ -72,6 +72,18 @@ pub(super) fn normalize_word_for_set(word: &str) -> String {
     }
 }
 
+pub(super) fn normalize_word_for_lookup(word: &str) -> std::borrow::Cow<'_, str> {
+    if word.is_ascii() {
+        if word.bytes().any(|byte| byte.is_ascii_uppercase()) {
+            std::borrow::Cow::Owned(word.to_ascii_lowercase())
+        } else {
+            std::borrow::Cow::Borrowed(word)
+        }
+    } else {
+        std::borrow::Cow::Owned(normalize_word_for_set(word))
+    }
+}
+
 pub(super) fn normalize_latin_word(word: &str) -> String {
     word.nfc().flat_map(char::to_lowercase).collect()
 }

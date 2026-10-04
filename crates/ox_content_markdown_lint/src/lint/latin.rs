@@ -3,70 +3,44 @@ use super::utils::*;
 use super::*;
 
 pub(super) fn assign_latin_languages(
-    tokens: Vec<Token>,
+    tokens: &mut [Token],
     languages: &[String],
     dictionary: &DictionaryBundle,
     fallback_language: &str,
-) -> Vec<Token> {
+) {
     if languages.len() <= 1 {
-        return tokens;
+        return;
     }
     let mut scores =
-        languages.iter().map(|language| (language.clone(), 0_usize)).collect::<FxHashMap<_, _>>();
-
-    let matching_languages = tokens
-        .iter()
-        .map(|token| get_matching_latin_languages(&token.text, languages, dictionary))
-        .collect::<Vec<_>>();
-
-    for matches in &matching_languages {
-        if matches.len() == 1 {
-            let language = &matches[0];
-            *scores.entry(language.clone()).or_default() += 1;
+        languages.iter().map(|language| (language.as_str(), 0_usize)).collect::<FxHashMap<_, _>>();
+    for token in tokens.iter_mut() {
+        let normalized = normalize_word_for_lookup(&token.text);
+        let mut matching = languages
+            .iter()
+            .map(String::as_str)
+            .filter(|language| language_contains_word(language, &normalized, dictionary));
+        if let Some(first) = matching.next() {
+            if matching.next().is_none() {
+                *scores.entry(first).or_default() += 1;
+            }
+            token.language = CompactString::from(first);
+        } else {
+            token.language = CompactString::from(
+                infer_latin_language_from_characters(&token.text, languages).unwrap_or(""),
+            );
         }
     }
 
     let dominant_language = scores
         .into_iter()
         .max_by(|left, right| left.1.cmp(&right.1))
-        .map_or_else(|| fallback_language.to_string(), |(language, _)| language);
-
-    tokens
-        .into_iter()
-        .zip(matching_languages)
-        .map(|(token, matching_languages)| {
-            let inferred_language = matching_languages
-                .first()
-                .cloned()
-                .or_else(|| infer_latin_language_from_characters(&token.text, languages));
-
-            Token {
-                language: CompactString::from(
-                    inferred_language.as_deref().unwrap_or(&dominant_language),
-                ),
-                ..token
-            }
-        })
-        .collect()
+        .map_or(fallback_language, |(language, _)| language);
+    for token in tokens.iter_mut().filter(|token| token.language.is_empty()) {
+        token.language = CompactString::from(dominant_language);
+    }
 }
 
-fn get_matching_latin_languages(
-    word: &str,
-    languages: &[String],
-    dictionary: &DictionaryBundle,
-) -> Vec<String> {
-    let normalized_word = normalize_word_for_set(word);
-
-    languages
-        .iter()
-        .filter(|language| {
-            language_contains_word((*language).as_str(), &normalized_word, dictionary)
-        })
-        .cloned()
-        .collect()
-}
-
-fn infer_latin_language_from_characters(word: &str, languages: &[String]) -> Option<String> {
+fn infer_latin_language_from_characters(word: &str, languages: &[String]) -> Option<&'static str> {
     if languages.iter().any(|language| language == "pl")
         && word.chars().any(|value| {
             matches!(
@@ -91,13 +65,13 @@ fn infer_latin_language_from_characters(word: &str, languages: &[String]) -> Opt
             )
         })
     {
-        return Some("pl".to_string());
+        return Some("pl");
     }
 
     if languages.iter().any(|language| language == "de")
         && word.chars().any(|value| matches!(value, 'ä' | 'ö' | 'ü' | 'ß' | 'Ä' | 'Ö' | 'Ü'))
     {
-        return Some("de".to_string());
+        return Some("de");
     }
 
     if languages.iter().any(|language| language == "fr")
@@ -138,7 +112,7 @@ fn infer_latin_language_from_characters(word: &str, languages: &[String]) -> Opt
             )
         })
     {
-        return Some("fr".to_string());
+        return Some("fr");
     }
 
     None

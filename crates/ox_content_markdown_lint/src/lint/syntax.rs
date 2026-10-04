@@ -98,19 +98,42 @@ impl Syntax {
         result
     }
 
-    pub fn mask_line(&self, line: &str, offset: usize) -> String {
+    pub fn mask_line<'b>(&self, line: &'b str, offset: usize, buffer: &'b mut String) -> &'b str {
         let mut index = self.visible.partition_point(|span| span.end as usize <= offset);
-        let mut output = String::with_capacity(line.len());
-        for (byte, c) in line.char_indices() {
-            let position = offset + byte;
-            while self.visible.get(index).is_some_and(|span| span.end as usize <= position) {
-                index += 1;
-            }
-            let visible =
-                self.visible.get(index).is_some_and(|span| span.start as usize <= position);
-            output.push(if visible || c.is_whitespace() { c } else { ' ' });
+        let end = offset + line.len();
+        if self
+            .visible
+            .get(index)
+            .is_some_and(|span| span.start as usize <= offset && span.end as usize >= end)
+        {
+            return line;
         }
-        output
+        buffer.clear();
+        let mut cursor = offset;
+        while let Some(span) = self.visible.get(index).filter(|span| (span.start as usize) < end) {
+            let start = (span.start as usize).max(cursor);
+            let visible_end = (span.end as usize).min(end);
+            if visible_end <= cursor {
+                index += 1;
+                continue;
+            }
+            if start > cursor {
+                buffer.extend(
+                    line[cursor - offset..start - offset]
+                        .chars()
+                        .map(|c| if c.is_whitespace() { c } else { ' ' }),
+                );
+            }
+            buffer.push_str(&line[start - offset..visible_end - offset]);
+            cursor = visible_end;
+            index += 1;
+        }
+        if cursor < end {
+            buffer.extend(
+                line[cursor - offset..].chars().map(|c| if c.is_whitespace() { c } else { ' ' }),
+            );
+        }
+        buffer
     }
 
     pub fn skipped_at(&self, offset: usize) -> bool {
@@ -193,7 +216,7 @@ impl<'a> Visit<'a> for Analyzer<'_, '_> {
         let span = self.span(node.span);
         self.syntax.controls.collect(self.source, span);
         self.syntax.hidden.push(span);
-        let line = self.source.position(span.start as usize).0 - 1;
+        let line = self.source.line_index(span.start as usize);
         let prefix = &self.source.text[self.source.lines[line]..span.start as usize];
         if prefix.trim().is_empty() {
             self.syntax.skipped.push(span);

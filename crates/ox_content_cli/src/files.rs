@@ -30,17 +30,22 @@ pub fn slash(path: &Path) -> String {
 }
 
 pub fn relative(path: &Path, base: &Path) -> PathBuf {
-    let path_parts: Vec<_> = path.components().collect();
-    let base_parts: Vec<_> = base.components().collect();
-    let common = path_parts.iter().zip(&base_parts).take_while(|(a, b)| a == b).count();
-    if common == 0 {
+    let mut path_parts = path.components().peekable();
+    let mut base_parts = base.components().peekable();
+    let mut common = false;
+    while path_parts.peek().is_some() && path_parts.peek() == base_parts.peek() {
+        common = true;
+        path_parts.next();
+        base_parts.next();
+    }
+    if !common {
         return path.to_path_buf();
     }
     let mut result = PathBuf::new();
-    for _ in common..base_parts.len() {
+    for _ in base_parts {
         result.push("..");
     }
-    for part in &path_parts[common..] {
+    for part in path_parts {
         result.push(part);
     }
     result

@@ -148,9 +148,14 @@ CLI workers read and lint files in parallel using Rayon, with batches of at most
 CPUs. Workers share prepared dictionaries and terminology matchers. No worker
 writes stdout: the coordinator sorts diagnostics and serializes borrowed data
 through a 64 KiB buffer. Short word tokens use inline string storage.
+Line masks and token vectors reuse per-document storage, and fully visible lines
+borrow source text directly. UTF-16 position indexes are built only when a
+diagnostic needs columns. Single-file and one-thread runs skip worker-pool startup;
+JSON diagnostics serialize directly without an intermediate reference array.
 
 The Native CLI workflow measures base/head medians on identical input, allocation
 counts and allocated bytes, plus serial/eight-thread CLI wall time including
-file discovery, reads, process startup, and JSON output. Raw measurements are
+file discovery, reads, process startup, and clean/8192-diagnostic JSON output.
+Base/head result hashes and serial/parallel reports must match. Raw measurements are
 published as the `markdown-lint-performance` artifact. Timing and allocation
 instrumentation run separately; results include seven warm repetitions.

@@ -40,7 +40,17 @@ fn main() {
     let threads =
         std::env::var("LINT_BENCH_THREADS").ok().and_then(|s| s.parse().ok()).unwrap_or(1);
     let pool = rayon::ThreadPoolBuilder::new().num_threads(threads).build().unwrap();
-    let source = format!("# Guide\n\n{}", "This is clear prose with a [visible link](https://example.com) and `code`.\nA second line completes the paragraph.\n\n".repeat(120));
+    let corpus = std::env::var("LINT_BENCH_CORPUS").unwrap_or_else(|_| "english".into());
+    let paragraph = match corpus.as_str() {
+        "english" => {
+            "This is clear prose with a [visible link](https://example.com) and `code`.\nA second line completes the paragraph.\n\n"
+        }
+        "japanese" => {
+            "この文書では、文章の構造と[設定方法](https://example.com)を説明します。`code` は検査から除外します。\n改行後も同じ段落の文章として扱い、表示される文字を確認します。\n\n"
+        }
+        _ => panic!("Unknown benchmark corpus: {corpus}"),
+    };
+    let source = format!("# Guide\n\n{}", paragraph.repeat(120));
     let source = format!("{}\n", source.trim_end_matches('\n'));
     let sources = vec![source; 128];
     let options = MarkdownLintOptions {
@@ -67,7 +77,7 @@ fn main() {
     COUNTING.store(false, Ordering::Relaxed);
     black_box(results);
     let bytes: usize = sources.iter().map(String::len).sum();
-    let result = serde_json::json!({ "threads": threads, "documents": sources.len(), "sourceBytes": bytes,
+    let result = serde_json::json!({ "corpus": corpus, "threads": threads, "documents": sources.len(), "sourceBytes": bytes,
         "medianMs": elapsed[3] * 1000.0, "mibPerSecond": bytes as f64 / 1_048_576.0 / elapsed[3],
         "allocations": ALLOCATIONS.load(Ordering::Relaxed), "allocatedBytes": BYTES.load(Ordering::Relaxed) });
     println!("{result}");

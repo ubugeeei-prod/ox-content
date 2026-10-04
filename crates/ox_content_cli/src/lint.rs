@@ -71,7 +71,7 @@ pub fn run(args: &[String]) -> Result<i32> {
     }
     let mut stdin = String::new();
     if options.stdin {
-        std::io::stdin().read_to_string(&mut stdin)?;
+        std::io::stdin().lock().read_to_string(&mut stdin)?;
     }
     let cwd = std::env::current_dir()?;
     let labels: Vec<_> = paths
@@ -96,36 +96,35 @@ pub fn run(args: &[String]) -> Result<i32> {
         .then(|| {
             MarkdownLinter::new(Some(config.native(options.spellcheck, true, options.strict)))
         });
-    let mut builder = rayon::ThreadPoolBuilder::new();
-    if let Some(threads) = options.threads {
-        builder = builder.num_threads(usize::from(threads));
-    }
-    let pool = builder.build()?;
+    let pool = if paths.len() > 1 && options.threads != Some(1) {
+        let mut builder = rayon::ThreadPoolBuilder::new();
+        if let Some(threads) = options.threads {
+            builder = builder.num_threads(usize::from(threads));
+        }
+        Some(builder.build()?)
+    } else {
+        None
+    };
+    let check = |path: &String| {
+        let linter =
+            if Path::new(path).extension().is_some_and(|ext| ext.eq_ignore_ascii_case("mdx")) {
+                mdx.as_ref().unwrap_or(&markdown)
+            } else {
+                &markdown
+            };
+        worker::check(path, options.stdin.then_some(stdin.as_str()), linter, options.fix)
+            .map_err(|error| error.to_string())
+    };
+    let mut results = Vec::new();
     // Sources live only inside workers; keep diagnostic memory bounded by batches.
     for (batch_index, batch) in paths.chunks(128).enumerate() {
-        let results: Vec<_> = pool.install(|| {
-            batch
-                .par_iter()
-                .map(|path| {
-                    let linter = if Path::new(path)
-                        .extension()
-                        .is_some_and(|ext| ext.eq_ignore_ascii_case("mdx"))
-                    {
-                        mdx.as_ref().unwrap_or(&markdown)
-                    } else {
-                        &markdown
-                    };
-                    worker::check(
-                        path,
-                        options.stdin.then_some(stdin.as_str()),
-                        linter,
-                        options.fix,
-                    )
-                    .map_err(|error| error.to_string())
-                })
-                .collect()
-        });
-        for (index, (path, checked)) in batch.iter().zip(results).enumerate() {
+        if let Some(pool) = &pool {
+            pool.install(|| batch.par_iter().map(check).collect_into_vec(&mut results));
+        } else {
+            results.extend(batch.iter().map(check));
+        }
+        #[allow(clippy::iter_with_drain, reason = "Reuse result capacity across worker batches.")]
+        for (index, (path, checked)) in batch.iter().zip(results.drain(..)).enumerate() {
             let (result, fixed) = checked.map_err(|error| format!("{path}: {error}"))?;
             errors += result.error_count;
             warnings += result.warning_count;
@@ -151,13 +150,7 @@ pub fn run(args: &[String]) -> Result<i32> {
             warning_count: warnings,
             fixed_count,
             duration_ms: duration,
-            diagnostics: diagnostics
-                .iter()
-                .map(|(index, diagnostic)| report::FileDiagnostic {
-                    file: &labels[*index],
-                    diagnostic,
-                })
-                .collect(),
+            diagnostics: report::Diagnostics { entries: &diagnostics, labels: &labels },
         };
         let mut output = BufWriter::with_capacity(64 * 1024, std::io::stdout().lock());
         serde_json::to_writer_pretty(&mut output, &report)?;
@@ -167,14 +160,12 @@ pub fn run(args: &[String]) -> Result<i32> {
         let color = !options.no_color
             && std::io::stdout().is_terminal()
             && std::env::var_os("NO_COLOR").is_none();
-        let paint = |code, text: &str| {
-            if color { format!("\x1b[{code}m{text}\x1b[0m") } else { text.to_string() }
-        };
         let mut output = BufWriter::with_capacity(64 * 1024, std::io::stdout().lock());
-        writeln!(output, "{}", paint("1;36", "◆ Ox Content · Markdown lint"))?;
+        writeln!(output, "{}", paint(color, "1;36", "◆ Ox Content · Markdown lint"))?;
         for (index, diagnostic) in diagnostics {
             let file = &labels[index];
             let severity = paint(
+                color,
                 if diagnostic.severity == "error" { "31" } else { "33" },
                 &diagnostic.severity,
             );
@@ -192,4 +183,12 @@ pub fn run(args: &[String]) -> Result<i32> {
         output.flush()?;
     }
     Ok(i32::from(errors > 0 || u64::from(warnings) > options.max_warnings))
+}
+
+fn paint<'a>(color: bool, code: &str, text: &'a str) -> std::borrow::Cow<'a, str> {
+    if color {
+        std::borrow::Cow::Owned(format!("\x1b[{code}m{text}\x1b[0m"))
+    } else {
+        std::borrow::Cow::Borrowed(text)
+    }
 }

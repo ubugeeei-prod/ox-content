@@ -41,7 +41,7 @@ impl Controls {
                 }
             };
             self.directives.push(Directive {
-                line: source.position(span.start as usize + end + 3).0,
+                line: source.line_index(span.start as usize + end + 3) + 1,
                 action,
                 rules: arguments
                     .split([',', ' ', '\t', '\n', '\r'])
