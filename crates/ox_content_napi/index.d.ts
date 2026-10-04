@@ -3422,6 +3422,9 @@ export declare function resolveSsgPageRoutes(pages: Array<JsSsgRoutePageInput>, 
 /** Resolves all output and public route paths for an SSG page. */
 export declare function resolveSsgRoutePaths(inputPath: string, srcDir: string, outDir: string, base: string, extension: string, siteUrl?: string | undefined | null): JsSsgRoutePaths
 
+/** Run native authoring commands using the same implementation as the Rust binary. */
+export declare function runAuthoringCli(args: Array<string>, editorAssets: string): number
+
 export declare function runLspStdio(): void
 
 /** Sanitize an HTML string with safe defaults or an explicit allow-list. */

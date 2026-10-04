@@ -87,6 +87,7 @@ renderSsgSectionIndex
 resolveSsgNavigationGroups
 resolveSsgPageRoutes
 resolveSsgRoutePaths
+runAuthoringCli
 runLspStdio
 sanitizeHtml
 searchIndex

@@ -1,0 +1,10 @@
+---
+title: Welcome
+description: Your first post.
+date: 2026-01-01
+tags: [welcome]
+---
+
+# Welcome
+
+This is your first post. Make it your own.

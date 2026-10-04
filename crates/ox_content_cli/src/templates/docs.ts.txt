@@ -1,0 +1,15 @@
+import { defineConfig } from "__OX_VITE__";
+import { oxContent } from "@ox-content/vite-plugin";
+import skin from "@ox-content/theme-__OX_SKIN__";
+import palette from "@ox-content/theme-color-__OX_PALETTE__";
+
+export default defineConfig({
+  plugins: [oxContent({
+    srcDir: "content",
+    outDir: "dist",
+    ssg: {
+      siteName: "__OX_NAME__",
+      theme: [skin, palette, { nav: [{ text: "Home", link: "/" }, { text: "Guide", link: "/guide" }], footer: { copyright: "__OX_NAME__" } }],
+    },
+  })],
+});

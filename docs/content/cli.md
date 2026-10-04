@@ -8,6 +8,19 @@ description: Native Markdown linting and content authoring tools.
 Run the standalone CLI with `vpx oxct`, including outside an existing project.
 The Vite plugin also includes the `oxct` binary for installed projects.
 
+Project creation, IDE setup, Markdown linting, and the terminal viewer are
+implemented in Rust. npm launchers call the same native implementation through
+the bundled NAPI package, so no separate Rust installation is required.
+Vite configuration loading and JavaScript validation hooks run in the Node.js
+integration layer.
+
+From a source checkout, the authoring commands can also run directly:
+
+```sh
+cargo run -p ox_content_cli --bin oxct -- lint
+cargo run -p ox_content_cli --bin oxct -- new my-docs --yes --no-install
+```
+
 ```bash
 vpx oxct new
 vpx oxct ide install

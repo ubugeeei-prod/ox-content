@@ -1,0 +1,10 @@
+---
+title: "__OX_NAME__"
+description: Welcome to your Ox Content site.
+---
+
+# __OX_NAME__
+
+Your content, beautifully rendered.
+
+[Read the guide](./guide.md)

@@ -1,0 +1,39 @@
+[package]
+name = "ox_content_cli"
+version.workspace = true
+authors.workspace = true
+categories.workspace = true
+edition.workspace = true
+homepage.workspace = true
+keywords.workspace = true
+license.workspace = true
+repository.workspace = true
+rust-version.workspace = true
+description = "Native authoring CLI for Ox Content"
+publish = false
+
+[lints]
+workspace = true
+
+[[bin]]
+name = "oxct"
+path = "src/main.rs"
+
+[dependencies]
+ox_content_markdown_lint = { workspace = true }
+clap = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+globset = "0.4"
+walkdir = "2.5"
+crossterm = "0.29"
+dialoguer = { version = "0.12", default-features = false }
+jsonc-parser = { version = "0.32.4", features = ["cst", "serde"] }
+pulldown-cmark = { version = "0.13", default-features = false }
+unicode-width = "0.2"
+unicode-segmentation = "1.12"
+percent-encoding = "2.3"
+tempfile = "3"
+
+[target.'cfg(unix)'.dependencies]
+signal-hook = "0.3"

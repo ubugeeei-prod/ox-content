@@ -4,7 +4,6 @@ import { tmpdir } from "node:os";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { afterEach, describe, expect, it } from "vite-plus/test";
-import { createProject } from "../../npm/vite-plugin-ox-content/bin/oxct-new.mjs";
 
 const repository = resolve(dirname(fileURLToPath(import.meta.url)), "../..");
 const dirs = [];
@@ -18,7 +17,26 @@ describe("generated Ox Content projects", () => {
       async (template) => {
         const root = await mkdtemp(join(tmpdir(), "oxct-build-"));
         dirs.push(root);
-        await createProject(root, { template, manager, skin: "editorial", palette: "nord" });
+        const generated = spawnSync(
+          process.execPath,
+          [
+            join(repository, "npm/vite-plugin-ox-content/bin/oxct.mjs"),
+            "new",
+            root,
+            "--template",
+            template,
+            "--package-manager",
+            manager,
+            "--skin",
+            "editorial",
+            "--palette",
+            "nord",
+            "--yes",
+            "--no-install",
+          ],
+          { encoding: "utf8" },
+        );
+        expect(generated.status, generated.stderr + generated.stdout).toBe(0);
         // Use this exact PR's built packages, rather than an older registry release.
         const links = {
           "@ox-content/vite-plugin": "npm/vite-plugin-ox-content",

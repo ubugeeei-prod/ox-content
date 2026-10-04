@@ -1,0 +1,9 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Ox Content</title>
+  </head>
+  <body><!-- Ox Content generates the static pages. --></body>
+</html>
