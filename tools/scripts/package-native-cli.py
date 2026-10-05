@@ -70,7 +70,8 @@ with tempfile.TemporaryDirectory(prefix="ox-native-cli-") as temporary:
             destination.write_bytes(packed)
             destination.chmod(mode)
     runner = installed / binary.name
-    assert subprocess.check_output([str(runner), "--version"], text=True).strip() == version
+    installed_version = subprocess.check_output([str(runner), "--version"], text=True).strip()
+    assert installed_version == version
     environment = os.environ.copy()
     environment["XDG_DATA_HOME"] = str(installed / "ide-data")
     subprocess.run([str(runner), "ide", "install", "--ide", "neovim", "--extensions-only", "--yes"],
