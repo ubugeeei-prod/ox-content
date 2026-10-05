@@ -14,6 +14,9 @@ concurrency:
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
+  native-cli-packages:
+    uses: ./.github/workflows/build-release-cli.yml
+
   native-cli:
     name: Native CLI - ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
@@ -34,6 +37,9 @@ jobs:
 
       - name: Test Rust authoring commands
         run: cargo test --locked -p ox_content_cli
+
+      - name: Verify native markdownlint rules
+        run: cargo test --locked -p ox_content_markdown_lint --test markdownlint
 
       - name: Build Rust launcher
         run: cargo build --locked -p ox_content_cli --bin oxct
@@ -56,6 +62,17 @@ jobs:
       - name: Cache Cargo
         uses: Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6 # v2
 
+      - name: Setup Vite+
+        uses: voidzero-dev/setup-vp@3754dd7dbdb32bd8f6d28b6043de13ad3a75f21f # v1.21.1
+        with:
+          run-install: false
+
+      - name: Verify expectations against pinned markdownlint
+        run: |
+          mkdir -p "$RUNNER_TEMP/markdownlint-reference"
+          vp exec -- pnpm --dir "$RUNNER_TEMP/markdownlint-reference" add markdownlint@0.41.1 --ignore-scripts
+          vp node tools/scripts/verify-markdownlint.mjs "$RUNNER_TEMP/markdownlint-reference/node_modules/markdownlint/lib/exports-sync.mjs"
+
       - name: Benchmark base and head on the same corpus
         env:
           BASE_SHA: ${{ github.event.pull_request.base.sha || github.event.before }}
@@ -73,12 +90,20 @@ jobs:
           LINT_BENCH_CORPUS=japanese LINT_BENCH_THREADS=1 cargo bench --locked -p ox_content_markdown_lint --bench throughput > lint-perf/japanese-head-1.json
           LINT_BENCH_CORPUS=japanese LINT_BENCH_THREADS=8 cargo bench --locked -p ox_content_markdown_lint --bench throughput > lint-perf/japanese-head-8.json
 
+      - name: Measure all 53 native markdownlint rules
+        run: |
+          LINT_BENCH_PROFILE=markdownlint LINT_BENCH_THREADS=1 cargo bench --locked -p ox_content_markdown_lint --bench throughput > lint-perf/markdownlint-1.json
+          LINT_BENCH_PROFILE=markdownlint LINT_BENCH_THREADS=8 cargo bench --locked -p ox_content_markdown_lint --bench throughput > lint-perf/markdownlint-8.json
+          LINT_BENCH_PROFILE=markdownlint LINT_BENCH_CORPUS=japanese LINT_BENCH_THREADS=1 cargo bench --locked -p ox_content_markdown_lint --bench throughput > lint-perf/markdownlint-japanese-1.json
+          LINT_BENCH_PROFILE=markdownlint LINT_BENCH_CORPUS=japanese LINT_BENCH_THREADS=8 cargo bench --locked -p ox_content_markdown_lint --bench throughput > lint-perf/markdownlint-japanese-8.json
+
       - name: Measure CLI including file reads and stdout
         run: |
           cargo build --locked --release --manifest-path /tmp/ox-lint-base/Cargo.toml -p ox_content_cli --bin oxct
           python3 tools/scripts/benchmark-markdown-lint.py /tmp/ox-lint-base/target/release/oxct > lint-perf/cli-base.json
           cargo build --locked --release -p ox_content_cli --bin oxct
           python3 tools/scripts/benchmark-markdown-lint.py target/release/oxct > lint-perf/cli.json
+          python3 tools/scripts/benchmark-markdown-lint.py target/release/oxct markdownlint > lint-perf/cli-markdownlint.json
           python3 tools/scripts/report-lint-benchmark.py lint-perf >> "$GITHUB_STEP_SUMMARY"
 
       - name: Upload lint performance evidence

@@ -1,0 +1,49 @@
+name: Build native CLI packages
+
+on:
+  workflow_call:
+
+permissions:
+  contents: read
+
+jobs:
+  native-cli-package:
+    name: Native CLI package - ${{ matrix.target }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-22.04
+            target: x86_64-unknown-linux-gnu
+            binary: oxct
+          - os: macos-15-intel
+            target: x86_64-apple-darwin
+            binary: oxct
+          - os: macos-latest
+            target: aarch64-apple-darwin
+            binary: oxct
+          - os: windows-2025
+            target: x86_64-pc-windows-msvc
+            binary: oxct.exe
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@89b12181fb390509a0842a86cc55eeb8eb928c1d # stable
+        with:
+          targets: ${{ matrix.target }}
+      - name: Cache Cargo
+        uses: Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6 # v2
+      - name: Build standalone runner
+        run: cargo build --locked --release -p ox_content_cli --bin oxct --target ${{ matrix.target }}
+      - name: Verify, package and checksum native runner
+        shell: bash
+        run: python3 tools/scripts/package-native-cli.py "target/${{ matrix.target }}/release/${{ matrix.binary }}" "${{ matrix.target }}"
+      - name: Upload native package
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: native-cli-${{ matrix.target }}
+          path: dist/native/*
+          if-no-files-found: error

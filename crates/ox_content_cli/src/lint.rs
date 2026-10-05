@@ -18,6 +18,15 @@ struct Options {
     paths: Vec<String>,
     #[arg(long)]
     config: Option<String>,
+    /// Enable the native markdownlint profile alongside an Ox Content config.
+    #[arg(long, conflicts_with = "no_markdownlint")]
+    markdownlint: bool,
+    #[arg(long)]
+    no_markdownlint: bool,
+    #[arg(long)]
+    list_rules: bool,
+    #[arg(long)]
+    no_inline_config: bool,
     #[arg(long)]
     ignore: Vec<String>,
     #[arg(long, default_value = "text", value_parser = ["text", "json"])]
@@ -45,15 +54,34 @@ pub fn run(args: &[String]) -> Result<i32> {
     let mut options = Options::try_parse_from(
         std::iter::once("oxct lint".to_string()).chain(args.iter().cloned()),
     )?;
-    let discovered =
-        [".oxlint.json", "oxlint.json"].into_iter().find(|path| Path::new(path).is_file());
-    let config = options
+    if options.list_rules {
+        return report::rules(&options.format);
+    }
+    let discovered = [
+        ".oxlint.json",
+        "oxlint.json",
+        ".markdownlint.json",
+        ".markdownlint.jsonc",
+        ".markdownlint.yaml",
+        ".markdownlint.yml",
+    ]
+    .into_iter()
+    .find(|path| Path::new(path).is_file());
+    let mut config = options
         .config
         .as_deref()
         .or(discovered)
         .map(config::Config::read)
         .transpose()?
         .unwrap_or_default();
+    config.inline_disabled |= options.no_inline_config;
+    if options.markdownlint {
+        if config.markdownlint.as_ref().is_none_or(|value| value.0 == false) {
+            config.markdownlint = Some(Default::default());
+        }
+    } else if options.no_markdownlint {
+        config.markdownlint = None;
+    }
     if options.paths.is_empty() {
         options.paths.clone_from(&config.include);
     }
@@ -61,10 +89,14 @@ pub fn run(args: &[String]) -> Result<i32> {
     let paths = if options.stdin {
         vec![options.stdin_filepath.clone()]
     } else {
-        files::discover(&options.paths, &options.ignore)?
-            .iter()
-            .map(|path| files::slash(path))
-            .collect()
+        files::discover_with_ignore_file(
+            &options.paths,
+            &options.ignore,
+            Path::new(".markdownlintignore"),
+        )?
+        .iter()
+        .map(|path| files::slash(path))
+        .collect()
     };
     if paths.is_empty() {
         return Err("No Markdown files matched. Check the paths and ignore patterns.".into());

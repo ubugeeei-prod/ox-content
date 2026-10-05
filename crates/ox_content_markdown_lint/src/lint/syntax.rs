@@ -21,10 +21,15 @@ pub(super) struct Syntax {
     urls: Vec<Span>,
     pub diagnostics: Vec<MarkdownLintDiagnostic>,
     pub controls: Controls,
+    pub markdownlint: Option<super::markdownlint::Document>,
 }
 
 impl Syntax {
-    pub fn analyze(source: &Source<'_>, options: &InternalMarkdownLintOptions) -> Self {
+    pub fn analyze(
+        source: &Source<'_>,
+        options: &InternalMarkdownLintOptions,
+        include_mask: bool,
+    ) -> Self {
         let base = frontmatter_end(source.text);
         let allocator = Allocator::for_source_len(source.text.len() - base);
         let mut parser_options = ParserOptions::gfm();
@@ -38,6 +43,7 @@ impl Syntax {
             urls: Vec::new(),
             diagnostics: Vec::new(),
             controls: Controls::default(),
+            markdownlint: None,
         };
         if base > 0 {
             result.skipped.push(Span::new(0, base as u32));
@@ -45,8 +51,21 @@ impl Syntax {
         match Parser::with_options(&allocator, &source.text[base..], parser_options).parse() {
             Ok(document) => {
                 let structure = Structure::new(source, &options.rules);
-                Analyzer { base: base as u32, source, syntax: &mut result, structure }
-                    .visit_document(&document);
+                let mut markdownlint =
+                    options.markdownlint.as_ref().map(|_| super::markdownlint::Document::default());
+                Analyzer {
+                    base: base as u32,
+                    source,
+                    syntax: &mut result,
+                    structure,
+                    markdownlint: markdownlint.as_mut(),
+                    visible: include_mask || options.needs_visible_prose(),
+                }
+                .visit_document(&document);
+                if let Some(index) = markdownlint.as_mut() {
+                    index.finish(source.text);
+                }
+                result.markdownlint = markdownlint;
             }
             Err(error) => {
                 let span = error.span();
@@ -147,6 +166,8 @@ struct Analyzer<'r, 's> {
     source: &'r Source<'s>,
     syntax: &'r mut Syntax,
     structure: Structure<'r, 's>,
+    markdownlint: Option<&'r mut super::markdownlint::Document>,
+    visible: bool,
 }
 
 impl Analyzer<'_, '_> {
@@ -156,7 +177,16 @@ impl Analyzer<'_, '_> {
 }
 
 impl<'a> Visit<'a> for Analyzer<'_, '_> {
+    fn visit_node(&mut self, node: &ox_content_ast::Node<'a>) {
+        if let Some(index) = self.markdownlint.as_mut() {
+            index.record(node, self.base, self.source.text);
+        }
+        walk::walk_node(self, node);
+    }
     fn visit_text(&mut self, node: &Text<'a>) {
+        if !self.visible {
+            return;
+        }
         let span = self.span(node.span);
         let Some(raw) = self.source.text.get(span.start as usize..span.end as usize) else {
             return;
@@ -191,18 +221,24 @@ impl<'a> Visit<'a> for Analyzer<'_, '_> {
     }
 
     fn visit_paragraph(&mut self, node: &Paragraph<'a>) {
-        self.syntax.blocks.push(self.span(node.span));
+        if self.visible {
+            self.syntax.blocks.push(self.span(node.span));
+        }
         walk::walk_paragraph(self, node);
     }
 
     fn visit_table_cell(&mut self, node: &TableCell<'a>) {
-        self.syntax.blocks.push(self.span(node.span));
+        if self.visible {
+            self.syntax.blocks.push(self.span(node.span));
+        }
         walk::walk_table_cell(self, node);
     }
 
     fn visit_heading(&mut self, node: &Heading<'a>) {
         self.structure.heading(node, self.span(node.span), &mut self.syntax.diagnostics);
-        self.syntax.blocks.push(self.span(node.span));
+        if self.visible {
+            self.syntax.blocks.push(self.span(node.span));
+        }
         walk::walk_heading(self, node);
     }
 
@@ -247,6 +283,10 @@ impl<'a> Visit<'a> for Analyzer<'_, '_> {
     }
     fn visit_link(&mut self, node: &Link<'a>) {
         self.structure.link(node, self.span(node.span), &mut self.syntax.diagnostics);
+        if !self.visible {
+            walk::walk_link(self, node);
+            return;
+        }
         let span = self.span(node.span);
         let raw = &self.source.text[span.start as usize..span.end as usize];
         if raw.strip_prefix('[').is_some_and(|label| {

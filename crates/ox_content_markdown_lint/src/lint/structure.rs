@@ -33,6 +33,15 @@ impl<'r, 's> Structure<'r, 's> {
         span: Span,
         output: &mut Vec<MarkdownLintDiagnostic>,
     ) {
+        let rules = &self.rules.structure;
+        if !self.rules.duplicate_headings
+            && !self.rules.heading_increment
+            && !rules.empty_headings.unwrap_or(true)
+            && !rules.first_heading_h1.unwrap_or(false)
+            && !rules.single_h1.unwrap_or(false)
+        {
+            return;
+        }
         let mut label = Label(super::CompactString::default());
         label.visit_heading(node);
         let label = normalize_latin_word(&super::collapse_whitespace(&label.0));
@@ -86,6 +95,11 @@ impl<'r, 's> Structure<'r, 's> {
     }
 
     pub fn code(&self, node: &CodeBlock<'_>, span: Span, output: &mut Vec<MarkdownLintDiagnostic>) {
+        if !self.rules.structure.code_fence_language.unwrap_or(false)
+            && !self.rules.structure.code_fence_closed.unwrap_or(true)
+        {
+            return;
+        }
         let raw = &self.source.text[span.start as usize..span.end as usize];
         let mut lines = raw.lines();
         let opening_line = lines.next().unwrap_or("");

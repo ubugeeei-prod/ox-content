@@ -54,3 +54,14 @@ export const STRUCTURE_DEFAULTS = {
   imageAlt: false,
   finalNewline: false,
 } as const;
+
+/** Native markdownlint 0.41.1 rules, aliases and tags. */
+export interface MarkdownlintConfig {
+  $schema?: string;
+  default?: boolean;
+  [ruleOrTag: string]:
+    | boolean
+    | string
+    | { enabled?: boolean; severity?: "error" | "warning"; [parameter: string]: unknown }
+    | undefined;
+}

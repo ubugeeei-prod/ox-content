@@ -1,7 +1,7 @@
 //! Same corpus/API on base and head; isolated allocation instrumentation.
 #![allow(unsafe_code, clippy::print_stdout, clippy::cast_precision_loss)]
 use ox_content_markdown_lint::{
-    MarkdownLintOptions, MarkdownLintRuleOptions, lint_markdown_documents,
+    MarkdownLintOptions, MarkdownLintRuleOptions, MarkdownLinter, lint_markdown_documents,
 };
 use std::{
     alloc::{GlobalAlloc, Layout, System},
@@ -50,6 +50,16 @@ fn main() {
         }
         _ => panic!("Unknown benchmark corpus: {corpus}"),
     };
+    let profile = std::env::var("LINT_BENCH_PROFILE").unwrap_or_else(|_| "legacy".into());
+    let paragraph = if profile == "markdownlint" {
+        if corpus == "japanese" {
+            "この文書では、[設定方法](https://example.com)を説明します。\n`code` は検査から除外し、次の段落まで文章を確認します。\n\n"
+        } else {
+            "A [visible link](https://example.com) and `code` complete this paragraph.\nA second line contains clear prose.\n\n"
+        }
+    } else {
+        paragraph
+    };
     let source = format!("# Guide\n\n{}", paragraph.repeat(120));
     let source = format!("{}\n", source.trim_end_matches('\n'));
     let sources = vec![source; 128];
@@ -57,8 +67,24 @@ fn main() {
         rules: Some(MarkdownLintRuleOptions { spellcheck: Some(false), ..Default::default() }),
         ..Default::default()
     };
-    let run =
-        || pool.install(|| lint_markdown_documents(black_box(&sources), Some(options.clone())));
+    let native = (profile == "markdownlint").then(|| {
+        MarkdownLinter::new(Some(
+            serde_json::from_value(serde_json::json!({"markdownlint":{}})).unwrap(),
+        ))
+    });
+    let run = || {
+        pool.install(|| {
+            if let Some(linter) = &native {
+                use rayon::prelude::*;
+                sources
+                    .par_iter()
+                    .map(|source| linter.lint_without_mask(black_box(source)))
+                    .collect()
+            } else {
+                lint_markdown_documents(black_box(&sources), Some(options.clone()))
+            }
+        })
+    };
     drop(run()); // warm dictionaries, regex caches, parser, workers
     let mut elapsed = Vec::new();
     for _ in 0..7 {
@@ -77,7 +103,7 @@ fn main() {
     COUNTING.store(false, Ordering::Relaxed);
     black_box(results);
     let bytes: usize = sources.iter().map(String::len).sum();
-    let result = serde_json::json!({ "corpus": corpus, "threads": threads, "documents": sources.len(), "sourceBytes": bytes,
+    let result = serde_json::json!({ "corpus": corpus, "profile": profile, "threads": threads, "documents": sources.len(), "sourceBytes": bytes,
         "medianMs": elapsed[3] * 1000.0, "mibPerSecond": bytes as f64 / 1_048_576.0 / elapsed[3],
         "allocations": ALLOCATIONS.load(Ordering::Relaxed), "allocatedBytes": BYTES.load(Ordering::Relaxed) });
     println!("{result}");

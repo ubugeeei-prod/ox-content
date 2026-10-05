@@ -971,6 +971,7 @@ export type {
   MarkdownLintFix,
   MarkdownLintFixResult,
   MarkdownLintTextRules,
+  MarkdownlintConfig,
   MarkdownLintDictionaryOptions,
   MarkdownLintLanguage,
   MarkdownLintOptions,

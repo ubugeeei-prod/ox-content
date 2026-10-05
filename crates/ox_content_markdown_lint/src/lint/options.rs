@@ -1,5 +1,18 @@
 use super::*;
 
+impl InternalMarkdownLintOptions {
+    pub fn needs_visible_prose(&self) -> bool {
+        self.rules.repeated_punctuation
+            || self.rules.repeated_words
+            || self.rules.spellcheck
+            || self.text_rules.sentence_length.is_some()
+            || self.text_rules.max_ten.is_some()
+            || self.text_rules.no_todo.unwrap_or(false)
+            || self.text_rules.no_exclamation_question_mark.unwrap_or(false)
+            || self.terminology.is_some()
+    }
+}
+
 pub(super) fn normalize_lint_options(
     options: Option<MarkdownLintOptions>,
 ) -> InternalMarkdownLintOptions {
@@ -21,7 +34,24 @@ pub(super) fn normalize_lint_options(
         .cloned()
         .collect();
     let dictionary = options.dictionary.unwrap_or_default();
-    let rules = options.rules.unwrap_or_default();
+    let mut rules = options.rules.unwrap_or_default();
+    let markdownlint = options.markdownlint.as_ref().filter(|v| v.0 != false).map(|config| {
+        let mut settings = super::markdownlint::Settings::new(config);
+        settings.inline_config = !options.no_inline_config.unwrap_or(false);
+        settings
+    });
+    if markdownlint.is_some() {
+        rules.duplicate_headings = Some(false);
+        rules.heading_increment = Some(false);
+        rules.trailing_spaces = Some(false);
+        rules.max_consecutive_blank_lines = Some(u32::MAX);
+        rules.repeated_punctuation.get_or_insert(false);
+        rules.repeated_words.get_or_insert(false);
+        rules.spellcheck.get_or_insert(false);
+        rules.empty_headings.get_or_insert(false);
+        rules.code_fence_closed.get_or_insert(false);
+        rules.empty_links.get_or_insert(false);
+    }
 
     let mut text_rules = options.text_rules.unwrap_or_default();
     if let Some(terms) = &mut text_rules.terminology {
@@ -51,6 +81,7 @@ pub(super) fn normalize_lint_options(
         mdx: options.mdx.unwrap_or(false),
         text_rules,
         terminology,
+        markdownlint,
         severities: options
             .severities
             .unwrap_or_default()
