@@ -3,11 +3,13 @@ import gzip
 import hashlib
 import io
 import json
+import os
 import pathlib
 import re
 import subprocess
 import sys
 import tarfile
+import tempfile
 import zipfile
 
 root = pathlib.Path(__file__).resolve().parents[2]
@@ -31,6 +33,9 @@ files = [(binary.name, binary.read_bytes(), 0o755),
          ("LICENSE", (root / "LICENSE").read_bytes(), 0o644),
          ("markdownlint-LICENSE", (root / "crates/ox_content_markdown_lint/markdownlint-LICENSE").read_bytes(), 0o644),
          ("README.md", b"# Ox Content native CLI\n\nRun `./oxct lint . --threads 8` (Windows: `oxct.exe`).\nUse `oxct lint --help` or `oxct lint --list-rules` for options.\nDocumentation: https://github.com/ubugeeei-prod/ox-content/tree/main/docs\n", 0o644)]
+plugin = root / "editors/neovim"
+files.extend((f"neovim/{path.relative_to(plugin).as_posix()}", path.read_bytes(), 0o644)
+             for path in sorted(plugin.rglob("*")) if path.is_file())
 output = root / "dist/native"
 output.mkdir(parents=True, exist_ok=True)
 name = f"oxct-v{version}-{target}"
@@ -51,6 +56,27 @@ else:
                 entry.mode = mode
                 entry.size = len(content)
                 package.addfile(entry, io.BytesIO(content))
+
+# Verify the actual archive contents in an isolated installation.
+with tempfile.TemporaryDirectory(prefix="ox-native-cli-") as temporary:
+    installed = pathlib.Path(temporary)
+    with (zipfile.ZipFile(archive) if binary.suffix == ".exe" else tarfile.open(archive)) as package:
+        for filename, content, mode in files:
+            packed = (package.read(filename) if binary.suffix == ".exe"
+                      else package.extractfile(filename).read())
+            assert packed == content, filename
+            destination = installed / filename
+            destination.parent.mkdir(parents=True, exist_ok=True)
+            destination.write_bytes(packed)
+            destination.chmod(mode)
+    runner = installed / binary.name
+    assert subprocess.check_output([str(runner), "--version"], text=True).strip() == version
+    environment = os.environ.copy()
+    environment["XDG_DATA_HOME"] = str(installed / "ide-data")
+    subprocess.run([str(runner), "ide", "install", "--ide", "neovim", "--extensions-only", "--yes"],
+                   cwd=installed, env=environment, check=True, capture_output=True)
+    copied = installed / "ide-data/nvim/site/pack/ox-content/start/ox-content/plugin/ox-content.lua"
+    assert copied.read_bytes() == (plugin / "plugin/ox-content.lua").read_bytes()
 digest = hashlib.sha256(archive.read_bytes()).hexdigest()
 archive.with_suffix(archive.suffix + ".sha256").write_text(f"{digest}  {archive.name}\n")
 print(f"Verified 53 rules and packaged {archive.name} ({archive.stat().st_size} bytes)")
