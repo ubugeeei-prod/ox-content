@@ -12,15 +12,26 @@ pub(super) fn collect_markdown_lint_state(
     include_mask: bool,
 ) -> MarkdownLintState {
     let source = Source::new(source);
-    let mut syntax = Syntax::analyze(&source, options);
+    let mut syntax = Syntax::analyze(&source, options, include_mask);
     let mut diagnostics = std::mem::take(&mut syntax.diagnostics);
+    if let (Some(document), Some(settings)) = (&syntax.markdownlint, &options.markdownlint) {
+        markdownlint::collect(&source, document, settings, &mut diagnostics);
+    }
     let mut masked_document =
         if include_mask { String::with_capacity(source.text.len()) } else { String::new() };
     let mut blank_streak = 0_u32;
     let mut offset = 0;
     let mut mask_buffer = String::new();
     let mut tokens = Vec::new();
-    for (index, raw) in source.text.split_inclusive('\n').enumerate() {
+    let line_checks = options.rules.trailing_spaces
+        || options.rules.max_consecutive_blank_lines != u32::MAX
+        || options.rules.repeated_punctuation
+        || options.rules.repeated_words
+        || options.rules.spellcheck
+        || include_mask;
+    for (index, raw) in
+        source.text.split_inclusive('\n').enumerate().take(if line_checks { usize::MAX } else { 0 })
+    {
         let line = raw.strip_suffix('\n').unwrap_or(raw);
         let line = line.strip_suffix('\r').unwrap_or(line);
         let line_number = index + 1;
@@ -77,7 +88,12 @@ pub(super) fn collect_markdown_lint_state(
         } else {
             blank_streak = 0;
         }
-        if skipped && !include_mask {
+        if (skipped
+            || !(options.rules.repeated_punctuation
+                || options.rules.repeated_words
+                || options.rules.spellcheck))
+            && !include_mask
+        {
             offset += raw.len();
             continue;
         }

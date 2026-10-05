@@ -25,6 +25,8 @@ ox_content_markdown_lint = { workspace = true }
 clap = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }
+serde_yaml = { workspace = true }
+ignore = "0.4"
 globset = "0.4"
 walkdir = "2.5"
 crossterm = "0.29"

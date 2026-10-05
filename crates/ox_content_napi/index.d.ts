@@ -1586,6 +1586,8 @@ export interface JsMarkdownLintLanguageWords {
 }
 
 export interface JsMarkdownLintOptions {
+  markdownlint?: boolean | Record<string, unknown>
+  noInlineConfig?: boolean
   languages?: Array<string>
   rules?: JsMarkdownLintRuleOptions
   dictionary?: JsMarkdownLintDictionaryOptions

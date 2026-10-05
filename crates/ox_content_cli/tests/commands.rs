@@ -29,7 +29,7 @@ fn native_lint_discovers_globs_and_respects_config() {
     fs::write(root.path().join("b.md"), "# Heading\n\nClean prose.\n").unwrap();
     fs::create_dir(root.path().join("node_modules")).unwrap();
     fs::write(root.path().join("node_modules/ignored.md"), "# Heading\n### Jump\n").unwrap();
-    let result = run(root.path(), &["lint", "--format", "json"], None);
+    let result = run(root.path(), &["lint", "--no-markdownlint", "--format", "json"], None);
     assert_eq!(result.status.code(), Some(1));
     let report: Value = serde_json::from_slice(&result.stdout).unwrap();
     assert_eq!(report["checkedFileCount"], 2);
@@ -50,6 +50,7 @@ fn native_lint_discovers_globs_and_respects_config() {
         &[
             "lint",
             "--stdin",
+            "--no-markdownlint",
             "--stdin-filepath",
             "input.mdx",
             "--format",

@@ -1094,6 +1094,22 @@ dependencies = [
 ]
 
 [[package]]
+name = "ignore"
+version = "0.4.33"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "00b69833ed729dc5aa7d19541d96d6cf8e9137194207a04916d658e43168402f"
+dependencies = [
+ "crossbeam-deque",
+ "globset",
+ "log",
+ "memchr",
+ "regex-automata",
+ "same-file",
+ "walkdir",
+ "winapi-util",
+]
+
+[[package]]
 name = "indexmap"
 version = "2.14.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1492,6 +1508,7 @@ dependencies = [
  "crossterm",
  "dialoguer",
  "globset",
+ "ignore",
  "jsonc-parser",
  "ox_content_markdown_lint",
  "percent-encoding",
@@ -1499,6 +1516,7 @@ dependencies = [
  "rayon",
  "serde",
  "serde_json",
+ "serde_yaml",
  "signal-hook",
  "tempfile",
  "unicode-segmentation",
@@ -1718,6 +1736,7 @@ dependencies = [
  "serde",
  "serde_json",
  "unicode-normalization",
+ "unicode-width 0.2.2",
 ]
 
 [[package]]

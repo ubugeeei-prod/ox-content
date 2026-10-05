@@ -60,12 +60,41 @@ fn glob(patterns: &[String]) -> Result<GlobSet> {
 }
 
 pub fn discover(paths: &[String], ignore: &[String]) -> Result<Vec<PathBuf>> {
+    discover_with_ignore_file(paths, ignore, Path::new(""))
+}
+
+pub fn discover_with_ignore_file(
+    paths: &[String],
+    ignore: &[String],
+    ignore_file: &Path,
+) -> Result<Vec<PathBuf>> {
     let cwd = std::env::current_dir()?;
     let ignored = glob(ignore)?;
+    let mut builder = ignore::gitignore::GitignoreBuilder::new(&cwd);
+    if ignore_file.is_file()
+        && let Some(error) = builder.add(ignore_file)
+    {
+        return Err(error.into());
+    }
+    let gitignored = builder.build()?;
     let defaults = vec![".".to_string()];
     let mut found = BTreeSet::new();
     for input in if paths.is_empty() { &defaults } else { paths } {
         let path = absolute(Path::new(input))?;
+        if path.is_file() {
+            if !ignored.is_match(&path)
+                && !ignored.is_match(path.strip_prefix(&cwd).unwrap_or(&path))
+                && !gitignored.matched_path_or_any_parents(&path, false).is_ignore()
+                && !path.components().any(|component| {
+                    ["node_modules", ".git", "dist", "target"]
+                        .iter()
+                        .any(|name| component.as_os_str() == *name)
+                })
+            {
+                found.insert(path);
+            }
+            continue;
+        }
         let pattern = if path.is_dir() { path.join(MARKDOWN_GLOB) } else { path.clone() };
         let matcher = glob(&[slash(&pattern)])?;
         let mut root = PathBuf::new();
@@ -85,6 +114,9 @@ pub fn discover(paths: &[String], ignore: &[String]) -> Result<Vec<PathBuf>> {
                 && !ignored.is_match(entry.path())
                 && !ignored
                     .is_match(entry.path().strip_prefix(&cwd).unwrap_or_else(|_| entry.path()))
+                && !gitignored
+                    .matched_path_or_any_parents(entry.path(), entry.file_type().is_dir())
+                    .is_ignore()
         }) {
             let entry = entry?;
             if (entry.file_type().is_file()

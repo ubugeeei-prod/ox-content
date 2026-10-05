@@ -20,6 +20,7 @@ async function fixture() {
   await fs.writeFile(resolve(root, "b.md"), "# Other\n\nClean prose.\n");
   await fs.mkdir(resolve(root, "node_modules"));
   await fs.writeFile(resolve(root, "node_modules/ignored.md"), "# Ignore\n### Jump\n");
+  await fs.writeFile(resolve(root, ".oxlint.json"), "{}");
   return root;
 }
 
@@ -57,7 +58,16 @@ describe("oxct lint", () => {
   });
   it("lints stdin, infers MDX, and permits an explicit warning budget", () => {
     const result = run(
-      ["--stdin", "--stdin-filepath", "input.mdx", "--format", "json", "--max-warnings", "10"],
+      [
+        "--stdin",
+        "--no-markdownlint",
+        "--stdin-filepath",
+        "input.mdx",
+        "--format",
+        "json",
+        "--max-warnings",
+        "10",
+      ],
       undefined,
       "export const x = 1;\n\n# Heading\n\nA repeated repeated word.\n",
     );

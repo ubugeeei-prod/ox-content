@@ -50,3 +50,17 @@ if baseline.exists():
 # Allow runner noise, but catch meaningful throughput or allocation regressions.
 assert serial["medianMs"] <= base["medianMs"] * 1.25, "serial lint throughput regressed by more than 25%"
 assert serial["allocations"] <= base["allocations"], "lint allocation count regressed"
+
+if (root / "markdownlint-1.json").exists():
+    print("\n## All 53 native markdownlint rules\n")
+    print("Prepared configuration, no prose masks, median of seven warm runs.\n")
+    print("| Corpus | Threads | Source bytes | Median ms | MiB/s | Allocations | Allocated bytes |")
+    print("| --- | ---: | ---: | ---: | ---: | ---: | ---: |")
+    for name in ("markdownlint-1", "markdownlint-8", "markdownlint-japanese-1", "markdownlint-japanese-8"):
+        row = json.loads((root / f"{name}.json").read_text())
+        print(f'| {row["corpus"]} | {row["threads"]} | {row["sourceBytes"]} | {row["medianMs"]:.2f} | {row["mibPerSecond"]:.2f} | {row["allocations"]} | {row["allocatedBytes"]} |')
+    cli = json.loads((root / "cli-markdownlint.json").read_text())
+    print("\nNative runner, 1024 files, including discovery, reads, startup and JSON stdout:\n")
+    for label, case in (("Clean", cli), ("2048 diagnostics", cli["diagnosticOutput"])):
+        for row in case["runs"]:
+            print(f'- {label}, {row["threads"]} threads: {row["medianMs"]:.2f} ms ({case["outputBytes"]} JSON bytes)')

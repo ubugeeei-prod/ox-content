@@ -86,6 +86,9 @@ impl From<JsMarkdownLintRuleOptions> for MarkdownLintRuleOptions {
 #[napi(object)]
 #[derive(Default, Clone)]
 pub struct JsMarkdownLintOptions {
+    #[napi(ts_type = "boolean | Record<string, unknown>")]
+    pub markdownlint: Option<serde_json::Value>,
+    pub no_inline_config: Option<bool>,
     pub languages: Option<Vec<String>>,
     pub rules: Option<JsMarkdownLintRuleOptions>,
     pub dictionary: Option<JsMarkdownLintDictionaryOptions>,
@@ -99,6 +102,12 @@ impl TryFrom<JsMarkdownLintOptions> for MarkdownLintOptions {
     type Error = napi::Error;
     fn try_from(value: JsMarkdownLintOptions) -> napi::Result<Self> {
         Ok(Self {
+            no_inline_config: value.no_inline_config,
+            markdownlint: value.markdownlint.map(serde_json::from_value).transpose().map_err(
+                |error| {
+                    napi::Error::from_reason(format!("Invalid markdownlint configuration: {error}"))
+                },
+            )?,
             languages: value.languages,
             rules: value.rules.map(Into::into),
             dictionary: value.dictionary.map(Into::into),

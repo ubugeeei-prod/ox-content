@@ -2,6 +2,36 @@ import { describe, expect, it } from "vite-plus/test";
 import { fixMarkdown, lintMarkdown, lintMarkdownAsync, lintMarkdownDocumentsAsync } from "./lint";
 
 describe("native Markdown lint quality", () => {
+  it("forwards the markdownlint profile without enabling prose rules", () => {
+    const source = "#  Title!\n\nTODO with with!!\n";
+    expect(lintMarkdown(source, { markdownlint: true }).diagnostics.map((d) => d.ruleId)).toEqual([
+      "MD019",
+      "MD026",
+    ]);
+    expect(lintMarkdown(source, { markdownlint: { default: false } }).diagnostics).toEqual([]);
+    expect(
+      lintMarkdown(source, {
+        markdownlint: { default: false },
+        textRules: { noTodo: true },
+      }).diagnostics.map((d) => d.ruleId),
+    ).toEqual(["no-todo"]);
+  });
+  it("forwards markdownlint directives, configuration severity and safe fixes", () => {
+    const source = "<!-- markdownlint-disable MD009 -->\ntext \n";
+    const options = { markdownlint: { default: false, MD009: "warning" as const } };
+    expect(lintMarkdown(source, options).diagnostics).toEqual([]);
+    const report = lintMarkdown(source, { ...options, noInlineConfig: true });
+    expect(report.diagnostics.map((d) => [d.ruleId, d.severity, d.line])).toEqual([
+      ["MD009", "warning", 2],
+    ]);
+    expect(report.warningCount).toBe(1);
+    const fixed = fixMarkdown("😀 Text   \r\nnext.\r\n\r\n\r\nEnd", {
+      markdownlint: { default: false, MD009: true, MD012: true, MD047: true },
+    });
+    expect(fixed.output).toBe("😀 Text  \r\nnext.\r\n\r\nEnd\r\n");
+    expect(fixed.appliedFixes).toBe(3);
+    expect(fixed.result.diagnostics).toEqual([]);
+  });
   it("checks Setext and formatted heading text", () => {
     expect(
       lintMarkdown("Title\n=====\n\n# **Title**\n", {

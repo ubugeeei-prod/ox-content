@@ -54,10 +54,11 @@ fn parallel_fix_discovers_prose_config_preserves_permissions_and_is_idempotent()
 fn diagnostic_order_is_identical_for_one_and_four_threads() {
     let root = tempfile::tempdir().unwrap();
     for index in 0..24 {
-        fs::write(root.path().join(format!("{index:02}.md")), "# Guide\n\nwith with\n").unwrap();
+        fs::write(root.path().join(format!("{index:02}.md")), "#  Guide!\n\n[link]()\n").unwrap();
     }
     let mut a = report(&run(root.path(), &["lint", "--threads", "1", "--format", "json"]));
     let mut b = report(&run(root.path(), &["lint", "--threads", "4", "--format", "json"]));
+    assert!(a["diagnostics"].as_array().unwrap().len() >= 72);
     a.as_object_mut().unwrap().remove("durationMs");
     b.as_object_mut().unwrap().remove("durationMs");
     assert_eq!(a, b);

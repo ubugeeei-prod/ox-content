@@ -12,6 +12,7 @@ export type {
   MarkdownLintFix,
   MarkdownLintFixResult,
   MarkdownLintTextRules,
+  MarkdownlintConfig,
 } from "./lint-extensions";
 
 const require = createRequire(import.meta.url);
@@ -163,6 +164,9 @@ export interface MarkdownLintRuleOptions extends MarkdownLintStructureRules {
  * Options for linting Markdown documents.
  */
 export interface MarkdownLintOptions {
+  /** Opt in to the native markdownlint profile. CLI lint enables it by default. */
+  markdownlint?: boolean | import("./lint-extensions").MarkdownlintConfig;
+  noInlineConfig?: boolean;
   /**
    * Languages enabled for spellchecking.
    *
@@ -280,6 +284,8 @@ interface NormalizedStandardDictionaryOptions {
 }
 
 interface InternalNormalizedMarkdownLintOptions {
+  markdownlint?: MarkdownLintOptions["markdownlint"];
+  noInlineConfig?: boolean;
   dictionary: Omit<MarkdownLintDictionaryOptions, "standard"> & {
     standard: NormalizedStandardDictionaryOptions | false;
   };
@@ -296,6 +302,8 @@ interface NapiMarkdownLintLanguageWords {
 }
 
 interface NapiMarkdownLintOptions {
+  markdownlint?: MarkdownLintOptions["markdownlint"];
+  noInlineConfig?: boolean;
   dictionary?: {
     byLanguage?: NapiMarkdownLintLanguageWords[];
     ignoredWords?: string[];
@@ -473,6 +481,8 @@ function toNapiMarkdownLintOptions(
   );
 
   return {
+    markdownlint: options.markdownlint,
+    noInlineConfig: options.noInlineConfig,
     dictionary: {
       byLanguage,
       ignoredWords: options.dictionary.ignoredWords,
@@ -515,7 +525,26 @@ function normalizeLintOptions(options: MarkdownLintOptions): InternalNormalizedM
 
   const standard = normalizeStandardDictionaryOptions(options.dictionary?.standard, languages);
 
+  const profile = options.markdownlint !== undefined && options.markdownlint !== false;
+  const defaults = profile
+    ? {
+        ...DEFAULT_RULES,
+        duplicateHeadings: false,
+        headingIncrement: false,
+        trailingSpaces: false,
+        maxConsecutiveBlankLines: 4294967295,
+        repeatedPunctuation: false,
+        repeatedWords: false,
+        spellcheck: false,
+        emptyHeadings: false,
+        codeFenceClosed: false,
+        emptyLinks: false,
+      }
+    : DEFAULT_RULES;
+
   return {
+    markdownlint: options.markdownlint,
+    noInlineConfig: options.noInlineConfig,
     dictionary: {
       ...options.dictionary,
       standard,
@@ -525,16 +554,16 @@ function normalizeLintOptions(options: MarkdownLintOptions): InternalNormalizedM
     textRules: options.textRules,
     severities: options.severities,
     rules: {
-      ...STRUCTURE_DEFAULTS,
+      ...defaults,
       ...options.rules,
-      duplicateHeadings: options.rules?.duplicateHeadings ?? DEFAULT_RULES.duplicateHeadings,
-      headingIncrement: options.rules?.headingIncrement ?? DEFAULT_RULES.headingIncrement,
+      duplicateHeadings: options.rules?.duplicateHeadings ?? defaults.duplicateHeadings,
+      headingIncrement: options.rules?.headingIncrement ?? defaults.headingIncrement,
       maxConsecutiveBlankLines:
-        options.rules?.maxConsecutiveBlankLines ?? DEFAULT_RULES.maxConsecutiveBlankLines,
-      repeatedPunctuation: options.rules?.repeatedPunctuation ?? DEFAULT_RULES.repeatedPunctuation,
-      repeatedWords: options.rules?.repeatedWords ?? DEFAULT_RULES.repeatedWords,
-      spellcheck: options.rules?.spellcheck ?? DEFAULT_RULES.spellcheck,
-      trailingSpaces: options.rules?.trailingSpaces ?? DEFAULT_RULES.trailingSpaces,
+        options.rules?.maxConsecutiveBlankLines ?? defaults.maxConsecutiveBlankLines,
+      repeatedPunctuation: options.rules?.repeatedPunctuation ?? defaults.repeatedPunctuation,
+      repeatedWords: options.rules?.repeatedWords ?? defaults.repeatedWords,
+      spellcheck: options.rules?.spellcheck ?? defaults.spellcheck,
+      trailingSpaces: options.rules?.trailingSpaces ?? defaults.trailingSpaces,
     },
   };
 }

@@ -1,0 +1,346 @@
+{
+  "MD001": {
+    "enabled": { "type": "boolean", "default": true },
+    "severity": { "type": "string", "enum": ["error", "warning"], "default": "error" },
+    "front_matter_title": { "type": "string", "default": "^\\s*title\\s*[:=]" }
+  },
+  "MD003": {
+    "enabled": { "type": "boolean", "default": true },
+    "severity": { "type": "string", "enum": ["error", "warning"], "default": "error" },
+    "style": {
+      "type": "string",
+      "enum": [
+        "consistent",
+        "atx",
+        "atx_closed",
+        "setext",
+        "setext_with_atx",
+        "setext_with_atx_closed"
+      ],
+      "default": "consistent"
+    }
+  },
+  "MD004": {
+    "enabled": { "type": "boolean", "default": true },
+    "severity": { "type": "string", "enum": ["error", "warning"], "default": "error" },
+    "style": {
+      "type": "string",
+      "enum": ["consistent", "asterisk", "plus", "dash", "sublist"],
+      "default": "consistent"
+    }
+  },
+  "MD005": {
+    "enabled": { "type": "boolean", "default": true },
+    "severity": { "type": "string", "enum": ["error", "warning"], "default": "error" }
+  },
+  "MD007": {
+    "enabled": { "type": "boolean", "default": true },
+    "severity": { "type": "string", "enum": ["error", "warning"], "default": "error" },
+    "indent": { "type": "integer", "minimum": 1, "default": 2 },
+    "start_indented": { "type": "boolean", "default": false },
+    "start_indent": { "type": "integer", "minimum": 1, "default": 2 }
+  },
+  "MD009": {
+    "enabled": { "type": "boolean", "default": true },
+    "severity": { "type": "string", "enum": ["error", "warning"], "default": "error" },
+    "br_spaces": { "type": "integer", "minimum": 0, "default": 2 },
+    "code_blocks": { "type": "boolean", "default": false },
+    "list_item_empty_lines": { "type": "boolean", "default": false },
+    "strict": { "type": "boolean", "default": false }
+  },
+  "MD010": {
+    "enabled": { "type": "boolean", "default": true },
+    "severity": { "type": "string", "enum": ["error", "warning"], "default": "error" },
+    "code_blocks": { "type": "boolean", "default": true },
+    "ignore_code_languages": { "type": "array", "items": { "type": "string" }, "default": [] },
+    "spaces_per_tab": { "type": "integer", "minimum": 0, "default": 1 }
+  },
+  "MD011": {
+    "enabled": { "type": "boolean", "default": true },
+    "severity": { "type": "string", "enum": ["error", "warning"], "default": "error" }
+  },
+  "MD012": {
+    "enabled": { "type": "boolean", "default": true },
+    "severity": { "type": "string", "enum": ["error", "warning"], "default": "error" },
+    "maximum": { "type": "integer", "minimum": 1, "default": 1 }
+  },
+  "MD013": {
+    "enabled": { "type": "boolean", "default": true },
+    "severity": { "type": "string", "enum": ["error", "warning"], "default": "error" },
+    "line_length": { "type": "integer", "minimum": 1, "default": 80 },
+    "heading_line_length": { "type": "integer", "minimum": 1, "default": 80 },
+    "code_block_line_length": { "type": "integer", "minimum": 1, "default": 80 },
+    "code_blocks": { "type": "boolean", "default": true },
+    "tables": { "type": "boolean", "default": true },
+    "headings": { "type": "boolean", "default": true },
+    "strict": { "type": "boolean", "default": false },
+    "stern": { "type": "boolean", "default": false }
+  },
+  "MD014": {
+    "enabled": { "type": "boolean", "default": true },
+    "severity": { "type": "string", "enum": ["error", "warning"], "default": "error" }
+  },
+  "MD018": {
+    "enabled": { "type": "boolean", "default": true },
+    "severity": { "type": "string", "enum": ["error", "warning"], "default": "error" }
+  },
+  "MD019": {
+    "enabled": { "type": "boolean", "default": true },
+    "severity": { "type": "string", "enum": ["error", "warning"], "default": "error" }
+  },
+  "MD020": {
+    "enabled": { "type": "boolean", "default": true },
+    "severity": { "type": "string", "enum": ["error", "warning"], "default": "error" }
+  },
+  "MD021": {
+    "enabled": { "type": "boolean", "default": true },
+    "severity": { "type": "string", "enum": ["error", "warning"], "default": "error" }
+  },
+  "MD022": {
+    "enabled": { "type": "boolean", "default": true },
+    "severity": { "type": "string", "enum": ["error", "warning"], "default": "error" },
+    "include_front_matter": { "type": "boolean", "default": false },
+    "lines_above": {
+      "type": ["integer", "array"],
+      "items": { "type": "integer" },
+      "minimum": -1,
+      "default": 1
+    },
+    "lines_below": {
+      "type": ["integer", "array"],
+      "items": { "type": "integer" },
+      "minimum": -1,
+      "default": 1
+    }
+  },
+  "MD023": {
+    "enabled": { "type": "boolean", "default": true },
+    "severity": { "type": "string", "enum": ["error", "warning"], "default": "error" }
+  },
+  "MD024": {
+    "enabled": { "type": "boolean", "default": true },
+    "severity": { "type": "string", "enum": ["error", "warning"], "default": "error" },
+    "siblings_only": { "type": "boolean", "default": false }
+  },
+  "MD025": {
+    "enabled": { "type": "boolean", "default": true },
+    "severity": { "type": "string", "enum": ["error", "warning"], "default": "error" },
+    "front_matter_title": { "type": "string", "default": "^\\s*title\\s*[:=]" },
+    "level": { "type": "integer", "minimum": 1, "maximum": 6, "default": 1 }
+  },
+  "MD026": {
+    "enabled": { "type": "boolean", "default": true },
+    "severity": { "type": "string", "enum": ["error", "warning"], "default": "error" },
+    "punctuation": { "type": "string", "default": ".,;:!。，；：！" }
+  },
+  "MD027": {
+    "enabled": { "type": "boolean", "default": true },
+    "severity": { "type": "string", "enum": ["error", "warning"], "default": "error" },
+    "list_items": { "type": "boolean", "default": true }
+  },
+  "MD028": {
+    "enabled": { "type": "boolean", "default": true },
+    "severity": { "type": "string", "enum": ["error", "warning"], "default": "error" }
+  },
+  "MD029": {
+    "enabled": { "type": "boolean", "default": true },
+    "severity": { "type": "string", "enum": ["error", "warning"], "default": "error" },
+    "style": {
+      "type": "string",
+      "enum": ["one", "ordered", "one_or_ordered", "zero"],
+      "default": "one_or_ordered"
+    }
+  },
+  "MD030": {
+    "enabled": { "type": "boolean", "default": true },
+    "severity": { "type": "string", "enum": ["error", "warning"], "default": "error" },
+    "ul_single": { "type": "integer", "minimum": 1, "default": 1 },
+    "ol_single": { "type": "integer", "minimum": 1, "default": 1 },
+    "ul_multi": { "type": "integer", "minimum": 1, "default": 1 },
+    "ol_multi": { "type": "integer", "minimum": 1, "default": 1 }
+  },
+  "MD031": {
+    "enabled": { "type": "boolean", "default": true },
+    "severity": { "type": "string", "enum": ["error", "warning"], "default": "error" },
+    "list_items": { "type": "boolean", "default": true }
+  },
+  "MD032": {
+    "enabled": { "type": "boolean", "default": true },
+    "severity": { "type": "string", "enum": ["error", "warning"], "default": "error" }
+  },
+  "MD033": {
+    "enabled": { "type": "boolean", "default": true },
+    "severity": { "type": "string", "enum": ["error", "warning"], "default": "error" },
+    "allowed_elements": { "type": "array", "items": { "type": "string" }, "default": [] },
+    "table_allowed_elements": { "type": "array", "items": { "type": "string" }, "default": [] }
+  },
+  "MD034": {
+    "enabled": { "type": "boolean", "default": true },
+    "severity": { "type": "string", "enum": ["error", "warning"], "default": "error" }
+  },
+  "MD035": {
+    "enabled": { "type": "boolean", "default": true },
+    "severity": { "type": "string", "enum": ["error", "warning"], "default": "error" },
+    "style": { "type": "string", "default": "consistent" }
+  },
+  "MD036": {
+    "enabled": { "type": "boolean", "default": true },
+    "severity": { "type": "string", "enum": ["error", "warning"], "default": "error" },
+    "punctuation": { "type": "string", "default": ".,;:!?。，；：！？" }
+  },
+  "MD037": {
+    "enabled": { "type": "boolean", "default": true },
+    "severity": { "type": "string", "enum": ["error", "warning"], "default": "error" }
+  },
+  "MD038": {
+    "enabled": { "type": "boolean", "default": true },
+    "severity": { "type": "string", "enum": ["error", "warning"], "default": "error" }
+  },
+  "MD039": {
+    "enabled": { "type": "boolean", "default": true },
+    "severity": { "type": "string", "enum": ["error", "warning"], "default": "error" }
+  },
+  "MD040": {
+    "enabled": { "type": "boolean", "default": true },
+    "severity": { "type": "string", "enum": ["error", "warning"], "default": "error" },
+    "allowed_languages": { "type": "array", "items": { "type": "string" }, "default": [] },
+    "language_only": { "type": "boolean", "default": false }
+  },
+  "MD041": {
+    "enabled": { "type": "boolean", "default": true },
+    "severity": { "type": "string", "enum": ["error", "warning"], "default": "error" },
+    "allow_preamble": { "type": "boolean", "default": false },
+    "front_matter_title": { "type": "string", "default": "^\\s*title\\s*[:=]" },
+    "level": { "type": "integer", "minimum": 1, "maximum": 6, "default": 1 }
+  },
+  "MD042": {
+    "enabled": { "type": "boolean", "default": true },
+    "severity": { "type": "string", "enum": ["error", "warning"], "default": "error" }
+  },
+  "MD043": {
+    "enabled": { "type": "boolean", "default": true },
+    "severity": { "type": "string", "enum": ["error", "warning"], "default": "error" },
+    "headings": {
+      "type": "array",
+      "items": { "type": "string", "pattern": "^(\\*|\\+|\\?|#{1,6}\\s+\\S.*)$" },
+      "default": []
+    },
+    "match_case": { "type": "boolean", "default": false }
+  },
+  "MD044": {
+    "enabled": { "type": "boolean", "default": true },
+    "severity": { "type": "string", "enum": ["error", "warning"], "default": "error" },
+    "names": { "type": "array", "items": { "type": "string" }, "default": [] },
+    "code_blocks": { "type": "boolean", "default": true },
+    "html_elements": { "type": "boolean", "default": true }
+  },
+  "MD045": {
+    "enabled": { "type": "boolean", "default": true },
+    "severity": { "type": "string", "enum": ["error", "warning"], "default": "error" }
+  },
+  "MD046": {
+    "enabled": { "type": "boolean", "default": true },
+    "severity": { "type": "string", "enum": ["error", "warning"], "default": "error" },
+    "style": {
+      "type": "string",
+      "enum": ["consistent", "fenced", "indented"],
+      "default": "consistent"
+    }
+  },
+  "MD047": {
+    "enabled": { "type": "boolean", "default": true },
+    "severity": { "type": "string", "enum": ["error", "warning"], "default": "error" }
+  },
+  "MD048": {
+    "enabled": { "type": "boolean", "default": true },
+    "severity": { "type": "string", "enum": ["error", "warning"], "default": "error" },
+    "style": {
+      "type": "string",
+      "enum": ["consistent", "backtick", "tilde"],
+      "default": "consistent"
+    }
+  },
+  "MD049": {
+    "enabled": { "type": "boolean", "default": true },
+    "severity": { "type": "string", "enum": ["error", "warning"], "default": "error" },
+    "style": {
+      "type": "string",
+      "enum": ["consistent", "asterisk", "underscore"],
+      "default": "consistent"
+    }
+  },
+  "MD050": {
+    "enabled": { "type": "boolean", "default": true },
+    "severity": { "type": "string", "enum": ["error", "warning"], "default": "error" },
+    "style": {
+      "type": "string",
+      "enum": ["consistent", "asterisk", "underscore"],
+      "default": "consistent"
+    }
+  },
+  "MD051": {
+    "enabled": { "type": "boolean", "default": true },
+    "severity": { "type": "string", "enum": ["error", "warning"], "default": "error" },
+    "ignore_case": { "type": "boolean", "default": false },
+    "ignored_pattern": { "type": "string", "default": "" }
+  },
+  "MD052": {
+    "enabled": { "type": "boolean", "default": true },
+    "severity": { "type": "string", "enum": ["error", "warning"], "default": "error" },
+    "ignored_labels": { "type": "array", "items": { "type": "string" }, "default": ["x"] },
+    "shortcut_syntax": { "type": "boolean", "default": false }
+  },
+  "MD053": {
+    "enabled": { "type": "boolean", "default": true },
+    "severity": { "type": "string", "enum": ["error", "warning"], "default": "error" },
+    "ignored_definitions": { "type": "array", "items": { "type": "string" }, "default": ["//"] }
+  },
+  "MD054": {
+    "enabled": { "type": "boolean", "default": true },
+    "severity": { "type": "string", "enum": ["error", "warning"], "default": "error" },
+    "autolink": { "type": "boolean", "default": true },
+    "inline": { "type": "boolean", "default": true },
+    "full": { "type": "boolean", "default": true },
+    "collapsed": { "type": "boolean", "default": true },
+    "shortcut": { "type": "boolean", "default": true },
+    "url_inline": { "type": "boolean", "default": true }
+  },
+  "MD055": {
+    "enabled": { "type": "boolean", "default": true },
+    "severity": { "type": "string", "enum": ["error", "warning"], "default": "error" },
+    "style": {
+      "type": "string",
+      "enum": [
+        "consistent",
+        "leading_only",
+        "trailing_only",
+        "leading_and_trailing",
+        "no_leading_or_trailing"
+      ],
+      "default": "consistent"
+    }
+  },
+  "MD056": {
+    "enabled": { "type": "boolean", "default": true },
+    "severity": { "type": "string", "enum": ["error", "warning"], "default": "error" }
+  },
+  "MD058": {
+    "enabled": { "type": "boolean", "default": true },
+    "severity": { "type": "string", "enum": ["error", "warning"], "default": "error" }
+  },
+  "MD059": {
+    "enabled": { "type": "boolean", "default": true },
+    "severity": { "type": "string", "enum": ["error", "warning"], "default": "error" },
+    "prohibited_texts": {
+      "type": "array",
+      "items": { "type": "string" },
+      "default": ["click here", "here", "link", "more"]
+    }
+  },
+  "MD060": {
+    "enabled": { "type": "boolean", "default": true },
+    "severity": { "type": "string", "enum": ["error", "warning"], "default": "error" },
+    "style": { "type": "string", "enum": ["any", "aligned", "compact", "tight"], "default": "any" },
+    "aligned_delimiter": { "type": "boolean", "default": false }
+  }
+}

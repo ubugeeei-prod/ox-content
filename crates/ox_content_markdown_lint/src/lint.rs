@@ -14,6 +14,7 @@ mod dictionary;
 mod extensions;
 mod fixes;
 mod latin;
+mod markdownlint;
 mod mask;
 mod options;
 mod patterns;
@@ -120,6 +121,7 @@ static PREPARED_LINT_DICTIONARY_DATA: LazyLock<PreparedLintDictionaryData> = Laz
 });
 
 pub use extensions::*;
+pub use markdownlint::{MarkdownlintConfig, MarkdownlintRule, markdownlint_rules};
 pub use types::*;
 
 #[derive(Clone)]
@@ -132,6 +134,7 @@ struct InternalMarkdownLintOptions {
     text_rules: MarkdownLintTextRules,
     severities: FxHashMap<String, MarkdownLintSeverity>,
     terminology: Option<aho_corasick::AhoCorasick>,
+    markdownlint: Option<markdownlint::Settings>,
 }
 
 #[derive(Clone, Default)]

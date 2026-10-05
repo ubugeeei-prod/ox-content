@@ -1,6 +1,22 @@
 use ox_content_markdown_lint::MarkdownLintDiagnostic;
 use serde::Serialize;
 use serde::ser::{SerializeSeq, Serializer};
+use std::io::{BufWriter, Write};
+
+pub(super) fn rules(format: &str) -> crate::Result<i32> {
+    let mut output = BufWriter::with_capacity(64 * 1024, std::io::stdout().lock());
+    let rules = ox_content_markdown_lint::markdownlint_rules();
+    if format == "json" {
+        serde_json::to_writer_pretty(&mut output, rules)?;
+        writeln!(output)?;
+    } else {
+        for rule in rules {
+            writeln!(output, "{} {} ({})", rule.id, rule.description, rule.aliases.join(", "))?;
+        }
+    }
+    output.flush()?;
+    Ok(0)
+}
 
 #[derive(Serialize)]
 pub(super) struct FileDiagnostic<'a> {

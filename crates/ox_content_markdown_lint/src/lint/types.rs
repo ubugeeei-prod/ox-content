@@ -36,6 +36,10 @@ pub struct MarkdownLintRuleOptions {
 #[derive(Default, Clone, Debug, serde::Deserialize, serde::Serialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct MarkdownLintOptions {
+    /// Enable native markdownlint rules with their standard configuration.
+    pub markdownlint: Option<super::MarkdownlintConfig>,
+    /// Ignore markdownlint inline configuration comments.
+    pub no_inline_config: Option<bool>,
     pub languages: Option<Vec<String>>,
     pub rules: Option<MarkdownLintRuleOptions>,
     pub dictionary: Option<MarkdownLintDictionaryOptions>,
