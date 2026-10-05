@@ -6,6 +6,6 @@
   "devDependencies": {
     "@cloudflare/build-output-utils": "0.8.4",
     "@types/node": "catalog:",
-    "cf": "1.0.0-beta.9"
+    "cf": "1.0.0-beta.10"
   }
 }
