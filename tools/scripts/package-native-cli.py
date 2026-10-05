@@ -17,13 +17,15 @@ version = re.search(r'^version = "([^"]+)"', (root / "Cargo.toml").read_text(), 
 assert re.fullmatch(r"\d+\.\d+\.\d+(?:-[\w.-]+)?", version)
 assert target in {"x86_64-unknown-linux-gnu", "x86_64-apple-darwin",
                   "aarch64-apple-darwin", "x86_64-pc-windows-msvc"}
-assert subprocess.check_output([str(binary), "--version"], text=True).strip() == f"oxct {version}"
+actual_version = subprocess.check_output([str(binary), "--version"], text=True).strip()
+assert actual_version == version, f"Expected {version}, received {actual_version!r}"
 rules = json.loads(subprocess.check_output([str(binary), "lint", "--list-rules", "--format", "json"]))
 assert len(rules) == 53 and rules[0]["id"] == "MD001" and rules[-1]["id"] == "MD060"
 result = subprocess.run([str(binary), "lint", "--stdin", "--format", "json"],
                         input="#  Title!\n\nText.\n", text=True, capture_output=True, cwd=binary.parent)
 assert result.returncode == 1, result.stderr
-assert [value["ruleId"] for value in json.loads(result.stdout)["diagnostics"]] == ["MD019", "MD026"]
+diagnostics = json.loads(result.stdout)["diagnostics"]
+assert [value["ruleId"] for value in diagnostics] == ["MD019", "MD026"], diagnostics
 
 files = [(binary.name, binary.read_bytes(), 0o755),
          ("LICENSE", (root / "LICENSE").read_bytes(), 0o644),
