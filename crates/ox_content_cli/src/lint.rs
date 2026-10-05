@@ -4,7 +4,7 @@ mod worker;
 
 use crate::{Result, files};
 use clap::Parser;
-use ox_content_markdown_lint::MarkdownLinter;
+use ox_content_markdown_lint::{MarkdownLinter, MarkdownlintConfig};
 use rayon::prelude::*;
 use std::{
     io::{BufWriter, IsTerminal, Read, Write},
@@ -77,7 +77,7 @@ pub fn run(args: &[String]) -> Result<i32> {
     config.inline_disabled |= options.no_inline_config;
     if options.markdownlint {
         if config.markdownlint.as_ref().is_none_or(|value| value.0 == false) {
-            config.markdownlint = Some(Default::default());
+            config.markdownlint = Some(MarkdownlintConfig::default());
         }
     } else if options.no_markdownlint {
         config.markdownlint = None;
