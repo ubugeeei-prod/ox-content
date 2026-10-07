@@ -1,5 +1,5 @@
 import { spawn } from "node:child_process";
-import { access, rename, rm, writeFile } from "node:fs/promises";
+import { access, readFile, rename, rm, writeFile } from "node:fs/promises";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { afterEach, describe, expect, it } from "vite-plus/test";
 import { frontmatterFixture } from "./oxct-frontmatter-fixture.mjs";
@@ -92,6 +92,21 @@ async function server(project = true) {
 }
 
 describe("Standard Schema project LSP", () => {
+  it("ignores generated config files and temporary editor saves", async () => {
+    const client = await server();
+    client.open("---\ntitle: bad\n---\n", 1);
+    await client.diagnostic(1, (items) =>
+      items.some((item) => item.code === "frontmatter-standard-schema"),
+    );
+    const executed = await readFile(client.marker, "utf8");
+    expect(executed.match(/executed/g)).toHaveLength(1);
+    await writeFile(`${client.configFile}.timestamp-ignored.mjs`, client.config);
+    await writeFile(`${client.configFile}.tmp`, client.config);
+    // Give the 120 ms filesystem debounce time to react to either artifact.
+    await new Promise((resolve) => setTimeout(resolve, 400));
+    expect(await readFile(client.marker, "utf8")).toBe(executed);
+  }, 25000);
+
   it("merges async schema diagnostics, completion and native Markdown features", async () => {
     const client = await server();
     client.open("---\ntitle: bad\ncategory: \n---\n# Body\n");

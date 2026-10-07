@@ -10,6 +10,9 @@ const permalink = "https://x.com/i/web/status/1543404742411698176";
 
 test("tweet client copies links and resets accessible state", async ({ page }) => {
   const runtime = await readFile(runtimePath, "utf8");
+  const time = new Date("2026-01-01T00:00:00Z");
+  await page.clock.install({ time });
+  await page.clock.pauseAt(new Date(time.getTime() + 1000));
   await page.setContent(pageHtml(), { waitUntil: "load" });
   await page.addScriptTag({ content: `${runtime}\ninitTweetCards(document, { copiedMs: 50 });` });
   await page.evaluate(() => {
@@ -37,6 +40,7 @@ test("tweet client copies links and resets accessible state", async ({ page }) =
   await expect(page.locator("[data-ox-tweet-copy]")).toHaveAttribute("data-ox-tweet-copied", "");
   await expect(page.locator("[data-ox-tweet-copy]")).toHaveAttribute("aria-label", "Copied!");
   await expect(page.locator("[data-ox-tweet-copy-status]")).toHaveText("Copied!");
+  await page.clock.runFor(50);
   await expect(page.locator("[data-ox-tweet-copy]")).not.toHaveAttribute(
     "data-ox-tweet-copied",
     "",
