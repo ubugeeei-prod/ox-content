@@ -1,6 +1,9 @@
 use crate::Result;
 use serde_json::json;
 
+#[cfg(test)]
+mod tests;
+
 pub const SKINS: &[&str] = &[
     "analog-film",
     "atlas",
