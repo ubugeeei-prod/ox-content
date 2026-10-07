@@ -16,6 +16,9 @@ use std::{
     time::{Duration, Instant},
 };
 
+#[cfg(test)]
+mod tests;
+
 pub fn run(files: Vec<PathBuf>, theme: String, color: bool, watch: bool) -> Result<()> {
     let mut source = files::read_document(&files[0])?;
     let guard = Terminal::open()?;
