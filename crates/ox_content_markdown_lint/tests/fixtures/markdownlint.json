@@ -2705,5 +2705,2134 @@
       ["MD060", 3],
       ["MD060", 3]
     ]
+  },
+  {
+    "name": "MD003 atx",
+    "source": "# A\n\n## B\n",
+    "config": {
+      "default": false,
+      "MD003": {
+        "style": "atx"
+      }
+    },
+    "expected": []
+  },
+  {
+    "name": "MD003 atx vs closed",
+    "source": "# A #\n\n## B\n",
+    "config": {
+      "default": false,
+      "MD003": {
+        "style": "atx"
+      }
+    },
+    "expected": [["MD003", 1]]
+  },
+  {
+    "name": "MD003 atx vs setext",
+    "source": "A\n=\n\n## B\n",
+    "config": {
+      "default": false,
+      "MD003": {
+        "style": "atx"
+      }
+    },
+    "expected": [["MD003", 1]]
+  },
+  {
+    "name": "MD003 atx_closed",
+    "source": "# A #\n\n## B\n\nC\n-\n",
+    "config": {
+      "default": false,
+      "MD003": {
+        "style": "atx_closed"
+      }
+    },
+    "expected": [
+      ["MD003", 3],
+      ["MD003", 5]
+    ]
+  },
+  {
+    "name": "MD003 setext",
+    "source": "A\n=\n\nB\n-\n\n### C\n",
+    "config": {
+      "default": false,
+      "MD003": {
+        "style": "setext"
+      }
+    },
+    "expected": [["MD003", 7]]
+  },
+  {
+    "name": "MD003 setext_with_atx ok",
+    "source": "A\n=\n\nB\n-\n\n### C\n",
+    "config": {
+      "default": false,
+      "MD003": {
+        "style": "setext_with_atx"
+      }
+    },
+    "expected": []
+  },
+  {
+    "name": "MD003 setext_with_atx bad",
+    "source": "# A\n\nB\n-\n\n### C ###\n",
+    "config": {
+      "default": false,
+      "MD003": {
+        "style": "setext_with_atx"
+      }
+    },
+    "expected": [
+      ["MD003", 1],
+      ["MD003", 6]
+    ]
+  },
+  {
+    "name": "MD003 setext_with_atx_closed ok",
+    "source": "A\n=\n\nB\n-\n\n### C ###\n",
+    "config": {
+      "default": false,
+      "MD003": {
+        "style": "setext_with_atx_closed"
+      }
+    },
+    "expected": []
+  },
+  {
+    "name": "MD003 setext_with_atx_closed bad",
+    "source": "A\n=\n\n## B ##\n\n### C\n",
+    "config": {
+      "default": false,
+      "MD003": {
+        "style": "setext_with_atx_closed"
+      }
+    },
+    "expected": [
+      ["MD003", 4],
+      ["MD003", 6]
+    ]
+  },
+  {
+    "name": "MD003 consistent closed first",
+    "source": "# A #\n\n## B ##\n\n### C\n",
+    "config": {
+      "default": false,
+      "MD003": true
+    },
+    "expected": [["MD003", 5]]
+  },
+  {
+    "name": "MD004 asterisk",
+    "source": "* a\n- b\n+ c\n",
+    "config": {
+      "default": false,
+      "MD004": {
+        "style": "asterisk"
+      }
+    },
+    "expected": [
+      ["MD004", 2],
+      ["MD004", 3]
+    ]
+  },
+  {
+    "name": "MD004 plus",
+    "source": "* a\n- b\n+ c\n",
+    "config": {
+      "default": false,
+      "MD004": {
+        "style": "plus"
+      }
+    },
+    "expected": [
+      ["MD004", 1],
+      ["MD004", 2]
+    ]
+  },
+  {
+    "name": "MD004 dash",
+    "source": "* a\n- b\n+ c\n",
+    "config": {
+      "default": false,
+      "MD004": {
+        "style": "dash"
+      }
+    },
+    "expected": [
+      ["MD004", 1],
+      ["MD004", 3]
+    ]
+  },
+  {
+    "name": "MD004 dash nested",
+    "source": "- a\n- b\n  - c\n",
+    "config": {
+      "default": false,
+      "MD004": {
+        "style": "dash"
+      }
+    },
+    "expected": []
+  },
+  {
+    "name": "MD007 start_indent",
+    "source": "   - a\n     - b\n",
+    "config": {
+      "default": false,
+      "MD007": {
+        "start_indented": true,
+        "start_indent": 3
+      }
+    },
+    "expected": []
+  },
+  {
+    "name": "MD007 start_indent bad",
+    "source": "  - a\n    - b\n",
+    "config": {
+      "default": false,
+      "MD007": {
+        "start_indented": true,
+        "start_indent": 3
+      }
+    },
+    "expected": [
+      ["MD007", 1],
+      ["MD007", 2]
+    ]
+  },
+  {
+    "name": "MD007 indent 4 ok",
+    "source": "- a\n    - b\n        - c\n",
+    "config": {
+      "default": false,
+      "MD007": {
+        "indent": 4
+      }
+    },
+    "expected": []
+  },
+  {
+    "name": "MD007 indent 4 bad",
+    "source": "- a\n  - b\n",
+    "config": {
+      "default": false,
+      "MD007": {
+        "indent": 4
+      }
+    },
+    "expected": [["MD007", 2]]
+  },
+  {
+    "name": "MD012 maximum 2 ok",
+    "source": "a\n\n\nb\n",
+    "config": {
+      "default": false,
+      "MD012": {
+        "maximum": 2
+      }
+    },
+    "expected": []
+  },
+  {
+    "name": "MD012 maximum 2 bad",
+    "source": "a\n\n\n\n\nb\n",
+    "config": {
+      "default": false,
+      "MD012": {
+        "maximum": 2
+      }
+    },
+    "expected": [
+      ["MD012", 4],
+      ["MD012", 5]
+    ]
+  },
+  {
+    "name": "MD013 line_length 10",
+    "source": "0123456789 x\n0123456789\n",
+    "config": {
+      "default": false,
+      "MD013": {
+        "line_length": 10
+      }
+    },
+    "expected": [["MD013", 1]]
+  },
+  {
+    "name": "MD013 code_block_line_length",
+    "source": "```txt\n0123456789 0123456789 x\n```\n\n0123456789 0123456789 x\n",
+    "config": {
+      "default": false,
+      "MD013": {
+        "line_length": 30,
+        "code_block_line_length": 10
+      }
+    },
+    "expected": [["MD013", 2]]
+  },
+  {
+    "name": "MD013 tables false",
+    "source": "| aaaaaaaa | bbbbbbbb |\n| --- | --- |\n| c | d eeeeeeeee fffffff |\n",
+    "config": {
+      "default": false,
+      "MD013": {
+        "line_length": 10,
+        "tables": false
+      }
+    },
+    "expected": []
+  },
+  {
+    "name": "MD013 tables true",
+    "source": "| aaaaaaaa | bbbbbbbb |\n| --- | --- |\n| c | d eeeeeeeee fffffff |\n",
+    "config": {
+      "default": false,
+      "MD013": {
+        "line_length": 10
+      }
+    },
+    "expected": [
+      ["MD013", 1],
+      ["MD013", 2],
+      ["MD013", 3]
+    ]
+  },
+  {
+    "name": "MD013 headings false",
+    "source": "# A long heading goes here\n\nshort\n",
+    "config": {
+      "default": false,
+      "MD013": {
+        "line_length": 10,
+        "headings": false
+      }
+    },
+    "expected": []
+  },
+  {
+    "name": "MD013 unicode utf16",
+    "source": "😀😀😀😀😀 x y\n日本語日本語日本語日本 x\n",
+    "config": {
+      "default": false,
+      "MD013": {
+        "line_length": 10
+      }
+    },
+    "expected": [
+      ["MD013", 1],
+      ["MD013", 2]
+    ]
+  },
+  {
+    "name": "MD025 level 2",
+    "source": "## A\n\n## B\n\n# C\n\n# D\n",
+    "config": {
+      "default": false,
+      "MD025": {
+        "level": 2
+      }
+    },
+    "expected": [["MD025", 3]]
+  },
+  {
+    "name": "MD025 front_matter_title custom",
+    "source": "---\nheading: x\n---\n\n# A\n",
+    "config": {
+      "default": false,
+      "MD025": {
+        "front_matter_title": "^\\s*heading\\s*:"
+      }
+    },
+    "expected": [["MD025", 5]]
+  },
+  {
+    "name": "MD025 front_matter_title empty",
+    "source": "---\ntitle: x\n---\n\n# A\n\n# B\n",
+    "config": {
+      "default": false,
+      "MD025": {
+        "front_matter_title": ""
+      }
+    },
+    "expected": [["MD025", 7]]
+  },
+  {
+    "name": "MD041 level 2 ok",
+    "source": "## A\n",
+    "config": {
+      "default": false,
+      "MD041": {
+        "level": 2
+      }
+    },
+    "expected": []
+  },
+  {
+    "name": "MD041 level 2 bad",
+    "source": "# A\n",
+    "config": {
+      "default": false,
+      "MD041": {
+        "level": 2
+      }
+    },
+    "expected": [["MD041", 1]]
+  },
+  {
+    "name": "MD041 fm title",
+    "source": "---\ntitle: x\n---\n\ntext\n",
+    "config": {
+      "default": false,
+      "MD041": true
+    },
+    "expected": []
+  },
+  {
+    "name": "MD041 fm title disabled",
+    "source": "---\ntitle: x\n---\n\ntext\n",
+    "config": {
+      "default": false,
+      "MD041": {
+        "front_matter_title": ""
+      }
+    },
+    "expected": [["MD041", 5]]
+  },
+  {
+    "name": "MD041 html h1",
+    "source": "<h1 align=\"center\">T</h1>\n",
+    "config": {
+      "default": false,
+      "MD041": true
+    },
+    "expected": []
+  },
+  {
+    "name": "MD026 custom punctuation",
+    "source": "# What?\n\n## Yes.\n",
+    "config": {
+      "default": false,
+      "MD026": {
+        "punctuation": "?"
+      }
+    },
+    "expected": [["MD026", 1]]
+  },
+  {
+    "name": "MD026 empty punctuation",
+    "source": "# Yes.\n",
+    "config": {
+      "default": false,
+      "MD026": {
+        "punctuation": ""
+      }
+    },
+    "expected": []
+  },
+  {
+    "name": "MD026 cjk",
+    "source": "# 見出し。\n\n## 見出し！！\n",
+    "config": {
+      "default": false,
+      "MD026": true
+    },
+    "expected": [
+      ["MD026", 1],
+      ["MD026", 3]
+    ]
+  },
+  {
+    "name": "MD026 closed atx",
+    "source": "# Title. #\n",
+    "config": {
+      "default": false,
+      "MD026": true
+    },
+    "expected": [["MD026", 1]]
+  },
+  {
+    "name": "MD029 one ok",
+    "source": "1. a\n1. b\n1. c\n",
+    "config": {
+      "default": false,
+      "MD029": {
+        "style": "one"
+      }
+    },
+    "expected": []
+  },
+  {
+    "name": "MD029 one bad",
+    "source": "1. a\n2. b\n3. c\n",
+    "config": {
+      "default": false,
+      "MD029": {
+        "style": "one"
+      }
+    },
+    "expected": [
+      ["MD029", 2],
+      ["MD029", 3]
+    ]
+  },
+  {
+    "name": "MD029 one_or_ordered ordered",
+    "source": "1. a\n2. b\n4. c\n",
+    "config": {
+      "default": false,
+      "MD029": true
+    },
+    "expected": [["MD029", 3]]
+  },
+  {
+    "name": "MD029 one_or_ordered zero start",
+    "source": "0. a\n1. b\n2. c\n",
+    "config": {
+      "default": false,
+      "MD029": true
+    },
+    "expected": []
+  },
+  {
+    "name": "MD029 ordered zero start",
+    "source": "0. a\n1. b\n2. c\n",
+    "config": {
+      "default": false,
+      "MD029": {
+        "style": "ordered"
+      }
+    },
+    "expected": []
+  },
+  {
+    "name": "MD029 zero ok",
+    "source": "0. a\n0. b\n",
+    "config": {
+      "default": false,
+      "MD029": {
+        "style": "zero"
+      }
+    },
+    "expected": []
+  },
+  {
+    "name": "MD029 paren",
+    "source": "1) a\n3) b\n",
+    "config": {
+      "default": false,
+      "MD029": true
+    },
+    "expected": [["MD029", 2]]
+  },
+  {
+    "name": "MD030 ul_single 2",
+    "source": "-  a\n-  b\n\n1. c\n",
+    "config": {
+      "default": false,
+      "MD030": {
+        "ul_single": 2
+      }
+    },
+    "expected": []
+  },
+  {
+    "name": "MD030 ol_single 2",
+    "source": "1.  a\n2. b\n",
+    "config": {
+      "default": false,
+      "MD030": {
+        "ol_single": 2
+      }
+    },
+    "expected": [["MD030", 2]]
+  },
+  {
+    "name": "MD030 ol_multi 3",
+    "source": "1.   a\n\n     more\n2. b\n",
+    "config": {
+      "default": false,
+      "MD030": {
+        "ol_multi": 3
+      }
+    },
+    "expected": [["MD030", 4]]
+  },
+  {
+    "name": "MD033 table_allowed",
+    "source": "| a | b |\n| - | - |\n| x<br>y | <b>z</b> |\n\nOut<br>side\n",
+    "config": {
+      "default": false,
+      "MD033": {
+        "table_allowed_elements": ["br"]
+      }
+    },
+    "expected": [
+      ["MD033", 3],
+      ["MD033", 5]
+    ]
+  },
+  {
+    "name": "MD033 allowed case",
+    "source": "<DIV>x</DIV>\n\n<Span>y</Span> <kbd>k</kbd>\n",
+    "config": {
+      "default": false,
+      "MD033": {
+        "allowed_elements": ["div", "span"]
+      }
+    },
+    "expected": [["MD033", 3]]
+  },
+  {
+    "name": "MD033 code",
+    "source": "`<b>` and\n\n```html\n<b>x</b>\n```\n",
+    "config": {
+      "default": false,
+      "MD033": true
+    },
+    "expected": []
+  },
+  {
+    "name": "MD035 consistent",
+    "source": "a\n\n***\n\n***\n\n- - -\n",
+    "config": {
+      "default": false,
+      "MD035": true
+    },
+    "expected": [["MD035", 7]]
+  },
+  {
+    "name": "MD036 punctuation default",
+    "source": "**Section**\n\n**Done.**\n\n_Other_\n",
+    "config": {
+      "default": false,
+      "MD036": true
+    },
+    "expected": [
+      ["MD036", 1],
+      ["MD036", 5]
+    ]
+  },
+  {
+    "name": "MD036 punctuation custom",
+    "source": "**Done.**\n\n**What?**\n",
+    "config": {
+      "default": false,
+      "MD036": {
+        "punctuation": "?"
+      }
+    },
+    "expected": [["MD036", 1]]
+  },
+  {
+    "name": "MD036 not whole",
+    "source": "**Bold** tail\n\n- **item**\n\n**two\nlines**\n",
+    "config": {
+      "default": false,
+      "MD036": true
+    },
+    "expected": []
+  },
+  {
+    "name": "thematic break first line final newline",
+    "source": "---\n\ntext",
+    "config": {
+      "default": false,
+      "MD047": true
+    },
+    "expected": [["MD047", 3]]
+  },
+  {
+    "name": "MD035 required style",
+    "source": "a\n\n---\n\n***\n\n___\n",
+    "config": {
+      "default": false,
+      "MD035": {
+        "style": "***"
+      }
+    },
+    "expected": [
+      ["MD035", 3],
+      ["MD035", 7]
+    ]
+  },
+  {
+    "name": "MD035 spaced style",
+    "source": "a\n\n* * *\n\n***\n",
+    "config": {
+      "default": false,
+      "MD035": {
+        "style": "* * *"
+      }
+    },
+    "expected": [["MD035", 5]]
+  },
+  {
+    "name": "MD043 ignores case",
+    "source": "# title\n\n## SECTION\n",
+    "config": {
+      "default": false,
+      "MD043": {
+        "headings": ["# Title", "## Section"]
+      }
+    },
+    "expected": []
+  },
+  {
+    "name": "MD043 match_case",
+    "source": "# title\n\n## Section\n",
+    "config": {
+      "default": false,
+      "MD043": {
+        "headings": ["# Title", "## Section"],
+        "match_case": true
+      }
+    },
+    "expected": [["MD043", 1]]
+  },
+  {
+    "name": "MD043 missing tail",
+    "source": "# Title\n",
+    "config": {
+      "default": false,
+      "MD043": {
+        "headings": ["# Title", "## Section"]
+      }
+    },
+    "expected": [["MD043", 2]]
+  },
+  {
+    "name": "MD043 extra",
+    "source": "# Title\n\n## Extra\n",
+    "config": {
+      "default": false,
+      "MD043": {
+        "headings": ["# Title"]
+      }
+    },
+    "expected": [["MD043", 3]]
+  },
+  {
+    "name": "MD044 html_elements true",
+    "source": "<p>javascript</p>\n",
+    "config": {
+      "default": false,
+      "MD044": {
+        "names": ["JavaScript"]
+      }
+    },
+    "expected": [["MD044", 1]]
+  },
+  {
+    "name": "MD044 multiple names",
+    "source": "github and javascript, Github.com\n",
+    "config": {
+      "default": false,
+      "MD044": {
+        "names": ["JavaScript", "GitHub"]
+      }
+    },
+    "expected": [
+      ["MD044", 1],
+      ["MD044", 1],
+      ["MD044", 1]
+    ]
+  },
+  {
+    "name": "MD044 code default",
+    "source": "`javascript`\n\n```js\njavascript\n```\n",
+    "config": {
+      "default": false,
+      "MD044": {
+        "names": ["JavaScript"]
+      }
+    },
+    "expected": [
+      ["MD044", 1],
+      ["MD044", 4]
+    ]
+  },
+  {
+    "name": "MD044 dotted",
+    "source": "Use node.js and Node.JS\n",
+    "config": {
+      "default": false,
+      "MD044": {
+        "names": ["Node.js"]
+      }
+    },
+    "expected": [
+      ["MD044", 1],
+      ["MD044", 1]
+    ]
+  },
+  {
+    "name": "MD046 indented",
+    "source": "```txt\ncode\n```\n\n    indented\n",
+    "config": {
+      "default": false,
+      "MD046": {
+        "style": "indented"
+      }
+    },
+    "expected": [["MD046", 1]]
+  },
+  {
+    "name": "MD046 consistent fenced first",
+    "source": "```txt\ncode\n```\n\ntext\n\n    indented\n",
+    "config": {
+      "default": false,
+      "MD046": true
+    },
+    "expected": [["MD046", 7]]
+  },
+  {
+    "name": "MD046 consistent indented first",
+    "source": "    indented\n\ntext\n\n```txt\ncode\n```\n",
+    "config": {
+      "default": false,
+      "MD046": true
+    },
+    "expected": [["MD046", 5]]
+  },
+  {
+    "name": "MD048 tilde",
+    "source": "```txt\ncode\n```\n\n~~~txt\ncode\n~~~\n",
+    "config": {
+      "default": false,
+      "MD048": {
+        "style": "tilde"
+      }
+    },
+    "expected": [["MD048", 1]]
+  },
+  {
+    "name": "MD048 consistent",
+    "source": "~~~txt\ncode\n~~~\n\n```txt\ncode\n```\n",
+    "config": {
+      "default": false,
+      "MD048": true
+    },
+    "expected": [["MD048", 5]]
+  },
+  {
+    "name": "MD049 asterisk",
+    "source": "_a_ and *b*\n",
+    "config": {
+      "default": false,
+      "MD049": {
+        "style": "asterisk"
+      }
+    },
+    "expected": [
+      ["MD049", 1],
+      ["MD049", 1]
+    ]
+  },
+  {
+    "name": "MD049 underscore",
+    "source": "_a_ and *b*\n",
+    "config": {
+      "default": false,
+      "MD049": {
+        "style": "underscore"
+      }
+    },
+    "expected": [
+      ["MD049", 1],
+      ["MD049", 1]
+    ]
+  },
+  {
+    "name": "MD049 consistent",
+    "source": "*a* and _b_ and *c*\n",
+    "config": {
+      "default": false,
+      "MD049": true
+    },
+    "expected": [
+      ["MD049", 1],
+      ["MD049", 1]
+    ]
+  },
+  {
+    "name": "MD050 asterisk",
+    "source": "__a__ and **b**\n",
+    "config": {
+      "default": false,
+      "MD050": {
+        "style": "asterisk"
+      }
+    },
+    "expected": [
+      ["MD050", 1],
+      ["MD050", 1]
+    ]
+  },
+  {
+    "name": "MD050 underscore",
+    "source": "__a__ and **b**\n",
+    "config": {
+      "default": false,
+      "MD050": {
+        "style": "underscore"
+      }
+    },
+    "expected": [
+      ["MD050", 1],
+      ["MD050", 1]
+    ]
+  },
+  {
+    "name": "MD050 consistent",
+    "source": "__a__ and **b** and __c__\n",
+    "config": {
+      "default": false,
+      "MD050": true
+    },
+    "expected": [
+      ["MD050", 1],
+      ["MD050", 1]
+    ]
+  },
+  {
+    "name": "MD049+50 independent",
+    "source": "*a* __b__ _c_ **d**\n",
+    "config": {
+      "default": false,
+      "MD049": true,
+      "MD050": true
+    },
+    "expected": [
+      ["MD049", 1],
+      ["MD049", 1],
+      ["MD050", 1],
+      ["MD050", 1]
+    ]
+  },
+  {
+    "name": "MD051 top and line",
+    "source": "# Title\n\n[a](#top) [b](#L10) [c](#L1C2-L3C4) [d](#l10)\n",
+    "config": {
+      "default": false,
+      "MD051": true
+    },
+    "expected": [["MD051", 3]]
+  },
+  {
+    "name": "MD051 duplicate suffix",
+    "source": "# A\n\n## A\n\n[x](#a) [y](#a-1) [z](#a-2)\n",
+    "config": {
+      "default": false,
+      "MD051": true
+    },
+    "expected": [["MD051", 5]]
+  },
+  {
+    "name": "MD051 punctuation slug",
+    "source": "# Hello, World! (v1.2)\n\n[x](#hello-world-v12) [y](#hello-world)\n",
+    "config": {
+      "default": false,
+      "MD051": true
+    },
+    "expected": [["MD051", 3]]
+  },
+  {
+    "name": "MD052 ignored_labels",
+    "source": "[text][todo] and [text][missing] and [ ] [x]\n",
+    "config": {
+      "default": false,
+      "MD052": {
+        "ignored_labels": ["todo"]
+      }
+    },
+    "expected": [["MD052", 1]]
+  },
+  {
+    "name": "MD052 default x",
+    "source": "- [x] done [x][] and [y][]\n",
+    "config": {
+      "default": false,
+      "MD052": true
+    },
+    "expected": [["MD052", 1]]
+  },
+  {
+    "name": "MD053 ignored_definitions",
+    "source": "[keep]: https://example.com\n[unused]: https://example.com\n[//]: # (comment)\n",
+    "config": {
+      "default": false,
+      "MD053": {
+        "ignored_definitions": ["keep"]
+      }
+    },
+    "expected": [
+      ["MD053", 2],
+      ["MD053", 3]
+    ]
+  },
+  {
+    "name": "MD053 default",
+    "source": "[used]: https://example.com\n[unused]: https://example.com\n[//]: # (comment)\n\n[used]\n",
+    "config": {
+      "default": false,
+      "MD053": true
+    },
+    "expected": [["MD053", 2]]
+  },
+  {
+    "name": "MD055 leading_and_trailing",
+    "source": "| a | b |\n| - | - |\nc | d\n",
+    "config": {
+      "default": false,
+      "MD055": {
+        "style": "leading_and_trailing"
+      }
+    },
+    "expected": [
+      ["MD055", 3],
+      ["MD055", 3]
+    ]
+  },
+  {
+    "name": "MD056 too few/many",
+    "source": "| a | b |\n| - | - |\n| c |\n| d | e | f |\n",
+    "config": {
+      "default": false,
+      "MD056": true
+    },
+    "expected": [
+      ["MD056", 3],
+      ["MD056", 4]
+    ]
+  },
+  {
+    "name": "MD058 both sides",
+    "source": "text\n| a | b |\n| - | - |\n| c | d |\ntext\n",
+    "config": {
+      "default": false,
+      "MD058": true
+    },
+    "expected": [["MD058", 2]]
+  },
+  {
+    "name": "MD058 ok",
+    "source": "text\n\n| a | b |\n| - | - |\n\ntext\n",
+    "config": {
+      "default": false,
+      "MD058": true
+    },
+    "expected": []
+  },
+  {
+    "name": "MD059 default list",
+    "source": "[click here](a) [Here](b) [LINK](c) [more...](d) [details](e)\n",
+    "config": {
+      "default": false,
+      "MD059": true
+    },
+    "expected": [
+      ["MD059", 1],
+      ["MD059", 1],
+      ["MD059", 1],
+      ["MD059", 1]
+    ]
+  },
+  {
+    "name": "MD059 empty list",
+    "source": "[here](a)\n",
+    "config": {
+      "default": false,
+      "MD059": {
+        "prohibited_texts": []
+      }
+    },
+    "expected": []
+  },
+  {
+    "name": "MD010 spaces_per_tab",
+    "source": "a\tb\n",
+    "config": {
+      "default": false,
+      "MD010": {
+        "spaces_per_tab": 4
+      }
+    },
+    "expected": [["MD010", 1]]
+  },
+  {
+    "name": "MD010 default",
+    "source": "\tindent\n",
+    "config": {
+      "default": false,
+      "MD010": true
+    },
+    "expected": [["MD010", 1]]
+  },
+  {
+    "name": "MD022 lines 2",
+    "source": "# A\n\n\ntext\n\n\n## B\n\ntext\n",
+    "config": {
+      "default": false,
+      "MD022": {
+        "lines_above": 2,
+        "lines_below": 2
+      }
+    },
+    "expected": [["MD022", 7]]
+  },
+  {
+    "name": "MD022 zero",
+    "source": "text\n# A\ntext\n",
+    "config": {
+      "default": false,
+      "MD022": {
+        "lines_above": 0,
+        "lines_below": 0
+      }
+    },
+    "expected": []
+  },
+  {
+    "name": "MD024 siblings different parents",
+    "source": "# A\n\n## Same\n\n# B\n\n## Same\n\n## Same\n",
+    "config": {
+      "default": false,
+      "MD024": {
+        "siblings_only": true
+      }
+    },
+    "expected": [["MD024", 9]]
+  },
+  {
+    "name": "MD027 basic",
+    "source": ">  two\n> one\n>   three\n",
+    "config": {
+      "default": false,
+      "MD027": true
+    },
+    "expected": [
+      ["MD027", 1],
+      ["MD027", 3]
+    ]
+  },
+  {
+    "name": "MD028 separated quotes",
+    "source": "> a\n\n> b\n\ntext\n\n> c\n>\n> d\n",
+    "config": {
+      "default": false,
+      "MD028": true
+    },
+    "expected": [["MD028", 2]]
+  },
+  {
+    "name": "MD031 start end",
+    "source": "```txt\ncode\n```\ntext\n",
+    "config": {
+      "default": false,
+      "MD031": true
+    },
+    "expected": [["MD031", 3]]
+  },
+  {
+    "name": "MD032 both sides",
+    "source": "text\n- a\n- b\n\n1. c\ntext\n",
+    "config": {
+      "default": false,
+      "MD032": true
+    },
+    "expected": [["MD032", 2]]
+  },
+  {
+    "name": "MD034 variants",
+    "source": "<https://a.example> https://b.example [c](https://c.example) `https://d.example`\n",
+    "config": {
+      "default": false,
+      "MD034": true
+    },
+    "expected": [["MD034", 1]]
+  },
+  {
+    "name": "MD037 all markers",
+    "source": "** bold ** and * em * and __ u __\n",
+    "config": {
+      "default": false,
+      "MD037": true
+    },
+    "expected": [
+      ["MD037", 1],
+      ["MD037", 1],
+      ["MD037", 1],
+      ["MD037", 1],
+      ["MD037", 1],
+      ["MD037", 1]
+    ]
+  },
+  {
+    "name": "MD038 edges",
+    "source": "` a` and `b ` and ` c ` and `` ` ``\n",
+    "config": {
+      "default": false,
+      "MD038": true
+    },
+    "expected": [
+      ["MD038", 1],
+      ["MD038", 1]
+    ]
+  },
+  {
+    "name": "MD039 edges",
+    "source": "[ a](x) [b ](x) [ c ](x) [d](x)\n",
+    "config": {
+      "default": false,
+      "MD039": true
+    },
+    "expected": [
+      ["MD039", 1],
+      ["MD039", 1],
+      ["MD039", 1],
+      ["MD039", 1]
+    ]
+  },
+  {
+    "name": "MD040 tilde",
+    "source": "~~~\ncode\n~~~\n",
+    "config": {
+      "default": false,
+      "MD040": true
+    },
+    "expected": [["MD040", 1]]
+  },
+  {
+    "name": "MD042 destinations",
+    "source": "[a]() [b](#) [c](<>) [d](#frag) [e][]\n\n[e]: #\n",
+    "config": {
+      "default": false,
+      "MD042": true
+    },
+    "expected": [
+      ["MD042", 1],
+      ["MD042", 1],
+      ["MD042", 1],
+      ["MD042", 1]
+    ]
+  },
+  {
+    "name": "MD014 output shown",
+    "source": "```sh\n$ ls\nfile\n$ pwd\n```\n",
+    "config": {
+      "default": false,
+      "MD014": true
+    },
+    "expected": []
+  },
+  {
+    "name": "MD014 all commands",
+    "source": "```sh\n$ ls\n\n$ pwd\n```\n",
+    "config": {
+      "default": false,
+      "MD014": true
+    },
+    "expected": [
+      ["MD014", 2],
+      ["MD014", 4]
+    ]
+  },
+  {
+    "name": "MD018 variants",
+    "source": "#Heading\n\n##Another\n\n#1 not\n\n#\n",
+    "config": {
+      "default": false,
+      "MD018": true
+    },
+    "expected": [
+      ["MD018", 1],
+      ["MD018", 3],
+      ["MD018", 5]
+    ]
+  },
+  {
+    "name": "MD019 fix",
+    "source": "#  Two\n\n##   Three\n",
+    "config": {
+      "default": false,
+      "MD019": true
+    },
+    "expected": [
+      ["MD019", 1],
+      ["MD019", 3]
+    ]
+  },
+  {
+    "name": "MD021 fix",
+    "source": "#  Closed  #\n",
+    "config": {
+      "default": false,
+      "MD021": true
+    },
+    "expected": [
+      ["MD021", 1],
+      ["MD021", 1]
+    ]
+  },
+  {
+    "name": "MD023 quoted heading",
+    "source": "  # Indented\n\n> # Quoted\n\ntext\n",
+    "config": {
+      "default": false,
+      "MD023": true
+    },
+    "expected": [["MD023", 1]]
+  },
+  {
+    "name": "MD005 misaligned item",
+    "source": "- a\n - b\n- c\n",
+    "config": {
+      "default": false,
+      "MD005": true
+    },
+    "expected": [["MD005", 2]]
+  },
+  {
+    "name": "MD001 repeated skips",
+    "source": "# A\n\n### C\n\n## B\n\n#### D\n",
+    "config": {
+      "default": false,
+      "MD001": true
+    },
+    "expected": [
+      ["MD001", 3],
+      ["MD001", 7]
+    ]
+  },
+  {
+    "name": "table trailing only",
+    "source": "A | B |\n--- | --- |\n| c | d |\n",
+    "config": {
+      "default": false,
+      "MD055": {
+        "style": "trailing_only"
+      }
+    },
+    "expected": [["MD055", 3]]
+  },
+  {
+    "name": "table leading and trailing",
+    "source": "| A | B |\n| --- | --- |\nc | d\n",
+    "config": {
+      "default": false,
+      "MD055": {
+        "style": "leading_and_trailing"
+      }
+    },
+    "expected": [
+      ["MD055", 3],
+      ["MD055", 3]
+    ]
+  },
+  {
+    "name": "table no leading or trailing",
+    "source": "A | B\n--- | ---\n| c | d |\n",
+    "config": {
+      "default": false,
+      "MD055": {
+        "style": "no_leading_or_trailing"
+      }
+    },
+    "expected": [
+      ["MD055", 3],
+      ["MD055", 3]
+    ]
+  },
+  {
+    "name": "table consistent from header",
+    "source": "A | B\n--- | ---\n| c | d |\ne | f\n",
+    "config": {
+      "default": false,
+      "MD055": true
+    },
+    "expected": [
+      ["MD055", 3],
+      ["MD055", 3]
+    ]
+  },
+  {
+    "name": "table column count both ways",
+    "source": "| A | B |\n| --- | --- |\n| c |\n| d | e | f |\n",
+    "config": {
+      "default": false,
+      "MD056": true
+    },
+    "expected": [
+      ["MD056", 3],
+      ["MD056", 4]
+    ]
+  },
+  {
+    "name": "table blank lines both sides",
+    "source": "text\n\n| A | B |\n| --- | --- |\n| c | d |\ntext\n",
+    "config": {
+      "default": false,
+      "MD058": true
+    },
+    "expected": []
+  },
+  {
+    "name": "table blank line above",
+    "source": "text\n| A | B |\n| --- | --- |\n| c | d |\n\ntext\n",
+    "config": {
+      "default": false,
+      "MD058": true
+    },
+    "expected": [["MD058", 2]]
+  },
+  {
+    "name": "disable several rules",
+    "source": "<!-- markdownlint-disable MD019 MD026 -->\n#  Title!\ntext \n",
+    "config": {
+      "default": false,
+      "MD009": true,
+      "MD019": true,
+      "MD026": true
+    },
+    "expected": [["MD009", 3]]
+  },
+  {
+    "name": "disable by alias",
+    "source": "<!-- markdownlint-disable no-trailing-spaces -->\ntext \n",
+    "config": {
+      "default": false,
+      "MD009": true
+    },
+    "expected": []
+  },
+  {
+    "name": "disable by tag",
+    "source": "<!-- markdownlint-disable whitespace -->\ntext \n#  Title\n",
+    "config": {
+      "default": false,
+      "MD009": true,
+      "MD019": true
+    },
+    "expected": [["MD019", 3]]
+  },
+  {
+    "name": "disable line all",
+    "source": "#  Title! <!-- markdownlint-disable-line -->\n#  Other!\n",
+    "config": {
+      "default": false,
+      "MD019": true,
+      "MD026": true
+    },
+    "expected": [
+      ["MD019", 2],
+      ["MD026", 2]
+    ]
+  },
+  {
+    "name": "disable next line at end",
+    "source": "text \n<!-- markdownlint-disable-next-line -->\n",
+    "config": {
+      "default": false,
+      "MD009": true
+    },
+    "expected": [["MD009", 1]]
+  },
+  {
+    "name": "disable next line skips one",
+    "source": "<!-- markdownlint-disable-next-line MD009 -->\n\ntext \n",
+    "config": {
+      "default": false,
+      "MD009": true
+    },
+    "expected": [["MD009", 3]]
+  },
+  {
+    "name": "enable unconfigured rule",
+    "source": "<!-- markdownlint-enable MD009 -->\ntext \n",
+    "config": {
+      "default": false
+    },
+    "expected": [["MD009", 2]]
+  },
+  {
+    "name": "restore without capture",
+    "source": "<!-- markdownlint-disable MD009 -->\ntext \n<!-- markdownlint-restore -->\ntext \n",
+    "config": {
+      "default": false,
+      "MD009": true
+    },
+    "expected": [["MD009", 4]]
+  },
+  {
+    "name": "capture restore twice",
+    "source": "<!-- markdownlint-capture -->\n<!-- markdownlint-disable MD009 -->\ntext \n<!-- markdownlint-restore -->\ntext \n<!-- markdownlint-disable MD009 -->\ntext \n<!-- markdownlint-restore -->\ntext \n",
+    "config": {
+      "default": false,
+      "MD009": true
+    },
+    "expected": [
+      ["MD009", 5],
+      ["MD009", 9]
+    ]
+  },
+  {
+    "name": "disable file with enable",
+    "source": "<!-- markdownlint-enable MD009 -->\ntext \n<!-- markdownlint-disable-file MD009 -->\n",
+    "config": {
+      "default": false,
+      "MD009": true
+    },
+    "expected": [["MD009", 2]]
+  },
+  {
+    "name": "configure file invalid json",
+    "source": "<!-- markdownlint-configure-file {MD009:false} -->\ntext \n",
+    "config": {
+      "default": false,
+      "MD009": true
+    },
+    "expected": [["MD009", 2]]
+  },
+  {
+    "name": "configure file twice",
+    "source": "<!-- markdownlint-configure-file {\"MD009\":false} -->\n<!-- markdownlint-configure-file {\"MD009\":true} -->\ntext \n",
+    "config": {
+      "default": false
+    },
+    "expected": [["MD009", 3]]
+  },
+  {
+    "name": "unknown directive ignored",
+    "source": "<!-- markdownlint-disable-all -->\ntext \n<!-- markdownlint-bogus MD009 -->\ntext \n",
+    "config": {
+      "default": false,
+      "MD009": true
+    },
+    "expected": [
+      ["MD009", 2],
+      ["MD009", 4]
+    ]
+  },
+  {
+    "name": "directive in inline code",
+    "source": "`<!-- markdownlint-disable MD009 -->`\ntext \n",
+    "config": {
+      "default": false,
+      "MD009": true
+    },
+    "expected": []
+  },
+  {
+    "name": "directive in indented code",
+    "source": "    <!-- markdownlint-disable MD009 -->\n\ntext \n",
+    "config": {
+      "default": false,
+      "MD009": true
+    },
+    "expected": []
+  },
+  {
+    "name": "directive same line both",
+    "source": "<!-- markdownlint-disable MD009 --> <!-- markdownlint-enable MD009 -->\ntext \n",
+    "config": {
+      "default": false,
+      "MD009": true
+    },
+    "expected": [["MD009", 2]]
+  },
+  {
+    "name": "directive unknown rule name",
+    "source": "<!-- markdownlint-disable MD999 -->\ntext \n",
+    "config": {
+      "default": false,
+      "MD009": true
+    },
+    "expected": [["MD009", 2]]
+  },
+  {
+    "name": "tag enables group",
+    "source": "text \n\n\n\ntext\tx\n",
+    "config": {
+      "default": false,
+      "whitespace": true
+    },
+    "expected": [
+      ["MD009", 1],
+      ["MD012", 3],
+      ["MD012", 4],
+      ["MD010", 5]
+    ]
+  },
+  {
+    "name": "id overrides alias",
+    "source": "text \n",
+    "config": {
+      "default": false,
+      "no-trailing-spaces": false,
+      "MD009": true
+    },
+    "expected": [["MD009", 1]]
+  },
+  {
+    "name": "alias overrides tag",
+    "source": "text \n",
+    "config": {
+      "default": false,
+      "whitespace": false,
+      "no-trailing-spaces": true
+    },
+    "expected": [["MD009", 1]]
+  },
+  {
+    "name": "lowercase id",
+    "source": "text \n",
+    "config": {
+      "default": false,
+      "md009": true
+    },
+    "expected": [["MD009", 1]]
+  },
+  {
+    "name": "uppercase alias",
+    "source": "text \n",
+    "config": {
+      "default": false,
+      "NO-TRAILING-SPACES": true
+    },
+    "expected": [["MD009", 1]]
+  },
+  {
+    "name": "default true rule false",
+    "source": "text \n",
+    "config": {
+      "default": true,
+      "MD009": false,
+      "MD041": false
+    },
+    "expected": []
+  },
+  {
+    "name": "schema key ignored",
+    "source": "text \n",
+    "config": {
+      "$schema": "https://example.com/schema.json",
+      "default": false,
+      "MD009": true
+    },
+    "expected": [["MD009", 1]]
+  },
+  {
+    "name": "severity error string",
+    "source": "text \n",
+    "config": {
+      "default": false,
+      "MD009": "error"
+    },
+    "expected": [["MD009", 1]]
+  },
+  {
+    "name": "severity object",
+    "source": "text \n",
+    "config": {
+      "default": false,
+      "MD009": {
+        "severity": "warning",
+        "br_spaces": 0
+      }
+    },
+    "expected": [["MD009", 1]]
+  },
+  {
+    "name": "empty object enables",
+    "source": "text \n",
+    "config": {
+      "default": false,
+      "MD009": {}
+    },
+    "expected": [["MD009", 1]]
+  },
+  {
+    "name": "trailing fullwidth space",
+    "source": "text　\n",
+    "config": {
+      "default": false,
+      "MD009": true
+    },
+    "expected": [["MD009", 1]]
+  },
+  {
+    "name": "trailing spaces after emoji",
+    "source": "👩‍💻 \n",
+    "config": {
+      "default": false,
+      "MD009": true
+    },
+    "expected": [["MD009", 1]]
+  },
+  {
+    "name": "heading punctuation fullwidth",
+    "source": "# 見出し：\n\n## 見出し？\n",
+    "config": {
+      "default": false,
+      "MD026": true
+    },
+    "expected": [["MD026", 1]]
+  },
+  {
+    "name": "bom frontmatter",
+    "source": "﻿---\ntitle: x\n---\n\ntext \n",
+    "config": {
+      "default": false,
+      "MD009": true
+    },
+    "expected": [["MD009", 5]]
+  },
+  {
+    "name": "crlf blank lines",
+    "source": "a\r\n\r\n\r\nb\r\n",
+    "config": {
+      "default": false,
+      "MD012": true
+    },
+    "expected": [["MD012", 3]]
+  },
+  {
+    "name": "crlf heading spacing",
+    "source": "# A\r\ntext\r\n",
+    "config": {
+      "default": false,
+      "MD022": true
+    },
+    "expected": [["MD022", 1]]
+  },
+  {
+    "name": "crlf line length",
+    "source": "0123456789 x\r\n",
+    "config": {
+      "default": false,
+      "MD013": {
+        "line_length": 10
+      }
+    },
+    "expected": [["MD013", 1]]
+  },
+  {
+    "name": "empty document",
+    "source": "",
+    "config": {},
+    "expected": []
+  },
+  {
+    "name": "default profile clean",
+    "source": "# Title\n\nA paragraph with a [link](https://example.com).\n\n- one\n- two\n\n```sh\nls\n```\n",
+    "config": {},
+    "expected": [["MD059", 3]]
+  },
+  {
+    "name": "default profile dirty",
+    "source": "## Sub\ntext \n* a\n- b\n",
+    "config": {},
+    "expected": [
+      ["MD022", 1],
+      ["MD041", 1],
+      ["MD009", 2],
+      ["MD032", 3],
+      ["MD032", 3],
+      ["MD004", 4],
+      ["MD032", 4]
+    ]
+  },
+  {
+    "name": "frontmatter not first line",
+    "source": "\n---\ntitle: x\n---\n",
+    "config": {
+      "default": false,
+      "MD041": true
+    },
+    "expected": [["MD041", 2]]
+  },
+  {
+    "name": "nested quote list code",
+    "source": "> - item\n>\n>   ```\n>   code\n>   ```\n",
+    "config": {
+      "default": false,
+      "MD040": true
+    },
+    "expected": [["MD040", 3]]
+  },
+  {
+    "name": "deep nested lists",
+    "source": "- a\n  - b\n    - c\n      - d\n",
+    "config": {
+      "default": false,
+      "MD007": true
+    },
+    "expected": []
+  },
+  {
+    "name": "ordered nested unordered",
+    "source": "1. a\n   - b\n     - c\n",
+    "config": {
+      "default": false,
+      "MD007": true
+    },
+    "expected": []
+  },
+  {
+    "name": "long line cjk no space",
+    "source": "日本語日本語日本語日本語日本語日本語日本語日本語日本語日本語日本語日本語日本語日本語日本語日本語日本語日本語日本語日本語日本語日本語日本語日本語日本語日本語日本語日本語日本語日本語日本語日本語日本語日本語日本語日本語日本語日本語日本語日本語\n",
+    "config": {
+      "default": false,
+      "MD013": true
+    },
+    "expected": []
+  },
+  {
+    "name": "long line cjk with space",
+    "source": "日本語日本語日本語日本語日本語日本語日本語日本語日本語日本語日本語日本語日本語日本語日本語日本語日本語日本語日本語日本語日本語日本語日本語日本語日本語日本語日本語 日本語\n",
+    "config": {
+      "default": false,
+      "MD013": true
+    },
+    "expected": [["MD013", 1]]
+  },
+  {
+    "name": "heading increment setext",
+    "source": "Title\n=====\n\n### Deep\n",
+    "config": {
+      "default": false,
+      "MD001": true
+    },
+    "expected": [["MD001", 4]]
+  },
+  {
+    "name": "duplicate heading case",
+    "source": "# Title\n\n## title\n\n## Title\n",
+    "config": {
+      "default": false,
+      "MD024": true
+    },
+    "expected": [["MD024", 5]]
+  },
+  {
+    "name": "single h1 setext",
+    "source": "One\n===\n\nTwo\n===\n",
+    "config": {
+      "default": false,
+      "MD025": true
+    },
+    "expected": [["MD025", 4]]
+  },
+  {
+    "name": "bare url angle and paren",
+    "source": "(https://example.com) and <https://example.com>\n",
+    "config": {
+      "default": false,
+      "MD034": true
+    },
+    "expected": [["MD034", 1]]
+  },
+  {
+    "name": "bare url in link text",
+    "source": "[https://example.com](https://example.com)\n",
+    "config": {
+      "default": false,
+      "MD034": true
+    },
+    "expected": []
+  },
+  {
+    "name": "html in heading",
+    "source": "# Title <small>x</small>\n",
+    "config": {
+      "default": false,
+      "MD033": true
+    },
+    "expected": [["MD033", 1]]
+  },
+  {
+    "name": "html self closing",
+    "source": "line<br/>break and <hr />\n",
+    "config": {
+      "default": false,
+      "MD033": true
+    },
+    "expected": [
+      ["MD033", 1],
+      ["MD033", 1]
+    ]
+  },
+  {
+    "name": "code span backtick pad",
+    "source": "`` `a` `` and ``  b  ``\n",
+    "config": {
+      "default": false,
+      "MD038": true
+    },
+    "expected": [
+      ["MD038", 1],
+      ["MD038", 1]
+    ]
+  },
+  {
+    "name": "empty link reference",
+    "source": "[text][ref]\n\n[ref]: #\n",
+    "config": {
+      "default": false,
+      "MD042": true
+    },
+    "expected": [["MD042", 1]]
+  },
+  {
+    "name": "fence info spacing",
+    "source": "```  rust  \ncode\n```\n",
+    "config": {
+      "default": false,
+      "MD040": {
+        "allowed_languages": ["rust"]
+      }
+    },
+    "expected": []
+  },
+  {
+    "name": "ordered list wrong start",
+    "source": "3. a\n4. b\n",
+    "config": {
+      "default": false,
+      "MD029": true
+    },
+    "expected": [
+      ["MD029", 1],
+      ["MD029", 2]
+    ]
+  },
+  {
+    "name": "ordered list one style from two",
+    "source": "2. a\n2. b\n",
+    "config": {
+      "default": false,
+      "MD029": {
+        "style": "one"
+      }
+    },
+    "expected": [
+      ["MD029", 1],
+      ["MD029", 2]
+    ]
+  },
+  {
+    "name": "blockquote blank with marker",
+    "source": "> a\n>\n> b\n",
+    "config": {
+      "default": false,
+      "MD028": true
+    },
+    "expected": []
+  },
+  {
+    "name": "blockquote two blank lines",
+    "source": "> a\n\n\n> b\n",
+    "config": {
+      "default": false,
+      "MD028": true
+    },
+    "expected": [
+      ["MD028", 2],
+      ["MD028", 3]
+    ]
+  },
+  {
+    "name": "lists around fences",
+    "source": "- a\n\n  ```txt\n  code\n  ```\n\n- b\n",
+    "config": {
+      "default": false,
+      "MD031": true,
+      "MD032": true
+    },
+    "expected": []
+  },
+  {
+    "name": "list after heading no blank",
+    "source": "# T\n- a\n",
+    "config": {
+      "default": false,
+      "MD032": true,
+      "MD022": true
+    },
+    "expected": [
+      ["MD022", 1],
+      ["MD032", 2]
+    ]
+  },
+  {
+    "name": "reference image collapsed",
+    "source": "![alt][]\n\n[alt]: a.png\n",
+    "config": {
+      "default": false,
+      "MD052": true,
+      "MD053": true
+    },
+    "expected": []
+  },
+  {
+    "name": "footnote not reference",
+    "source": "text[^1]\n\n[^1]: note\n",
+    "config": {
+      "default": false,
+      "MD052": true,
+      "MD053": true
+    },
+    "expected": []
+  },
+  {
+    "name": "link style autolink only",
+    "source": "[text](https://example.com) <https://example.com>\n",
+    "config": {
+      "default": false,
+      "MD054": {
+        "inline": false,
+        "full": false,
+        "collapsed": false,
+        "shortcut": false
+      }
+    },
+    "expected": [["MD054", 1]]
+  },
+  {
+    "name": "link style image inline",
+    "source": "![alt](a.png)\n",
+    "config": {
+      "default": false,
+      "MD054": {
+        "inline": false
+      }
+    },
+    "expected": [["MD054", 1]]
+  },
+  {
+    "name": "descriptive image link",
+    "source": "[![here](a.png)](b)\n",
+    "config": {
+      "default": false,
+      "MD059": true
+    },
+    "expected": []
+  },
+  {
+    "name": "proper name start of word",
+    "source": "javascripts and myjavascript and java-script\n",
+    "config": {
+      "default": false,
+      "MD044": {
+        "names": ["JavaScript"]
+      }
+    },
+    "expected": []
+  },
+  {
+    "name": "proper name in heading and link text",
+    "source": "# javascript\n\n[javascript](https://javascript.example)\n",
+    "config": {
+      "default": false,
+      "MD044": {
+        "names": ["JavaScript"]
+      }
+    },
+    "expected": [
+      ["MD044", 1],
+      ["MD044", 3]
+    ]
+  },
+  {
+    "name": "single trailing newline crlf",
+    "source": "text\r\n",
+    "config": {
+      "default": false,
+      "MD047": true
+    },
+    "expected": []
+  },
+  {
+    "name": "code block style in list",
+    "source": "- a\n\n      indented\n\n```txt\nfenced\n```\n",
+    "config": {
+      "default": false,
+      "MD046": true
+    },
+    "expected": [["MD046", 5]]
+  },
+  {
+    "name": "commands in tilde fence",
+    "source": "~~~sh\n$ ls\n~~~\n",
+    "config": {
+      "default": false,
+      "MD014": true
+    },
+    "expected": [["MD014", 2]]
+  },
+  {
+    "name": "reversed link in code span",
+    "source": "`(text)[https://example.com]`\n",
+    "config": {
+      "default": false,
+      "MD011": true
+    },
+    "expected": []
+  },
+  {
+    "name": "closed atx both missing",
+    "source": "#Closed#\n",
+    "config": {
+      "default": false,
+      "MD020": true
+    },
+    "expected": [["MD020", 1]]
+  },
+  {
+    "name": "closed atx left missing",
+    "source": "##Closed ##\n",
+    "config": {
+      "default": false,
+      "MD020": true
+    },
+    "expected": [["MD020", 1]]
+  },
+  {
+    "name": "atx no space with content hash",
+    "source": "#hashtag text\n\n#! shebang\n",
+    "config": {
+      "default": false,
+      "MD018": true
+    },
+    "expected": [
+      ["MD018", 1],
+      ["MD018", 3]
+    ]
+  },
+  {
+    "name": "hr styles mixed spaced",
+    "source": "text\n\n- - -\n\n---\n",
+    "config": {
+      "default": false,
+      "MD035": true
+    },
+    "expected": [["MD035", 5]]
+  },
+  {
+    "name": "inline html in table allowed",
+    "source": "| A | B |\n| --- | --- |\n| x<br>y | <b>z</b> |\n\nOut<br>side\n",
+    "config": {
+      "default": false,
+      "MD033": {
+        "table_allowed_elements": ["br"]
+      }
+    },
+    "expected": [
+      ["MD033", 3],
+      ["MD033", 5]
+    ]
   }
 ]
