@@ -29,7 +29,12 @@ impl Project {
     pub fn new() -> Self {
         let temporary = tempfile::tempdir().unwrap();
         // The CLI reports paths below the real working directory, not a symlinked temp root.
-        let root = temporary.path().canonicalize().unwrap();
+        // Windows canonical paths are verbatim (`\\?\`), which the CLI never prints.
+        let root = if cfg!(windows) {
+            temporary.path().to_path_buf()
+        } else {
+            temporary.path().canonicalize().unwrap()
+        };
         for directory in ["work", "home", "bin"] {
             fs::create_dir(root.join(directory)).unwrap();
         }
@@ -58,6 +63,11 @@ impl Project {
 
     pub fn read(&self, path: &str) -> String {
         fs::read_to_string(self.file(path)).unwrap()
+    }
+
+    /// File content with LF line endings; embedded templates follow the checkout's line endings.
+    pub fn text(&self, path: &str) -> String {
+        self.read(path).replace("\r\n", "\n")
     }
 
     pub fn exists(&self, path: &str) -> bool {

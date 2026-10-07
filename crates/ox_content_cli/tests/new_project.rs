@@ -74,9 +74,9 @@ fn each_template_writes_its_own_content_and_nothing_unresolved() {
         expected.sort();
         assert_eq!(files, expected, "{template}");
         for file in &files {
-            let text = project.read(&format!("site/{file}"));
+            let text = project.text(&format!("site/{file}"));
             assert!(!text.contains("__OX_"), "{template}/{file}: {text}");
-            assert!(text.ends_with('\n') && !text.contains('\r'), "{template}/{file}");
+            assert!(text.ends_with('\n'), "{template}/{file}");
         }
         assert!(project.read("site/README.md").contains(&format!("An Ox Content {template} site")));
         let config = project.read("site/vite.config.ts");
@@ -186,7 +186,7 @@ fn display_names_are_escaped_for_every_file_format() {
     let config = project.read(&format!("{name}/vite.config.ts"));
     assert!(config.contains(&format!("siteName: {quoted},")), "{config}");
     assert!(config.contains(&format!("footer: {{ copyright: {quoted} }}")), "{config}");
-    let index = project.read(&format!("{name}/content/index.md"));
+    let index = project.text(&format!("{name}/content/index.md"));
     assert!(index.starts_with(&format!("---\ntitle: {quoted}\n")), "{index}");
     assert!(index.contains(&format!("\n# {name}\n")), "{index}");
     assert!(project.read(&format!("{name}/README.md")).starts_with(&format!("# {name}\n")));
@@ -197,7 +197,7 @@ fn display_names_are_escaped_for_every_file_format() {
 fn unicode_project_names_are_preserved_in_content() {
     let project = Project::new();
     project.run(&["new", "日本語 👩‍💻", "--template", "minimal", "--yes"]).success();
-    let index = project.read("日本語 👩‍💻/content/index.md");
+    let index = project.text("日本語 👩‍💻/content/index.md");
     assert!(
         index.contains("title: \"日本語 👩‍💻\"\n") && index.contains("\n# 日本語 👩‍💻\n"),
         "{index}"

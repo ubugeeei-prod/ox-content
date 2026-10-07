@@ -109,7 +109,7 @@ fn every_template_and_manager_resolves_all_placeholders() {
                     "{label}"
                 );
                 assert!(!content.contains("__OX_"), "{label}: {content}");
-                assert!(content.ends_with('\n') && !content.contains('\r'), "{label}");
+                assert!(content.ends_with('\n'), "{label}");
             }
             for required in [
                 "package.json",
@@ -193,10 +193,9 @@ fn display_names_are_embedded_as_valid_string_literals() {
             let config = file(&files, "vite.config.ts");
             assert!(config.contains(&format!("siteName: {literal},")), "{name:?}: {config}");
             assert!(config.contains(&format!("footer: {{ copyright: {literal} }}")), "{name:?}");
-            assert!(
-                file(&files, "content/index.md").starts_with(&format!("---\ntitle: {literal}\n")),
-                "{name:?}"
-            );
+            // Embedded templates follow the checkout's line endings.
+            let index = file(&files, "content/index.md").replace("\r\n", "\n");
+            assert!(index.starts_with(&format!("---\ntitle: {literal}\n")), "{name:?}");
         }
     }
 }

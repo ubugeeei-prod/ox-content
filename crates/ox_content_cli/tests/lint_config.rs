@@ -253,7 +253,7 @@ fn invalid_configuration_fails_without_linting_or_fixing() {
         ("custom.json", r#"{"MD013":{"lenght":80}}"#, "Invalid markdownlint configuration"),
         ("custom.json", r#"{"extends":5}"#, "extends must be a path or path array"),
         ("custom.json", r#"{"extends":[5]}"#, "extends must contain paths"),
-        ("custom.json", r#"{"extends":"missing.json"}"#, "No such file or directory"),
+        ("custom.json", r#"{"extends":"missing.json"}"#, "(os error 2)"),
         ("custom.json", r#"{"extends":"list.json"}"#, "Extended configuration must be an object"),
         ("custom.json", r#"{"unknownKey":1,"rules":{}}"#, "unknown field `unknownKey`"),
         ("custom.json", r#"{"rules":{"nope":true}}"#, "unknown field `nope`"),

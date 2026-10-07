@@ -21,7 +21,7 @@ struct Viewer {
 impl Viewer {
     fn new() -> Self {
         let directory = tempfile::tempdir().unwrap();
-        let root = crate::files::absolute(&directory.path().canonicalize().unwrap()).unwrap();
+        let root = crate::files::absolute(directory.path()).unwrap();
         let mut files = Vec::new();
         for (name, content) in
             [("index.md", INDEX), ("guide.md", "# Guide\n\nBody.\n"), ("sp ace.md", "# Spaced\n")]
