@@ -13,11 +13,12 @@ const configFile = resolve(workerData.cwd, workerData.config ?? "vite.config.ts"
 // Keep recovery observable even when the initial config cannot be evaluated.
 try {
   const watcher = watch(dirname(configFile), (_, file) => {
+    // Vite's generated bundles and temporary editor files must not reload the config.
     if (
       file &&
       (workerData.config
         ? String(file) !== basename(configFile)
-        : !/^(vite|ox-content)\.config\./.test(String(file)))
+        : !/^(vite|ox-content)\.config\.(?:[cm]?[jt]s)$/.test(String(file)))
     )
       return;
     clearTimeout(timer);
