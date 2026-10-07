@@ -34,11 +34,13 @@ fn render(source: &str, args: &[&str]) -> String {
 #[test]
 fn a_directory_prints_its_first_document_in_path_order() {
     let project = project();
-    let rule = "─".repeat(80);
-    assert_eq!(print(&project, &[]), format!("# B doc\n{rule}\n\n"));
-    assert_eq!(print(&project, &["."]), print(&project, &[]));
-    assert_eq!(print(&project, &["docs"]), format!("# A doc\n{rule}\n\ntext\n\n"));
-    assert_eq!(print(&project, &["docs/*.md"]), print(&project, &["docs"]));
+    let rule = "─".repeat(40);
+    let width = ["--width", "40"];
+    assert_eq!(print(&project, &width), format!("# B doc\n{rule}\n\n"));
+    assert_eq!(print(&project, &[&["."], &width[..]].concat()), print(&project, &width));
+    let docs = print(&project, &[&["docs"], &width[..]].concat());
+    assert_eq!(docs, format!("# A doc\n{rule}\n\ntext\n\n"));
+    assert_eq!(print(&project, &[&["docs/*.md"], &width[..]].concat()), docs);
 }
 
 #[test]
@@ -84,11 +86,14 @@ fn every_printed_line_fits_the_requested_width() {
     }
 }
 
+/// Without `--width` the page follows the attached console, or 80 columns when there is none.
 #[test]
-fn width_defaults_to_eighty_columns_without_a_terminal() {
+fn default_width_stays_within_the_supported_range() {
     let output = render("# Title\n", &[]);
-    assert_eq!(output, format!("# Title\n{}\n\n", "─".repeat(80)));
-    assert_eq!(render("# Title\n", &["--width", "80"]), output);
+    let rule = output.lines().nth(1).unwrap();
+    assert!(rule.chars().all(|ch| ch == '─'), "{output}");
+    assert!((20..=240).contains(&rule.width()), "{} columns", rule.width());
+    assert_eq!(render("# Title\n", &["--width", "80"]), format!("# Title\n{}\n\n", "─".repeat(80)));
 }
 
 #[test]
