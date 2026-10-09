@@ -26,6 +26,16 @@
   z-index: 1;
 }
 
+/* An element with its own `view-transition-name`, such as a header kept still
+   across navigation, would be captured as a separate group and cross-faded
+   above both root snapshots, switching theme ahead of the circle. The whole
+   page stays in the root snapshot for the length of a toggle. */
+:root[data-ox-theme-transition] *,
+:root[data-ox-theme-transition] *::before,
+:root[data-ox-theme-transition] *::after {
+  view-transition-name: none !important;
+}
+
 /* Element-level colour transitions would animate underneath the snapshot and
    bleed the old palette into the new one. The runtime holds this attribute
    only while the theme is mutated, and drops it once both snapshots exist. */
