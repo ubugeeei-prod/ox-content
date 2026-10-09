@@ -181,6 +181,16 @@
         "id": "GHSA-v2hh-gcrm-f6hx",
         "reason": "Webpack example dependency; not shipped in published packages.",
         "expires": "2026-08-31"
+      },
+      {
+        "id": "GHSA-vfj7-8cjw-p6xm",
+        "reason": "v3.2 maintenance line: braces has no patched release; reached only through the dev-only Mermaid CLI (tailwindcss 3), which main has removed.",
+        "expires": "2026-12-31"
+      },
+      {
+        "id": "GHSA-ch52-4w7c-c8xp",
+        "reason": "v3.2 maintenance line: http-cache-semantics has no patched release; reached only through the benchmark Astro apps, not published packages.",
+        "expires": "2026-12-31"
       }
     ]
   },

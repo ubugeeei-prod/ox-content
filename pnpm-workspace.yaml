@@ -41,11 +41,15 @@ packageExtensions:
     dependencies:
       picomatch: ^4.0.4
 overrides:
+  # Security fixes in devalue 5.9.3+, preserving the existing major version.
+  devalue@5: "5.9.4"
   vite: "catalog:"
   vitest: "catalog:"
-  # GHSA-rgw5-rvv9-x895: ReDoS in brace-expansion, patched in 2.1.4 and 5.0.9.
-  brace-expansion@2: "2.1.4"
-  brace-expansion@5: "5.0.9"
+  # GHSA-6j4f-fj2g-mc7p and GHSA-qhr7-859c-m2p7: brace-expansion recursion DoS.
+  brace-expansion@2: "2.1.7"
+  brace-expansion@5: "5.0.12"
+  # GHSA-rfgv-xxqx-mfg5, GHSA-vp8m-p9jh-q5pm, GHSA-w293-vg96-wgc3: fixed in 8.10.2.
+  undici@8: "8.10.2"
   # GHSA-28wg-ghj8-5hjv, GHSA-2v37-7h3g-55p8: nanoid, patched in 3.3.17.
   nanoid@3: "3.3.18"
   # GHSA-2883-xcg3-v3hh: js-yaml, patched in 4.3.2.
@@ -59,6 +63,12 @@ overrides:
   # GHSA-5jgf-p345-68v8, GHSA-f65p-4m7j-42xc, GHSA-fph4-wmhf-6fwf, GHSA-jqff-g426-hqxp,
   # GHSA-58mr-gqgx-xq4g, GHSA-qw65-cvwx-89v3: fast-uri, patched in 3.1.8.
   fast-uri: "3.1.8"
+  # GHSA-wq5f-xc86-pv6w: miniflare pins sharp 0.35.4; fixed in 0.35.5.
+  sharp@<0.35.5: "0.35.5"
+  # GHSA-68fv-2mgg-jv7q: source-map-js, fixed in 1.2.2.
+  source-map-js@1: "1.2.2"
+  # GHSA-g2v6-rqmx-r4w6: @vue/server-renderer follows vue's exact version; fixed in 3.5.42.
+  vue@<3.5.42: "3.5.43"
 peerDependencyRules:
   allowAny:
     - vite

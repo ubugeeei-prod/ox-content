@@ -58,7 +58,7 @@ fn css_is_omitted_when_headings_have_no_permalink() {
     let html = generate_html(&page("<h1 id=\"hello\">Hello</h1>"), &[], &config(None));
     assert!(!html.contains("ox-content:css:heading-permalinks"), "{html}");
     assert!(!html.contains(".header-anchor"), "{html}");
-    assert!(!html.contains(r#"class="ox-heading-permalinks--always""#), "{html}");
+    assert!(!always_visible(&html), "{html}");
 }
 
 #[test]
@@ -66,14 +66,14 @@ fn css_is_included_when_renderer_emits_the_marker() {
     let html = generate_html(&page(permalink_heading()), &[], &config(None));
     assert!(html.contains("ox-content:css:heading-permalinks"), "{html}");
     assert!(html.contains(".header-anchor"), "{html}");
-    assert!(!html.contains(r#"class="ox-heading-permalinks--always""#), "{html}");
+    assert!(!always_visible(&html), "{html}");
 }
 
 #[test]
 fn always_visible_is_a_body_class_only() {
     let theme = ThemeConfig { heading_permalink: Some("always".into()), ..Default::default() };
     let html = generate_html(&page(permalink_heading()), &[], &config(Some(theme)));
-    assert!(html.contains(r#"class="ox-heading-permalinks--always""#), "{html}");
+    assert!(always_visible(&html), "{html}");
     assert!(html.contains(r##"<a class="header-anchor" href="#hello""##), "{html}");
 }
 
@@ -82,7 +82,7 @@ fn hover_theme_does_not_change_heading_html() {
     let theme = ThemeConfig { heading_permalink: Some("hover".into()), ..Default::default() };
     let html = generate_html(&page(permalink_heading()), &[], &config(Some(theme)));
     assert!(html.contains(permalink_heading()), "{html}");
-    assert!(!html.contains(r#"class="ox-heading-permalinks--always""#), "{html}");
+    assert!(!always_visible(&html), "{html}");
 }
 
 #[test]
@@ -110,4 +110,10 @@ fn visibility_helpers_and_css_contract() {
     assert!(HEADING_PERMALINK_CSS.contains("prefers-reduced-motion"));
     assert!(!HEADING_PERMALINK_CSS.contains("box-shadow"));
     assert!(!HEADING_PERMALINK_CSS.contains("<script"));
+}
+
+fn always_visible(html: &str) -> bool {
+    let body = &html[html.find("<body").expect("body")..];
+    let tag = &body[..=body.find('>').expect("body tag")];
+    tag.split(['"', ' ']).any(|token| token == "ox-heading-permalinks--always")
 }

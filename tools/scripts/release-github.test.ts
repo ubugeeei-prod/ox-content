@@ -147,6 +147,56 @@ describe("release orchestration", () => {
     mockApi((route) => (route === "rulesets/1" ? { ...rule, enforcement: "disabled" } : undefined));
     await expect(mergeRelease("owner/repo", 123)).rejects.toThrow(/ruleset/);
   });
+  it("compares and protects a maintenance-line release against its own base", async () => {
+    const compared: string[] = [];
+    let merged = false;
+    const maintenance = {
+      ...pr,
+      head: { ...pr.head, ref: "release/v1.2.4" },
+      base: { ref: "v1.2.x", sha: "base1" },
+    };
+    mockApi((route) => {
+      if (route === "pulls/123")
+        return { ...maintenance, merged, merge_commit_sha: merged ? "merged1" : null };
+      if (route === "pulls/123/merge") {
+        merged = true;
+        return { merged: true };
+      }
+      if (route.startsWith("compare/")) {
+        compared.push(route);
+        return { behind_by: 0 };
+      }
+      if (route === "rulesets/1") {
+        const covered = structuredClone(rule);
+        covered.conditions.ref_name.include.push("refs/heads/v1.2.x");
+        return covered;
+      }
+    });
+    expect((await mergeRelease("owner/repo", 123)).merged).toBe(true);
+    expect(compared).toEqual(["compare/v1.2.x...head1"]);
+  });
+  it("refuses a maintenance-line merge the ruleset does not cover", async () => {
+    mockApi((route) =>
+      route === "pulls/123"
+        ? { ...pr, head: { ...pr.head, ref: "release/v1.2.4" }, base: { ref: "v1.2.x" } }
+        : undefined,
+    );
+    await expect(mergeRelease("owner/repo", 123)).rejects.toThrow(/covering v1\.2\.x/);
+    expect(
+      vi.mocked(execFileSync).mock.calls.some(([, args]) => String(args?.[1]).endsWith("/merge")),
+    ).toBe(false);
+  });
+  it.each([
+    ["release/v1.3.0", "v1.2.x", /maintenance line/],
+    ["release/v1.2.4", "develop", /maintenance branch/],
+  ])("refuses %s into %s", async (ref, base, error) => {
+    mockApi((route) =>
+      route === "pulls/123"
+        ? { ...pr, head: { ...pr.head, ref }, base: { ref: base, sha: "base1" } }
+        : undefined,
+    );
+    await expect(mergeRelease("owner/repo", 123)).rejects.toThrow(error);
+  });
   it("does not turn a skipped workflow into successful validation", () => {
     expect(() => runPassed({ ...success, conclusion: "skipped" })).toThrow();
     expect(runPassed(undefined)).toBe(false);
