@@ -66,7 +66,10 @@ immediate switch.
 
 The two options are independent: `toggleTransition` never touches the
 cross-document snapshots, and its stylesheet is scoped to an attribute the
-runtime holds for the length of one toggle.
+runtime holds for the length of one toggle. During a toggle, elements you give a
+`view-transition-name` (for example a header kept still across navigation)
+stay in the page snapshot, so they change theme with the circle. Their names
+apply again once the toggle ends.
 
 ### From a custom host
 
