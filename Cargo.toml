@@ -45,6 +45,9 @@ disallowed_methods = "allow"
 disallowed_types = "allow"
 
 # Allow
+# Existing test assertions intentionally use is_empty; this style-only lint
+# appeared in Rust 1.99 and does not change the assertion semantics.
+assert_is_empty = "allow"
 match_same_arms = "allow"
 option_if_let_else = "allow"
 case_sensitive_file_extension_comparisons = "allow"
