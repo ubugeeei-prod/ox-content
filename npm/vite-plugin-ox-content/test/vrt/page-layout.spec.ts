@@ -188,6 +188,24 @@ test.describe("sidebar restoration", () => {
     expect(visible.top).toBeGreaterThan(0);
     expect(visible.bottom).toBeGreaterThan(0);
   });
+
+  test("still reveals the current page when storage access throws", async ({ context, page }) => {
+    // Blocked site data makes the storage getters themselves throw.
+    await context.addInitScript(() => {
+      for (const name of ["localStorage", "sessionStorage"]) {
+        Object.defineProperty(window, name, {
+          get() {
+            throw new DOMException("Access is denied", "SecurityError");
+          },
+        });
+      }
+    });
+    await probeFirstSidebarFrame(context);
+    await serve(page, pagesFor([85]));
+    await page.goto(`${origin}${url("page-85")}`);
+
+    expect(await firstFrame(page)).toBeGreaterThan(0);
+  });
 });
 
 test.describe("hidden sidebar", () => {

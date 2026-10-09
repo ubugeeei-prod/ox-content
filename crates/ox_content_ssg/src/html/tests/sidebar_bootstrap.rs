@@ -1,6 +1,6 @@
 //! Sidebar scroll and collapse state must be restored before first paint.
 
-use super::super::nav::SIDEBAR_BOOTSTRAP_JS;
+use super::super::nav::{SIDEBAR_BOOTSTRAP_JS, sidebar_bootstrap_js};
 use super::super::*;
 
 fn page() -> PageData {
@@ -66,7 +66,7 @@ fn config() -> SsgConfig {
 fn restores_inline_between_the_sidebar_and_the_main_column() {
     let html = generate_html(&page(), &nav(), &config());
     let aside_end = html.find("</aside>").expect("sidebar");
-    let restore = html.find("sessionStorage, \"sidebarScroll\"").expect("inline restore");
+    let restore = html.find("\"sessionStorage\", \"sidebarScroll\"").expect("inline restore");
     let main = html.find("<main class=\"main").expect("main column");
     let deferred = html.find("<!-- ox-content:scripts:start -->").expect("page scripts");
 
@@ -89,7 +89,7 @@ fn production_asset_extraction_keeps_the_restore_inline() {
 
     let html = &result.pages[0].html;
     let aside_end = html.find("</aside>").expect("sidebar");
-    let restore = html.find("sessionStorage, \"sidebarScroll\"").expect("inline restore");
+    let restore = html.find("\"sessionStorage\", \"sidebarScroll\"").expect("inline restore");
     assert!(aside_end < restore && restore < html.find("<main").expect("main"), "{html}");
     assert!(html.contains("<script defer src=\"/docs/assets/ox-content-core-"), "{html}");
 }
@@ -110,4 +110,11 @@ fn bootstrap_reveals_the_current_page_and_survives_blocked_storage() {
     assert!(SIDEBAR_BOOTSTRAP_JS.contains("try"));
     assert!(SIDEBAR_BOOTSTRAP_JS.contains("catch"));
     assert!(!SIDEBAR_BOOTSTRAP_JS.contains("</script"));
+}
+
+#[test]
+fn base_cannot_break_out_of_the_inline_script() {
+    let js = sidebar_bootstrap_js("/a\"b</script><x>/");
+    assert!(js.contains(r#""ox-content:nav:/a\"b\u003c/script>\u003cx>/:" + key"#), "{js}");
+    assert!(!js.contains("</script"), "{js}");
 }

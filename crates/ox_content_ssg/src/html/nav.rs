@@ -12,9 +12,14 @@ use super::{NavGroup, NavItem};
 /// The deferred `ssg.js` only records later changes.
 pub(super) const SIDEBAR_BOOTSTRAP_JS: &str = include_str!("sidebar_bootstrap.js");
 
-/// Scopes the collapse-state keys to `base`, exactly as `ssg.js` does.
+/// Scopes the collapse-state keys to `base`, the same keys `ssg.js` writes.
+///
+/// The script is inline, so `base` goes in as an escaped string body: a quote
+/// cannot end the literal and `</script>` cannot end the element.
 pub(super) fn sidebar_bootstrap_js(base: &str) -> String {
-    SIDEBAR_BOOTSTRAP_JS.replace("{{base}}", base)
+    let quoted = serde_json::to_string(base).unwrap_or_default();
+    let body = quoted.strip_prefix('"').and_then(|s| s.strip_suffix('"')).unwrap_or_default();
+    SIDEBAR_BOOTSTRAP_JS.replace("{{base}}", &body.replace('<', "\\u003c"))
 }
 
 pub(super) fn generate_nav_html(nav_groups: &[NavGroup], current_path: &str) -> String {

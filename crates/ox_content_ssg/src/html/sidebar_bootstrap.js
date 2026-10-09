@@ -4,7 +4,7 @@
 
   const read = (storage, key) => {
     try {
-      return storage.getItem(key);
+      return window[storage].getItem(key);
     } catch {
       return null;
     }
@@ -12,7 +12,7 @@
 
   sidebar.querySelectorAll("details[data-ox-nav-state-key]").forEach((details) => {
     const key = details.getAttribute("data-ox-nav-state-key");
-    const state = read(localStorage, "ox-content:nav:{{base}}:" + key);
+    const state = read("localStorage", "ox-content:nav:{{base}}:" + key);
     if (state === "open") {
       details.open = true;
     } else if (state === "closed") {
@@ -20,7 +20,7 @@
     }
   });
 
-  const saved = parseInt(read(sessionStorage, "sidebarScroll") ?? "", 10);
+  const saved = parseInt(read("sessionStorage", "sidebarScroll") ?? "", 10);
   if (saved > 0) sidebar.scrollTop = saved;
 
   const active = sidebar.querySelector(".nav-link.active");

@@ -11,7 +11,7 @@ fn frontmatter_hides_sidebar() {
     assert!(html.contains(r#"<header class="header">"#), "{html}");
     // Without the class the main column keeps the sidebar's left offset.
     assert!(body_class(&html).contains("ox-no-sidebar"), "{html}");
-    assert!(!html.contains("sessionStorage, \"sidebarScroll\""), "nothing to restore: {html}");
+    assert!(!html.contains("\"sessionStorage\", \"sidebarScroll\""), "nothing to restore: {html}");
 }
 
 #[test]
