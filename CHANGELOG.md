@@ -1,5 +1,16 @@
 # Changelog
 
+## [3.2.14] - 2026-10-09
+
+### Features
+
+- release patches from vX.Y.x maintenance lines (#1494) _(affects: ci, docs, tooling)_
+
+### Bug Fixes
+
+- end the circle reveal on the new theme and carry named elements (#1495) _(affects: crates: ox_content_ssg; npm: @ox-content/vite-plugin; docs)_
+- restore the sidebar before first paint and respect page layout options (#1493) _(affects: crates: ox_content_ssg; npm: @ox-content/vite-plugin; docs)_
+
 ## [3.2.13] - 2026-09-29
 
 ### Features
