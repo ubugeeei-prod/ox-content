@@ -1,9 +1,11 @@
 import { describe, expect, it } from "vite-plus/test";
 import {
   hasReleaseProtection,
+  isReleaseBase,
   releaseVersion,
   requireMaintainer,
   requireSuccessfulJobs,
+  requireVersionOnBase,
   type Ruleset,
 } from "./release-policy.ts";
 
@@ -79,5 +81,36 @@ describe("release branch and protection", () => {
     const wrongApp = structuredClone(protectedRule);
     wrongApp.rules[1].parameters!.required_status_checks![0].integration_id = 1;
     expect(hasReleaseProtection(wrongApp)).toBe(false);
+  });
+});
+
+describe("maintenance lines", () => {
+  it.each(["main", "v3.2.x", "v10.0.x", "v0.1.x"])("accepts %s as a release base", (ref) => {
+    expect(isReleaseBase(ref)).toBe(true);
+  });
+  it.each(["develop", "v3.x", "v3.2.1", "v03.2.x", "release/v3.2.x", "v3.2.x;echo", "3.2.x"])(
+    "rejects %s as a release base",
+    (ref) => {
+      expect(isReleaseBase(ref)).toBe(false);
+      expect(() => requireVersionOnBase("3.2.14", ref)).toThrow(/maintenance branch/);
+    },
+  );
+  it.each(["3.2.14", "3.2.15-beta.0"])("ships %s from v3.2.x", (version) => {
+    expect(() => requireVersionOnBase(version, "v3.2.x")).not.toThrow();
+  });
+  it.each(["3.3.0", "3.20.1", "4.2.0", "13.2.0"])("keeps %s off v3.2.x", (version) => {
+    expect(() => requireVersionOnBase(version, "v3.2.x")).toThrow(/v3\.2\.x maintenance line/);
+  });
+  it("lets main ship any version", () => {
+    expect(() => requireVersionOnBase("3.2.14", "main")).not.toThrow();
+  });
+  it("requires the ruleset to cover both main and the maintenance line", () => {
+    expect(hasReleaseProtection(protectedRule, "v3.2.x")).toBe(false);
+    const both = structuredClone(protectedRule);
+    both.conditions.ref_name.include.push("refs/heads/v3.2.x");
+    expect(hasReleaseProtection(both, "v3.2.x")).toBe(true);
+    const lineOnly = structuredClone(protectedRule);
+    lineOnly.conditions.ref_name.include = ["refs/heads/v3.2.x"];
+    expect(hasReleaseProtection(lineOnly, "v3.2.x")).toBe(false);
   });
 });
