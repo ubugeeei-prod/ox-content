@@ -2,7 +2,8 @@ name: Release validation
 
 on:
   pull_request:
-    branches: [main]
+    # Release PRs target main or a vX.Y.x maintenance line.
+    branches: [main, "v[0-9]+.[0-9]+.x"]
     types: [opened, synchronize, reopened, ready_for_review, labeled, unlabeled]
 
 permissions:
@@ -68,7 +69,7 @@ jobs:
         uses: voidzero-dev/setup-vp@3754dd7dbdb32bd8f6d28b6043de13ad3a75f21f # v1.21.1
         with:
           run-install: false
-      - name: Require all release jobs and recheck current main and author
+      - name: Require all release jobs and recheck current base and author
         env:
           GH_TOKEN: ${{ github.token }}
           RELEASE_JOB_RESULTS: ${{ toJSON(needs) }}
