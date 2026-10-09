@@ -120,12 +120,17 @@ jobs:
           git switch -c "$branch"
           if [ -d extensions/ox-content ]; then
             git submodule update --init extensions/ox-content
-            git -C extensions/ox-content fetch origin
+            git -C extensions/ox-content fetch origin --tags
           else
             git submodule add https://github.com/ubugeeei-prod/ox-content.git extensions/ox-content
           fi
-          # Pin the released commit; main may already be on a newer line.
-          git -C extensions/ox-content checkout --detach "$GITHUB_SHA"
+          # Pin the released commit; main may already be on a newer line. A
+          # manual dispatch for a version pins that version's tag.
+          release_ref="$GITHUB_SHA"
+          if [ -n "$VERSION_INPUT" ]; then
+            release_ref="refs/tags/v${version}"
+          fi
+          git -C extensions/ox-content checkout --detach "$release_ref"
           perl -0pi -e \
             's/\[ox-content\]\n(?:[^\[]*\n)*/[ox-content]\nsubmodule = "extensions\/ox-content"\npath = "editors\/zed"\nversion = "'$version'"\n\n/s' \
             extensions.toml

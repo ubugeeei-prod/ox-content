@@ -80,9 +80,15 @@ jobs:
             TAG="${PRE_ID%%.*}"
           else
             TAG="latest"
-            # A maintenance-line release must not move `latest` back to an older line.
-            LATEST="$(npm view @ox-content/vite-plugin dist-tags.latest 2>/dev/null || true)"
-            if [[ -n "$LATEST" && "$(printf '%s\n' "$LATEST" "$VERSION" | sort -V | tail -n 1)" != "$VERSION" ]]; then
+            # A maintenance-line release must not move `latest` back to an older
+            # line. Release tags decide it for every package alike, and a failed
+            # lookup fails the step rather than defaulting to `latest`.
+            NEWEST="$(git ls-remote --tags --refs origin 'v*' | sed -n 's|.*refs/tags/v\([0-9][0-9.]*\)$|\1|p' | sort -V | tail -n 1)"
+            if [[ -z "$NEWEST" ]]; then
+              echo "::error::Could not list release tags"
+              exit 1
+            fi
+            if [[ "$(printf '%s\n' "$NEWEST" "$VERSION" | sort -V | tail -n 1)" != "$VERSION" ]]; then
               TAG="release-${VERSION%.*}"
             fi
           fi
@@ -227,9 +233,15 @@ jobs:
             TAG="${PRE_ID%%.*}"
           else
             TAG="latest"
-            # A maintenance-line release must not move `latest` back to an older line.
-            LATEST="$(npm view @ox-content/vite-plugin dist-tags.latest 2>/dev/null || true)"
-            if [[ -n "$LATEST" && "$(printf '%s\n' "$LATEST" "$VERSION" | sort -V | tail -n 1)" != "$VERSION" ]]; then
+            # A maintenance-line release must not move `latest` back to an older
+            # line. Release tags decide it for every package alike, and a failed
+            # lookup fails the step rather than defaulting to `latest`.
+            NEWEST="$(git ls-remote --tags --refs origin 'v*' | sed -n 's|.*refs/tags/v\([0-9][0-9.]*\)$|\1|p' | sort -V | tail -n 1)"
+            if [[ -z "$NEWEST" ]]; then
+              echo "::error::Could not list release tags"
+              exit 1
+            fi
+            if [[ "$(printf '%s\n' "$NEWEST" "$VERSION" | sort -V | tail -n 1)" != "$VERSION" ]]; then
               TAG="release-${VERSION%.*}"
             fi
           fi
