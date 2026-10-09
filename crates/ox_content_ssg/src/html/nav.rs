@@ -3,6 +3,20 @@ use std::fmt::Write as _;
 use super::utils::escape_html;
 use super::{NavGroup, NavItem};
 
+/// Restores the sidebar's collapse state and scroll position, then reveals the
+/// current page's link if it is out of view.
+///
+/// The page template places it directly after the sidebar markup, so the first
+/// frame and the cross-document view transition snapshot already show the
+/// restored state; head stylesheets block it, so layout is final when it runs.
+/// The deferred `ssg.js` only records later changes.
+pub(super) const SIDEBAR_BOOTSTRAP_JS: &str = include_str!("sidebar_bootstrap.js");
+
+/// Scopes the collapse-state keys to `base`, exactly as `ssg.js` does.
+pub(super) fn sidebar_bootstrap_js(base: &str) -> String {
+    SIDEBAR_BOOTSTRAP_JS.replace("{{base}}", base)
+}
+
 pub(super) fn generate_nav_html(nav_groups: &[NavGroup], current_path: &str) -> String {
     let mut html = String::new();
     for (group_index, group) in nav_groups.iter().enumerate() {

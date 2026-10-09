@@ -811,6 +811,9 @@ a:hover {
   min-width: 0;
   overflow-x: hidden;
 }
+.ox-no-sidebar .main {
+  margin-left: 0;
+}
 .main--with-toc {
   padding-right: 2rem;
 }
@@ -2459,6 +2462,41 @@ a:hover {
       </nav>
 
     </aside>
+    <script>(() => {
+  const sidebar = document.getElementById("ox-sidebar");
+  if (!sidebar) return;
+
+  const read = (storage, key) => {
+    try {
+      return storage.getItem(key);
+    } catch {
+      return null;
+    }
+  };
+
+  sidebar.querySelectorAll("details[data-ox-nav-state-key]").forEach((details) => {
+    const key = details.getAttribute("data-ox-nav-state-key");
+    const state = read(localStorage, "ox-content:nav:/docs/:" + key);
+    if (state === "open") {
+      details.open = true;
+    } else if (state === "closed") {
+      details.open = false;
+    }
+  });
+
+  const saved = parseInt(read(sessionStorage, "sidebarScroll") ?? "", 10);
+  if (saved > 0) sidebar.scrollTop = saved;
+
+  const active = sidebar.querySelector(".nav-link.active");
+  const view = sidebar.clientHeight;
+  if (!active || !view || !active.getClientRects().length) return;
+  const top =
+    active.getBoundingClientRect().top - sidebar.getBoundingClientRect().top + sidebar.scrollTop;
+  if (top < sidebar.scrollTop || top + active.offsetHeight > sidebar.scrollTop + view) {
+    sidebar.scrollTop = Math.max(0, top - view / 3);
+  }
+})();
+</script>
 
     <main class="main">
 
@@ -2545,22 +2583,19 @@ if (sidebar && overlay) {
   });
 }
 
+// The inline sidebar bootstrap restores the scroll position and collapse
+// state before first paint; this deferred script only records changes.
 if (sidebar) {
-  const savedPos = sessionStorage.getItem("sidebarScroll");
-  if (savedPos) sidebar.scrollTop = parseInt(savedPos, 10);
-  sidebar.addEventListener("scroll", () =>
-    sessionStorage.setItem("sidebarScroll", sidebar.scrollTop),
-  );
+  sidebar.addEventListener("scroll", () => {
+    try {
+      sessionStorage.setItem("sidebarScroll", sidebar.scrollTop);
+    } catch {
+      // Ignore storage failures so navigation remains usable.
+    }
+  });
 }
 
 const navStateStoragePrefix = "ox-content:nav:/docs/:";
-const getNavState = (key) => {
-  try {
-    return localStorage.getItem(navStateStoragePrefix + key);
-  } catch {
-    return null;
-  }
-};
 const setNavState = (key, open) => {
   try {
     localStorage.setItem(navStateStoragePrefix + key, open ? "open" : "closed");
@@ -2572,13 +2607,6 @@ const setNavState = (key, open) => {
 document.querySelectorAll("details[data-ox-nav-state-key]").forEach((details) => {
   const key = details.getAttribute("data-ox-nav-state-key");
   if (!key) return;
-
-  const savedState = getNavState(key);
-  if (savedState === "open") {
-    details.open = true;
-  } else if (savedState === "closed") {
-    details.open = false;
-  }
 
   details.addEventListener("toggle", () => setNavState(key, details.open));
 });

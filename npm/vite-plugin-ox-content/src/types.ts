@@ -80,10 +80,14 @@ export interface HeroImage {
   /** Alt text */
   alt?: string;
 
-  /** Image width */
+  /**
+   * Rendered width in CSS pixels. With only one of `width` or `height`, the
+   * other follows the image's aspect ratio. Without either, the image keeps
+   * its natural size, capped by the hero column.
+   */
   width?: number;
 
-  /** Image height */
+  /** Rendered height in CSS pixels. See `width`. */
   height?: number;
 }
 
