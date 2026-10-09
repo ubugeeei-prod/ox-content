@@ -1,11 +1,16 @@
 #!/usr/bin/env node
-// Usage: vp run release [patch|minor|major|alpha|beta|x.y.z] | --resume <pr-number>
+// Usage: vp run release [patch|minor|major|alpha|beta|x.y.z] [--base vX.Y.x] | --resume <pr-number>
 
 import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { bumpVersion, prepareRelease } from "./release-prepare.ts";
-import { releaseVersion, VERSION_PATTERN } from "./release-policy.ts";
+import {
+  releaseVersion,
+  requireReleaseBase,
+  requireVersionOnBase,
+  VERSION_PATTERN,
+} from "./release-policy.ts";
 import {
   api,
   authorPermission,
@@ -21,24 +26,25 @@ import {
 
 const root = resolve(import.meta.dirname, "../..");
 
-function createReleasePr(repo: string, input: string): number {
-  run("git", ["fetch", "origin", "main", "--tags"], root);
+function createReleasePr(repo: string, input: string, base: string): number {
+  run("git", ["fetch", "origin", base, "--tags"], root);
   const current = JSON.parse(
-    run("git", ["show", "origin/main:crates/ox_content_napi/package.json"], root),
+    run("git", ["show", `origin/${base}:crates/ox_content_napi/package.json`], root),
   ).version;
   const bumps = ["patch", "minor", "major", "alpha", "beta"] as const;
   const version = bumps.includes(input as (typeof bumps)[number])
     ? bumpVersion(current, input as (typeof bumps)[number])
     : input;
   if (!VERSION_PATTERN.test(version)) throw new Error(`Invalid version: ${version}`);
+  requireVersionOnBase(version, base);
   const branch = `release/v${version}`;
   const existing = api<PullRequest[]>(
     repo,
-    `pulls?state=open&base=main&head=${encodeURIComponent(`${repo.split("/")[0]}:${branch}`)}`,
+    `pulls?state=open&base=${base}&head=${encodeURIComponent(`${repo.split("/")[0]}:${branch}`)}`,
   );
   if (existing.length) return existing[0].number;
   if (current === version)
-    throw new Error(`main is already v${version}; use --resume <pr-number>.`);
+    throw new Error(`${base} is already v${version}; use --resume <pr-number>.`);
   if (run("git", ["ls-remote", "--tags", "origin", `refs/tags/v${version}`], root)) {
     throw new Error(`v${version} already exists; use --resume <pr-number>.`);
   }
@@ -46,9 +52,9 @@ function createReleasePr(repo: string, input: string): number {
   const worktree = join(temp, "checkout");
   let added = false;
   try {
-    run("git", ["worktree", "add", "-b", branch, worktree, "origin/main"], root);
+    run("git", ["worktree", "add", "-b", branch, worktree, `origin/${base}`], root);
     added = true;
-    // Prepare from the fetched main inside the isolated checkout.
+    // Prepare from the fetched base inside the isolated checkout.
     run(
       process.execPath,
       [join(worktree, "tools/scripts/release.ts"), version, "--prepare-only"],
@@ -60,7 +66,7 @@ function createReleasePr(repo: string, input: string): number {
     const body = join(temp, "body.md");
     writeFileSync(
       body,
-      `Release v${version}.\n\nThe release command waits for the full release validation and CI, updates this PR if main advances, and merges only with strict Release gate protection. The tag is created after the merge.\n`,
+      `Release v${version}.\n\nThe release command waits for the full release validation and CI, updates this PR if ${base} advances, and merges only with strict Release gate protection. The tag is created after the merge.\n`,
     );
     const url = run(
       "gh",
@@ -70,7 +76,7 @@ function createReleasePr(repo: string, input: string): number {
         "--repo",
         repo,
         "--base",
-        "main",
+        base,
         "--head",
         branch,
         "--title",
@@ -96,21 +102,23 @@ function createReleasePr(repo: string, input: string): number {
 
 function tagMergedRelease(repo: string, pr: PullRequest): string {
   requireReleasePr(repo, pr);
-  ensureReleaseProtection(repo);
+  const base = pr.base.ref;
+  ensureReleaseProtection(repo, false, base);
   if (!pr.merged || !pr.merge_commit_sha) throw new Error("Release PR has not merged.");
   const version = releaseVersion(pr.head.ref);
+  requireVersionOnBase(version, base);
   for (const workflow of ["ci.yml", "release-pr.yml"]) {
     if (!runPassed(latestRun(repo, workflow, pr.head.sha, "pull_request"))) {
       throw new Error(`No successful ${workflow} run for the merged release PR head.`);
     }
   }
-  run("git", ["fetch", "origin", "main", pr.head.sha, pr.merge_commit_sha], root);
+  run("git", ["fetch", "origin", base, pr.head.sha, pr.merge_commit_sha], root);
   run("git", ["merge-base", "--is-ancestor", `${pr.merge_commit_sha}^1`, pr.head.sha], root);
   const tree = (sha: string) => run("git", ["rev-parse", `${sha}^{tree}`], root);
   if (tree(pr.head.sha) !== tree(pr.merge_commit_sha)) {
     throw new Error("Merged tree differs from the validated release PR; refusing to tag.");
   }
-  run("git", ["merge-base", "--is-ancestor", pr.merge_commit_sha, "origin/main"], root);
+  run("git", ["merge-base", "--is-ancestor", pr.merge_commit_sha, `origin/${base}`], root);
   const pkg = JSON.parse(
     run("git", ["show", `${pr.merge_commit_sha}:crates/ox_content_napi/package.json`], root),
   );
@@ -143,17 +151,22 @@ async function main(): Promise<void> {
   }
   if (args[0] === "--help") {
     console.log(
-      "vp run release [patch|minor|major|alpha|beta|x.y.z]\nvp run release --resume <pr-number>",
+      "vp run release [patch|minor|major|alpha|beta|x.y.z] [--base vX.Y.x]\nvp run release --resume <pr-number>",
     );
     return;
   }
   const resume = args[0] === "--resume";
+  const baseAt = args.indexOf("--base");
+  const base = baseAt === -1 ? "main" : args[baseAt + 1];
+  const rest =
+    baseAt === -1 ? args : args.filter((_, index) => index < baseAt || index > baseAt + 1);
   if (
     (resume && (args.length !== 2 || !/^[1-9]\d*$/.test(args[1]))) ||
-    (!resume && args.length > 1)
+    (!resume && (rest.length > 1 || (baseAt !== -1 && !base)))
   ) {
-    throw new Error("Usage: vp run release [version] | --resume <pr-number>");
+    throw new Error("Usage: vp run release [version] [--base vX.Y.x] | --resume <pr-number>");
   }
+  requireReleaseBase(base);
   const repo = run(
     "gh",
     ["repo", "view", "--json", "nameWithOwner", "--jq", ".nameWithOwner"],
@@ -162,7 +175,9 @@ async function main(): Promise<void> {
   const login = run("gh", ["api", "user", "--jq", ".login"], root);
   authorPermission(repo, login);
   ensureReleaseProtection(repo, true);
-  const number = resume ? Number(args[1]) : createReleasePr(repo, args[0] ?? "patch");
+  // A resumed PR's base is checked once the PR is read.
+  if (!resume) ensureReleaseProtection(repo, false, base);
+  const number = resume ? Number(args[1]) : createReleasePr(repo, rest[0] ?? "patch", base);
   try {
     console.log(`Release PR #${number}; resume with: vp run release --resume ${number}`);
     const pr = await mergeRelease(repo, number);

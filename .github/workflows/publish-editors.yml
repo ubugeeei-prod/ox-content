@@ -121,10 +121,11 @@ jobs:
           if [ -d extensions/ox-content ]; then
             git submodule update --init extensions/ox-content
             git -C extensions/ox-content fetch origin
-            git -C extensions/ox-content checkout -B main origin/main
           else
             git submodule add https://github.com/ubugeeei-prod/ox-content.git extensions/ox-content
           fi
+          # Pin the released commit; main may already be on a newer line.
+          git -C extensions/ox-content checkout --detach "$GITHUB_SHA"
           perl -0pi -e \
             's/\[ox-content\]\n(?:[^\[]*\n)*/[ox-content]\nsubmodule = "extensions\/ox-content"\npath = "editors\/zed"\nversion = "'$version'"\n\n/s' \
             extensions.toml

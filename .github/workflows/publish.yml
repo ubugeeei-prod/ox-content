@@ -80,6 +80,11 @@ jobs:
             TAG="${PRE_ID%%.*}"
           else
             TAG="latest"
+            # A maintenance-line release must not move `latest` back to an older line.
+            LATEST="$(npm view @ox-content/vite-plugin dist-tags.latest 2>/dev/null || true)"
+            if [[ -n "$LATEST" && "$(printf '%s\n' "$LATEST" "$VERSION" | sort -V | tail -n 1)" != "$VERSION" ]]; then
+              TAG="release-${VERSION%.*}"
+            fi
           fi
 
           if [[ ! "$TAG" =~ ^[A-Za-z0-9][A-Za-z0-9._-]*$ ]]; then
@@ -222,6 +227,11 @@ jobs:
             TAG="${PRE_ID%%.*}"
           else
             TAG="latest"
+            # A maintenance-line release must not move `latest` back to an older line.
+            LATEST="$(npm view @ox-content/vite-plugin dist-tags.latest 2>/dev/null || true)"
+            if [[ -n "$LATEST" && "$(printf '%s\n' "$LATEST" "$VERSION" | sort -V | tail -n 1)" != "$VERSION" ]]; then
+              TAG="release-${VERSION%.*}"
+            fi
           fi
 
           if [[ ! "$TAG" =~ ^[A-Za-z0-9][A-Za-z0-9._-]*$ ]]; then
