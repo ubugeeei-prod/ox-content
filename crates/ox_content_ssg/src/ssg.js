@@ -41,22 +41,19 @@ if (sidebar && overlay) {
   });
 }
 
+// The inline sidebar bootstrap restores the scroll position and collapse
+// state before first paint; this deferred script only records changes.
 if (sidebar) {
-  const savedPos = sessionStorage.getItem("sidebarScroll");
-  if (savedPos) sidebar.scrollTop = parseInt(savedPos, 10);
-  sidebar.addEventListener("scroll", () =>
-    sessionStorage.setItem("sidebarScroll", sidebar.scrollTop),
-  );
+  sidebar.addEventListener("scroll", () => {
+    try {
+      sessionStorage.setItem("sidebarScroll", sidebar.scrollTop);
+    } catch {
+      // Ignore storage failures so navigation remains usable.
+    }
+  });
 }
 
 const navStateStoragePrefix = "ox-content:nav:{{base}}:";
-const getNavState = (key) => {
-  try {
-    return localStorage.getItem(navStateStoragePrefix + key);
-  } catch {
-    return null;
-  }
-};
 const setNavState = (key, open) => {
   try {
     localStorage.setItem(navStateStoragePrefix + key, open ? "open" : "closed");
@@ -68,13 +65,6 @@ const setNavState = (key, open) => {
 document.querySelectorAll("details[data-ox-nav-state-key]").forEach((details) => {
   const key = details.getAttribute("data-ox-nav-state-key");
   if (!key) return;
-
-  const savedState = getNavState(key);
-  if (savedState === "open") {
-    details.open = true;
-  } else if (savedState === "closed") {
-    details.open = false;
-  }
 
   details.addEventListener("toggle", () => setNavState(key, details.open));
 });

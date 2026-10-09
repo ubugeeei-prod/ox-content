@@ -83,6 +83,7 @@
       </nav>
 {{ embed_sidebar_after|safe }}
     </aside>
+    <script>{{ sidebar_bootstrap_js|safe }}</script>
 {% endif %}
     <main class="main{% if has_toc %} main--with-toc{% endif %}"{% if skip_link.is_some() %} id="ox-main"{% endif %}>
 {{ embed_content_before|safe }}
