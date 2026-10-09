@@ -774,6 +774,9 @@ a:hover {
   min-width: 0;
   overflow-x: hidden;
 }
+.ox-no-sidebar .main {
+  margin-left: 0;
+}
 .main--with-toc {
   padding-right: 2rem;
 }

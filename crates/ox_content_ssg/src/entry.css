@@ -127,10 +127,18 @@
 }
 
 .hero-image img {
-  width: 100%;
-  height: auto;
+  max-width: 100%;
+  margin-inline: auto;
+  object-fit: contain;
   filter: none;
   display: block;
+}
+
+/* Authored `width`/`height` attributes size the image; `object-fit` keeps a
+   mismatched pair from distorting it. Without them it spans the image column. */
+.hero-image img:not([width], [height]) {
+  width: 100%;
+  height: auto;
 }
 
 .hero-actions {
@@ -331,7 +339,7 @@
   max-width: var(--octc-max-content-width);
 }
 
-.entry-page--subtle .hero-image img {
+.entry-page--subtle .hero-image img:not([width], [height]) {
   width: min(100%, 280px);
 }
 

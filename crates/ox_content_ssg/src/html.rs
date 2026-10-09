@@ -168,6 +168,7 @@ struct PageTemplate<'a> {
     embed_sidebar_before: &'a str,
     navigation: &'a str,
     embed_sidebar_after: &'a str,
+    sidebar_bootstrap_js: &'a str,
     embed_content_before: &'a str,
     breadcrumbs: Option<&'a BreadcrumbsView>,
     main_content: &'a str,

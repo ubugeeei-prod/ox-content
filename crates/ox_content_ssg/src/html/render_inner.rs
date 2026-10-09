@@ -14,7 +14,7 @@ use super::heading_permalinks::{push_heading_permalink_body_class, push_heading_
 use super::json_ld::render_json_ld;
 use super::locale_switcher::render_locale_switcher;
 use super::mpa_navigation::{MPA_NAVIGATION_CSS, THEME_BOOTSTRAP_JS, view_transitions_enabled};
-use super::nav::generate_nav_html;
+use super::nav::{generate_nav_html, sidebar_bootstrap_js};
 use super::not_by_ai::push_not_by_ai_css;
 use super::page_js::{PageJsInput, assemble_page_js};
 use super::pagination::resolve_pager;
@@ -288,6 +288,9 @@ pub(super) fn generate_html_inner(
         body_classes.push("entry-page--subtle".to_string());
     }
     push_header_chrome_body_classes(&mut body_classes, &announcement_html, chrome);
+    if nav_html.is_empty() {
+        body_classes.push("ox-no-sidebar".to_string());
+    }
     push_heading_permalink_body_class(&mut body_classes, theme, &page_data.content);
     let body_class = body_classes.join(" ");
     let page_head = render_themed_head(page_data, config, json_ld.as_deref());
@@ -321,6 +324,7 @@ pub(super) fn generate_html_inner(
         embed_sidebar_before,
         navigation: &nav_html,
         embed_sidebar_after,
+        sidebar_bootstrap_js: &sidebar_bootstrap_js(&config.base),
         embed_content_before,
         breadcrumbs: breadcrumbs.as_ref(),
         main_content: &main_content,

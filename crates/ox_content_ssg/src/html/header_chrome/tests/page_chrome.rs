@@ -1,4 +1,4 @@
-use super::super::super::{ThemeConfig, ThemeFooter};
+use super::super::super::{SSG_CSS, ThemeConfig, ThemeFooter};
 use super::super::{PageChromeFlags, ThemeAnnouncement};
 use super::{body_class, nav_item, render};
 
@@ -9,6 +9,14 @@ fn frontmatter_hides_sidebar() {
 
     assert!(!html.contains(r#"class="sidebar""#), "{html}");
     assert!(html.contains(r#"<header class="header">"#), "{html}");
+    // Without the class the main column keeps the sidebar's left offset.
+    assert!(body_class(&html).contains("ox-no-sidebar"), "{html}");
+    assert!(!html.contains("\"sessionStorage\", \"sidebarScroll\""), "nothing to restore: {html}");
+}
+
+#[test]
+fn hidden_sidebar_releases_the_main_column_offset() {
+    assert!(SSG_CSS.contains(".ox-no-sidebar .main {\n  margin-left: 0;\n}"));
 }
 
 #[test]
@@ -19,6 +27,7 @@ fn frontmatter_hides_navbar() {
     assert!(!html.contains(r#"<header class="header">"#), "{html}");
     assert!(body_class(&html).contains("ox-no-navbar"), "{html}");
     assert!(html.contains(r#"<aside id="ox-sidebar" class="sidebar">"#), "{html}");
+    assert!(!body_class(&html).contains("ox-no-sidebar"), "{html}");
 }
 
 #[test]
@@ -32,6 +41,7 @@ fn page_chrome_off_ignores_hide_flags() {
     assert!(html.contains(r#"<aside id="ox-sidebar" class="sidebar">"#), "{html}");
     assert!(html.contains(r#"<header class="header">"#), "{html}");
     assert!(!body_class(&html).contains("ox-no-navbar"), "{html}");
+    assert!(!body_class(&html).contains("ox-no-sidebar"), "{html}");
 }
 
 #[test]
