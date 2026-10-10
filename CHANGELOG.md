@@ -1,6 +1,6 @@
 # Changelog
 
-## [3.3.0] - 2026-10-05
+## [3.3.0] - 2026-10-10
 
 ### Features
 
@@ -8,11 +8,15 @@
 - strengthen Markdown checks with opt-in prose rules and parallel execution (#1480) _(affects: crates: ox_content_cli, ox_content_lsp, ox_content_markdown_lint, ox_content_napi, ox_content_parser; npm: @ox-content/napi, @ox-content/vite-plugin, vscode-ox-content; ci, docs, tooling, workspace metadata)_
 - validate glob-specific schemas in builds and editors (#1472) _(affects: npm: @ox-content/vite-plugin, vscode-ox-content; docs, tooling, workspace metadata)_
 - add a modern interactive Markdown reader (#1471) _(affects: npm: @ox-content/vite-plugin; docs, tooling, workspace metadata)_
-- add guided project and IDE setup (#1470) _(affects: npm: @ox-content/vite-plugin, oxct; ci, docs, editor extensions, tooling, workspace metadata)_
+- add guided project and IDE setup (#1470) _(affects: npm: @ox-content/vite-plugin, @ox-content/cli; ci, docs, editor extensions, tooling, workspace metadata)_
 - add fast native Markdown lint (#1468) _(affects: crates: ox_content_lsp, ox_content_mermaid; npm: @ox-content/vite-plugin; docs, tooling, workspace metadata)_
 
 ### Bug Fixes
 
+- publish the authoring package as @ox-content/cli (#1498) _(affects: npm: @ox-content/cli; ci, docs, tooling)_
+- end the circle reveal on the new theme and carry named elements (#1495) _(affects: crates: ox_content_ssg; npm: @ox-content/vite-plugin; docs)_
+- restore the sidebar before first paint and respect page layout options (#1493) _(affects: crates: ox_content_ssg; npm: @ox-content/vite-plugin; docs)_
+- resolve npm advisories blocking authoring CI _(affects: workspace metadata)_
 - eliminate fence false positives and prefer longest terms (#1481) _(affects: crates: ox_content_markdown_lint; docs)_
 - keep transformed values inside the validation worker (#1478) _(affects: npm: @ox-content/vite-plugin)_
 - preserve LF patch files on Windows checkouts (#1476)
