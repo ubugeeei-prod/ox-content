@@ -66,6 +66,9 @@ jobs:
     runs-on: ubuntu-latest
     needs: build-editors
     environment: open-vsx
+    permissions:
+      contents: read
+      id-token: write
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -84,9 +87,8 @@ jobs:
           path: dist/vscode
           merge-multiple: true
 
-      - name: Publish with ovsx
+      - name: Publish with Open VSX trusted publishing
         env:
-          OVSX_PAT: ${{ secrets.OVSX_PAT }}
           PUBLISH_FROM_DISPATCH: ${{ inputs.publish }}
         run: node tools/scripts/publish-editor-extensions.ts open-vsx
 
