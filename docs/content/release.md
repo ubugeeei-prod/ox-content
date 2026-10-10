@@ -142,6 +142,29 @@ exists. The first trust call prompts for 2FA; later ones in the same five
 minutes can skip it. The publish steps skip versions that already exist, so
 the bootstrap publish is not republished.
 
+## Open VSX Trusted Publishing
+
+The Open VSX publishing job uses GitHub Actions OIDC with `ovsx --trusted-publishing`.
+It requires `id-token: write` and the `open-vsx` environment; no `OVSX_PAT` secret
+is needed. A publishing run fails if its OIDC credentials or registry registration
+are unavailable. Packaging-only dispatches still build without publishing.
+
+Open VSX currently requires the extension to have an active published version
+before a namespace owner can register its trusted publisher. Complete that
+one-time registration in Open VSX Settings → Trusted Publishers with:
+
+- Namespace: `ubugeeei`
+- Extension: `vscode-ox-content`
+- Provider: GitHub Actions
+- Organization: `ubugeeei-prod`
+- Repository: `ox-content`
+- Workflow: `publish-editors.yml`
+- Environment: `open-vsx`
+
+The namespace owner must also sign the Open VSX Publisher Agreement. See the
+[Open VSX trusted publishing guide](https://github.com/eclipse-openvsx/openvsx/wiki/Trusted-Publishing)
+for the initial publication and registration requirements.
+
 ## First-Time Crate Publishing
 
 The crates.io job uses GitHub Actions Trusted Publishing. Trusted Publishing can

@@ -31,11 +31,12 @@ describe("publish editor extensions", () => {
     const openVsxFixture = createFixture();
     const openVsx = runPublisher(openVsxFixture, "open-vsx", {
       GITHUB_REF_NAME: "v3.0.0-alpha.7",
-      OVSX_PAT: "test-token",
+      ACTIONS_ID_TOKEN_REQUEST_URL: "https://example.invalid/oidc",
+      ACTIONS_ID_TOKEN_REQUEST_TOKEN: "test-oidc-request-token",
     });
 
     expect(openVsx.status).toBe(0);
-    expect(readFileSync(openVsxFixture.callLog, "utf8")).toContain("ovsx");
+    expect(readFileSync(openVsxFixture.callLog, "utf8")).toContain("ovsx@1.2.0");
 
     const marketplaceFixture = createFixture();
     const marketplace = runPublisher(marketplaceFixture, "vscode-marketplace", {
@@ -45,6 +46,50 @@ describe("publish editor extensions", () => {
 
     expect(marketplace.status).toBe(0);
     expect(readFileSync(marketplaceFixture.callLog, "utf8")).toContain("@vscode/vsce");
+  });
+
+  it("uses OIDC for every Open VSX target and ignores a configured PAT", () => {
+    const fixture = createFixture();
+    writeFileSync(join(fixture.root, "dist", "vscode", "vscode-ox-content-darwin-arm64.vsix"), "");
+    const result = runPublisher(fixture, "open-vsx", {
+      GITHUB_REF_NAME: "v3.3.0",
+      ACTIONS_ID_TOKEN_REQUEST_URL: "https://example.invalid/oidc",
+      ACTIONS_ID_TOKEN_REQUEST_TOKEN: "test-oidc-request-token",
+      OVSX_PAT: "unused-test-token",
+    });
+
+    expect(result.status).toBe(0);
+    const calls = readFileSync(fixture.callLog, "utf8")
+      .trim()
+      .split("\n")
+      .map((line) => JSON.parse(line));
+    expect(calls).toHaveLength(2);
+    for (const call of calls) {
+      expect(call.args).toContain("--trusted-publishing");
+      expect(call.args).not.toContain("-p");
+      expect(call.hasOpenVsxPat).toBe(false);
+    }
+  });
+
+  it("fails Open VSX publishing without OIDC credentials", () => {
+    const fixture = createFixture();
+    const result = runPublisher(fixture, "open-vsx", { GITHUB_REF_NAME: "v3.3.0" });
+
+    expect(result.status).toBe(1);
+    expect(result.stderr).toContain("requires GitHub Actions OIDC credentials");
+    expect(existsSync(fixture.callLog)).toBe(false);
+  });
+
+  it("allows packaging-only dispatch without OIDC credentials", () => {
+    const fixture = createFixture();
+    const result = runPublisher(fixture, "open-vsx", {
+      GITHUB_EVENT_NAME: "workflow_dispatch",
+      PUBLISH_FROM_DISPATCH: "false",
+    });
+
+    expect(result.status).toBe(0);
+    expect(result.stdout).toContain("Packaging-only dispatch");
+    expect(existsSync(fixture.callLog)).toBe(false);
   });
 });
 
@@ -64,7 +109,7 @@ function createFixture() {
     [
       "#!/usr/bin/env node",
       "const fs = require('node:fs');",
-      "fs.appendFileSync(process.env.VP_CALL_LOG, JSON.stringify(process.argv.slice(2)) + '\\n');",
+      "fs.appendFileSync(process.env.VP_CALL_LOG, JSON.stringify({ args: process.argv.slice(2), hasOpenVsxPat: process.env.OVSX_PAT !== undefined }) + '\\n');",
       "process.exit(0);",
     ].join("\n"),
   );
@@ -83,6 +128,10 @@ function runPublisher(
     encoding: "utf8",
     env: {
       ...process.env,
+      ACTIONS_ID_TOKEN_REQUEST_URL: "",
+      ACTIONS_ID_TOKEN_REQUEST_TOKEN: "",
+      OVSX_PAT: "",
+      GITHUB_EVENT_NAME: "push",
       ...env,
       PATH: `${fixture.binDir}${process.platform === "win32" ? ";" : ":"}${process.env.PATH}`,
       VP_CALL_LOG: fixture.callLog,

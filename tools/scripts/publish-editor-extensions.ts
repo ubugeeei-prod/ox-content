@@ -7,8 +7,8 @@ import { setTimeout as sleep } from "node:timers/promises";
 
 type Registry = {
   label: string;
-  tokenEnv: string;
-  args: (vsix: string, token: string) => string[];
+  tokenEnv?: string;
+  args: (vsix: string) => string[];
 };
 
 // Marketplace outages surface as a hard failure on the very first VSIX (Azure
@@ -45,19 +45,17 @@ const registries: Record<string, Registry> = {
   },
   "open-vsx": {
     label: "Open VSX",
-    tokenEnv: "OVSX_PAT",
-    args: (vsix, token) => [
+    args: (vsix) => [
       "exec",
       "--",
       "pnpm",
       "dlx",
       ...allowBuildFlags,
-      "ovsx",
+      "ovsx@1.2.0",
       "publish",
       vsix,
       "--skip-duplicate",
-      "-p",
-      token,
+      "--trusted-publishing",
     ],
   },
 };
@@ -85,12 +83,21 @@ if (registry === registries["vscode-marketplace"] && isPrereleaseVersion(release
   process.exit(0);
 }
 
-const token = process.env[registry.tokenEnv];
-if (!token) {
+if (registry.tokenEnv && !process.env[registry.tokenEnv]) {
   console.log(
     `::warning::${registry.tokenEnv} is not configured; skipping ${registry.label} publish.`,
   );
   process.exit(0);
+}
+
+const publishEnv = { ...process.env };
+if (registry === registries["open-vsx"]) {
+  if (!publishEnv.ACTIONS_ID_TOKEN_REQUEST_URL || !publishEnv.ACTIONS_ID_TOKEN_REQUEST_TOKEN) {
+    console.error("::error::Open VSX publishing requires GitHub Actions OIDC credentials.");
+    process.exit(1);
+  }
+  // ovsx gives PATs precedence over OIDC even with --trusted-publishing.
+  delete publishEnv.OVSX_PAT;
 }
 
 const packages = listVsixPackages();
@@ -101,7 +108,7 @@ console.log(
 );
 
 for (const vsix of packages) {
-  await publishWithRetry(registry, vsix, token);
+  await publishWithRetry(registry, vsix, publishEnv);
 }
 
 function listVsixPackages(): string[] {
@@ -151,11 +158,15 @@ function isPrereleaseVersion(version: string | null): boolean {
   return version !== null && /^\d+\.\d+\.\d+-/.test(version);
 }
 
-async function publishWithRetry(target: Registry, vsix: string, pat: string): Promise<void> {
+async function publishWithRetry(
+  target: Registry,
+  vsix: string,
+  env: NodeJS.ProcessEnv,
+): Promise<void> {
   let delay = initialDelayMs;
 
   for (let attempt = 1; attempt <= maxAttempts; attempt++) {
-    const result = spawnSync("vp", target.args(vsix, pat), { stdio: "inherit" });
+    const result = spawnSync("vp", target.args(vsix), { stdio: "inherit", env });
 
     if (result.status === 0) {
       return;
