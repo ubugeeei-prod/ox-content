@@ -1,6 +1,6 @@
 {
   "name": "oxct",
-  "version": "3.2.13",
+  "version": "3.3.0",
   "description": "Ox Content authoring CLI: native Markdown lint, Vite projects, IDE setup, and terminal reading",
   "license": "MIT",
   "author": "ubugeeei",
