@@ -290,7 +290,7 @@ jobs:
           TARBALL=$(vp exec -- pnpm pack --pack-destination /tmp | tail -1)
           npm publish "$TARBALL" --provenance --access public --tag "$NPM_TAG"
 
-      - name: Publish oxct
+      - name: Publish @ox-content/cli
         working-directory: npm/oxct
         run: |
           PKG_NAME=$(node -p "require('./package.json').name")

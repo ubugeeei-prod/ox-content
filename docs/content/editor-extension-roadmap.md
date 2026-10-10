@@ -16,7 +16,7 @@ must not depend on a later one in the list.
    translate LSP capabilities into editor-native UI.
 2. **Every feature ships a CLI counterpart.** If a check or generator only
    exists inside the LSP, it cannot run in CI. The minimum bar is one binary
-   per feature (`vpx oxct link-check`, a configured textlint command, …) returning
+   per feature (`vpx @ox-content/cli link-check`, a configured textlint command, …) returning
    non-zero on failure with a stable text/JSON output.
 3. **Native dependencies stay native.** Type-aware features that need
    TypeScript talk to `typescript-go` via the `corsa_client` Rust crate, not
@@ -31,21 +31,21 @@ must not depend on a later one in the list.
 
 ## Feature Matrix
 
-| #   | Feature                                         | LSP                                           | CLI                          | VS Code                                       | Neovim                                        | Status           |
-| --- | ----------------------------------------------- | --------------------------------------------- | ---------------------------- | --------------------------------------------- | --------------------------------------------- | ---------------- |
-| 1   | Markdown preview (HMR)                          | push channel                                  | none                         | subscribed webview                            | external browser, on-demand                   | needs CLI + nvim |
-| 2   | i18n preview / completion                       | present                                       | `vpx oxct i18n`              | present                                       | present                                       | shipped          |
-| 3   | MDC completion + type check                     | completion + hover + definition + diagnostics | `vpx oxct mdc-check`         | completion + hover + definition + diagnostics | completion + hover + definition + diagnostics | shipped          |
-| 4   | Vue / React props completion + jump + typecheck | crate scaffold                                | planned                      | planned                                       | planned                                       | scaffold landed  |
-| 5   | Asset path completion + diagnostics             | completion provider                           | via link checker             | completion + diagnostics                      | completion + diagnostics                      | shipped          |
-| 6   | Dead link checker                               | diagnostics                                   | `vpx oxct link-check`        | diagnostics                                   | diagnostics                                   | local: shipped   |
-| 7   | textlint integration                            | diagnostics + quickfix                        | via configured command       | enabled per setting                           | enabled per setting                           | shipped (opt-in) |
-| 8   | Frontmatter schema completion + diagnostics     | present                                       | none (validated through LSP) | present                                       | present                                       | built-in meta    |
-| 9   | Document structure (outline + folding)          | symbols + folding ranges                      | none (unit-tested headless)  | outline + folding                             | outline + folding                             | shipped          |
-| 10  | Document links (Markdown links + images)        | document link provider                        | none (unit-tested headless)  | clickable links                               | clickable links                               | shipped          |
-| 11  | Selection ranges (expand selection)             | selection range provider                      | none (unit-tested headless)  | expand/shrink selection                       | expand/shrink selection                       | shipped          |
-| 12  | Document highlights (matching link targets)     | document highlight prov.                      | none (unit-tested headless)  | highlight same-target                         | highlight same-target                         | shipped          |
-| 13  | Half/full-width spacing                         | diagnostics + formatting                      | none (validated through LSP) | quickfix + save fix                           | quickfix + formatting                         | shipped          |
+| #   | Feature                                         | LSP                                           | CLI                              | VS Code                                       | Neovim                                        | Status           |
+| --- | ----------------------------------------------- | --------------------------------------------- | -------------------------------- | --------------------------------------------- | --------------------------------------------- | ---------------- |
+| 1   | Markdown preview (HMR)                          | push channel                                  | none                             | subscribed webview                            | external browser, on-demand                   | needs CLI + nvim |
+| 2   | i18n preview / completion                       | present                                       | `vpx @ox-content/cli i18n`       | present                                       | present                                       | shipped          |
+| 3   | MDC completion + type check                     | completion + hover + definition + diagnostics | `vpx @ox-content/cli mdc-check`  | completion + hover + definition + diagnostics | completion + hover + definition + diagnostics | shipped          |
+| 4   | Vue / React props completion + jump + typecheck | crate scaffold                                | planned                          | planned                                       | planned                                       | scaffold landed  |
+| 5   | Asset path completion + diagnostics             | completion provider                           | via link checker                 | completion + diagnostics                      | completion + diagnostics                      | shipped          |
+| 6   | Dead link checker                               | diagnostics                                   | `vpx @ox-content/cli link-check` | diagnostics                                   | diagnostics                                   | local: shipped   |
+| 7   | textlint integration                            | diagnostics + quickfix                        | via configured command           | enabled per setting                           | enabled per setting                           | shipped (opt-in) |
+| 8   | Frontmatter schema completion + diagnostics     | present                                       | none (validated through LSP)     | present                                       | present                                       | built-in meta    |
+| 9   | Document structure (outline + folding)          | symbols + folding ranges                      | none (unit-tested headless)      | outline + folding                             | outline + folding                             | shipped          |
+| 10  | Document links (Markdown links + images)        | document link provider                        | none (unit-tested headless)      | clickable links                               | clickable links                               | shipped          |
+| 11  | Selection ranges (expand selection)             | selection range provider                      | none (unit-tested headless)      | expand/shrink selection                       | expand/shrink selection                       | shipped          |
+| 12  | Document highlights (matching link targets)     | document highlight prov.                      | none (unit-tested headless)      | highlight same-target                         | highlight same-target                         | shipped          |
+| 13  | Half/full-width spacing                         | diagnostics + formatting                      | none (validated through LSP)     | quickfix + save fix                           | quickfix + formatting                         | shipped          |
 
 ## PR Sequence
 
@@ -86,7 +86,7 @@ Replace the polling refresh path with an explicit push channel.
 - ✅ VS Code webview subscribes on open, unsubscribes on dispose, and
   listens for `oxContent/previewDidChange` instead of debouncing on
   `onDidChangeTextDocument`.
-- Pending follow-up: CLI `vpx oxct preview` that hosts an SSE endpoint
+- Pending follow-up: CLI `vpx @ox-content/cli preview` that hosts an SSE endpoint
   backed by the same renderer (useful for `--watch` workflows and for the
   Neovim browser preview). Tracked as a separate PR so this one stays
   focused on the LSP push channel.
@@ -99,7 +99,7 @@ Replace the polling refresh path with an explicit push channel.
   resolution (relative paths, self-anchors, image targets). Offline-only
   by design; ships with 11 unit tests covering every link form documented
   in the crate README.
-- ✅ CLI `vpx oxct link-check [paths…] [--src-dir DIR] [--ignore PATTERN]
+- ✅ CLI `vpx @ox-content/cli link-check [paths…] [--src-dir DIR] [--ignore PATTERN]
 [--format text|json]` with exit-code-1-on-error semantics for CI.
 - ✅ LSP diagnostics under `source: "ox-content-link"`, wired into the
   per-document diagnostic publish path so they appear alongside parse,
