@@ -30,6 +30,7 @@ mod mpa_navigation;
 mod nav_active;
 mod navigation_state;
 mod rendering;
+mod sidebar_bootstrap;
 mod social;
 mod theme;
 mod theme_quality;

@@ -106,6 +106,20 @@ describe("applyThemeTransition reveal geometry", () => {
     expect(clip[1]).toBe("circle(0px at 0px 0px)");
   });
 
+  it.each(["dark", "light"])(
+    "holds the clip's end state until teardown when switching to %s",
+    async (nextTheme) => {
+      // Without it, the collapsed outgoing snapshot of a switch to light is
+      // painted whole for one frame before the transition tears down.
+      const h = harness();
+      const pending = h.applyThemeTransition({ nextTheme, apply: () => {} });
+      await h.settle();
+      await pending;
+
+      expect(h.animations[0].options.fill).toBe("forwards");
+    },
+  );
+
   it("falls back to the trigger centre for a keyboard activation", async () => {
     const h = harness();
     // A keyboard-driven click reports detail 0 and no coordinates.

@@ -18,6 +18,28 @@ export function requireMaintainer(permission: Permission): void {
   }
 }
 
+/** A maintenance line cut from a release tag, such as `v3.2.x`. */
+const MAINTENANCE_BRANCH = /^v(0|[1-9]\d*)\.(0|[1-9]\d*)\.x$/;
+
+export function isReleaseBase(ref: string): boolean {
+  return ref === "main" || MAINTENANCE_BRANCH.test(ref);
+}
+
+export function requireReleaseBase(ref: string): void {
+  if (!isReleaseBase(ref)) {
+    throw new Error(`Releases target main or a vX.Y.x maintenance branch, not ${ref}.`);
+  }
+}
+
+/** A maintenance line only ships versions of its own major.minor. */
+export function requireVersionOnBase(version: string, base: string): void {
+  requireReleaseBase(base);
+  const line = base.match(MAINTENANCE_BRANCH);
+  if (line && !version.startsWith(`${line[1]}.${line[2]}.`)) {
+    throw new Error(`v${version} does not belong to the ${base} maintenance line.`);
+  }
+}
+
 export function releaseVersion(branch: string): string {
   const version = branch.replace(/^release\/v/, "");
   if (!branch.startsWith("release/v") || !VERSION_PATTERN.test(version)) {
@@ -48,13 +70,14 @@ export type Ruleset = {
   }[];
 };
 
-export function hasReleaseProtection(rule: Ruleset): boolean {
+export function hasReleaseProtection(rule: Ruleset, base = "main"): boolean {
   return (
     rule.name === RELEASE_RULESET &&
     rule.enforcement === "active" &&
     (rule.bypass_actors === undefined || rule.bypass_actors.length === 0) &&
     (!rule.current_user_can_bypass || rule.current_user_can_bypass === "never") &&
     rule.conditions.ref_name.include.includes("refs/heads/main") &&
+    rule.conditions.ref_name.include.includes(`refs/heads/${base}`) &&
     rule.conditions.ref_name.exclude.length === 0 &&
     rule.rules.some((item) => item.type === "pull_request") &&
     rule.rules.some(

@@ -82,4 +82,6 @@ editLink: false
 
 `aside: false` は `outline: false` の別名です。`pageChrome` がオフのとき、これらのフラグは無視するので、既存の frontmatter がシェルを変えられません。
 
+サイドバーのないページには、ここで隠した場合もサイトにサイドバー項目がない場合も `<body>` に `ox-no-sidebar` が付き、メインカラムは左端から始まります。ナビバーを隠すと `ox-no-navbar` が付きます。`:has()` を使わずにランディングページを装飾するときに使えます。
+
 bare モードはヘッダーナビ、告知バー、page-chrome クラスを一切出しません。

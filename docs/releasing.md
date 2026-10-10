@@ -54,6 +54,26 @@ fail because of registry outages or credentials; resume reruns failed publishing
 jobs against the same tag. It never moves or deletes an existing tag. Optional
 Open VSX/Zed publication still follows the existing credential configuration.
 
+## Maintenance releases
+
+When main already carries the next minor or major, ship a patch from a
+maintenance line instead. Cut `vX.Y.x` from the last release tag, merge the
+fixes into it through PRs (cherry-picks of the commits merged into main), then
+release from it:
+
+```bash
+git push origin vX.Y.Z:refs/heads/vX.Y.x
+vp run release patch --base vX.Y.x
+```
+
+The release command, release validation and the tag check use the PR's base
+wherever main is used above. A `vX.Y.x` line only releases `X.Y.*` versions. The
+`Release pull requests` ruleset must include `refs/heads/vX.Y.x` as well as
+main, and the command stops if it does not. Add the branch to the ruleset once
+per line (requires Admin). If a newer stable release tag already exists,
+the npm packages are published under `release-X.Y` instead of `latest`. The Zed registry
+PR pins the released commit rather than main.
+
 ## Repository setup
 
 The first release command installs a `Release pull requests` ruleset if absent

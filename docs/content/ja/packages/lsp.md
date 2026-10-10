@@ -1,32 +1,32 @@
 ---
 title: チェッカーと言語サーバー
-description: vpx oxct lsp と CLI チェッカーが共有する診断、対応機能、既知のギャップ。
+description: vpx @ox-content/cli lsp と CLI チェッカーが共有する診断、対応機能、既知のギャップ。
 ---
 
 # チェッカーと言語サーバー
 
-`vpx oxct lsp` と CLI チェッカーは、Markdown / MDC / ローカルリンクについて
+`vpx @ox-content/cli lsp` と CLI チェッカーは、Markdown / MDC / ローカルリンクについて
 同じ診断ケースを共有します。エディタは
 `textDocument/publishDiagnostics` で受け取り、CI は同じコード・範囲・メッセージを
 `oxct` のチェッカーコマンドから実行できます。
 
 ## 共有する診断ケース
 
-| Source               | CLI                             | コード                                                                                  |
-| -------------------- | ------------------------------- | --------------------------------------------------------------------------------------- |
-| `ox-content-mdc`     | `vpx oxct mdc-check`            | `mdc-unquoted-prop`, `mdc-mismatched-tag`, `mdc-orphan-close`, `mdc-unclosed-tag`       |
-| `ox-content-link`    | `vpx oxct link-check`           | `link-missing-file`, `link-missing-anchor`, `link-cross-file-anchor`, `link-unresolved` |
-| `ox-content`         | なし（frontmatter は LSP のみ） | `frontmatter-unknown`, `frontmatter-type`, `frontmatter-enum`, `frontmatter-required`   |
-| `ox-content-spacing` | なし（spacing は LSP のみ）     | `space-between-half-and-full-width`, `require-space-between-half-and-full-width`        |
-| `textlint`           | 設定した `textlint` コマンド    | sidecar の rule id                                                                      |
+| Source               | CLI                              | コード                                                                                  |
+| -------------------- | -------------------------------- | --------------------------------------------------------------------------------------- |
+| `ox-content-mdc`     | `vpx @ox-content/cli mdc-check`  | `mdc-unquoted-prop`, `mdc-mismatched-tag`, `mdc-orphan-close`, `mdc-unclosed-tag`       |
+| `ox-content-link`    | `vpx @ox-content/cli link-check` | `link-missing-file`, `link-missing-anchor`, `link-cross-file-anchor`, `link-unresolved` |
+| `ox-content`         | なし（frontmatter は LSP のみ）  | `frontmatter-unknown`, `frontmatter-type`, `frontmatter-enum`, `frontmatter-required`   |
+| `ox-content-spacing` | なし（spacing は LSP のみ）      | `space-between-half-and-full-width`, `require-space-between-half-and-full-width`        |
+| `textlint`           | 設定した `textlint` コマンド     | sidecar の rule id                                                                      |
 
 MDC CLI は YAML frontmatter をスキップし、言語サーバーと同じ行にタグ診断を出します。
 リンク検査はどちらの面でも文書全体を対象にします。
 
 ```bash
-vpx oxct mdc-check --format json docs/page.mdc
-vpx oxct link-check --format json docs/page.md
-vpx oxct lsp
+vpx @ox-content/cli mdc-check --format json docs/page.mdc
+vpx @ox-content/cli link-check --format json docs/page.md
+vpx @ox-content/cli lsp
 ```
 
 ## 言語サーバーの振る舞い

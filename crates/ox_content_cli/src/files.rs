@@ -7,6 +7,9 @@ use std::{
 };
 use walkdir::WalkDir;
 
+#[cfg(test)]
+mod tests;
+
 pub const MARKDOWN_GLOB: &str = "**/*.{md,markdown,mdx,mdc}";
 pub const VIEWER_LIMIT: u64 = 4 * 1024 * 1024;
 

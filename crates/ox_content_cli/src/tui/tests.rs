@@ -1,3 +1,7 @@
+mod layout;
+mod rendering;
+mod text;
+
 use super::{
     render::render,
     screen::{self, State},

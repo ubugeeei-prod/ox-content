@@ -93,5 +93,10 @@ editLink: false
 `aside: false` is an alias for `outline: false`. When `pageChrome` is off,
 these flags are ignored so existing frontmatter cannot change the shell.
 
+A page without a sidebar, whether hidden here or because the site has no
+sidebar entries, gets `ox-no-sidebar` on `<body>` and the main column starts at
+the left edge. A hidden navbar adds `ox-no-navbar`. Use these classes to style
+landing pages without `:has()`.
+
 Bare mode never emits header nav, the announcement bar, or page-chrome
 classes.

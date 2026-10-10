@@ -5,6 +5,8 @@ import {
   RELEASE_CHECK,
   RELEASE_RULESET,
   requireMaintainer,
+  requireReleaseBase,
+  requireVersionOnBase,
   releaseVersion,
   type Permission,
   type Ruleset,
@@ -47,24 +49,26 @@ export function authorPermission(repo: string, login: string): void {
 }
 
 export function requireReleasePr(repo: string, pr: PullRequest): void {
-  if (pr.base.ref !== "main" || pr.head.repo?.full_name !== repo || pr.draft) {
-    throw new Error("Release requires a non-draft, same-repository PR targeting main.");
+  if (pr.head.repo?.full_name !== repo || pr.draft) {
+    throw new Error("Release requires a non-draft, same-repository PR.");
   }
+  requireReleaseBase(pr.base.ref);
   authorPermission(repo, pr.user.login);
 }
 
+/** Whether the PR contains its base branch's current head. */
 export function isCurrent(repo: string, pr: PullRequest): boolean {
-  const comparison = api<{ behind_by: number }>(repo, `compare/main...${pr.head.sha}`);
+  const comparison = api<{ behind_by: number }>(repo, `compare/${pr.base.ref}...${pr.head.sha}`);
   return comparison.behind_by === 0;
 }
 
-export function ensureReleaseProtection(repo: string, install = false): void {
+export function ensureReleaseProtection(repo: string, install = false, base = "main"): void {
   const summaries = api<{ id: number; name: string }[]>(repo, "rulesets?per_page=100");
   const summary = summaries.find((item) => item.name === RELEASE_RULESET);
-  if (summary && hasReleaseProtection(api<Ruleset>(repo, `rulesets/${summary.id}`))) return;
-  if (!install || summary) {
+  if (summary && hasReleaseProtection(api<Ruleset>(repo, `rulesets/${summary.id}`), base)) return;
+  if (!install || summary || base !== "main") {
     throw new Error(
-      `An active, non-bypassable ${RELEASE_RULESET} ruleset with strict ${RELEASE_CHECK} is required. See docs/releasing.md.`,
+      `An active, non-bypassable ${RELEASE_RULESET} ruleset with strict ${RELEASE_CHECK} covering ${base} is required. See docs/releasing.md.`,
     );
   }
   api(repo, "contents/.github/workflows/release-pr.yml?ref=main");
@@ -136,11 +140,13 @@ export async function mergeRelease(repo: string, number: number): Promise<PullRe
   while (Date.now() < deadline) {
     const pr = api<PullRequest>(repo, `pulls/${number}`);
     requireReleasePr(repo, pr);
-    releaseVersion(pr.head.ref);
+    requireVersionOnBase(releaseVersion(pr.head.ref), pr.base.ref);
     if (pr.merged) return pr;
     if (pr.state !== "open") throw new Error(`PR is closed: ${pr.html_url}`);
     if (!isCurrent(repo, pr)) {
-      console.log("main advanced; updating the release PR and waiting for fresh validation.");
+      console.log(
+        `${pr.base.ref} advanced; updating the release PR and waiting for fresh validation.`,
+      );
       api(repo, `pulls/${number}/update-branch`, { expected_head_sha: pr.head.sha }, "PUT");
       await sleep(15_000);
       continue;
@@ -150,8 +156,8 @@ export async function mergeRelease(repo: string, number: number): Promise<PullRe
       runPassed(latestRun(repo, workflow, pr.head.sha, "pull_request")),
     );
     if (passed.every(Boolean)) {
-      ensureReleaseProtection(repo);
-      // GitHub's strict rule closes the race if main moves after isCurrent().
+      ensureReleaseProtection(repo, false, pr.base.ref);
+      // GitHub's strict rule closes the race if the base moves after isCurrent().
       try {
         const result = api<{ merged: boolean }>(
           repo,

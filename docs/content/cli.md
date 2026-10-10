@@ -5,8 +5,9 @@ description: Native Markdown linting and content authoring tools.
 
 # Ox Content CLI
 
-Run the standalone CLI with `vpx oxct`, including outside an existing project.
-The Vite plugin also includes the `oxct` binary for installed projects.
+Run the standalone CLI from the `@ox-content/cli` npm package with
+`vpx @ox-content/cli`, including outside an existing project. The installed
+command is `oxct`. The Vite plugin also includes this binary for installed projects.
 
 Project creation, IDE setup, Markdown linting, and the terminal viewer are
 implemented in Rust. npm launchers call the same native implementation through
@@ -22,17 +23,17 @@ cargo run -p ox_content_cli --bin oxct -- new my-docs --yes --no-install
 ```
 
 ```bash
-vpx oxct new
-vpx oxct ide install
-vpx oxct lint
-vpx oxct lint 'content/**/*.{md,mdx}'
-vpx oxct lint --format json
-cat content/index.md | vpx oxct lint --stdin
+vpx @ox-content/cli new
+vpx @ox-content/cli ide install
+vpx @ox-content/cli lint
+vpx @ox-content/cli lint 'content/**/*.{md,mdx}'
+vpx @ox-content/cli lint --format json
+cat content/index.md | vpx @ox-content/cli lint --stdin
 ```
 
 ## Create a project
 
-`vpx oxct new` guides you through a directory, documentation / blog / minimal
+`vpx @ox-content/cli new` guides you through a directory, documentation / blog / minimal
 template, theme skin, color palette, package manager, and dependency installation.
 The generated project includes Vite configuration, Markdown examples, scripts,
 and a TypeScript configuration. Existing nonempty directories are preserved.
@@ -40,8 +41,8 @@ and a TypeScript configuration. Existing nonempty directories are preserved.
 For automation:
 
 ```bash
-vpx oxct new my-docs --yes --template docs --skin editorial --palette nord --no-install
-vpx oxct new my-blog --yes --template blog --package-manager pnpm --install
+vpx @ox-content/cli new my-docs --yes --template docs --skin editorial --palette nord --no-install
+vpx @ox-content/cli new my-blog --yes --template blog --package-manager pnpm --install
 ```
 
 Without a terminal, setup uses defaults and does not install dependencies unless
@@ -49,16 +50,16 @@ you pass `--install`. Installation failures preserve the project so you can retr
 
 ## Set up an IDE
 
-`vpx oxct ide install` lets you select VS Code, Cursor, Windsurf, VSCodium, Zed,
+`vpx @ox-content/cli ide install` lets you select VS Code, Cursor, Windsurf, VSCodium, Zed,
 or Neovim, then choose extension installation, workspace configuration, or both.
 It shows the affected files and commands before applying the plan.
 Existing JSONC comments and unrelated settings are preserved; changed files get
 a backup alongside the original.
 
 ```bash
-vpx oxct ide install --ide vscode --config-only --yes
-vpx oxct ide install --ide cursor --ide zed --dry-run
-vpx oxct ide install --ide neovim --yes
+vpx @ox-content/cli ide install --ide vscode --config-only --yes
+vpx @ox-content/cli ide install --ide cursor --ide zed --dry-run
+vpx @ox-content/cli ide install --ide neovim --yes
 ```
 
 VS Code family installations use the IDE's CLI, which must be on PATH. Zed setup
@@ -111,15 +112,15 @@ filename in diagnostics.
 
 ## Terminal Markdown reader
 
-`vpx oxct tui` opens a full-screen reader with a file sidebar, heading outline,
+`vpx @ox-content/cli tui` opens a full-screen reader with a file sidebar, heading outline,
 local Markdown links, styled GFM tables and task lists, code blocks, and a search
 bar. It wraps Japanese text and emoji by display width and follows editor saves.
 
 ```bash
-vpx oxct tui content
-vpx oxct tui README.md --theme light
-vpx oxct tui 'content/**/*.md' --no-watch
-cat README.md | vpx oxct tui --stdin --width 80
+vpx @ox-content/cli tui content
+vpx @ox-content/cli tui README.md --theme light
+vpx @ox-content/cli tui 'content/**/*.md' --no-watch
+cat README.md | vpx @ox-content/cli tui --stdin --width 80
 ```
 
 Use Tab to switch between reader, files, outline, and links. Arrow keys or `j` / `k`
@@ -165,20 +166,20 @@ export default defineConfig({
 });
 ```
 
-Run `vpx oxct typecheck` to check all matching Markdown/MDC/MDX documents without
-building the site, or `vpx oxct typecheck 'content/posts/**/*.md' --format json`.
+Run `vpx @ox-content/cli typecheck` to check all matching Markdown/MDC/MDX documents without
+building the site, or `vpx @ox-content/cli typecheck 'content/posts/**/*.md' --format json`.
 Use `--config path/to/vite.config.ts` for an alternate configuration. Schema errors
 report YAML line/column positions and fail both typecheck and the Vite build.
 Async refinements execute in both paths. Defaults and transforms become the
 frontmatter returned by the Vite transform; they do not rewrite source files.
 `InferFrontmatterInput` describes the YAML input before those defaults/transforms.
 
-`vpx oxct ide install` configures project schema support. The VS Code extension
+`vpx @ox-content/cli ide install` configures project schema support. The VS Code extension
 automatically uses the installed workspace plugin after Workspace Trust is granted;
 `oxContent.frontmatter.projectValidation` can disable it. Explicit server paths
-continue to take precedence. Other LSP clients can run `vpx oxct lsp --project`.
+continue to take precedence. Other LSP clients can run `vpx @ox-content/cli lsp --project`.
 This mode executes Vite configuration and validators, and should be enabled only
-for a trusted project. Plain `vpx oxct lsp` uses the bundled Rust server without
+for a trusted project. Plain `vpx @ox-content/cli lsp` uses the bundled Rust server without
 evaluating project configuration.
 
 IDE diagnostics run the same async validators as builds and update on document or

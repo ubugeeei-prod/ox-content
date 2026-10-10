@@ -1,7 +1,7 @@
 import { spawnSync } from "node:child_process";
 import { appendFileSync, readFileSync } from "node:fs";
 import { api, isCurrent, requireReleasePr, run, type PullRequest } from "./release-github.ts";
-import { releaseVersion, requireSuccessfulJobs } from "./release-policy.ts";
+import { releaseVersion, requireSuccessfulJobs, requireVersionOnBase } from "./release-policy.ts";
 import { NPM_PACKAGES } from "./release-targets.ts";
 
 const event = JSON.parse(readFileSync(process.env.GITHUB_EVENT_PATH!, "utf8"));
@@ -40,10 +40,13 @@ const full = release || requested;
 if (full) {
   requireReleasePr(repo, pr);
   if (!isCurrent(repo, pr))
-    throw new Error("Update the release PR with the latest main, then re-run validation.");
+    throw new Error(
+      `Update the release PR with the latest ${pr.base.ref}, then re-run validation.`,
+    );
 }
 if (release) {
   const version = releaseVersion(pr.head.ref);
+  requireVersionOnBase(version, pr.base.ref);
   if (!versionChanged) throw new Error("Release PR must change the version.");
   for (const file of metadata) {
     if (versionAt(pr.head.sha, file) !== version)

@@ -81,14 +81,14 @@ source file path.
 Run the same hooks in CI without producing the full site:
 
 ```bash
-vpx oxct validate
+vpx @ox-content/cli validate
 ```
 
 Use `--config` when the Vite config is not at the project root, and repeat
 `--collection` to validate only selected collections:
 
 ```bash
-vpx oxct validate --config apps/docs/vite.config.ts --collection blog
+vpx @ox-content/cli validate --config apps/docs/vite.config.ts --collection blog
 ```
 
 ## Entry Shape

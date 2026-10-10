@@ -124,11 +124,15 @@ function applyThemeTransition(options) {
   transition.ready.then(
     () => {
       restore();
+      // The clip has to hold its end state until the pseudo-elements are torn
+      // down. Without `fill`, a collapsed outgoing snapshot is painted whole,
+      // still on top, for the frame between the animation ending and teardown.
       root.animate(
         { clipPath: expanding ? [clipFrom, clipTo] : [clipTo, clipFrom] },
         {
           duration,
           easing,
+          fill: "forwards",
           pseudoElement: expanding ? "::view-transition-new(root)" : "::view-transition-old(root)",
         },
       );

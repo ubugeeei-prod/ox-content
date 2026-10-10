@@ -58,6 +58,16 @@ mod tests {
     }
 
     #[test]
+    fn named_elements_stay_in_the_root_snapshot_during_a_toggle() {
+        // A named header or sidebar would otherwise cross-fade above the
+        // circle and switch theme ahead of it.
+        assert!(THEME_TRANSITION_CSS.contains(
+            ":root[data-ox-theme-transition] *,\n:root[data-ox-theme-transition] *::before,\n:root[data-ox-theme-transition] *::after {\n  view-transition-name: none !important;\n}"
+        ));
+        assert!(THEME_TRANSITION_JS.contains("fill: \"forwards\""));
+    }
+
+    #[test]
     fn the_runtime_falls_back_instead_of_throwing() {
         assert!(THEME_TRANSITION_JS.contains("prefers-reduced-motion: reduce"));
         assert!(THEME_TRANSITION_JS.contains("startViewTransition"));

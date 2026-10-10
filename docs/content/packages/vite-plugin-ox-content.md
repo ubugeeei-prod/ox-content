@@ -31,7 +31,7 @@ export default defineConfig({
 If you already have a VitePress site, generate an editable ox-content options object:
 
 ```bash
-vpx oxct migrate vitepress .vitepress/config.ts \
+vpx @ox-content/cli migrate vitepress .vitepress/config.ts \
   --src-dir docs \
   --out-dir dist \
   --out ox-content.config.ts
@@ -40,7 +40,7 @@ vpx oxct migrate vitepress .vitepress/config.ts \
 The CLI runs through the `oxct` binary installed by `@ox-content/vite-plugin`:
 
 ```bash
-vpx oxct migrate vitepress .vitepress/config.ts --out ox-content.config.ts
+vpx @ox-content/cli migrate vitepress .vitepress/config.ts --out ox-content.config.ts
 ```
 
 The generated `ox-content.config.ts` maps these settings into ox-content:
