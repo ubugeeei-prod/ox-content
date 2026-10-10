@@ -84,7 +84,7 @@ export default defineConfig({
 ### Migrate from VitePress
 
 ```bash
-vpx oxct migrate vitepress .vitepress/config.ts \
+vpx @ox-content/cli migrate vitepress .vitepress/config.ts \
   --src-dir docs \
   --out-dir dist \
   --out ox-content.config.ts
@@ -93,7 +93,7 @@ vpx oxct migrate vitepress .vitepress/config.ts \
 The same migration runner is available through the unified `oxct` CLI:
 
 ```bash
-vpx oxct migrate vitepress .vitepress/config.ts --out ox-content.config.ts
+vpx @ox-content/cli migrate vitepress .vitepress/config.ts --out ox-content.config.ts
 ```
 
 The generated `ox-content.config.ts` contains an editable `OxContentOptions` object built from
@@ -141,23 +141,23 @@ npm install @ox-content/vite-plugin-solid solid-js@next @solidjs/web@next @solid
 
 ```bash
 # Check for missing/unused translation keys after installing @ox-content/vite-plugin
-vpx oxct i18n check --dict-dir content/i18n --src src
+vpx @ox-content/cli i18n check --dict-dir content/i18n --src src
 
 # Validate an ICU MessageFormat 2 message
-vpx oxct i18n validate "Hello {$name}"
+vpx @ox-content/cli i18n validate "Hello {$name}"
 ```
 
 ### Dead Link Checker (CLI)
 
 ```bash
 # Check every link in a tree, exit non-zero on broken targets
-vpx oxct link-check docs/**/*.md
+vpx @ox-content/cli link-check docs/**/*.md
 
 # Treat `/foo.md` as workspace-rooted under docs/
-vpx oxct link-check --src-dir docs docs/**/*.md
+vpx @ox-content/cli link-check --src-dir docs docs/**/*.md
 
 # Suppress known intentionally-broken targets
-vpx oxct link-check --ignore "intentionally-broken" docs/**/*.md
+vpx @ox-content/cli link-check --ignore "intentionally-broken" docs/**/*.md
 ```
 
 Offline-only by design — `http://` and `https://` links pass through
@@ -169,7 +169,7 @@ without timeouts, retries, or rate limits.
 Ox Content now ships a unified authoring and i18n language server:
 
 ```bash
-vpx oxct lsp
+vpx @ox-content/cli lsp
 ```
 
 You can wire it into:
@@ -195,13 +195,13 @@ Supported features include:
 For CI or editor-independent checks, run:
 
 ```bash
-vpx oxct mdc-check docs/page.mdc
+vpx @ox-content/cli mdc-check docs/page.mdc
 ```
 
 To preview a generated Open Graph image as SVG:
 
 ```bash
-vpx oxct og-preview --title "My Docs" --description "Fast content tooling" --out og.svg
+vpx @ox-content/cli og-preview --title "My Docs" --description "Fast content tooling" --out og.svg
 ```
 
 **[Read the full documentation →](https://ox-content.dev/)**

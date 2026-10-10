@@ -36,7 +36,7 @@ export default defineConfig({
 すでに VitePress サイトがあるときは、編集可能な ox-content オプションオブジェクトを生成します。
 
 ```bash
-vpx oxct migrate vitepress .vitepress/config.ts \
+vpx @ox-content/cli migrate vitepress .vitepress/config.ts \
   --src-dir docs \
   --out-dir dist \
   --out ox-content.config.ts
@@ -45,7 +45,7 @@ vpx oxct migrate vitepress .vitepress/config.ts \
 CLI は `@ox-content/vite-plugin` が入れる `oxct` バイナリから実行します。
 
 ```bash
-vpx oxct migrate vitepress .vitepress/config.ts --out ox-content.config.ts
+vpx @ox-content/cli migrate vitepress .vitepress/config.ts --out ox-content.config.ts
 ```
 
 生成される `ox-content.config.ts` は、これらの設定を ox-content へ写します。

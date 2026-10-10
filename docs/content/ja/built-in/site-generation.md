@@ -218,7 +218,7 @@ oxContent({
 を生成できます。
 
 ```bash
-vpx oxct og-preview --title "My Docs" --description "Fast content tooling" --out og.svg
+vpx @ox-content/cli og-preview --title "My Docs" --description "Fast content tooling" --out og.svg
 ```
 
 | `ogImageOptions`            | 既定         | 目的                                                             |

@@ -20,7 +20,7 @@ oxct lint --stdin --stdin-filepath page.md
 Standalone executables for Linux x64, macOS Intel/Apple Silicon, and Windows x64
 are attached to GitHub releases with SHA-256 checksums. They run without Node.js.
 You can also build `cargo build --release -p ox_content_cli --bin oxct` and use
-`target/release/oxct`. The npm `vpx oxct lint` command uses the same Rust engine.
+`target/release/oxct`. The npm `vpx @ox-content/cli lint` command uses the same Rust engine.
 
 ## Markdownlint configuration
 

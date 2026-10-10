@@ -84,7 +84,7 @@ repository, `.github/workflows/publish.yml`, and the `npm` environment. All
 three are part of the identity, so renaming the workflow file or the environment
 breaks publishing until every entry is updated to match.
 
-Entries are needed for the workspace packages (`@ox-content/napi`,
+Entries are needed for the workspace packages (`@ox-content/cli`, `@ox-content/napi`,
 `@ox-content/islands`, `@ox-content/code-play`, `@ox-content/vite-plugin`,
 `@ox-content/unplugin`, the four
 `@ox-content/vite-plugin-{vue,react,svelte,solid}` integrations, and
@@ -111,6 +111,11 @@ by a maintainer with local npm credentials, before the tag is pushed:
 ```bash
 # Generic new package, or @ox-content/code-play
 node tools/scripts/bootstrap-npm-package.mjs npm/ox-content-code-play
+
+# Standalone @ox-content/cli package (installed command: oxct)
+vp node tools/scripts/bootstrap-npm-package.mjs npm/oxct --pack-only
+# After reviewing the tarball, authenticate npm and bootstrap the package:
+vp node tools/scripts/bootstrap-npm-package.mjs npm/oxct
 ```
 
 The script packs the workspace package, publishes it from the laptop
