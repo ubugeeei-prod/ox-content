@@ -10,6 +10,13 @@ const roots: string[] = [];
 afterEach(() => roots.splice(0).forEach((root) => rmSync(root, { recursive: true, force: true })));
 
 describe("release npm registration checks", () => {
+  it("uses the same public-registration check in publishing preflight", () => {
+    const fixture = createFixture();
+    const result = runCheck(fixture, "public", true);
+    expect(result.status).toBe(0);
+    expect(result.stdout).toContain("Every package is registered as public on npm");
+    expect(readFileSync(fixture.log, "utf8")).toContain('"access","get","status"');
+  });
   it("accepts public registration before the first version is published", () => {
     const fixture = createFixture();
     const result = runCheck(fixture, "public");
@@ -65,8 +72,15 @@ if (args[0] === 'access') {
   return { root, bin, log };
 }
 
-function runCheck(fixture: ReturnType<typeof createFixture>, visibility: string) {
-  return spawnSync(process.execPath, [script], {
+function runCheck(
+  fixture: ReturnType<typeof createFixture>,
+  visibility: string,
+  preflight = false,
+) {
+  const args = preflight
+    ? [resolve("tools/scripts/npm-registry-check.ts"), NPM_PACKAGES[0]]
+    : [script];
+  return spawnSync(process.execPath, args, {
     cwd: fixture.root,
     encoding: "utf8",
     env: {

@@ -103,7 +103,7 @@ exactly:
 
 Trusted publishing cannot create a package that does not exist yet: the
 publisher entry is configured on the package's settings page, so the package has
-to be there first. Same shape as the crates.io restriction below.
+to be registered first. Registration can precede its first public version.
 
 Use npm staged publishing to reserve the package name with local maintainer
 authentication before pushing the release tag. The registration candidate stays

@@ -3,6 +3,7 @@ import { mkdtempSync, readFileSync, readdirSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { CARGO_PUBLISH_PACKAGES, NPM_PACKAGES } from "./release-targets.ts";
+import { requirePublicNpmRegistration } from "./npm-registry-check.ts";
 
 function run(command: string, args: string[], cwd = process.cwd()): void {
   execFileSync(command, args, { cwd, stdio: "inherit" });
@@ -22,17 +23,7 @@ if (process.argv.includes("--crates")) {
   try {
     for (const directory of packages) {
       const pkg = JSON.parse(readFileSync(join(directory, "package.json"), "utf8"));
-      // A staged first version reserves the name before its public packument exists.
-      const visibility = JSON.parse(
-        execFileSync(
-          "npm",
-          ["access", "get", "status", pkg.name, "--json", "--registry=https://registry.npmjs.org"],
-          { encoding: "utf8" },
-        ),
-      );
-      if (visibility[pkg.name] !== "public") {
-        throw new Error(`${pkg.name} must be registered as a public npm package before release.`);
-      }
+      requirePublicNpmRegistration(pkg.name);
       run("vp", [
         "exec",
         "--",
