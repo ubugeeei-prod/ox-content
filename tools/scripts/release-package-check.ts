@@ -22,8 +22,17 @@ if (process.argv.includes("--crates")) {
   try {
     for (const directory of packages) {
       const pkg = JSON.parse(readFileSync(join(directory, "package.json"), "utf8"));
-      // Trusted publishing cannot create a package name for the first time.
-      run("npm", ["view", pkg.name, "name", "--registry=https://registry.npmjs.org"]);
+      // A staged first version reserves the name before its public packument exists.
+      const visibility = JSON.parse(
+        execFileSync(
+          "npm",
+          ["access", "get", "status", pkg.name, "--json", "--registry=https://registry.npmjs.org"],
+          { encoding: "utf8" },
+        ),
+      );
+      if (visibility[pkg.name] !== "public") {
+        throw new Error(`${pkg.name} must be registered as a public npm package before release.`);
+      }
       run("vp", [
         "exec",
         "--",

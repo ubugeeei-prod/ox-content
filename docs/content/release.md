@@ -105,8 +105,9 @@ Trusted publishing cannot create a package that does not exist yet: the
 publisher entry is configured on the package's settings page, so the package has
 to be there first. Same shape as the crates.io restriction below.
 
-A release that introduces a new npm package therefore needs one manual publish
-by a maintainer with local npm credentials, before the tag is pushed:
+Use npm staged publishing to reserve the package name with local maintainer
+authentication before pushing the release tag. The registration candidate stays
+unpublished; GitHub Actions publishes the first public version through OIDC.
 
 ```bash
 # Generic new package, or @ox-content/code-play
@@ -118,9 +119,10 @@ vp node tools/scripts/bootstrap-npm-package.mjs npm/oxct --pack-only
 vp node tools/scripts/bootstrap-npm-package.mjs npm/oxct
 ```
 
-The script packs the workspace package, publishes it from the laptop
-(`--provenance=false`, dist-tag from the version: `alpha` for
-`3.0.0-alpha.1`), then registers the GitHub Actions trusted publisher:
+The script packs the workspace package, stages a separate registration prerelease
+(`3.3.0-registration.0` for release `3.3.0`), then registers the GitHub Actions
+trusted publisher. Keeping a separate version avoids reserving the release's
+version number in the staged-version index.
 
 ```bash
 npm trust github @ox-content/code-play \
@@ -133,14 +135,17 @@ npm trust github @ox-content/code-play \
 
 Bump every workspace package to the release version before packing, or the
 tarball will pin its `@ox-content/*` dependencies to the previous one.
-`--provenance=false` is required because provenance generation needs CI; the
-package's `publishConfig` turns it on, and subsequent versions get it from the
-workflow.
+The local staging command uses `--provenance=false` because attestation requires
+CI. The first public version gets provenance from the OIDC publishing workflow.
+Release validation uses `npm access get status` to require public registration;
+`npm view` returns 404 until a version has actually been published.
 
 `npm trust` requires npm 11.15+, account 2FA, and a package that already
 exists. The first trust call prompts for 2FA; later ones in the same five
-minutes can skip it. The publish steps skip versions that already exist, so
-the bootstrap publish is not republished.
+minutes can skip it. After confirming the trusted publisher, the maintainer can
+remove the unused staged candidate with `npm stage reject <stage-id>` and log
+out of the temporary local session. Do not approve the registration candidate.
+See [npm staged publishing](https://docs.npmjs.com/cli/v11/commands/npm-stage/).
 
 ## Open VSX Trusted Publishing
 
