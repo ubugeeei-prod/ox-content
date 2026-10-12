@@ -3,6 +3,7 @@ import { mkdtempSync, readFileSync, readdirSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { CARGO_PUBLISH_PACKAGES, NPM_PACKAGES } from "./release-targets.ts";
+import { requirePublicNpmRegistration } from "./npm-registry-check.ts";
 
 function run(command: string, args: string[], cwd = process.cwd()): void {
   execFileSync(command, args, { cwd, stdio: "inherit" });
@@ -22,8 +23,7 @@ if (process.argv.includes("--crates")) {
   try {
     for (const directory of packages) {
       const pkg = JSON.parse(readFileSync(join(directory, "package.json"), "utf8"));
-      // Trusted publishing cannot create a package name for the first time.
-      run("npm", ["view", pkg.name, "name", "--registry=https://registry.npmjs.org"]);
+      requirePublicNpmRegistration(pkg.name);
       run("vp", [
         "exec",
         "--",

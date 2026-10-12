@@ -16,8 +16,8 @@ PRs retain their existing CI and only add a lightweight release policy check.
 The `release-validation` label explicitly opts a tooling PR into the full matrix.
 Version changes are detected from manifests, so removing labels cannot skip them.
 
-New npm package names require a first authenticated publish before the registry
-name preflight can pass. Prepare the release PR and verify its build, package,
+New npm package names require an authenticated registration before registry
+preflight can pass. Prepare the release PR and verify its build, package,
 native and editor results first. From that exact release branch, inspect the
 first package without changing the registry:
 
@@ -32,11 +32,12 @@ vp exec -- pnpm dlx npm@11.19.0 login
 vp node tools/scripts/bootstrap-npm-package.mjs npm/oxct
 ```
 
-The helper checks the identity, builds/packs the workspace package, performs the
-first publish without provenance, and configures `publish.yml` in the `npm`
+The helper checks the identity, builds/packs the workspace package, stages an
+unpublished registration prerelease, and configures `publish.yml` in the `npm`
 environment as its trusted publisher. npm may require a browser/2FA operation.
-If publication succeeded but publisher registration failed, retry with
-`--register-only` to avoid republishing the immutable version. Rerun the release
+The first public version is published through Actions OIDC with provenance.
+If staging succeeded but publisher registration failed, retry with
+`--register-only` to avoid staging another candidate. Rerun the release
 validation and resume the release command; registry checks remain required and
 the tag is created only after all exact-head release checks pass and the PR merges.
 
@@ -52,7 +53,8 @@ failures leave the PR open and create no tag. Fix the PR or rerun the failed
 Actions jobs, then use `vp run release --resume <pr-number>`. Publication can still
 fail because of registry outages or credentials; resume reruns failed publishing
 jobs against the same tag. It never moves or deletes an existing tag. Optional
-Open VSX/Zed publication still follows the existing credential configuration.
+Open VSX publication requires its one-time trusted-publisher registration;
+Zed registry submission follows the registry's human-contribution policy.
 
 ## Maintenance releases
 
