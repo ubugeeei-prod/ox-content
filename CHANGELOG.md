@@ -14,6 +14,8 @@
 
 ### Bug Fixes
 
+- prepare Zed registration for maintainer submission (#1505) _(affects: npm: vscode-ox-content; ci, docs)_
+- replace unmaintained YAML parser with serde_norway (#1506) _(affects: workspace metadata)_
 - bootstrap npm OIDC without a public release (#1500) _(affects: ci, docs, tooling)_
 - publish Open VSX extensions with OIDC (#1499) _(affects: ci, docs, tooling)_
 - publish the authoring package as @ox-content/cli (#1498) _(affects: npm: @ox-content/cli; ci, docs)_
