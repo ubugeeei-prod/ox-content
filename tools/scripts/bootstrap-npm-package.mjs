@@ -1,14 +1,13 @@
 #!/usr/bin/env node
 /**
- * First-time publish for a workspace package that does not exist on npm yet.
- * Trusted publishing cannot create the package; run this once from a laptop
- * with npm credentials, then this script registers the GitHub Actions trusted
- * publisher via `npm trust`.
+ * Register a new workspace package without publishing its first public version.
+ * Stage a separate registration prerelease with local npm authentication, then
+ * configure GitHub Actions trusted publishing via `npm trust`.
  *
  * Usage: vp node tools/scripts/bootstrap-npm-package.mjs npm/oxct [--pack-only|--register-only]
  */
 import { spawnSync } from "node:child_process";
-import { mkdtempSync, readFileSync } from "node:fs";
+import { mkdirSync, mkdtempSync, readFileSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 
@@ -35,15 +34,14 @@ if (!packageDir) {
 
 const root = resolve(import.meta.dirname, "../..");
 const cwd = resolve(root, packageDir);
-const dest = mkdtempSync(join(tmpdir(), "ox-content-bootstrap-"));
 const pkg = JSON.parse(readFileSync(join(cwd, "package.json"), "utf8"));
 if (pkg.private) throw new Error(`Cannot publish private package ${pkg.name}`);
 
-const tag = distTag(pkg.version);
 // Do not start publishing without a usable maintainer identity.
 if (!packOnly) npm(["whoami"]);
 
 if (!registerOnly) {
+  const dest = mkdtempSync(join(tmpdir(), "ox-content-bootstrap-"));
   console.log(`Building ${pkg.name}@${pkg.version} in ${packageDir}`);
   run("vp", ["exec", "--filter", pkg.name, "--", "vp", "run", "build"], root);
 
@@ -70,8 +68,26 @@ if (!registerOnly) {
     process.exit(0);
   }
 
-  console.log(`Publishing ${tarball} as ${tag} (no provenance; CI will attest later versions)`);
-  npm(["publish", tarball, "--access", "public", "--provenance=false", "--tag", tag]);
+  const stagingDir = join(dest, "registration");
+  mkdirSync(stagingDir);
+  run("tar", ["-xzf", resolve(cwd, tarball), "-C", stagingDir], root);
+  const stagedPackageDir = join(stagingDir, "package");
+  const manifestPath = join(stagedPackageDir, "package.json");
+  const stagedPackage = JSON.parse(readFileSync(manifestPath, "utf8"));
+  stagedPackage.version = `${pkg.version}${pkg.version.includes("-") ? "." : "-"}registration.0`;
+  writeFileSync(manifestPath, JSON.stringify(stagedPackage, null, 2) + "\n");
+
+  console.log(`Staging ${pkg.name}@${stagedPackage.version}; no public version is published.`);
+  npm([
+    "stage",
+    "publish",
+    stagedPackageDir,
+    "--access",
+    "public",
+    "--provenance=false",
+    "--tag",
+    "registration",
+  ]);
 }
 
 console.log(`Configuring trusted publisher for ${pkg.name}`);
@@ -97,12 +113,6 @@ Trusted publishing configured for ${pkg.name}:
   Workflow filename:     ${TRUST_WORKFLOW}
   Environment name:      ${TRUST_ENV}
 `);
-
-function distTag(version) {
-  const dash = version.indexOf("-");
-  if (dash === -1) return "latest";
-  return version.slice(dash + 1).split(".")[0] || "latest";
-}
 
 function run(command, args, commandCwd) {
   const result = spawnSync(command, args, { cwd: commandCwd, stdio: "inherit" });

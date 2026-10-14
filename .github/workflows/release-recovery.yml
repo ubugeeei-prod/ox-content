@@ -102,11 +102,9 @@ jobs:
       - name: Build WASM package
         run: vp run build:wasm
 
-      # A package name that has never been published cannot be recovered here:
-      # trusted publishing has no package to attach a publisher to, so npm
-      # rejects the OIDC exchange. Bootstrapping a new name is a one-time human
-      # publish followed by `npm trust github <pkg> --file publish.yml
-      # --repo <owner/repo> --env npm`, after which every release is OIDC again.
+      # New names need local registration before recovery: stage a separate
+      # unpublished candidate, then configure the publisher with `npm trust`.
+      # The first public version can then be published through OIDC.
       - name: Publish missing npm packages
         run: |
           set -euo pipefail

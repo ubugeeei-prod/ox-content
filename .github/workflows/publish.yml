@@ -172,32 +172,17 @@ jobs:
       - name: Install npm with trusted publishing support
         run: npm install -g npm@11.19.0 # zizmor: ignore[adhoc-packages]
 
-      # Trusted publishing cannot bootstrap a name that has never been
-      # published: there is no package for npm to attach a publisher to, so the
-      # OIDC exchange falls back to asking for a token and the step dies with
-      # ENEEDAUTH. That happened to v3.0.0-alpha.17 and v3.0.0-alpha.18, both
-      # times after most of the release had already gone out. Thirty seconds
-      # here beats twenty minutes and a half-published tag.
-      - name: Check every package name exists on the registry
+      # Local staging reserves new names without a public version. Check the
+      # registration, then let OIDC publish their first release with provenance.
+      - name: Check every package is registered as public on npm
         run: |
           shopt -s nullglob
-          missing=()
-          for dir in npm/oxct npm/ox-content-islands npm/ox-content-code-play \
-                     npm/unplugin-ox-content npm/vite-plugin-ox-content \
-                     npm/vite-plugin-ox-content-react npm/vite-plugin-ox-content-solid \
-                     npm/vite-plugin-ox-content-svelte npm/vite-plugin-ox-content-vue \
-                     npm/theme/* npm/theme-color/*; do
-            [ -f "$dir/package.json" ] || continue
-            name=$(node -p "require('$PWD/$dir/package.json').name")
-            npm view "$name" name >/dev/null 2>&1 || missing+=("$name")
-          done
-          if [ ${#missing[@]} -gt 0 ]; then
-            echo "::error::${#missing[@]} package name(s) have never been published, so there is no trusted publisher to authorise them:"
-            printf '::error::  %s\n' "${missing[@]}"
-            echo "::error::Publish each once by hand, then name this repository, .github/workflows/publish.yml and the npm environment as its trusted publisher."
-            exit 1
-          fi
-          echo "Every package name already exists on the registry"
+          node tools/scripts/npm-registry-check.ts \
+            npm/oxct npm/ox-content-islands npm/ox-content-code-play \
+            npm/unplugin-ox-content npm/vite-plugin-ox-content \
+            npm/vite-plugin-ox-content-react npm/vite-plugin-ox-content-solid \
+            npm/vite-plugin-ox-content-svelte npm/vite-plugin-ox-content-vue \
+            npm/theme/* npm/theme-color/*
 
       - name: Setup Rust
         uses: dtolnay/rust-toolchain@29eef336d9b2848a0b548edc03f92a220660cdb8 # stable
