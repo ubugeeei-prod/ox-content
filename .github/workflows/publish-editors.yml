@@ -92,47 +92,48 @@ jobs:
           PUBLISH_FROM_DISPATCH: ${{ inputs.publish }}
         run: node tools/scripts/publish-editor-extensions.ts open-vsx
 
-  open-zed-registry-pr:
-    name: Open Zed registry PR
+  prepare-zed-registry:
+    name: Prepare Zed registry patch
     runs-on: ubuntu-latest
     needs: build-editors
     steps:
-      - name: Open registry pull request
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Setup Vite+
+        uses: voidzero-dev/setup-vp@3754dd7dbdb32bd8f6d28b6043de13ad3a75f21f # v1.21.1
+        with:
+          run-install: false
+
+      # Zed requires human-authored PRs and maintainer communication. Prepare
+      # a reviewable patch without credentials that can push to its registry.
+      - name: Prepare registration against the released commit
         env:
-          GH_TOKEN: ${{ secrets.ZED_EXTENSIONS_PAT }}
           VERSION_INPUT: ${{ inputs.version }}
         run: |
           set -euo pipefail
-          if [ -z "${GH_TOKEN:-}" ]; then
-            echo "::warning::ZED_EXTENSIONS_PAT is not configured; skipping Zed registry PR."
-            exit 0
+          version="${VERSION_INPUT:-}"
+          release_ref="$GITHUB_SHA"
+          if [ -n "$version" ]; then
+            release_ref="refs/tags/v${version}"
+          else
+            version=$(node -p "JSON.parse(require('fs').readFileSync('npm/vscode-ox-content/package.json')).version")
           fi
-          gh auth setup-git
-          version="$VERSION_INPUT"
-          if [ -z "$version" ]; then
-            version="${GITHUB_REF_NAME#v}"
-          fi
-          if [ -z "$version" ] || [ "$version" = "$GITHUB_REF_NAME" ]; then
-            echo "::error::A version is required for manual Zed registry PR dispatch."
-            exit 1
-          fi
-          branch="ox-content-${version}"
-          gh repo clone zed-industries/extensions zed-extensions
+          git clone --depth 1 https://github.com/zed-industries/extensions.git zed-extensions
           cd zed-extensions
-          git switch -c "$branch"
           if [ -d extensions/ox-content ]; then
             git submodule update --init extensions/ox-content
             git -C extensions/ox-content fetch origin --tags
           else
             git submodule add https://github.com/ubugeeei-prod/ox-content.git extensions/ox-content
           fi
-          # Pin the released commit; main may already be on a newer line. A
-          # manual dispatch for a version pins that version's tag.
-          release_ref="$GITHUB_SHA"
-          if [ -n "$VERSION_INPUT" ]; then
-            release_ref="refs/tags/v${version}"
-          fi
           git -C extensions/ox-content checkout --detach "$release_ref"
+          actual_version=$(sed -n 's/^version = "\(.*\)"/\1/p' extensions/ox-content/editors/zed/extension.toml)
+          if [ "$actual_version" != "$version" ]; then
+            echo "::error::Zed metadata does not match the requested version."
+            exit 1
+          fi
           perl -0pi -e \
             's/\[ox-content\]\n(?:[^\[]*\n)*/[ox-content]\nsubmodule = "extensions\/ox-content"\npath = "editors\/zed"\nversion = "'$version'"\n\n/s' \
             extensions.toml
@@ -144,15 +145,17 @@ jobs:
               printf 'version = "%s"\n' "$version"
             } >> extensions.toml
           fi
-          corepack enable
-          pnpm install --frozen-lockfile
-          pnpm sort-extensions
+          vp env exec --node 26 --package-manager pnpm@12.1.0 pnpm install --frozen-lockfile
+          vp env exec --node 26 --package-manager pnpm@12.1.0 pnpm sort-extensions
           git add .gitmodules extensions.toml extensions/ox-content
-          git -c user.name="ox-content release" \
-            -c user.email="actions@github.com" \
-            commit -m "ox-content ${version}"
-          git push --set-upstream origin "$branch"
-          gh pr create \
-            --repo zed-industries/extensions \
-            --title "ox-content ${version}" \
-            --body "Update ox-content to ${version}."
+          mkdir -p ../dist/zed-registry
+          git diff --cached --binary > "../dist/zed-registry/ox-content-${version}.patch"
+          git rev-parse HEAD > ../dist/zed-registry/registry-base.txt
+          git -C extensions/ox-content rev-parse HEAD > ../dist/zed-registry/extension-commit.txt
+
+      - name: Upload patch for maintainer submission
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: zed-registry-patch
+          path: dist/zed-registry/*
+          if-no-files-found: error
