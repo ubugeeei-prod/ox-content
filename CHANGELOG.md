@@ -1,21 +1,25 @@
 # Changelog
 
-## [3.3.0] - 2026-10-10
+## [3.3.0] - 2026-10-14
 
 ### Features
 
+- release patches from vX.Y.x maintenance lines (#1494) _(affects: ci, docs, tooling)_
 - add native markdownlint rules and standalone runner (#1486) _(affects: crates: ox_content_cli, ox_content_markdown_lint, ox_content_napi; npm: @ox-content/napi, @ox-content/vite-plugin; ci, docs, tooling, workspace metadata)_
 - strengthen Markdown checks with opt-in prose rules and parallel execution (#1480) _(affects: crates: ox_content_cli, ox_content_lsp, ox_content_markdown_lint, ox_content_napi, ox_content_parser; npm: @ox-content/napi, @ox-content/vite-plugin, vscode-ox-content; ci, docs, tooling, workspace metadata)_
 - validate glob-specific schemas in builds and editors (#1472) _(affects: npm: @ox-content/vite-plugin, vscode-ox-content; docs, tooling, workspace metadata)_
 - add a modern interactive Markdown reader (#1471) _(affects: npm: @ox-content/vite-plugin; docs, tooling, workspace metadata)_
-- add guided project and IDE setup (#1470) _(affects: npm: @ox-content/vite-plugin, @ox-content/cli; ci, docs, editor extensions, tooling, workspace metadata)_
+- add guided project and IDE setup (#1470) _(affects: npm: @ox-content/cli, @ox-content/vite-plugin; ci, docs, editor extensions, tooling, workspace metadata)_
 - add fast native Markdown lint (#1468) _(affects: crates: ox_content_lsp, ox_content_mermaid; npm: @ox-content/vite-plugin; docs, tooling, workspace metadata)_
 
 ### Bug Fixes
 
-- publish the authoring package as @ox-content/cli (#1498) _(affects: npm: @ox-content/cli; ci, docs, tooling)_
+- bootstrap npm OIDC without a public release (#1500) _(affects: ci, docs, tooling)_
+- publish Open VSX extensions with OIDC (#1499) _(affects: ci, docs, tooling)_
+- publish the authoring package as @ox-content/cli (#1498) _(affects: npm: @ox-content/cli; ci, docs)_
 - end the circle reveal on the new theme and carry named elements (#1495) _(affects: crates: ox_content_ssg; npm: @ox-content/vite-plugin; docs)_
 - restore the sidebar before first paint and respect page layout options (#1493) _(affects: crates: ox_content_ssg; npm: @ox-content/vite-plugin; docs)_
+- prevent configuration reload and timer races _(affects: npm: @ox-content/vite-plugin)_
 - resolve npm advisories blocking authoring CI _(affects: workspace metadata)_
 - eliminate fence false positives and prefer longest terms (#1481) _(affects: crates: ox_content_markdown_lint; docs)_
 - keep transformed values inside the validation worker (#1478) _(affects: npm: @ox-content/vite-plugin)_
@@ -30,6 +34,17 @@
 ### Refactoring
 
 - move authoring commands to Rust (#1479) _(affects: crates: ox_content_cli, ox_content_napi; npm: @ox-content/napi, @ox-content/vite-plugin; ci, docs, tooling, workspace metadata)_
+
+## [3.2.14] - 2026-10-09
+
+### Features
+
+- release patches from vX.Y.x maintenance lines (#1494) _(affects: ci, docs, tooling)_
+
+### Bug Fixes
+
+- end the circle reveal on the new theme and carry named elements (#1495) _(affects: crates: ox_content_ssg; npm: @ox-content/vite-plugin; docs)_
+- restore the sidebar before first paint and respect page layout options (#1493) _(affects: crates: ox_content_ssg; npm: @ox-content/vite-plugin; docs)_
 
 ## [3.2.13] - 2026-09-29
 
