@@ -239,14 +239,15 @@ Final shipping PR. Does not change runtime behavior.
 - ✅ New workflow `.github/workflows/publish-editors.yml` triggered by `v*`
   tags and manual dispatch. It builds platform-specific VSIX files with bundled
   `ox-content-lsp` binaries for `linux-x64`, `darwin-x64`, `darwin-arm64`, and
-  `win32-x64`, then publishes via `vsce` and `ovsx` when `VSCE_PAT` /
-  `OVSX_PAT` are configured.
-- ✅ The same workflow validates the Zed extension WASM build and can open a
-  `zed-industries/extensions` registry PR when `ZED_EXTENSIONS_PAT` is
-  configured.
+  `win32-x64`, then publishes via `vsce` with `VSCE_PAT` and via `ovsx` with
+  Open VSX trusted publishing after its initial registration.
+- ✅ The same workflow validates the Zed extension WASM build and prepares a
+  `zed-industries/extensions` registration patch pinned to the release commit.
+  A maintainer reviews and submits it under Zed's human contribution policy.
 - Document the operational setup in
   `npm/vscode-ox-content/PUBLISHING.md`: publisher creation, `VSCE_PAT`,
-  `OVSX_PAT`, `ZED_EXTENSIONS_PAT`, versioning policy, and manual dry runs.
+  Open VSX initial registration and OIDC, Zed maintainer submission, versioning
+  policy, and manual dry runs.
 
 ## Out of Scope
 

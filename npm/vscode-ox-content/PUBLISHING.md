@@ -8,11 +8,14 @@ This package is released through `.github/workflows/publish-editors.yml`.
 2. Add repository secret `VSCE_PAT` with Marketplace Manage permission.
    `vsce` reads this token from the `VSCE_PAT` environment variable in CI.
 3. Create the Open VSX namespace `ubugeeei`.
-4. Add repository secret `OVSX_PAT`.
-5. Optional for Zed: add `ZED_EXTENSIONS_PAT` with permission to push a branch
-   to `zed-industries/extensions` and open a pull request. The Zed extension
-   path includes its own `LICENSE` because Zed validates the license at the
-   configured `path`.
+4. Sign the Open VSX Publisher Agreement and publish the first reviewed VSIX
+   with a local PAT. Then register `publish-editors.yml`, repository
+   `ubugeeei-prod/ox-content`, environment `open-vsx` as its trusted publisher.
+   Subsequent CI releases use OIDC; no `OVSX_PAT` secret is needed.
+5. Zed registration requires a human who understands the extension to submit
+   and explain the PR under its [AI policy](https://github.com/zed-industries/extensions/blob/main/AI_POLICY.md).
+   The workflow prepares a patch for review. The Zed extension includes its own
+   `LICENSE` because Zed validates the configured `path`.
 
 References:
 
@@ -48,12 +51,12 @@ References:
 4. If `VSCE_PAT` is configured, the workflow publishes every VSIX to the VS
    Code Marketplace.
 
-5. If `OVSX_PAT` is configured, the workflow publishes the same VSIX files to
-   Open VSX.
+5. The workflow publishes the same VSIX files to Open VSX with trusted publishing.
+   Initial registration must be complete before this can succeed.
 
 6. The Zed job builds the extension for `wasm32-unknown-unknown` and uploads a
-   source artifact. If `ZED_EXTENSIONS_PAT` is configured, it also opens a PR
-   against `zed-industries/extensions` with:
+   source artifact. The `zed-registry-patch` artifact contains a registration
+   patch against `zed-industries/extensions`, pinned to the release commit:
 
    ```toml
    [ox-content]
@@ -61,6 +64,12 @@ References:
    path = "editors/zed"
    version = "<version>"
    ```
+
+Download `zed-registry-patch`, clone your fork of the Zed registry, and check out
+its `registry-base.txt` commit. Apply the patch with `git apply --index`, then run
+`git submodule update --init extensions/ox-content`. Review the extension source,
+commit the changes, and submit the PR with your own explanation. Write maintainer
+responses yourself; the workflow does not submit or comment on your behalf.
 
 ## Manual dry run
 
