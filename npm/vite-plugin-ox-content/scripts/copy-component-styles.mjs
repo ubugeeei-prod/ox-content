@@ -18,7 +18,7 @@ const outDir = join(packageRoot, "dist/styles");
 
 /** Public feature stylesheets. Filenames are package API. */
 export const STYLE_ENTRIES = /** @type {const} */ ([
-  { name: "core.css", sources: ["ssg.css"] },
+  { name: "core.css", sources: ["ssg.css", "html/tablet_navigation.css"] },
   { name: "magic-links.css", sources: ["plugins/magic-links.css"] },
   {
     name: "social.css",

@@ -36,7 +36,7 @@ const CRATE_SOURCES: Record<
   Exclude<(typeof DOCUMENTED_STYLE_IMPORTS)[number], "all.css">,
   string[]
 > = {
-  "core.css": ["ssg.css"],
+  "core.css": ["ssg.css", "html/tablet_navigation.css"],
   "magic-links.css": ["plugins/magic-links.css"],
   "social.css": [
     "plugins/social.css",
