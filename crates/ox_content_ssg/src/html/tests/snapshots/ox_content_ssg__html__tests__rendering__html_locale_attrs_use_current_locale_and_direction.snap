@@ -2364,6 +2364,89 @@ a:hover {
   outline: var(--octc-focus-ring);
   outline-offset: var(--octc-focus-offset);
 }
+/* Keep the existing phone drawer and persistent desktop sidebar in normal flow. */
+.sidebar-panel {
+  display: contents;
+  color: inherit;
+}
+@media (768px < width < 960px) {
+  .menu-toggle {
+    display: inline-flex;
+    flex-shrink: 0;
+    align-items: center;
+    justify-content: center;
+    min-width: var(--octc-touch-target);
+    min-height: var(--octc-touch-target);
+  }
+  .main {
+    margin-left: 0;
+  }
+  .sidebar-panel {
+    display: none;
+    position: fixed;
+    inset: calc(var(--octc-header-height) + 0.75rem) auto 0.75rem 1rem;
+    margin: 0;
+    padding: 0;
+    width: min(20rem, calc(100vw - 2rem));
+    height: auto;
+    max-height: calc(100dvh - var(--octc-header-height) - 1.5rem);
+    color: var(--octc-color-text);
+    background: var(--octc-color-bg-alt);
+    border: 1px solid var(--octc-color-border);
+    border-radius: 8px;
+    overflow: hidden;
+  }
+  .sidebar-panel:popover-open {
+    display: block;
+  }
+  .sidebar-panel::backdrop {
+    background: color-mix(in srgb, var(--octc-color-bg) 72%, transparent);
+    backdrop-filter: blur(2px);
+    -webkit-backdrop-filter: blur(2px);
+  }
+  .sidebar-panel .sidebar,
+  .entry-page .sidebar-panel .sidebar--entry {
+    display: block;
+    position: static;
+    width: 100%;
+    height: 100%;
+    border: 0;
+    background: var(--octc-color-bg-alt);
+    scrollbar-gutter: stable;
+  }
+  .sidebar .nav-link,
+  .sidebar .nav-title--summary {
+    min-height: var(--octc-touch-target);
+    display: flex;
+    align-items: center;
+  }
+  body:has(.sidebar-panel:popover-open) {
+    overflow: hidden;
+    overscroll-behavior: none;
+  }
+  .ox-has-announce .sidebar-panel {
+    top: calc(var(--octc-header-height) + 3rem);
+    max-height: calc(100dvh - var(--octc-header-height) - 3.75rem);
+  }
+  /* Pages without a header still need a visible route into their navigation. */
+  .ox-no-navbar .sidebar-panel {
+    display: contents;
+  }
+  .ox-no-navbar .sidebar-panel .sidebar {
+    position: fixed;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    width: var(--octc-sidebar-width);
+    height: auto;
+  }
+  .ox-no-navbar:not(.ox-no-sidebar) .main {
+    margin-left: var(--octc-sidebar-width);
+  }
+  .ox-has-announce.ox-no-navbar .sidebar-panel .sidebar {
+    top: 2.25rem;
+  }
+}
 
 /* ox-content:css:base:end */
 /* ox-content:css:mpa-navigation:start */
@@ -2394,11 +2477,7 @@ a:hover {
 <body class="ox-no-sidebar">
 
   <header class="header">
-    <button class="menu-toggle" aria-label="Toggle menu" aria-controls="ox-sidebar" aria-expanded="false">
-      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round">
-        <path d="M3 12h18M3 6h18M3 18h18"/>
-      </svg>
-    </button>
+
     <a href="/index.html" class="header-title" aria-label="Localized">
 
 
@@ -2486,10 +2565,10 @@ a:hover {
   </footer>
   <!-- ox-content:scripts:start -->
   <script>// ox-content:js:core:start
-const toggle = document.querySelector(".menu-toggle"),
-  mobileMenuBtn = document.querySelector("[data-mobile-menu]"),
+const mobileMenuBtn = document.querySelector("[data-mobile-menu]"),
   sidebar = document.querySelector(".sidebar"),
-  overlay = document.querySelector(".overlay");
+  overlay = document.querySelector(".overlay"),
+  sidebarPanel = document.getElementById("ox-sidebar-panel");
 
 let lastMenuTrigger = null;
 
@@ -2499,7 +2578,7 @@ const setMenuOpen = (open, trigger = null, restoreFocus = false) => {
   sidebar.classList.toggle("open", open);
   overlay.classList.toggle("open", open);
   document.body.classList.toggle("menu-open", open);
-  [toggle, mobileMenuBtn].forEach((button) => button?.setAttribute("aria-expanded", String(open)));
+  mobileMenuBtn?.setAttribute("aria-expanded", String(open));
 
   if (open && trigger instanceof HTMLElement) {
     lastMenuTrigger = trigger;
@@ -2515,7 +2594,6 @@ const setMenuOpen = (open, trigger = null, restoreFocus = false) => {
 const toggleMenu = (trigger) => setMenuOpen(!sidebar?.classList.contains("open"), trigger);
 
 if (sidebar && overlay) {
-  toggle?.addEventListener("click", () => toggleMenu(toggle));
   mobileMenuBtn?.addEventListener("click", () => toggleMenu(mobileMenuBtn));
   overlay.addEventListener("click", () => setMenuOpen(false));
   sidebar
@@ -2528,6 +2606,22 @@ if (sidebar && overlay) {
     }
   });
 }
+
+// The tablet drawer opens natively, including before this deferred script loads.
+// Only clear transient drawers when crossing layout boundaries; never persist them.
+const phoneLayout = matchMedia("(max-width: 768px)"),
+  desktopLayout = matchMedia("(min-width: 960px)");
+const resetNavigationLayout = () => {
+  setMenuOpen(false);
+  if (sidebarPanel?.matches(":popover-open")) sidebarPanel.hidePopover();
+};
+phoneLayout.addEventListener("change", resetNavigationLayout);
+desktopLayout.addEventListener("change", resetNavigationLayout);
+sidebarPanel?.querySelectorAll("a").forEach((link) =>
+  link.addEventListener("click", () => {
+    if (sidebarPanel.matches(":popover-open")) sidebarPanel.hidePopover();
+  }),
+);
 
 // The inline sidebar bootstrap restores the scroll position and collapse
 // state before first paint; this deferred script only records changes.

@@ -1,7 +1,7 @@
-const toggle = document.querySelector(".menu-toggle"),
-  mobileMenuBtn = document.querySelector("[data-mobile-menu]"),
+const mobileMenuBtn = document.querySelector("[data-mobile-menu]"),
   sidebar = document.querySelector(".sidebar"),
-  overlay = document.querySelector(".overlay");
+  overlay = document.querySelector(".overlay"),
+  sidebarPanel = document.getElementById("ox-sidebar-panel");
 
 let lastMenuTrigger = null;
 
@@ -11,7 +11,7 @@ const setMenuOpen = (open, trigger = null, restoreFocus = false) => {
   sidebar.classList.toggle("open", open);
   overlay.classList.toggle("open", open);
   document.body.classList.toggle("menu-open", open);
-  [toggle, mobileMenuBtn].forEach((button) => button?.setAttribute("aria-expanded", String(open)));
+  mobileMenuBtn?.setAttribute("aria-expanded", String(open));
 
   if (open && trigger instanceof HTMLElement) {
     lastMenuTrigger = trigger;
@@ -27,7 +27,6 @@ const setMenuOpen = (open, trigger = null, restoreFocus = false) => {
 const toggleMenu = (trigger) => setMenuOpen(!sidebar?.classList.contains("open"), trigger);
 
 if (sidebar && overlay) {
-  toggle?.addEventListener("click", () => toggleMenu(toggle));
   mobileMenuBtn?.addEventListener("click", () => toggleMenu(mobileMenuBtn));
   overlay.addEventListener("click", () => setMenuOpen(false));
   sidebar
@@ -40,6 +39,22 @@ if (sidebar && overlay) {
     }
   });
 }
+
+// The tablet drawer opens natively, including before this deferred script loads.
+// Only clear transient drawers when crossing layout boundaries; never persist them.
+const phoneLayout = matchMedia("(max-width: 768px)"),
+  desktopLayout = matchMedia("(min-width: 960px)");
+const resetNavigationLayout = () => {
+  setMenuOpen(false);
+  if (sidebarPanel?.matches(":popover-open")) sidebarPanel.hidePopover();
+};
+phoneLayout.addEventListener("change", resetNavigationLayout);
+desktopLayout.addEventListener("change", resetNavigationLayout);
+sidebarPanel?.querySelectorAll("a").forEach((link) =>
+  link.addEventListener("click", () => {
+    if (sidebarPanel.matches(":popover-open")) sidebarPanel.hidePopover();
+  }),
+);
 
 // The inline sidebar bootstrap restores the scroll position and collapse
 // state before first paint; this deferred script only records changes.

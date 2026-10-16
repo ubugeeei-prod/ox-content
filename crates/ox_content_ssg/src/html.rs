@@ -206,8 +206,12 @@ const MAGIC_LINKS_INCLUDE_MARK: &str = "/* @include magic-links.css */";
 const MAGIC_LINKS_CSS: &str = include_str!("plugins/magic-links.css");
 
 /// CSS styles for SSG pages, with Magic Link rules spliced in.
-static SSG_CSS: std::sync::LazyLock<String> =
-    std::sync::LazyLock::new(|| inline_magic_links_css(include_str!("ssg.css")));
+static SSG_CSS: std::sync::LazyLock<String> = std::sync::LazyLock::new(|| {
+    inline_magic_links_css(concat!(
+        include_str!("ssg.css"),
+        include_str!("html/tablet_navigation.css")
+    ))
+});
 
 fn inline_magic_links_css(template: &str) -> String {
     assert!(

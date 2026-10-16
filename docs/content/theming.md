@@ -248,6 +248,12 @@ theme config (below) or override them directly from [custom CSS](#custom-css-and
 
 ### Layout
 
+The sidebar stays pinned from 960px upwards. Between 768px and 960px, it opens
+from the header as a native popover, leaving the full width for the article.
+The tablet menu works without JavaScript and closes with Escape or a click
+outside; its open state is not saved. At 768px and below, navigation uses the
+phone layout with the bottom menu bar.
+
 | Option                   | CSS Variable               | Description                              |
 | ------------------------ | -------------------------- | ---------------------------------------- |
 | `layout.sidebarWidth`    | `--octc-sidebar-width`     | Sidebar width (default: `260px`)         |

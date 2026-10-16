@@ -12,6 +12,11 @@ fn nav_disabled_by_default() {
     assert!(!html.contains("data-ox-announce"), "{html}");
     assert!(html.contains(r#"<header class="header">"#), "{html}");
     assert!(html.contains(r#"<aside id="ox-sidebar" class="sidebar">"#), "{html}");
+    assert!(
+        html.contains(r#"id="ox-sidebar-panel" class="sidebar-panel" popover="auto""#),
+        "tablet navigation must be available without the deferred script"
+    );
+    assert!(html.contains(r#"popovertarget="ox-sidebar-panel""#));
 }
 
 #[test]

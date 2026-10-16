@@ -15,11 +15,11 @@
 {% if let Some(skip) = skip_link %}{{ skip|safe }}
 {% endif %}{{ embed_header_before|safe }}{{ announcement_html|safe }}{% if show_navbar %}
   <header class="header">
-    <button class="menu-toggle" aria-label="Toggle menu" aria-controls="ox-sidebar" aria-expanded="false">
+{% if !navigation.is_empty() %}    <button class="menu-toggle" aria-label="Toggle menu" aria-controls="ox-sidebar-panel" popovertarget="ox-sidebar-panel">
       <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round">
         <path d="M3 12h18M3 6h18M3 18h18"/>
       </svg>
-    </button>
+    </button>{% endif %}
     <a href="{{ base }}index.html" class="header-title{% if !show_site_name_text %} header-title--logo-only{% endif %}" aria-label="{{ site_name }}">
 {% if let Some(light_logo_src) = logo_light_src %}
 {% if let Some(dark_logo_src) = logo_dark_src %}
@@ -76,6 +76,7 @@
   <div class="overlay"></div>
   <div class="layout">
 {% if !navigation.is_empty() %}
+    <div id="ox-sidebar-panel" class="sidebar-panel" popover="auto">
     <aside id="ox-sidebar" class="sidebar{% if is_entry_page %} sidebar--entry{% endif %}">
 {{ embed_sidebar_before|safe }}
       <nav>
@@ -83,6 +84,7 @@
       </nav>
 {{ embed_sidebar_after|safe }}
     </aside>
+    </div>
     <script>{{ sidebar_bootstrap_js|safe }}</script>
 {% endif %}
     <main class="main{% if has_toc %} main--with-toc{% endif %}"{% if skip_link.is_some() %} id="ox-main"{% endif %}>
