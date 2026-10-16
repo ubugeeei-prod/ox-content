@@ -1,5 +1,11 @@
 # Changelog
 
+## [3.3.2] - 2026-10-16
+
+### Features
+
+- open tablet navigation from the header (#1510) _(affects: crates: ox_content_ssg; npm: @ox-content/vite-plugin; docs)_
+
 ## [3.3.1] - 2026-10-16
 
 ### Bug Fixes
