@@ -1,5 +1,11 @@
 # Changelog
 
+## [3.3.1] - 2026-10-16
+
+### Bug Fixes
+
+- point the header logo at the localized home (#1508) _(affects: npm: @ox-content/vite-plugin)_
+
 ## [3.3.0] - 2026-10-14
 
 ### Features
