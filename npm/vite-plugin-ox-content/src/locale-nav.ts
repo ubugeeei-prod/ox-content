@@ -168,6 +168,21 @@ export function localizeHeaderNavItems(
   }));
 }
 
+/**
+ * Home href for the header logo. Uses the same sibling lookup as header nav,
+ * and leaves the default locale unprefixed when `hideDefaultLocale` is set.
+ */
+export function localeHomeHref(options: LocalizeNavOptions): string {
+  const base =
+    !options.base || options.base === "/"
+      ? "/"
+      : options.base
+
+  const baseWithTrailingSlash = base.endsWith("/") ? base : `${base}/`;
+
+  return localizeHref(`${baseWithTrailingSlash}index.html`, options);
+}
+
 export function localizeHref(
   href: string,
   options: LocalizeNavOptions,

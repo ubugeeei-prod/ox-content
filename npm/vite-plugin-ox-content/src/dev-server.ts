@@ -22,6 +22,7 @@ import {
   getHref,
   generateHtmlPage,
   getPageLocale,
+  resolveHeaderLogoHref,
   formatTitle,
   normalizeRoutePrefix,
   parseSsgPagerOverride,
@@ -605,6 +606,7 @@ async function renderPage(
     options.ssg.headValidation,
     i18n ? i18n.defaultLocale : undefined,
     Boolean(options.icons?.enabled),
+    resolveHeaderLogoHref(base, localeNav, undefined),
   );
 
   if (markdownSource && options.ssg.markdownSource?.alternate) {
