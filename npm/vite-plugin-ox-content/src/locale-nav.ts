@@ -173,10 +173,7 @@ export function localizeHeaderNavItems(
  * and leaves the default locale unprefixed when `hideDefaultLocale` is set.
  */
 export function localeHomeHref(options: LocalizeNavOptions): string {
-  const base =
-    !options.base || options.base === "/"
-      ? "/"
-      : options.base
+  const base = !options.base || options.base === "/" ? "/" : options.base;
 
   const baseWithTrailingSlash = base.endsWith("/") ? base : `${base}/`;
 

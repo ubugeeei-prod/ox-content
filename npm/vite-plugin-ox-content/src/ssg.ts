@@ -847,17 +847,13 @@ export async function generateHtmlPage(
   const html = typeof result === "string" ? result : result.html;
   const diagnostics = typeof result === "string" ? [] : (result.diagnostics ?? []);
   reportHeadDiagnostics(diagnostics, headValidation);
-  /** html with search locale filters */
   const htmlWithFilters = injectSearchLocaleFilters(html, {
     locales: availableLocales ?? [],
     current: locale,
     defaultLocale: defaultLocale ?? availableLocales?.[0]?.code ?? "en",
   });
 
-  /** html with header logo href */
-  const htmlWithHeaderLogoHref = homeHref ? applyHeaderLogoHref(htmlWithFilters, homeHref) : htmlWithFilters;
-  
-  return htmlWithHeaderLogoHref;
+  return homeHref ? applyHeaderLogoHref(htmlWithFilters, homeHref) : htmlWithFilters;
 }
 
 /**
@@ -2010,7 +2006,12 @@ async function renderSsgPage(
       context.ssgOptions.headValidation,
       i18n?.defaultLocale,
       Boolean(context.options.icons?.enabled),
-      resolveHeaderLogoHref(context.base, localeNav, versionNavigation),
+      resolveHeaderLogoHref(
+        context.base,
+        localeNav,
+        versionNavigation,
+        context.ssgOptions.routePrefix,
+      ),
     ),
     markdownSource,
   );
@@ -2024,19 +2025,23 @@ export function resolveHeaderLogoHref(
   base: string,
   localeNav: LocalizeNavOptions | undefined,
   versionNavigation: VersionNavigationContext | undefined,
+  routePrefix?: string,
 ): string {
-  const normalizedBasePath = (()=>{
-    if (!base || base === "/") {
-      return "/";
-    }
-    if (base.endsWith("/")) {
-      return base;
-    }
-    return `${base}/`;
-  })();
-
-  const localizedHomeHref = localeNav ? localeHomeHref(localeNav) : `${normalizedBasePath}index.html`;
-  return versionNavigation ? rewriteVersionedHref(localizedHomeHref, versionNavigation) : localizedHomeHref;
+  const homeBase = publicBase(base, routePrefix);
+  const homeNav =
+    localeNav && normalizeRoutePrefix(routePrefix)
+      ? {
+          ...localeNav,
+          base: homeBase,
+          pages: localeNav.pages.map((page) => ({
+            ...page,
+            path: localeUrlPath(page.path, routePrefix),
+            aliases: page.aliases?.map((alias) => localeUrlPath(alias, routePrefix)),
+          })),
+        }
+      : localeNav;
+  const homeHref = homeNav ? localeHomeHref(homeNav) : `${homeBase}index.html`;
+  return versionNavigation ? rewriteVersionedHref(homeHref, versionNavigation) : homeHref;
 }
 
 function pageMarkdownSourceHref(

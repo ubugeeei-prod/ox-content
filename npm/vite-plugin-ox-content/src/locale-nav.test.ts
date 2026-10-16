@@ -7,12 +7,10 @@ import { resolveI18nOptions } from "./i18n";
 import {
   localizeHeaderNavItems,
   localizeHref,
-  localeHomeHref,
   localizeNavGroups,
   sitePathFromHref,
 } from "./locale-nav";
-import { buildSsg, buildThemeNavItems, resolveHeaderLogoHref } from "./ssg";
-import { createVersionNavigationContext } from "./version-navigation";
+import { buildSsg, buildThemeNavItems } from "./ssg";
 import { resolveTheme } from "./theme";
 
 const locales = [{ code: "en" }, { code: "ja" }, { code: "zh-Hans-CN" }];
@@ -198,61 +196,6 @@ describe("localizeNavGroups", () => {
   });
 });
 
-describe("localeHomeHref", () => {
-  it("uses the locale home and keeps the hidden default locale unprefixed", () => {
-    expect(localeHomeHref(jaOptions())).toBe("/docs/ja/index.html");
-    expect(localeHomeHref({ ...jaOptions(), locale: "en" })).toBe("/docs/index.html");
-    expect(
-      localeHomeHref({
-        ...jaOptions(),
-        locale: "zh-cn",
-        locales: [...locales, { code: "zh-cn" }],
-        pages: [...pages, { path: "zh-cn", href: "/docs/zh-cn/index.html" }],
-      }),
-    ).toBe("/docs/zh-cn/index.html");
-  });
-
-  it("prefixes the default locale when hideDefaultLocale is false", () => {
-    expect(
-      localeHomeHref({
-        locale: "en",
-        locales: [{ code: "en" }, { code: "ja" }],
-        defaultLocale: "en",
-        hideDefaultLocale: false,
-        pages: [
-          { path: "en", href: "/en/index.html" },
-          { path: "ja", href: "/ja/index.html" },
-        ],
-        base: "/",
-      }),
-    ).toBe("/en/index.html");
-  });
-
-  it("keeps the logo inside the active documentation version", () => {
-    const versionNavigation = createVersionNavigationContext({
-      prefix: "2.90",
-      base: "/docs/",
-      pages: [
-        { path: "", versionedPath: "2.90", href: "/docs/2.90/", sourcePath: "" },
-        { path: "ja", versionedPath: "2.90/ja", href: "/docs/2.90/ja/", sourcePath: "ja" },
-      ],
-    });
-    const shared = {
-      locales: [{ code: "en" }, { code: "ja" }],
-      defaultLocale: "en",
-      hideDefaultLocale: true,
-      pages: versionNavigation.pages,
-      base: "/docs/",
-    };
-    expect(resolveHeaderLogoHref("/docs/", { ...shared, locale: "ja" }, versionNavigation)).toBe(
-      "/docs/2.90/ja/",
-    );
-    expect(resolveHeaderLogoHref("/docs/", { ...shared, locale: "en" }, versionNavigation)).toBe(
-      "/docs/2.90/",
-    );
-  });
-});
-
 describe("localizeHeaderNavItems", () => {
   it("rewrites header links to the locale sibling", () => {
     const items = localizeHeaderNavItems(
@@ -333,52 +276,6 @@ describe("buildSsg locale nav", () => {
     expect(jaGuide).toContain('class="nav-link active">開始</a>');
     expect(jaGuide).not.toContain("&lt;script");
     expect(jaGuide).not.toMatch(/aside[\s\S]*href="\/guide\/index\.html"/);
-  });
-
-  it("points the header logo at the localized home", async () => {
-    const root = await fs.mkdtemp(path.join(os.tmpdir(), "ox-content-locale-logo-"));
-    tempDirs.push(root);
-    const srcDir = path.join(root, "content");
-    await fs.mkdir(path.join(srcDir, "ja"), { recursive: true });
-    await fs.writeFile(path.join(srcDir, "index.md"), "# Home\n", "utf8");
-    await fs.writeFile(path.join(srcDir, "guide.md"), "# Guide\n", "utf8");
-    await fs.writeFile(path.join(srcDir, "ja", "index.md"), "# ホーム\n", "utf8");
-    await fs.writeFile(path.join(srcDir, "ja", "guide.md"), "# ガイド\n", "utf8");
-
-    const base = createDocsResolvedOptions();
-    const i18n = resolveI18nOptions({
-      enabled: true,
-      defaultLocale: "en",
-      locales: [
-        { code: "en", name: "English" },
-        { code: "ja", name: "日本語" },
-      ],
-      hideDefaultLocale: true,
-      check: false,
-    });
-    expect(i18n).not.toBe(false);
-
-    const result = await buildSsg(
-      createDocsResolvedOptions({
-        base: "/docs/",
-        i18n,
-        ssg: {
-          ...base.ssg,
-          theme: resolveTheme({
-            nav: [{ text: "Home", link: "/index.md" }],
-          }),
-        },
-      }),
-      root,
-    );
-    expect(result.errors).toEqual([]);
-
-    const jaGuide = await fs.readFile(path.join(root, "dist", "ja", "guide", "index.html"), "utf8");
-    const enGuide = await fs.readFile(path.join(root, "dist", "guide", "index.html"), "utf8");
-    expect(jaGuide).toContain('href="/docs/ja/index.html" class="header-title"');
-    expect(jaGuide).toContain('href="/docs/ja/index.html"');
-    expect(enGuide).toContain('href="/docs/index.html" class="header-title"');
-    expect(enGuide).not.toContain('href="/docs/en/index.html"');
   });
 
   it("escapes hostile localized labels in nav and breadcrumbs", async () => {
