@@ -57,7 +57,15 @@ async function routeFixture(page: Page, pages: Map<string, string>) {
     const body = pages.get(pathname);
     await route.fulfill(
       body
-        ? { contentType: "text/html", headers: { "cache-control": "no-store" }, body }
+        ? {
+            contentType: pathname.endsWith(".css")
+              ? "text/css"
+              : pathname.endsWith(".js")
+                ? "text/javascript"
+                : "text/html",
+            headers: { "cache-control": "no-store" },
+            body,
+          }
         : { status: 404, contentType: "text/plain", body: "not found" },
     );
   });
@@ -100,6 +108,13 @@ async function buildFixture(): Promise<{ root: string; pages: Map<string, string
       `/docs/2.90/${name}/`,
       await fs.readFile(path.join(root, "dist", "2.90", name, "index.html"), "utf8"),
     );
+  }
+  // SSG externalizes shared CSS and JS. Serve those assets as well as HTML so
+  // native navigation is exercised with the actual responsive layout.
+  for (const file of result.files) {
+    if (!file.endsWith(".css") && !file.endsWith(".js")) continue;
+    const relative = path.relative(path.join(root, "dist"), file).split(path.sep).join("/");
+    pages.set(`/docs/${relative}`, await fs.readFile(file, "utf8"));
   }
   return { root, pages };
 }
