@@ -1,5 +1,11 @@
 # Changelog
 
+## [3.3.3] - 2026-10-18
+
+### Bug Fixes
+
+- prioritize mobile language navigation and restore dev updates (#1512) _(affects: crates: ox_content_ssg; npm: @ox-content/vite-plugin; docs)_
+
 ## [3.3.2] - 2026-10-16
 
 ### Features
