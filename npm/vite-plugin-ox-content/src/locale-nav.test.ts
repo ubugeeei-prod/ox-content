@@ -275,7 +275,9 @@ describe("buildSsg locale nav", () => {
     expect(jaGuide).toContain('<div class="nav-title">ガイド</div>');
     expect(jaGuide).toContain('class="nav-link active">開始</a>');
     expect(jaGuide).not.toContain("&lt;script");
-    expect(jaGuide).not.toMatch(/aside[\s\S]*href="\/guide\/index\.html"/);
+    const sidebar = jaGuide.match(/<aside id="ox-sidebar"[\s\S]*?<\/aside>/)?.[0];
+    expect(sidebar).toBeDefined();
+    expect(sidebar).not.toContain('href="/guide/index.html"');
   });
 
   it("escapes hostile localized labels in nav and breadcrumbs", async () => {
