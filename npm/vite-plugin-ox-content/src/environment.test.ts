@@ -56,7 +56,7 @@ describe("markdown environment", () => {
   });
 
   it("sends Markdown HMR through the current Vite environment", () => {
-    const plugin = oxContent({}).find((candidate) => candidate.name === "ox-content");
+    const plugin = oxContent({ ssg: false }).find((candidate) => candidate.name === "ox-content");
     if (!plugin?.hotUpdate) {
       throw new Error("main plugin should expose hotUpdate");
     }

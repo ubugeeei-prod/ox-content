@@ -1933,7 +1933,8 @@ a:hover {
   }
 }
 /* Mobile Footer Bar */
-.mobile-footer {
+.mobile-footer,
+.mobile-preferences {
   display: none;
 }
 @media (max-width: 768px) {
@@ -1964,6 +1965,10 @@ a:hover {
     padding-bottom: env(safe-area-inset-bottom, 0px);
     z-index: 100;
   }
+  .mobile-footer > * {
+    flex: 1 1 0;
+    min-width: 0;
+  }
   .mobile-footer-btn {
     display: flex;
     flex-direction: column;
@@ -1982,6 +1987,55 @@ a:hover {
   .mobile-footer-btn svg {
     width: 22px;
     height: 22px;
+  }
+  .mobile-preferences {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 0.5rem;
+    margin-top: 2rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--octc-color-border);
+  }
+  .mobile-preferences .mobile-footer-btn {
+    min-height: var(--octc-touch-target);
+  }
+  .ox-mobile-locale-switcher {
+    flex: 0 1 33%;
+    min-width: 0;
+  }
+  .ox-mobile-locale-switcher > button {
+    width: 100%;
+    min-height: var(--octc-touch-target);
+    padding: 0.5rem;
+    gap: 0.25rem;
+    font-size: inherit;
+  }
+  .ox-mobile-locale-switcher > button::after {
+    display: none;
+  }
+  .ox-mobile-locale-switcher .mobile-footer-label {
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .ox-mobile-locale-switcher > .ox-header-select-menu {
+    top: auto;
+    bottom: calc(100% + 0.75rem);
+    inset-inline-end: 0;
+    min-width: min(12rem, calc(100vw - 2rem));
+    max-width: calc(100vw - 2rem);
+    max-height: min(24rem, 65dvh);
+    overflow: auto;
+  }
+  .ox-mobile-locale-switcher .ox-header-select-menu a,
+  .ox-mobile-locale-switcher .ox-header-select-menu span {
+    display: flex;
+    align-items: center;
+    min-height: var(--octc-touch-target);
+    white-space: normal;
+    overflow-wrap: anywhere;
   }
   .mobile-footer-label {
     font-size: 0.625rem;
@@ -2572,6 +2626,17 @@ a:hover {
 <sp><sp>
 </footer>
 
+    <nav class="mobile-preferences" aria-label="Appearance and social links">
+      <button class="mobile-footer-btn" aria-label="Theme" data-mobile-theme>
+        <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+          <circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>
+        </svg>
+        <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+          <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+        </svg>
+        <span class="mobile-footer-label">Theme</span>
+      </button>
+    </nav>
     </main>
 
   </div>
@@ -2588,15 +2653,7 @@ a:hover {
       </svg>
       <span class="mobile-footer-label">Search</span>
     </button>
-    <button class="mobile-footer-btn" aria-label="Theme" data-mobile-theme>
-      <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
-        <circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>
-      </svg>
-      <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
-        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
-      </svg>
-      <span class="mobile-footer-label">Theme</span>
-    </button>
+
   </footer>
   <!-- ox-content:scripts:start -->
   <script>// ox-content:js:core:start

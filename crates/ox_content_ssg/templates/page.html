@@ -143,6 +143,17 @@
 {{ embed_content_after|safe }}
 {{ embed_footer_before|safe }}
 {{ footer_html|safe }}
+    <nav class="mobile-preferences" aria-label="Appearance and social links">
+      <button class="mobile-footer-btn" aria-label="Theme" data-mobile-theme>
+        <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+          <circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>
+        </svg>
+        <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+          <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+        </svg>
+        <span class="mobile-footer-label">Theme</span>
+      </button>
+{{ mobile_social_links|safe }}    </nav>
     </main>
 {% if has_toc %}
     <aside class="toc" aria-label="On this page">
@@ -166,15 +177,7 @@
       </svg>
       <span class="mobile-footer-label">Search</span>
     </button>
-{{ mobile_social_links|safe }}    <button class="mobile-footer-btn" aria-label="Theme" data-mobile-theme>
-      <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
-        <circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>
-      </svg>
-      <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
-        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
-      </svg>
-      <span class="mobile-footer-label">Theme</span>
-    </button>
+{{ mobile_locale_switcher|safe }}
   </footer>
 {% if let Some(chrome) = reader_chrome %}{% if chrome.back_to_top %}  <button type="button" class="ox-back-to-top" data-ox-back-to-top hidden aria-label="Back to top">Back to top</button>
 {% endif %}{% endif %}  <!-- ox-content:scripts:start -->

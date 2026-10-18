@@ -164,6 +164,7 @@ struct PageTemplate<'a> {
     logo_height: u32,
     social_links: &'a str,
     locale_switcher: &'a str,
+    mobile_locale_switcher: &'a str,
     is_entry_page: bool,
     embed_sidebar_before: &'a str,
     navigation: &'a str,

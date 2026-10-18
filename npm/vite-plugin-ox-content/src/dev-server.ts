@@ -276,72 +276,18 @@ async function resolveMarkdownFile(
 /**
  * Inject Vite HMR client script into the HTML.
  */
-function injectViteHmrClient(html: string): string {
-  const hmrScript = `<script type="module" src="/@vite/client"></script>
-<script type="module">
-if (import.meta.hot) {
-  const reexecuteBodyScripts = () => {
-    const scripts = Array.from(document.body.querySelectorAll('script'));
-    for (const script of scripts) {
-      const nextScript = document.createElement('script');
-      for (const attr of script.attributes) {
-        nextScript.setAttribute(attr.name, attr.value);
-      }
-      nextScript.textContent = script.textContent;
-      script.replaceWith(nextScript);
-    }
-  };
-
-  const applyHotUpdate = async () => {
-    const nextUrl = new URL(window.location.href);
-    nextUrl.searchParams.set('__ox_hmr', String(Date.now()));
-
-    const scrollX = window.scrollX;
-    const scrollY = window.scrollY;
-    const theme = document.documentElement.getAttribute('data-theme');
-
-    const response = await fetch(nextUrl.toString(), {
-      cache: 'no-store',
-      headers: {
-        'x-ox-content-hmr': '1',
-      },
-    });
-
-    if (!response.ok) {
-      throw new Error('Failed to fetch updated page');
-    }
-
-    const nextHtml = await response.text();
-    const nextDocument = new DOMParser().parseFromString(nextHtml, 'text/html');
-
-    if (!nextDocument.body) {
-      throw new Error('Updated page is missing a body');
-    }
-
-    document.title = nextDocument.title;
-    document.body.innerHTML = nextDocument.body.innerHTML;
-    reexecuteBodyScripts();
-
-    if (theme) {
-      document.documentElement.setAttribute('data-theme', theme);
-    }
-
-    window.scrollTo({ left: scrollX, top: scrollY });
-  };
-
-  let pendingUpdate = Promise.resolve();
-
-  import.meta.hot.on('ox-content:update', () => {
-    pendingUpdate = pendingUpdate
-      .then(() => applyHotUpdate())
-      .catch((error) => {
-        console.warn('[ox-content] HMR patch failed, falling back to reload.', error);
-        location.reload();
-      });
-  });
-}
+function injectViteHmrClient(html: string, base: string): string {
+  // This middleware serves complete HTML without Vite's HTML transform. Native
+  // inline modules do not get import.meta.hot injected, so connect explicitly.
+  const client = `${normalizeRouteBase(base)}@vite/client`;
+  const context = `${normalizeRouteBase(base)}__ox-content`;
+  const hmrScript = `<script type="module">
+import { createHotContext } from ${JSON.stringify(client)};
+const hot = createHotContext(${JSON.stringify(context)});
+// These are server-rendered documents. Navigation reruns page scripts and
+// refreshes head metadata, styles, and chrome together, without stale handlers.
+hot.on('ox-content:update', () => window.location.reload());
 </script>`;
-
   return html.replace("</head>", hmrScript + "\n</head>");
 }
 
@@ -614,7 +560,7 @@ async function renderPage(
   }
 
   if (hmr) {
-    html = injectViteHmrClient(html);
+    html = injectViteHmrClient(html, base);
   }
 
   return html;

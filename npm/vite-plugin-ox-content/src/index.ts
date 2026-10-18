@@ -22,12 +22,7 @@ import { BlogFeedError } from "./blog";
 import { PageResourceError } from "./resources";
 import { createKatexAssetsPlugin } from "./plugins/math-assets";
 import { buildSearchIndex, writeSearchIndex, generateSearchModule } from "./search";
-import {
-  createDevServerMiddleware,
-  createDevServerCache,
-  invalidateNavCache,
-  invalidatePageCache,
-} from "./dev-server";
+import { createDevServerMiddleware, createDevServerCache, invalidateNavCache } from "./dev-server";
 import { createOgViewerPlugin } from "./og-viewer";
 import { createI18nPlugin } from "./i18n";
 import { createAssetsPlugin } from "./assets";
@@ -376,11 +371,14 @@ function createMainPlugin(
         return;
       }
 
-      this.environment.hot.send({
-        type: "custom",
-        event: "ox-content:update",
-        data: { file },
-      });
+      // SSG documents are watched independently of Vite's module graph.
+      if (!resolvedOptions.ssg.enabled) {
+        this.environment.hot.send({
+          type: "custom",
+          event: "ox-content:update",
+          data: { file },
+        });
+      }
 
       return modules;
     },
@@ -389,7 +387,7 @@ function createMainPlugin(
       if (!isMarkdownFilePath(file, resolvedOptions.extensions)) {
         return;
       }
-      if (hasEnvironmentApiServer(server)) {
+      if (resolvedOptions.ssg.enabled || hasEnvironmentApiServer(server)) {
         return;
       }
 
@@ -561,6 +559,7 @@ function createSsgPlugin(
       const root = getRoot();
       const srcDir = path.resolve(root, resolvedOptions.srcDir);
       devServer.middlewares.use(createDevServerMiddleware(resolvedOptions, root, ssgDevCache));
+      devServer.watcher.add(srcDir);
 
       devServer.watcher.on("add", (file: string) => {
         notifySsgFileAddedOrRemoved(devServer, resolvedOptions, ssgDevCache, srcDir, file, "add");
@@ -577,7 +576,12 @@ function createSsgPlugin(
       });
       devServer.watcher.on("change", (file: string) => {
         if (file.startsWith(srcDir) && isMarkdownFilePath(file, resolvedOptions.extensions)) {
-          invalidatePageCache(ssgDevCache, file);
+          invalidateNavCache(ssgDevCache);
+          devServer.ws.send({
+            type: "custom",
+            event: "ox-content:update",
+            data: { file, type: "change" },
+          });
         }
       });
     },

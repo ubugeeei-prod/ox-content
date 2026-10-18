@@ -5,6 +5,15 @@ use super::utils::escape_html;
 
 /// Renders the header locale switcher, or an empty string when it is off.
 pub(super) fn render_locale_switcher(config: &SsgConfig) -> String {
+    render_switcher(config, false)
+}
+
+/// Renders the phone language control in the persistent navigation bar.
+pub(super) fn render_mobile_locale_switcher(config: &SsgConfig) -> String {
+    render_switcher(config, true)
+}
+
+fn render_switcher(config: &SsgConfig, mobile: bool) -> String {
     if !config.locale_switcher {
         return String::new();
     }
@@ -20,13 +29,25 @@ pub(super) fn render_locale_switcher(config: &SsgConfig) -> String {
         .or_else(|| locales.first())
         .map(|locale| escape_html(&locale.name))
         .unwrap_or_default();
-    let mut html =
-        String::from("<nav class=\"ox-header-select ox-locale-switcher\" aria-label=\"Language\">");
-    html.push_str(
-        "<button type=\"button\" disabled aria-expanded=\"false\" aria-haspopup=\"true\">",
-    );
-    html.push_str(&current_name);
-    html.push_str("</button><ul class=\"ox-header-select-menu\">");
+    let mut html = if mobile {
+        String::from(
+            "<nav class=\"ox-header-select ox-locale-switcher ox-mobile-locale-switcher\" aria-label=\"Language\">",
+        )
+    } else {
+        String::from("<nav class=\"ox-header-select ox-locale-switcher\" aria-label=\"Language\">")
+    };
+    if mobile {
+        html.push_str("<button type=\"button\" class=\"mobile-footer-btn\" aria-label=\"Change language\" disabled aria-expanded=\"false\" aria-haspopup=\"true\"><svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\"><circle cx=\"12\" cy=\"12\" r=\"9\"/><path d=\"M3 12h18M12 3a18 18 0 0 1 0 18 18 18 0 0 1 0-18\"/></svg><span class=\"mobile-footer-label\">");
+        html.push_str(&current_name);
+        html.push_str("</span></button>");
+    } else {
+        html.push_str(
+            "<button type=\"button\" disabled aria-expanded=\"false\" aria-haspopup=\"true\">",
+        );
+        html.push_str(&current_name);
+        html.push_str("</button>");
+    }
+    html.push_str("<ul class=\"ox-header-select-menu\">");
     for locale in locales {
         html.push_str("<li>");
         html.push_str(&render_locale_item(locale, current, config));

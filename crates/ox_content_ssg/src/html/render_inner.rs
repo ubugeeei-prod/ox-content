@@ -12,7 +12,7 @@ use super::header_chrome::{
 };
 use super::heading_permalinks::{push_heading_permalink_body_class, push_heading_permalink_css};
 use super::json_ld::render_json_ld;
-use super::locale_switcher::render_locale_switcher;
+use super::locale_switcher::{render_locale_switcher, render_mobile_locale_switcher};
 use super::mpa_navigation::{MPA_NAVIGATION_CSS, THEME_BOOTSTRAP_JS, view_transitions_enabled};
 use super::nav::{generate_nav_html, sidebar_bootstrap_js};
 use super::not_by_ai::push_not_by_ai_css;
@@ -262,7 +262,6 @@ pub(super) fn generate_html_inner(
         page_data.markdown_source.as_deref(),
         is_entry_page,
     );
-
     let (page_class, main_content) = if let Some(ref entry) = page_data.entry_page {
         let entry_html = generate_entry_html(entry, &config.base, self_hosted_icons);
         let combined = if article_html.trim().is_empty() {
@@ -320,6 +319,7 @@ pub(super) fn generate_html_inner(
         logo_height,
         social_links: &social_links_html,
         locale_switcher: &locale_switcher_html,
+        mobile_locale_switcher: &render_mobile_locale_switcher(config),
         is_entry_page,
         embed_sidebar_before,
         navigation: &nav_html,

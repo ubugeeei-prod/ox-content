@@ -56,3 +56,6 @@ Bare mode never emits the switcher.
 
 This documentation site enables the switcher with `en` and `ja`. Japanese
 guides live under [`/ja/`](/ja/).
+
+On phones, the language switcher stays in the bottom navigation beside Menu and
+Search. Appearance and social links are available at the end of the page.
