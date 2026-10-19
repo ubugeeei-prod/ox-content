@@ -65,6 +65,7 @@ pub fn parse_and_render(source: &str, options: Option<WasmParserOptions>) -> JsV
         autolink_patterns: opts.autolink_patterns,
         semantic_footnotes: opts.semantic_footnotes,
         heading_permalinks: opts.heading_permalinks,
+        sanitize: opts.sanitize,
     };
 
     // The arena and renderer are reused across calls (see `scratch`); on a
@@ -100,6 +101,7 @@ pub fn transform(source: &str, options: Option<WasmParserOptions>) -> JsValue {
         autolink_patterns: opts.autolink_patterns,
         semantic_footnotes: opts.semantic_footnotes,
         heading_permalinks: opts.heading_permalinks,
+        sanitize: opts.sanitize,
     };
 
     let transform_result = with_scratch(content.len(), &renderer_key, |allocator, renderer| {

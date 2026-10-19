@@ -34,6 +34,7 @@ pub struct WasmParserOptions {
     pub(crate) source_spans: bool,
     pub(crate) semantic_footnotes: bool,
     pub(crate) heading_permalinks: bool,
+    pub(crate) sanitize: bool,
 }
 
 #[wasm_bindgen]
@@ -45,7 +46,7 @@ impl WasmParserOptions {
     /// `autolinkTargetBlank = true`, `linkTargetBlank = true`,
     /// `sourceSpans = false`, `semanticFootnotes = false`, and the non-GFM
     /// Markdown extensions (`superscript`, `subscript`, `smartPunctuation`,
-    /// `math`, and `definitionLists`) disabled.
+    /// `math`, and `definitionLists`) disabled, and `sanitize = false`.
     #[wasm_bindgen(constructor)]
     pub fn new() -> Self {
         Self {
@@ -71,6 +72,7 @@ impl WasmParserOptions {
             source_spans: false,
             semantic_footnotes: false,
             heading_permalinks: false,
+            sanitize: false,
         }
     }
 
@@ -204,6 +206,14 @@ impl WasmParserOptions {
     #[wasm_bindgen(setter = headingPermalinks)]
     pub fn set_heading_permalinks(&mut self, value: bool) {
         self.heading_permalinks = value;
+    }
+
+    /// Escapes raw HTML and neutralises unsafe link and image URLs
+    /// (`javascript:` and friends), so untrusted Markdown can be inserted
+    /// into a page with `innerHTML`.
+    #[wasm_bindgen(setter)]
+    pub fn set_sanitize(&mut self, value: bool) {
+        self.sanitize = value;
     }
 }
 

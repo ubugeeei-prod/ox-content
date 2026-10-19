@@ -37,6 +37,8 @@ console.log(result.html);
 - `version()`
 - `WasmParserOptions`
 
+既定ではソース中の生 HTML はそのまま出力されます。信頼できない Markdown を描画する場合は `options.sanitize = true` を設定してください。生 HTML がエスケープされ、`javascript:` などのリンクや画像の URL が無効化されます。
+
 ## 補足
 
 - このパッケージは ESM のみです。

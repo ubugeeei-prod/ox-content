@@ -37,6 +37,8 @@ The current WebAssembly surface exposes:
 - `version()`
 - `WasmParserOptions`
 
+Raw HTML in the source is passed through by default. Set `options.sanitize = true` before rendering untrusted Markdown: raw HTML is escaped and `javascript:`-style link and image URLs are neutralised.
+
 ## Notes
 
 - The generated module is ESM-only.

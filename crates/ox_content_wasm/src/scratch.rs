@@ -36,6 +36,7 @@ pub struct RendererKey {
     pub autolink_patterns: Vec<String>,
     pub semantic_footnotes: bool,
     pub heading_permalinks: bool,
+    pub sanitize: bool,
 }
 
 struct Scratch {
@@ -55,6 +56,7 @@ fn default_key() -> RendererKey {
         autolink_patterns: defaults.autolink_patterns,
         semantic_footnotes: defaults.semantic_footnotes,
         heading_permalinks: defaults.heading_permalinks,
+        sanitize: defaults.sanitize,
     }
 }
 
@@ -97,6 +99,7 @@ pub fn with_scratch<R>(
                 autolink_patterns: key.autolink_patterns.clone(),
                 semantic_footnotes: key.semantic_footnotes,
                 heading_permalinks: key.heading_permalinks,
+                sanitize: key.sanitize,
                 ..Default::default()
             });
             scratch.renderer_key = key.clone();
@@ -104,4 +107,34 @@ pub fn with_scratch<R>(
 
         f(&scratch.allocator, &mut scratch.renderer)
     })
+}
+
+#[cfg(test)]
+mod tests {
+    use ox_content_parser::{Parser, ParserOptions};
+
+    use super::{RendererKey, default_key, with_scratch};
+
+    fn render(source: &str, sanitize: bool) -> String {
+        let key = RendererKey { sanitize, ..default_key() };
+        with_scratch(source.len(), &key, |allocator, renderer| {
+            let doc =
+                Parser::with_options(allocator, source, ParserOptions::default()).parse().unwrap();
+            renderer.render_borrowed(&doc).to_owned()
+        })
+    }
+
+    #[test]
+    fn sanitize_key_reaches_the_cached_renderer() {
+        let source = "<img src=x onerror=alert(1)> [run](javascript:alert(1))";
+
+        let raw = render(source, false);
+        assert!(raw.contains("<img src=x"), "{raw}");
+
+        // Same thread-local scratch, so this also proves a key change rebuilds
+        // the renderer instead of reusing the unsanitised one.
+        let sanitized = render(source, true);
+        assert!(!sanitized.contains("<img"), "{sanitized}");
+        assert!(!sanitized.contains("javascript:"), "{sanitized}");
+    }
 }
