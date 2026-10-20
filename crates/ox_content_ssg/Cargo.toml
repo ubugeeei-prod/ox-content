@@ -15,7 +15,7 @@ description = "Static Site Generation for Ox Content documentation"
 workspace = true
 
 [dependencies]
-askama = "0.16"
+askama = { version = "0.16", default-features = false, features = ["derive", "std", "urlencode"] }
 rustc-hash = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }
