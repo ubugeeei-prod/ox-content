@@ -1,5 +1,11 @@
 # Changelog
 
+## [3.4.0] - 2026-10-20
+
+### Features
+
+- expose the renderer sanitize option (#1518) _(affects: crates: ox_content_wasm; docs)_
+
 ## [3.3.3] - 2026-10-18
 
 ### Bug Fixes
