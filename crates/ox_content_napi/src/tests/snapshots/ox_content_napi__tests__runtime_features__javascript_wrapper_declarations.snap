@@ -239,6 +239,15 @@ export declare function generateSsgHtml(pageData: JsSsgPageData, navGroups: Arra
 /** Generates multiple themed SSG HTML pages while sharing navigation/config conversion. */
 export declare function generateSsgHtmlPages(pageDatas: Array<JsSsgPageData>, navGroups: Array<JsSsgNavGroup>, config: JsSsgConfig): Array<JsSsgHtmlResult>
 
+/**
+ * Generates and externalizes built-in theme pages as a single streaming pass.
+ *
+ * Expanded inline theme HTML never crosses the N-API boundary and only one
+ * expanded page is retained at a time. Shared chunk caches remain alive for
+ * the complete batch, so the output is equivalent to whole-batch extraction.
+ */
+export declare function generateSsgHtmlPagesExternalized(requests: Array<JsSsgExternalizedHtmlPageRequest>, navGroups: Array<JsSsgNavGroup>, config: JsSsgConfig, outDir: string, base: string): JsSsgGeneratedExternalizedAssets
+
 /** Returns unique git authors for a file. Empty when git is missing or fails. */
 export declare function getGitContributors(filePath: string, root?: string | undefined | null): Array<JsGitContributor>
 
@@ -2504,6 +2513,32 @@ export interface JsSsgExternalizedAssets {
   /** HTML pages with inline assets replaced. */
   pages: Array<JsSsgGeneratedHtmlPage>
   /** Extracted shared assets. */
+  assets: Array<JsSsgSharedAsset>
+}
+
+/** One compact page returned by streamed generation and extraction. */
+export interface JsSsgExternalizedHtmlPage {
+  inputPath: string
+  outputPath: string
+  html: string
+  diagnostics: Array<JsHeadDiagnostic>
+}
+
+/** One page request for streamed built-in theme generation and extraction. */
+export interface JsSsgExternalizedHtmlPageRequest {
+  /** Source Markdown path retained in the generated page result. */
+  inputPath: string
+  /** Destination HTML path retained in the generated page result. */
+  outputPath: string
+  /** Page data consumed by the built-in theme renderer. */
+  pageData: JsSsgPageData
+}
+
+/** Streamed built-in theme generation result. */
+export interface JsSsgGeneratedExternalizedAssets {
+  /** HTML pages after inline theme assets have been replaced. */
+  pages: Array<JsSsgExternalizedHtmlPage>
+  /** Unique CSS and JavaScript chunks shared by those pages. */
   assets: Array<JsSsgSharedAsset>
 }
 

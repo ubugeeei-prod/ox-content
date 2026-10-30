@@ -1,6 +1,9 @@
 use napi_derive::napi;
 
-use crate::{JsHeadDiagnostic, JsSsgConfig, JsSsgHtmlResult, JsSsgNavGroup, JsSsgPageData};
+use crate::{
+    JsHeadDiagnostic, JsSsgConfig, JsSsgExternalizedHtmlPage, JsSsgExternalizedHtmlPageRequest,
+    JsSsgGeneratedExternalizedAssets, JsSsgHtmlResult, JsSsgNavGroup, JsSsgPageData,
+};
 
 use super::converters::{
     convert_a11y, convert_entry_page_config, convert_json_ld, convert_nav_item,
@@ -49,6 +52,59 @@ pub fn generate_ssg_html_pages(
             ))
         })
         .collect()
+}
+
+/// Generates and externalizes built-in theme pages as a single streaming pass.
+///
+/// Expanded inline theme HTML never crosses the N-API boundary and only one
+/// expanded page is retained at a time. Shared chunk caches remain alive for
+/// the complete batch, so the output is equivalent to whole-batch extraction.
+#[napi(js_name = "generateSsgHtmlPagesExternalized")]
+pub fn generate_ssg_html_pages_externalized(
+    requests: Vec<JsSsgExternalizedHtmlPageRequest>,
+    nav_groups: Vec<JsSsgNavGroup>,
+    config: JsSsgConfig,
+    out_dir: String,
+    base: String,
+) -> JsSsgGeneratedExternalizedAssets {
+    let team = convert_team(config.team.clone());
+    let ssg_nav_groups = convert_nav_groups(nav_groups);
+    let ssg_config = convert_ssg_config(config);
+    let mut externalizer = ox_content_ssg::SharedAssetExternalizer::new(&out_dir, &base);
+    let mut pages = Vec::with_capacity(requests.len());
+
+    for request in requests {
+        let ssg_page_data = convert_ssg_page_data(request.page_data, &team);
+        let generated =
+            ox_content_ssg::generate_html_result(&ssg_page_data, &ssg_nav_groups, &ssg_config);
+        let page = externalizer.externalize_page(ox_content_ssg::GeneratedHtmlPage {
+            input_path: request.input_path,
+            output_path: request.output_path,
+            html: generated.html,
+        });
+        pages.push(JsSsgExternalizedHtmlPage {
+            input_path: page.input_path,
+            output_path: page.output_path,
+            html: page.html,
+            diagnostics: generated
+                .diagnostics
+                .into_iter()
+                .map(|diagnostic| JsHeadDiagnostic {
+                    strict: diagnostic.strict,
+                    message: diagnostic.message,
+                })
+                .collect(),
+        });
+    }
+
+    JsSsgGeneratedExternalizedAssets {
+        pages,
+        assets: externalizer
+            .finish()
+            .into_iter()
+            .map(super::converters::map_shared_asset)
+            .collect(),
+    }
 }
 
 fn convert_ssg_page_data(

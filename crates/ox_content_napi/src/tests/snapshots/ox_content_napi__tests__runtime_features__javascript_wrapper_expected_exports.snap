@@ -49,6 +49,7 @@ nativeHighlightLanguages
 supportsHighlightLanguage
 generateSsgHtml
 generateSsgHtmlPages
+generateSsgHtmlPagesExternalized
 getGitContributors
 getGitLastUpdated
 getGitLastUpdatedMany

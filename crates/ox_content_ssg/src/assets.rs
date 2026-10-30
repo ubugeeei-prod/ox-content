@@ -47,6 +47,93 @@ pub struct ExternalizedAssets {
     pub assets: Vec<SharedAsset>,
 }
 
+/// Incremental shared-asset extractor for streaming page generation.
+///
+/// Keeping the chunk caches across pages preserves content de-duplication,
+/// while externalizing each page immediately avoids retaining every expanded
+/// inline theme in memory at once.
+pub struct SharedAssetExternalizer<'a> {
+    css_chunks: AssetCache,
+    js_chunks: AssetCache,
+    out_dir: &'a str,
+    base: &'a str,
+}
+
+impl<'a> SharedAssetExternalizer<'a> {
+    /// Creates an extractor for one SSG build.
+    #[must_use]
+    pub fn new(out_dir: &'a str, base: &'a str) -> Self {
+        Self { css_chunks: AssetCache::default(), js_chunks: AssetCache::default(), out_dir, base }
+    }
+
+    /// Externalizes one page while retaining shared chunk state for later pages.
+    #[must_use]
+    pub fn externalize_page(&mut self, page: GeneratedHtmlPage) -> GeneratedHtmlPage {
+        if !contains_inline_asset_tag(&page.html) {
+            return page;
+        }
+
+        let mut html = page.html;
+
+        if let Some(block) =
+            find_marked_block(&html, STYLE_BLOCK_START, STYLE_BLOCK_END, STYLE_OPEN, STYLE_CLOSE)
+        {
+            let replacement = build_style_replacement(
+                &block.content,
+                &mut self.css_chunks,
+                self.out_dir,
+                self.base,
+            );
+            html.replace_range(block.start..block.end, &replacement);
+        } else if let Some(block) = find_first_tag_block(&html, STYLE_OPEN, STYLE_CLOSE) {
+            let replacement = build_style_replacement(
+                &block.content,
+                &mut self.css_chunks,
+                self.out_dir,
+                self.base,
+            );
+            html.replace_range(block.start..block.end, &replacement);
+        }
+
+        if let Some(block) = find_marked_block(
+            &html,
+            SCRIPT_BLOCK_START,
+            SCRIPT_BLOCK_END,
+            SCRIPT_OPEN,
+            SCRIPT_CLOSE,
+        ) {
+            let replacement = build_script_replacement(
+                &block.content,
+                &mut self.js_chunks,
+                self.out_dir,
+                self.base,
+            );
+            html.replace_range(block.start..block.end, &replacement);
+        } else if let Some(block) = find_last_body_script_block(&html) {
+            let replacement = build_script_replacement(
+                &block.content,
+                &mut self.js_chunks,
+                self.out_dir,
+                self.base,
+            );
+            let replacement = if replacement.is_empty() {
+                BODY_CLOSE.to_string()
+            } else {
+                format!("{replacement}\n{BODY_CLOSE}")
+            };
+            html.replace_range(block.start..block.end, &replacement);
+        }
+
+        GeneratedHtmlPage { html, ..page }
+    }
+
+    /// Finishes extraction and returns every unique shared asset.
+    #[must_use]
+    pub fn finish(self) -> Vec<SharedAsset> {
+        self.css_chunks.into_chunks().into_iter().chain(self.js_chunks.into_chunks()).collect()
+    }
+}
+
 /// Extracts shared CSS/JS chunks from generated HTML pages.
 ///
 /// The Rust HTML generator emits marked style/script regions. This pass walks
@@ -59,60 +146,10 @@ pub fn externalize_shared_page_assets(
     out_dir: &str,
     base: &str,
 ) -> ExternalizedAssets {
-    let mut css_chunks = AssetCache::default();
-    let mut js_chunks = AssetCache::default();
-
-    let optimized_pages = pages
-        .into_iter()
-        .map(|page| {
-            if !contains_inline_asset_tag(&page.html) {
-                return page;
-            }
-
-            let mut html = page.html;
-
-            if let Some(block) = find_marked_block(
-                &html,
-                STYLE_BLOCK_START,
-                STYLE_BLOCK_END,
-                STYLE_OPEN,
-                STYLE_CLOSE,
-            ) {
-                let replacement =
-                    build_style_replacement(&block.content, &mut css_chunks, out_dir, base);
-                html.replace_range(block.start..block.end, &replacement);
-            } else if let Some(block) = find_first_tag_block(&html, STYLE_OPEN, STYLE_CLOSE) {
-                let replacement =
-                    build_style_replacement(&block.content, &mut css_chunks, out_dir, base);
-                html.replace_range(block.start..block.end, &replacement);
-            }
-
-            if let Some(block) = find_marked_block(
-                &html,
-                SCRIPT_BLOCK_START,
-                SCRIPT_BLOCK_END,
-                SCRIPT_OPEN,
-                SCRIPT_CLOSE,
-            ) {
-                let replacement =
-                    build_script_replacement(&block.content, &mut js_chunks, out_dir, base);
-                html.replace_range(block.start..block.end, &replacement);
-            } else if let Some(block) = find_last_body_script_block(&html) {
-                let replacement =
-                    build_script_replacement(&block.content, &mut js_chunks, out_dir, base);
-                let replacement = if replacement.is_empty() {
-                    BODY_CLOSE.to_string()
-                } else {
-                    format!("{replacement}\n{BODY_CLOSE}")
-                };
-                html.replace_range(block.start..block.end, &replacement);
-            }
-
-            GeneratedHtmlPage { html, ..page }
-        })
-        .collect();
-
-    let assets = css_chunks.into_chunks().into_iter().chain(js_chunks.into_chunks()).collect();
+    let mut externalizer = SharedAssetExternalizer::new(out_dir, base);
+    let optimized_pages =
+        pages.into_iter().map(|page| externalizer.externalize_page(page)).collect();
+    let assets = externalizer.finish();
 
     ExternalizedAssets { pages: optimized_pages, assets }
 }
@@ -191,6 +228,27 @@ mod tests {
 
         assert!(result.assets.is_empty());
         assert_eq!(result.pages[0].html, html);
+    }
+
+    #[test]
+    fn incrementally_externalizes_pages_with_one_shared_cache() {
+        let mut externalizer = SharedAssetExternalizer::new("/tmp/site", "/docs/");
+        let first = externalizer.externalize_page(GeneratedHtmlPage {
+            input_path: "a.md".to_string(),
+            output_path: "/tmp/site/a/index.html".to_string(),
+            html: format_page("A"),
+        });
+        let second = externalizer.externalize_page(GeneratedHtmlPage {
+            input_path: "b.md".to_string(),
+            output_path: "/tmp/site/b/index.html".to_string(),
+            html: format_page("B"),
+        });
+        let assets = externalizer.finish();
+
+        assert_eq!(assets.len(), 3);
+        let shared_css = &assets[0].public_path;
+        assert!(first.html.contains(shared_css));
+        assert!(second.html.contains(shared_css));
     }
 
     #[test]
