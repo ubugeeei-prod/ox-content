@@ -4,8 +4,11 @@ import { unified } from "unified";
 import parse from "rehype-parse";
 import stringify from "rehype-stringify";
 import type { Root, Element } from "hast";
+import { interopDefault } from "../interop";
 
-const processor = unified().use(parse, { fragment: true }).use(stringify);
+const processor = unified()
+  .use(interopDefault(parse), { fragment: true })
+  .use(interopDefault(stringify));
 const mime: Record<string, string> = {
   ".png": "image/png",
   ".jpg": "image/jpeg",
