@@ -31,6 +31,9 @@ function firstPixel(png: Buffer): number[] {
 const browser = await openBrowser();
 const hasChromium = browser !== null;
 await browser?.[Symbol.asyncDispose]();
+if (process.env.OX_CONTENT_REQUIRE_OG_CHROMIUM === "1" && !hasChromium) {
+  throw new Error("Chromium must be available for the OG renderer integration matrix.");
+}
 const css =
   ".card{display:flex;width:100%;height:100%;background:#123456;color:white;font-size:24px}";
 const templates = {

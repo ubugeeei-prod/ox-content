@@ -112,8 +112,13 @@ jobs:
       - name: Check browser availability
         run: google-chrome --version
 
+      - name: Install Chromium for OG renderer tests
+        run: vp exec --filter @ox-content/vite-plugin -- playwright install chromium
+
       - name: Run tests
         run: vp run test
+        env:
+          OX_CONTENT_REQUIRE_OG_CHROMIUM: "1"
 
   vscode-test:
     name: VS Code extension tests
