@@ -191,7 +191,7 @@ Complete the following once as the maintainer:
 4. Generate a temporary token in [Access Tokens](https://open-vsx.org/user-settings/tokens)
    and use it only in the local shell for this initial upload:
 
-   ```bash
+   ```zsh
    open_vsx_tools=$(mktemp -d)
    env -u OVSX_PAT vp env exec --node 26 npm install \
      --prefix "$open_vsx_tools" --no-audit --no-fund ovsx@1.2.0
