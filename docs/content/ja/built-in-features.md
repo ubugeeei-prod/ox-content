@@ -147,7 +147,7 @@ Ox Content は、よく使うドキュメントの挙動を既定で載せ、非
 | 型ホバー              | `typedHover`                                                                                                                                                                                                                                                       | `false`            | [型ホバー](./built-in/typed-hover.md)                                    |
 | 独自パイプライン      | `transformers`                                                                                                                                                                                                                                                     | `[]`               | [サイト生成](./built-in/site-generation.md)                              |
 
-タブと YouTube 埋め込みにオプションはありません。SSG と dev preview では常に処理されます。[埋め込み](./built-in/embeds.md) を見てください。
+タブと YouTube 埋め込みにオプションはありません。SSG と dev preview では常に処理されます。[埋め込み](./built-in/embeds.md#タブ) を見てください。
 
 ## 設定例
 
