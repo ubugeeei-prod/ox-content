@@ -19,11 +19,25 @@ describe("compare collection scale", () => {
     const result = compareReports(10, 13);
 
     expect(result.status).toBe(1);
-    expect(result.stderr).toContain("regression exceeded 20%");
+    expect(result.stderr).toContain("regression exceeded 20% and 0.05 ms");
+  });
+
+  it("ignores relative noise below the absolute tolerance", () => {
+    const result = compareReports(0.0004, 0.0008);
+
+    expect(result.status).toBe(0);
+    expect(result.report).toContain("+100.0%");
+  });
+
+  it.each(["NaN", "Infinity", "-1"])("rejects an invalid absolute tolerance: %s", (value) => {
+    const result = compareReports(10, 13, ["--max-absolute-regression-ms", value]);
+
+    expect(result.status).toBe(1);
+    expect(result.stderr).toContain("requires a finite nonnegative number");
   });
 });
 
-function compareReports(baseMs: number, headMs: number) {
+function compareReports(baseMs: number, headMs: number, options: string[] = []) {
   const directory = mkdtempSync(join(tmpdir(), "ox-collection-compare-"));
   const base = join(directory, "base.json");
   const head = join(directory, "head.json");
@@ -34,7 +48,7 @@ function compareReports(baseMs: number, headMs: number) {
 
   const result = spawnSync(
     process.execPath,
-    [script, "--base", base, "--head", head, "--append", report],
+    [script, "--base", base, "--head", head, "--append", report, ...options],
     {
       encoding: "utf8",
       env: { ...process.env, OX_CONTENT_BENCHMARK_ALLOW_REGRESSION: "0" },

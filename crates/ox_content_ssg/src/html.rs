@@ -56,7 +56,9 @@ pub use page::{
     HeroNoticeConfig, LocaleInfo, LocalePath, NavGroup, NavItem, PageData, PagerOverride,
     SsgConfig, TocEntry,
 };
-pub use render::{GeneratedHtml, generate_html, generate_html_result};
+pub use render::{
+    GeneratedHtml, generate_html, generate_html_result, generate_html_result_with_auto_navigation,
+};
 pub use theme::{
     SocialLink, SocialLinks, ThemeColors, ThemeConfig, ThemeEmbed, ThemeEntryPage, ThemeFonts,
     ThemeFooter, ThemeHeader, ThemeLayout,

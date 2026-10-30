@@ -22,7 +22,60 @@ pub(super) fn sidebar_bootstrap_js(base: &str) -> String {
     SIDEBAR_BOOTSTRAP_JS.replace("{{base}}", &body.replace('<', "\\u003c"))
 }
 
+#[cfg(test)]
 pub(super) fn generate_nav_html(nav_groups: &[NavGroup], current_path: &str) -> String {
+    generate_page_nav_html(nav_groups, current_path, false)
+}
+
+/// Large auto-generated sidebars are grouped by their top-level directory.
+/// Rendering every group on every page makes a 2k-page site write hundreds of
+/// megabytes of duplicate HTML. Above the threshold, keep the active section
+/// server-rendered and reduce each sibling section to its representative link.
+pub(super) fn generate_page_nav_html(
+    nav_groups: &[NavGroup],
+    current_path: &str,
+    scope_large_auto_navigation: bool,
+) -> String {
+    const LARGE_AUTO_NAV_THRESHOLD: usize = 512;
+    let item_count: usize = nav_groups.iter().map(|group| group.items.len()).sum();
+    if !scope_large_auto_navigation || item_count <= LARGE_AUTO_NAV_THRESHOLD {
+        return render_nav_groups(nav_groups, current_path);
+    }
+
+    let active_group = nav_groups
+        .iter()
+        .position(|group| group.items.iter().any(|item| item.path == current_path));
+    let Some(active_group) = active_group else {
+        return render_nav_groups(nav_groups, current_path);
+    };
+
+    let scoped: Vec<_> = nav_groups
+        .iter()
+        .enumerate()
+        .filter_map(|(index, group)| {
+            if index == active_group {
+                return Some(group.clone());
+            }
+            let item = representative_section_item(group)?.clone();
+            Some(NavGroup {
+                title: group.title.clone(),
+                items: vec![item],
+                collapsed: group.collapsed,
+                sticky_collapsed: group.sticky_collapsed,
+            })
+        })
+        .collect();
+    render_nav_groups(&scoped, current_path)
+}
+
+fn representative_section_item(group: &NavGroup) -> Option<&NavItem> {
+    let first = group.items.first()?;
+    let prefix = first.path.split('/').next().unwrap_or_default();
+    let index_path = format!("{prefix}/index");
+    group.items.iter().find(|item| item.path == prefix || item.path == index_path).or(Some(first))
+}
+
+fn render_nav_groups(nav_groups: &[NavGroup], current_path: &str) -> String {
     let mut html = String::new();
     for (group_index, group) in nav_groups.iter().enumerate() {
         if group.collapsed.is_some() {
@@ -136,5 +189,47 @@ fn safe_nav_href(href: &str) -> String {
 fn push_fmt(output: &mut String, args: std::fmt::Arguments<'_>) {
     if output.write_fmt(args).is_err() {
         output.push_str("[formatting failed]");
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn section(name: &str, count: usize) -> NavGroup {
+        NavGroup {
+            title: name.to_string(),
+            items: (0..count)
+                .map(|index| NavItem {
+                    title: format!("Page {index}"),
+                    path: format!("{name}/{index}"),
+                    href: format!("/{name}/{index}/index.html"),
+                    children: Vec::new(),
+                    collapsed: None,
+                    sticky_collapsed: None,
+                })
+                .collect(),
+            collapsed: None,
+            sticky_collapsed: None,
+        }
+    }
+
+    #[test]
+    fn scopes_large_auto_navigation_to_the_active_section() {
+        let groups = vec![section("guide", 300), section("api", 300)];
+        let html = generate_page_nav_html(&groups, "guide/42", true);
+
+        assert_eq!(html.matches("class=\"nav-item\"").count(), 301);
+        assert!(html.contains("class=\"nav-link active\">Page 42</a>"));
+        assert!(html.contains("<div class=\"nav-title\">api</div>"));
+        assert!(!html.contains("/api/42/index.html"));
+    }
+
+    #[test]
+    fn keeps_large_manual_navigation_complete() {
+        let groups = vec![section("guide", 300), section("api", 300)];
+        let html = generate_page_nav_html(&groups, "guide/42", false);
+
+        assert_eq!(html.matches("class=\"nav-item\"").count(), 600);
     }
 }

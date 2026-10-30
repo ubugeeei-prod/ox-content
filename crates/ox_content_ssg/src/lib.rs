@@ -106,8 +106,8 @@ pub use html::{
     TeamLink, TeamMember, TeamOptions, ThemeAnnouncement, ThemeColors, ThemeConfig, ThemeEmbed,
     ThemeEntryPage, ThemeFonts, ThemeFooter, ThemeHeader, ThemeLayout, TocEntry,
     apply_reader_chrome, generate_bare_html, generate_bare_page, generate_html,
-    generate_html_result, is_safe_section_href, render_head, render_section_index,
-    render_team_page, resolve_head, serialize_head,
+    generate_html_result, generate_html_result_with_auto_navigation, is_safe_section_href,
+    render_head, render_section_index, render_team_page, resolve_head, serialize_head,
 };
 pub use permalinks::{
     CascadeOptions, PermalinksOptions, ResolvedRoutePage, RoutePage, RouteResolveOutput,

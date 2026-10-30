@@ -42,6 +42,8 @@ pub struct JsSsgConfig {
     pub page_chrome: Option<bool>,
     /// Opt-in JSON-LD structured data. Presence enables the feature.
     pub json_ld: Option<JsJsonLd>,
+    /// True only for navigation inferred from the full Markdown collection.
+    pub auto_navigation: Option<bool>,
 }
 
 /// Opt-in JSON-LD structured data. Presence of the object enables the feature.
