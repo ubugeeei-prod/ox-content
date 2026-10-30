@@ -9,8 +9,11 @@ import * as crypto from "crypto";
 import { availableParallelism } from "os";
 import { openBrowser, openBrowserPool } from "./browser";
 import type { OgBrowserSession } from "./browser";
-import { renderHtmlToPngWithSatori } from "./satori-renderer";
-import { getDefaultSatoriTemplate, getDefaultTemplate } from "./template";
+import { createSatoriRenderer } from "./satori-renderer";
+import { createTakumiRenderer } from "./takumi-renderer";
+import { resolveTemplate } from "./template-loader";
+import { templateSources } from "./template-source";
+export { isBareSpecifier, tsTemplateBundleOptions } from "./template-loader";
 import { computeCacheKey, getCached, isCached, writeCache } from "./cache";
 import type {
   OgImageOptions,
@@ -28,6 +31,7 @@ export type {
   OgImageSatoriFont,
   OgImageSatoriFontWeight,
   OgImageSatoriOptions,
+  OgImageTakumiOptions,
 } from "./types";
 
 export type { OgBrowserPool, OgBrowserSession } from "./browser";
@@ -54,6 +58,7 @@ export function resolveOgImageOptions(options: OgImageOptions | undefined): Reso
     renderer: options?.renderer ?? "chromium",
     template: options?.template,
     vuePlugin: options?.vuePlugin ?? "vitejs",
+    jsxFramework: options?.jsxFramework ?? "react",
     width: options?.width ?? 1200,
     height: options?.height ?? 630,
     cache: options?.cache ?? true,
@@ -61,6 +66,10 @@ export function resolveOgImageOptions(options: OgImageOptions | undefined): Reso
     satori: {
       fonts: options?.satori?.fonts ?? [],
       systemFontFallback: options?.satori?.systemFontFallback ?? true,
+    },
+    takumi: {
+      fonts: options?.takumi?.fonts ?? [],
+      systemFontFallback: options?.takumi?.systemFontFallback ?? true,
     },
   };
 }
@@ -85,444 +94,6 @@ export interface OgImageResult {
 }
 
 /**
- * Resolves the template function from options.
- *
- * Dispatches by file extension:
- * - `.vue`  → Vue SFC (SSR via vue/server-renderer)
- * - `.svelte` → Svelte SFC (SSR via svelte/server)
- * - `.tsx`/`.jsx` → React Server Component (SSR via react-dom/server)
- * - others → TypeScript template (direct function export)
- */
-async function resolveTemplate(
-  options: ResolvedOgImageOptions,
-  root: string,
-): Promise<OgImageTemplateFn> {
-  if (!options.template) {
-    return options.renderer === "satori" ? getDefaultSatoriTemplate() : getDefaultTemplate();
-  }
-
-  const templatePath = path.resolve(root, options.template);
-
-  // Verify file exists
-  const fs = await import("fs/promises");
-  try {
-    await fs.access(templatePath);
-  } catch {
-    throw new Error(`[ox-content:og-image] Template file not found: ${templatePath}`);
-  }
-
-  const ext = path.extname(templatePath).toLowerCase();
-
-  switch (ext) {
-    case ".vue":
-      return resolveVueTemplate(templatePath, options, root);
-    case ".svelte":
-      return resolveSvelteTemplate(templatePath, root);
-    case ".tsx":
-    case ".jsx":
-      return resolveReactTemplate(templatePath, root);
-    default:
-      return resolveTsTemplate(templatePath, options, root);
-  }
-}
-
-/**
- * Matches this package and every subpath it exports.
- *
- * A template's natural runtime is whatever renders it, and for the
- * framework-less kinds that is this package: `renderToString`, `raw`, `when`
- * and `each` live at its root, and the JSX runtime under `./jsx-runtime`.
- * Inlining them instead drags the entire plugin — chokidar, fsevents and all
- * — into the template bundle, which is what made importing it fail outright.
- */
-const OX_CONTENT_PACKAGE = /^@ox-content\/vite-plugin(\/.*)?$/;
-
-/**
- * Whether `id` is a bare specifier, and so resolvable at runtime rather than
- * something the template bundle has to inline.
- *
- * Template bundles are written to `<root>/.cache/og-images/` and imported
- * from there, so Node resolves anything left external against the project's
- * own `node_modules`. Relative and absolute imports still bundle, which is
- * what a template actually needs — its own components travel with it.
- */
-export function isBareSpecifier(id: string): boolean {
-  if (id.startsWith(".") || id.startsWith("/") || id.startsWith("\0")) {
-    return false;
-  }
-  // Windows drive letters and rolldown's virtual-module prefixes.
-  return !/^[a-zA-Z]:[\\/]/.test(id);
-}
-
-/**
- * Rolldown input options for a `.ts` template bundle.
- *
- * A `.ts` template is the framework-less kind, so it has no single runtime to
- * externalize the way the `.vue`, `.svelte` and `.tsx` paths do — anything
- * from `node_modules` is better resolved at import time than inlined. Nothing
- * on this path has a compiler plugin, so nothing here needed bundling to be
- * loadable in the first place.
- */
-export function tsTemplateBundleOptions(templatePath: string) {
-  return {
-    input: templatePath,
-    platform: "node" as const,
-    external: (id: string) => isBareSpecifier(id),
-  };
-}
-
-/**
- * Resolves a plain TypeScript template (existing behavior).
- */
-async function resolveTsTemplate(
-  templatePath: string,
-  options: ResolvedOgImageOptions,
-  root: string,
-): Promise<OgImageTemplateFn> {
-  const fs = await import("fs/promises");
-  const { rolldown } = await import("rolldown");
-  const cacheDir = path.join(root, ".cache", "og-images");
-  await fs.mkdir(cacheDir, { recursive: true });
-
-  const outfile = path.join(cacheDir, "_template.mjs");
-
-  const bundle = await rolldown(tsTemplateBundleOptions(templatePath));
-  await bundle.write({
-    file: outfile,
-    format: "esm",
-  });
-  await bundle.close();
-
-  const mod = await import(`${outfile}?t=${Date.now()}`);
-  const templateFn = mod.default;
-
-  if (typeof templateFn !== "function") {
-    throw new Error(
-      `[ox-content:og-image] Template must default-export a function: ${options.template}`,
-    );
-  }
-
-  return templateFn as OgImageTemplateFn;
-}
-
-/**
- * Resolves a Vue SFC template via SSR.
- *
- * Compiles the SFC with @vue/compiler-sfc (or @vizejs/vite-plugin),
- * bundles with rolldown, then wraps with createSSRApp + renderToString.
- */
-async function resolveVueTemplate(
-  templatePath: string,
-  options: ResolvedOgImageOptions,
-  root: string,
-): Promise<OgImageTemplateFn> {
-  const fs = await import("fs/promises");
-  const { rolldown } = await import("rolldown");
-  const cacheDir = path.join(root, ".cache", "og-images");
-  await fs.mkdir(cacheDir, { recursive: true });
-
-  const outfile = path.join(cacheDir, "_template_vue.mjs");
-
-  const plugins =
-    options.vuePlugin === "vizejs" ? await getVizejsPlugin() : [createVueCompilerPlugin()];
-
-  const bundle = await rolldown({
-    input: templatePath,
-    platform: "node",
-    external: ["vue", "vue/server-renderer", OX_CONTENT_PACKAGE],
-    plugins,
-  });
-  await bundle.write({
-    file: outfile,
-    format: "esm",
-  });
-  await bundle.close();
-
-  const mod = await import(`${outfile}?t=${Date.now()}`);
-  const Component = mod.default;
-
-  if (!Component) {
-    throw new Error(
-      `[ox-content:og-image] Vue template must have a default export: ${templatePath}`,
-    );
-  }
-
-  // Extract CSS from SFC <style> blocks (Vue SSR does not include styles).
-  // OG image templates render in complete isolation, so scoping is unnecessary.
-  // We use raw CSS content to avoid scope ID mismatches between compilers
-  // (e.g., vizejs and @vue/compiler-sfc may produce different scope hashes).
-  let extractedCss = ((mod as Record<string, unknown>).__vize_css__ as string) || "";
-  if (!extractedCss) {
-    try {
-      let compilerSfc: typeof import("@vue/compiler-sfc");
-      try {
-        compilerSfc = await import("@vue/compiler-sfc");
-      } catch {
-        compilerSfc = null as never;
-      }
-      if (compilerSfc) {
-        const sfcSource = await fs.readFile(templatePath, "utf-8");
-        const { descriptor } = compilerSfc.parse(sfcSource, { filename: templatePath });
-        for (const style of descriptor.styles) {
-          extractedCss += style.content;
-        }
-      }
-    } catch {
-      // CSS extraction is best-effort
-    }
-  }
-
-  // Import Vue SSR utilities
-  const { createSSRApp } = await import("vue");
-  const { renderToString } = await import("vue/server-renderer");
-
-  return async (props) => {
-    const app = createSSRApp(Component, props);
-    const html = await renderToString(app);
-    if (extractedCss) {
-      return `<style>${extractedCss}</style>${html}`;
-    }
-    return html;
-  };
-}
-
-/**
- * Creates a rolldown plugin that compiles Vue SFCs using @vue/compiler-sfc.
- */
-function createVueCompilerPlugin(): import("rolldown").Plugin {
-  return {
-    name: "ox-content-vue-sfc",
-    async transform(code, id) {
-      if (!id.endsWith(".vue")) return null;
-
-      let compilerSfc: typeof import("@vue/compiler-sfc");
-      try {
-        compilerSfc = await import("@vue/compiler-sfc");
-      } catch {
-        throw new Error(
-          "[ox-content:og-image] @vue/compiler-sfc is required for .vue templates. " +
-            "Install it with: pnpm add -D @vue/compiler-sfc",
-        );
-      }
-
-      const { descriptor } = compilerSfc.parse(code, { filename: id });
-
-      // Compile <script setup> or <script>
-      let scriptCode: string;
-      if (descriptor.scriptSetup || descriptor.script) {
-        const compiled = compilerSfc.compileScript(descriptor, {
-          id,
-          inlineTemplate: true,
-        });
-        scriptCode = compiled.content;
-      } else {
-        // Template-only SFC: compile template separately
-        if (!descriptor.template) {
-          throw new Error(
-            `[ox-content:og-image] Vue SFC must have a <template> or <script>: ${id}`,
-          );
-        }
-        const templateResult = compilerSfc.compileTemplate({
-          source: descriptor.template.content,
-          filename: id,
-          id,
-        });
-        if (templateResult.errors.length > 0) {
-          throw new Error(
-            `[ox-content:og-image] Vue template compilation errors in ${id}: ${templateResult.errors.map(String).join(", ")}`,
-          );
-        }
-        scriptCode = `${templateResult.code}\nexport default { render }`;
-      }
-
-      // Determine if the compiled output contains TypeScript
-      const isTs = !!(descriptor.scriptSetup?.lang === "ts" || descriptor.script?.lang === "ts");
-
-      return { code: scriptCode, moduleType: isTs ? "ts" : "js" };
-    },
-  };
-}
-
-/**
- * Loads @vizejs/vite-plugin as a rolldown plugin for Vue SFC compilation.
- */
-async function getVizejsPlugin(): Promise<import("rolldown").Plugin[]> {
-  try {
-    const vizejs = await import("@vizejs/vite-plugin");
-    const plugin = vizejs.default?.() ?? vizejs;
-    return Array.isArray(plugin) ? plugin : [plugin];
-  } catch {
-    throw new Error(
-      "[ox-content:og-image] @vizejs/vite-plugin is required when vuePlugin is 'vizejs'. " +
-        "Install it with: pnpm add -D @vizejs/vite-plugin",
-    );
-  }
-}
-
-/**
- * Resolves a Svelte SFC template via SSR.
- *
- * Compiles the SFC with svelte/compiler (server mode + runes),
- * bundles with rolldown, then wraps with svelte/server render().
- */
-async function resolveSvelteTemplate(
-  templatePath: string,
-  root: string,
-): Promise<OgImageTemplateFn> {
-  const fs = await import("fs/promises");
-  const { rolldown } = await import("rolldown");
-  const cacheDir = path.join(root, ".cache", "og-images");
-  await fs.mkdir(cacheDir, { recursive: true });
-
-  const outfile = path.join(cacheDir, "_template_svelte.mjs");
-
-  const bundle = await rolldown({
-    input: templatePath,
-    platform: "node",
-    external: [
-      "svelte",
-      "svelte/server",
-      "svelte/internal",
-      "svelte/internal/server",
-      OX_CONTENT_PACKAGE,
-    ],
-    plugins: [createSvelteCompilerPlugin()],
-  });
-  await bundle.write({
-    file: outfile,
-    format: "esm",
-  });
-  await bundle.close();
-
-  const mod = await import(`${outfile}?t=${Date.now()}`);
-  const Component = mod.default;
-
-  if (!Component) {
-    throw new Error(
-      `[ox-content:og-image] Svelte template must have a default export: ${templatePath}`,
-    );
-  }
-
-  // Import Svelte SSR utility
-  const { render } = (await import("svelte/server")) as {
-    render: (component: unknown, options: { props: Record<string, unknown> }) => { body: string };
-  };
-
-  return async (props) => {
-    const { body } = render(Component, { props });
-    return body;
-  };
-}
-
-/**
- * Creates a rolldown plugin that compiles Svelte SFCs using svelte/compiler.
- */
-function createSvelteCompilerPlugin(): import("rolldown").Plugin {
-  return {
-    name: "ox-content-svelte-sfc",
-    async transform(code, id) {
-      if (!id.endsWith(".svelte")) return null;
-
-      let svelteCompiler: typeof import("svelte/compiler");
-      try {
-        svelteCompiler = await import("svelte/compiler");
-      } catch {
-        throw new Error(
-          "[ox-content:og-image] svelte is required for .svelte templates. " +
-            "Install it with: pnpm add -D svelte",
-        );
-      }
-
-      const result = svelteCompiler.compile(code, {
-        generate: "server",
-        runes: true,
-        filename: id,
-      });
-
-      return { code: result.js.code };
-    },
-  };
-}
-
-/**
- * Resolves a React (.tsx/.jsx) template via SSR.
- *
- * Bundles with rolldown (JSX transform), then wraps with
- * react-dom/server renderToReadableStream for async Server Component support.
- */
-async function resolveReactTemplate(
-  templatePath: string,
-  root: string,
-): Promise<OgImageTemplateFn> {
-  const fs = await import("fs/promises");
-  const { rolldown } = await import("rolldown");
-  const cacheDir = path.join(root, ".cache", "og-images");
-  await fs.mkdir(cacheDir, { recursive: true });
-
-  const outfile = path.join(cacheDir, "_template_react.mjs");
-
-  const bundle = await rolldown({
-    input: templatePath,
-    platform: "node",
-    external: [
-      "react",
-      "react/jsx-runtime",
-      "react/jsx-dev-runtime",
-      "react-dom",
-      "react-dom/server",
-      OX_CONTENT_PACKAGE,
-    ],
-    transform: {
-      jsx: "react-jsx",
-    },
-  });
-  await bundle.write({
-    file: outfile,
-    format: "esm",
-  });
-  await bundle.close();
-
-  const mod = await import(`${outfile}?t=${Date.now()}`);
-  const Component = mod.default;
-
-  if (!Component) {
-    throw new Error(
-      `[ox-content:og-image] React template must have a default export: ${templatePath}`,
-    );
-  }
-
-  // Import React SSR utilities
-  let React: typeof import("react");
-  let ReactDOMServer: typeof import("react-dom/server");
-  try {
-    React = await import("react");
-    ReactDOMServer = await import("react-dom/server");
-  } catch {
-    throw new Error(
-      "[ox-content:og-image] react and react-dom are required for .tsx/.jsx templates. " +
-        "Install them with: pnpm add -D react react-dom",
-    );
-  }
-
-  return async (props) => {
-    const element = React.createElement(Component, props);
-    // Use renderToReadableStream for async Server Component support
-    const stream = await ReactDOMServer.renderToReadableStream(element);
-    const reader = stream.getReader();
-    const chunks: Uint8Array[] = [];
-    while (true) {
-      const { done, value } = await reader.read();
-      if (done) break;
-      chunks.push(value);
-    }
-    const decoder = new TextDecoder();
-    return (
-      chunks.map((chunk) => decoder.decode(chunk, { stream: true })).join("") + decoder.decode()
-    );
-  };
-}
-
-/**
  * Computes a stable template source identifier for cache keys.
  *
  * For custom templates, hashes the file content so cache invalidates
@@ -531,25 +102,30 @@ async function resolveReactTemplate(
 async function computeTemplateSource(
   options: ResolvedOgImageOptions,
   root: string,
+  templateFn: OgImageTemplateFn,
 ): Promise<string> {
   let baseSource: string;
   if (!options.template) {
-    baseSource = options.renderer === "satori" ? "__default_satori_v1__" : "__default__";
+    baseSource = options.renderer !== "chromium" ? "__default_satori_v1__" : "__default__";
   } else {
     const fs = await import("fs/promises");
     const templatePath = path.resolve(root, options.template);
-    const content = await fs.readFile(templatePath, "utf-8");
+    const content = templateSources.get(templateFn) ?? (await fs.readFile(templatePath, "utf-8"));
     baseSource = crypto.createHash("sha256").update(content).digest("hex");
-  }
-
-  if (options.renderer !== "satori") {
-    return baseSource;
   }
 
   const fontSource = await computeSatoriFontSource(options, root);
   return crypto
     .createHash("sha256")
-    .update(JSON.stringify({ baseSource, renderer: options.renderer, fontSource }))
+    .update(
+      JSON.stringify({
+        baseSource,
+        renderer: options.renderer,
+        jsxFramework: options.jsxFramework,
+        vuePlugin: options.vuePlugin,
+        fontSource,
+      }),
+    )
     .digest("hex");
 }
 
@@ -558,8 +134,9 @@ async function computeSatoriFontSource(
   root: string,
 ): Promise<unknown> {
   const fs = await import("fs/promises");
+  const fontOptions = options.renderer === "takumi" ? options.takumi : options.satori;
   const fonts = await Promise.all(
-    options.satori.fonts.map(async (font) => {
+    (fontOptions?.fonts ?? []).map(async (font) => {
       const fontPath = path.isAbsolute(font.path) ? font.path : path.resolve(root, font.path);
       try {
         const stat = await fs.stat(fontPath);
@@ -585,7 +162,7 @@ async function computeSatoriFontSource(
 
   return {
     fonts,
-    systemFontFallback: options.satori.systemFontFallback,
+    systemFontFallback: fontOptions?.systemFontFallback ?? true,
   };
 }
 
@@ -608,7 +185,7 @@ export async function generateOgImages(
   const templateFn = await resolveTemplate(options, root);
 
   // Compute template source for cache key
-  const templateSource = await computeTemplateSource(options, root);
+  const templateSource = await computeTemplateSource(options, root, templateFn);
 
   // Cache directory
   const cacheDir = path.join(root, ".cache", "og-images");
@@ -621,8 +198,8 @@ export async function generateOgImages(
     if (allCached) return allCached;
   }
 
-  if (options.renderer === "satori") {
-    return renderSatoriPages(keyed, templateFn, options, cacheDir, root);
+  if (options.renderer !== "chromium") {
+    return renderBrowserlessPages(keyed, templateFn, options, cacheDir, root);
   }
 
   // One browser per worker: rendering does not parallelize inside a single
@@ -679,7 +256,7 @@ export async function mapWithSessions<Item, Result>(
   return results;
 }
 
-async function renderSatoriPages(
+async function renderBrowserlessPages(
   pages: KeyedPageEntry[],
   templateFn: OgImageTemplateFn,
   options: ResolvedOgImageOptions,
@@ -688,11 +265,21 @@ async function renderSatoriPages(
 ): Promise<OgImageResult[]> {
   const results: OgImageResult[] = [];
   const concurrency = Math.max(1, options.concurrency);
+  let render: (html: string) => Promise<Buffer>;
+  try {
+    render = await (options.renderer === "takumi"
+      ? createTakumiRenderer(options, root)
+      : createSatoriRenderer(options, root));
+  } catch (error) {
+    return pages.map(({ outputPath }) => ({ outputPath, cached: false, error: String(error) }));
+  }
 
   for (let i = 0; i < pages.length; i += concurrency) {
     const batch = pages.slice(i, i + concurrency);
     const batchResults = await Promise.all(
-      batch.map((entry) => renderSingleSatoriPage(entry, templateFn, options, cacheDir, root)),
+      batch.map((entry) =>
+        renderSingleBrowserlessPage(entry, templateFn, options, cacheDir, render),
+      ),
     );
     results.push(...batchResults);
   }
@@ -806,12 +393,12 @@ async function renderSinglePage(
 /**
  * Renders a single page to PNG using Satori, with cache support.
  */
-async function renderSingleSatoriPage(
+async function renderSingleBrowserlessPage(
   entry: KeyedPageEntry,
   templateFn: OgImageTemplateFn,
   options: ResolvedOgImageOptions,
   cacheDir: string,
-  root: string,
+  render: (html: string) => Promise<Buffer>,
 ): Promise<OgImageResult> {
   try {
     if (options.cache) {
@@ -823,7 +410,7 @@ async function renderSingleSatoriPage(
     }
 
     const html = await templateFn(entry.props);
-    const png = await renderHtmlToPngWithSatori(html, options, root);
+    const png = await render(html);
 
     await writeOutput(entry.outputPath, png);
 

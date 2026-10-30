@@ -221,16 +221,19 @@ oxContent({
 vpx @ox-content/cli og-preview --title "My Docs" --description "Fast content tooling" --out og.svg
 ```
 
-| `ogImageOptions`            | 既定         | 目的                                                             |
-| --------------------------- | ------------ | ---------------------------------------------------------------- |
-| `renderer`                  | `"chromium"` | `"chromium"` はブラウザ CSS 互換、`"satori"` は高速な SVG 描画。 |
-| `template`                  | 組み込み     | 独自テンプレート: `.ts`、`.vue`、`.svelte`、`.tsx`。             |
-| `width`                     | `1200`       | 画像幅（ピクセル）。                                             |
-| `height`                    | `630`        | 画像高さ（ピクセル）。                                           |
-| `cache`                     | `true`       | 変わっていないページの再描画を飛ばす。                           |
-| `concurrency`               | CPU 依存     | 並列の画像描画。既定は `min(4, cores - 1)`。                     |
-| `satori.fonts`              | `[]`         | Satori に渡すフォントファイル（`.ttf`、`.otf`、`.woff`）。       |
-| `satori.systemFontFallback` | `true`       | `satori.fonts` が空のとき、よくある OS フォントパスを探す。      |
+| `ogImageOptions`            | 既定         | 目的                                                                  |
+| --------------------------- | ------------ | --------------------------------------------------------------------- |
+| `renderer`                  | `"chromium"` | `"chromium"`、`"satori"`（SVG → PNG）、`"takumi"`（ネイティブ PNG）。 |
+| `template`                  | 組み込み     | 独自テンプレート: `.ts`、`.vue`、`.svelte`、`.tsx`。                  |
+| `width`                     | `1200`       | 画像幅（ピクセル）。                                                  |
+| `height`                    | `630`        | 画像高さ（ピクセル）。                                                |
+| `cache`                     | `true`       | 変わっていないページの再描画を飛ばす。                                |
+| `concurrency`               | CPU 依存     | 並列の画像描画。既定は `min(4, cores - 1)`。                          |
+| `satori.fonts`              | `[]`         | Satori に渡すフォントファイル（`.ttf`、`.otf`、`.woff`）。            |
+| `satori.systemFontFallback` | `true`       | `satori.fonts` が空のとき、よくある OS フォントパスを探す。           |
+| `takumi.fonts`              | `[]`         | Takumi 用フォント。指定形式は `satori.fonts` と共通。                 |
+| `takumi.systemFontFallback` | `true`       | `takumi.fonts` が空のとき OS のフォントを探す。                       |
+| `jsxFramework`              | `"react"`    | `.tsx` / `.jsx` 用ランタイム（`"react"` または `"solid"`）。          |
 
 描画した画像は `.cache/og-images` にキャッシュします。キーはテンプレートのソースとページの props のハッシュなので、変更のないページは再描画せずキャッシュからコピーします。描画コストを払うのはタイトル・説明・frontmatter が変わったページだけです。このディレクトリは gitignore されているため、復元しない CI ジョブは毎回すべてのページを描画します。`node_modules` と同じように、実行間でキャッシュしてください。
 
@@ -239,6 +242,17 @@ Chromium は互換性重視のレンダラーです。通常のブラウザ CSS�
 ブラウザを起動せず HTML を SVG にし、そこから PNG を作るので、大きいサイト
 ほど速くなります。その代わり、テンプレートは Satori が対応する HTML / CSS
 サブセットに収め、テキスト用のフォントを少なくとも 1 つ読み込める必要があります。
+
+Takumi もブラウザ不要の選択肢です。`renderer: "takumi"` と指定すると、
+`@takumi-rs/core` を直接使います。フォントは `takumi.fonts` に指定します。
+既定値は引き続き Chromium です。ブラウザと同じ CSS 描画が必要なら Chromium を選んでください。
+Satori と Takumi はクライアント JavaScript を実行せず、それぞれ対応する CSS の範囲で描画します。
+
+3 つのレンダラーで、TypeScript 関数・Vue SFC・Svelte SFC・React JSX・Solid JSX の
+共通テンプレート経路を使えます。コンポーネントは SSR で HTML にした後に画像化します。
+`public/` のローカル画像にも対応します。日本語などの描画を環境によらず揃えるには、
+必要な文字を収録したフォントをプロジェクトに置いて明示指定してください。
+キャッシュキーにはレンダラーも含まれ、切り替え前の画像が流用されることはありません。
 
 ```ts
 oxContent({

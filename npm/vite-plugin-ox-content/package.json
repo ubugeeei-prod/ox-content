@@ -202,6 +202,7 @@
     "@ox-content/napi": "workspace:*",
     "@resvg/resvg-js": "^2.6.2",
     "@standard-schema/spec": "^1.1.0",
+    "@takumi-rs/core": "^2.19.0",
     "clean-css": "~5.3.3",
     "cspell-lib": "^10.3.3",
     "glob": "^13.0.6",
@@ -222,6 +223,8 @@
   },
   "devDependencies": {
     "@playwright/test": "^1.63.0",
+    "@solidjs/compiler": "^2.0.0-rc.9",
+    "@solidjs/web": "catalog:",
     "@types/hast": "^3.0.5",
     "@types/node": "catalog:",
     "@types/react": "catalog:",
@@ -231,22 +234,35 @@
     "get-tsconfig": "^5.0.0-beta.4",
     "jsonc-parser": "^3.3.1",
     "katex": "^0.16.22",
+    "solid-js": "catalog:",
     "vite": "catalog:",
     "vite-plus": "catalog:",
     "yaml": "^2.9.0",
     "zod": "^4.6.6"
   },
   "peerDependencies": {
+    "@solidjs/compiler": "^2.0.0-rc.9",
+    "@solidjs/web": "^2.0.0-rc.8",
     "@vue/compiler-sfc": "^3.4.0",
     "budoux": "^0.9.0",
     "katex": "^0.16.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
+    "solid-js": "^2.0.0-rc.8",
     "svelte": "^5.0.0",
     "vite": "^0.2.8 || ^8.0.0",
     "vue": "^3.4.0"
   },
   "peerDependenciesMeta": {
+    "@solidjs/compiler": {
+      "optional": true
+    },
+    "@solidjs/web": {
+      "optional": true
+    },
+    "solid-js": {
+      "optional": true
+    },
     "budoux": {
       "optional": true
     },

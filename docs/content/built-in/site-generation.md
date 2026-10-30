@@ -264,16 +264,19 @@ from the `oxct` CLI:
 vpx @ox-content/cli og-preview --title "My Docs" --description "Fast content tooling" --out og.svg
 ```
 
-| `ogImageOptions`            | Default      | Purpose                                                               |
-| --------------------------- | ------------ | --------------------------------------------------------------------- |
-| `renderer`                  | `"chromium"` | `"chromium"` for full browser CSS, `"satori"` for fast SVG rendering. |
-| `template`                  | built-in     | Custom template: `.ts`, `.vue`, `.svelte`, or `.tsx`.                 |
-| `width`                     | `1200`       | Image width in pixels.                                                |
-| `height`                    | `630`        | Image height in pixels.                                               |
-| `cache`                     | `true`       | Skip re-rendering unchanged pages.                                    |
-| `concurrency`               | CPU-aware    | Parallel image renders. Defaults to `min(4, cores - 1)`.              |
-| `satori.fonts`              | `[]`         | Font files for Satori (`.ttf`, `.otf`, or `.woff`).                   |
-| `satori.systemFontFallback` | `true`       | Try common OS font paths when `satori.fonts` is empty.                |
+| `ogImageOptions`            | Default      | Purpose                                                           |
+| --------------------------- | ------------ | ----------------------------------------------------------------- |
+| `renderer`                  | `"chromium"` | `"chromium"`, `"satori"` (SVG → PNG), or `"takumi"` (native PNG). |
+| `template`                  | built-in     | Custom template: `.ts`, `.vue`, `.svelte`, or `.tsx`.             |
+| `width`                     | `1200`       | Image width in pixels.                                            |
+| `height`                    | `630`        | Image height in pixels.                                           |
+| `cache`                     | `true`       | Skip re-rendering unchanged pages.                                |
+| `concurrency`               | CPU-aware    | Parallel image renders. Defaults to `min(4, cores - 1)`.          |
+| `satori.fonts`              | `[]`         | Font files for Satori (`.ttf`, `.otf`, or `.woff`).               |
+| `satori.systemFontFallback` | `true`       | Try common OS font paths when `satori.fonts` is empty.            |
+| `takumi.fonts`              | `[]`         | Font files for Takumi, with the same fields as `satori.fonts`.    |
+| `takumi.systemFontFallback` | `true`       | Try common OS font paths when `takumi.fonts` is empty.            |
+| `jsxFramework`              | `"react"`    | `"react"` or `"solid"` for `.tsx` / `.jsx` templates.             |
 
 Rendered images are cached under `.cache/og-images`, keyed by a hash of the
 template source and the page's props, so an unchanged page is copied from cache
@@ -287,6 +290,21 @@ public assets, and framework templates exactly as a page would. Satori skips
 the browser and renders HTML to SVG, then PNG, which is much faster for large
 sites. The tradeoff is that templates must stay inside Satori's supported HTML
 and CSS subset, and text needs at least one loadable font.
+
+Takumi is another browserless choice, using `@takumi-rs/core` directly.
+Select it with `renderer: "takumi"` and configure fonts under `takumi` instead of
+`satori`. Chromium remains the default and is recommended for full browser CSS.
+Neither browserless renderer runs client JavaScript or guarantees browser-identical
+layout. See the [Satori](https://github.com/vercel/satori#css) and
+[Takumi](https://takumi.kane.tw/docs/concepts) support documentation.
+
+All three renderers share the same template pipeline: TypeScript functions, Vue
+SFCs, Svelte SFCs, React JSX, and Solid JSX. Framework components are rendered on
+the server before image generation. Local images in `public/` work with each
+renderer, including root-relative image URLs. For portable text rendering,
+provide project-local fonts with glyphs for every language you use; system font
+fallback depends on the build machine. Renderer selection is part of the cache
+key, so switching backends never reuses an image from another renderer.
 
 ```ts
 oxContent({

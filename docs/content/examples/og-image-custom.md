@@ -406,6 +406,30 @@ Requires `react` and `react-dom` (v19+) as dev dependencies.
 
 ## Options
 
+Chromium is the default renderer for every template format. To use a browserless
+renderer, keep your template and set `renderer: "satori"` or `renderer: "takumi"`:
+
+```ts
+ogImageOptions: {
+  renderer: "takumi",
+  template: "./og.vue", // also .ts, .svelte, .tsx, or .jsx
+  takumi: {
+    fonts: [{ path: "public/fonts/Inter-Regular.ttf", name: "Inter" }],
+    systemFontFallback: false,
+  },
+}
+```
+
+For Satori use the same font configuration under `satori`. Both browserless
+engines support their own HTML/CSS subsets; Chromium is the first choice for
+browser CSS fidelity. Component CSS and local `public/` images are passed through
+the common SSR pipeline. No browser is launched for Satori or Takumi.
+
+For Solid `.tsx` / `.jsx` templates, set `jsxFramework: "solid"` and install
+`solid-js`, `@solidjs/web`, and `@solidjs/compiler` (Solid 2). The template is
+compiled for SSR with the Solid compiler. React remains the default JSX runtime.
+Vue requires `vue` and `@vue/compiler-sfc`; Svelte requires `svelte`.
+
 All options are set in `ogImageOptions`:
 
 ```ts
@@ -427,7 +451,7 @@ ogImageOptions: {
   cache: true,    // default: true
 
   // Number of pages rendered in parallel
-  concurrency: 4, // default: 1
+  concurrency: 4, // default: min(4, cores - 1), at least 1
 }
 ```
 
@@ -450,7 +474,7 @@ The `layout` field is excluded since it controls page rendering, not OG images.
 
 1. **Template bundling** — Your template file is bundled with [rolldown](https://rolldown.rs/) at build time. For SFC formats (`.vue`, `.svelte`, `.tsx`), a framework-specific compiler plugin is applied during bundling, then the component is rendered to HTML via SSR.
 2. **Cache key** — A SHA256 hash of the template source + all props + dimensions. When any of these change, the image is re-rendered.
-3. **Rendering** — Ox Content opens a Chromium browser (via Playwright), loads your HTML, and takes a screenshot. The browser session is automatically cleaned up via `using` (Explicit Resource Management).
+3. **Rendering** — Chromium takes a browser screenshot by default. Satori converts the server-rendered HTML to SVG and then PNG; Takumi renders it to PNG natively. Browser sessions are automatically cleaned up via `using` (Explicit Resource Management), and browserless renderers reuse their fonts and renderer modules for the batch.
 4. **Output** — PNG files are written alongside your HTML output, and `<meta property="og:image">` tags are injected.
 
 ## Caching

@@ -120,6 +120,7 @@ export type {
   OgImageSatoriFont,
   OgImageSatoriFontWeight,
   OgImageSatoriOptions,
+  OgImageTakumiOptions,
   MarkdownDisplayFormat,
   DocsOptions,
   ResolvedDocsOptions,
