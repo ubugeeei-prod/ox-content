@@ -247,6 +247,20 @@ export interface SsgOptions {
   transformConcurrency?: number;
 
   /**
+   * Extract identical inline `<style>` and `<script>` blocks into shared files.
+   *
+   * Disable this only when a custom `render` host already emits external CSS
+   * and JavaScript. Skipping extraction avoids copying every generated HTML
+   * document through the native asset pipeline, which is significant for
+   * framework-rendered sites with thousands of large pages. Inline assets are
+   * left untouched by this extraction pass when disabled; configured HTML
+   * minification and PWA injection still run afterward.
+   *
+   * @default true
+   */
+  externalizeAssets?: boolean;
+
+  /**
    * Remove previously generated files from the output directory before writing
    * the new SSG result.
    *
@@ -674,6 +688,7 @@ export interface ResolvedSsgOptions {
    */
   routePrefix?: string;
   transformConcurrency?: number;
+  externalizeAssets: boolean;
   clean: boolean;
   minifyHtml: boolean;
   bare: boolean;

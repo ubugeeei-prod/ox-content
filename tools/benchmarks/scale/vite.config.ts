@@ -27,7 +27,12 @@ export default defineConfig({
     oxContent({
       srcDir: "content",
       outDir: env?.OX_SCALE_OUT_DIR ?? "dist",
-      ssg: { enabled: true, bare: !on("THEME") && !hostTheme, render: hostTheme },
+      ssg: {
+        enabled: true,
+        bare: !on("THEME") && !hostTheme,
+        render: hostTheme,
+        externalizeAssets: env?.OX_SCALE_EXTERNALIZE_ASSETS !== "0",
+      },
       highlight: on("HIGHLIGHT"),
       gfm: true,
       tables: true,

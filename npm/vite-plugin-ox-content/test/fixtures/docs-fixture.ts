@@ -100,6 +100,7 @@ export function createDocsResolvedOptions(
     ssg: {
       enabled: true,
       extension: ".html",
+      externalizeAssets: true,
       clean: false,
       minifyHtml: false,
       bare: false,

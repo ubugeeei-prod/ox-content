@@ -57,9 +57,11 @@ the suite exists to find the ones that are not.
 Measures the complete build for a custom renderer that returns Vite-style
 HTML with external CSS and module scripts. The default 2,000-page corpus adds
 64 KiB of host output per page (125 MiB total), exposing final SSG processing
-that normal small Markdown fixtures hide. Every iteration validates both the
-HTML page count and total bytes, so a failed SSG cannot be reported as a
-speedup. Raise `--bytes-per-page` to model unusually large SSR payloads.
+cost that normal small Markdown fixtures hide. Every iteration validates both
+the HTML page count and total bytes, so a failed SSG cannot be reported as a
+speedup. Raise `--bytes-per-page` to model unusually large SSR payloads. Pass
+`--externalize-assets false` when the host already owns every CSS and
+JavaScript asset.
 
 ## What it found
 
