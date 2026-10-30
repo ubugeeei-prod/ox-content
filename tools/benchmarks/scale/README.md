@@ -12,6 +12,7 @@ asked to do.
 vp install                       # tools/benchmarks/scale is a workspace package
 node tools/benchmarks/scale/run.mjs    # all three suites
 node tools/benchmarks/scale/run.mjs --suite build --pages 3200 --json out.json
+node tools/benchmarks/scale/host-output.mjs --pages 2000 --bytes-per-page 65536
 ```
 
 The pages are synthesized by `site.mjs` into `content/` (gitignored) and carry
@@ -51,6 +52,15 @@ over the same corpus and reports the delta. Features whose delta is within the
 noise floor (a few tens of milliseconds here) are indistinguishable from zero;
 the suite exists to find the ones that are not.
 
+### `host-output` — does large framework HTML stay cheap?
+
+Measures the complete build for a custom renderer that returns Vite-style
+HTML with external CSS and module scripts. The default 2,000-page corpus adds
+64 KiB of host output per page (125 MiB total), exposing final SSG processing
+that normal small Markdown fixtures hide. Every iteration validates both the
+HTML page count and total bytes, so a failed SSG cannot be reported as a
+speedup. Raise `--bytes-per-page` to model unusually large SSR payloads.
+
 ## What it found
 
 The suite was written to answer "is v3 ready for a very large project", and
@@ -78,4 +88,4 @@ which is sublinear in the page count: 3,200 pages cost 0.50 ms each against
 builtin, so about five minutes at the default 400 pages. `--suite og` depends
 on Chromium and is a few minutes at 100 pages. Use `--pages` to trade coverage
 for time, and `--iterations` for how many runs each measurement takes the best
-of.
+of. `host-output.mjs` defaults to five validated iterations.

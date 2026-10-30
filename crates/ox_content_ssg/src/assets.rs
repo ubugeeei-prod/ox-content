@@ -65,6 +65,10 @@ pub fn externalize_shared_page_assets(
     let optimized_pages = pages
         .into_iter()
         .map(|page| {
+            if !contains_inline_asset_tag(&page.html) {
+                return page;
+            }
+
             let mut html = page.html;
 
             if let Some(block) = find_marked_block(
@@ -113,6 +117,24 @@ pub fn externalize_shared_page_assets(
     ExternalizedAssets { pages: optimized_pages, assets }
 }
 
+/// Checks both exact opening tags in one pass. Framework hosts normally emit
+/// attribute-bearing Vite tags (`<script type=...>`, `<style nonce=...>`),
+/// which the extractor intentionally leaves alone. Bailing out here avoids the
+/// marker, fallback, and closing-body scans for their often very large HTML.
+fn contains_inline_asset_tag(html: &str) -> bool {
+    let bytes = html.as_bytes();
+    let mut cursor = 0;
+    while let Some(relative) = memchr::memchr(b'<', &bytes[cursor..]) {
+        let start = cursor + relative;
+        let tail = &bytes[start..];
+        if tail.starts_with(STYLE_OPEN.as_bytes()) || tail.starts_with(SCRIPT_OPEN.as_bytes()) {
+            return true;
+        }
+        cursor = start + 1;
+    }
+    false
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -152,6 +174,23 @@ mod tests {
 
         assert!(result.assets.is_empty());
         insta::assert_debug_snapshot!(result);
+    }
+
+    #[test]
+    fn leaves_external_host_assets_unchanged() {
+        let html = r#"<html><head><link rel="stylesheet" href="/assets/app.css"></head>
+<body><script type="module" src="/assets/app.js"></script></body></html>"#
+            .to_string();
+        let pages = vec![GeneratedHtmlPage {
+            input_path: "host.md".to_string(),
+            output_path: "/tmp/site/host/index.html".to_string(),
+            html: html.clone(),
+        }];
+
+        let result = externalize_shared_page_assets(pages, "/tmp/site", "/");
+
+        assert!(result.assets.is_empty());
+        assert_eq!(result.pages[0].html, html);
     }
 
     #[test]

@@ -6,18 +6,28 @@
  * defaults to off, so a suite states exactly what it is paying for.
  */
 import { defineConfig } from "vite-plus";
-import { oxContent } from "@ox-content/vite-plugin";
+import { oxContent, raw, renderToString, type JSXNode } from "@ox-content/vite-plugin";
 
 const env = (globalThis as { process?: { env?: Record<string, string | undefined> } }).process?.env;
 
 const on = (name: string) => env?.[`OX_SCALE_${name}`] === "1";
+const hostPaddingBytes = Number(env?.OX_SCALE_HOST_PADDING_BYTES ?? 0);
+const hostTheme = on("HOST_HTML")
+  ? ({ children }: { children: JSXNode }) =>
+      raw(
+        '<!doctype html><html><head><link rel="stylesheet" href="/assets/app.css"></head><body>' +
+          renderToString(children) +
+          "x".repeat(hostPaddingBytes) +
+          '<script type="module" src="/assets/app.js"></script></body></html>',
+      )
+  : undefined;
 
 export default defineConfig({
   plugins: [
     oxContent({
       srcDir: "content",
       outDir: env?.OX_SCALE_OUT_DIR ?? "dist",
-      ssg: { enabled: true, bare: !on("THEME") },
+      ssg: { enabled: true, bare: !on("THEME") && !hostTheme, render: hostTheme },
       highlight: on("HIGHLIGHT"),
       gfm: true,
       tables: true,
