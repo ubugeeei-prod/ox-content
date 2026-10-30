@@ -20,7 +20,8 @@ for (const size of Object.keys(head.sizes)) {
   }
   for (const [label, baseMs, headMs] of metrics(baseSize, headSize)) {
     const delta = (headMs / baseMs - 1) * 100;
-    if (delta > options.maxRegression) {
+    const absoluteDelta = headMs - baseMs;
+    if (delta > options.maxRegression && absoluteDelta > options.maxAbsoluteRegressionMs) {
       regression = true;
     }
     rows.push(
@@ -35,7 +36,9 @@ appendFileSync(
 );
 
 if (regression && process.env.OX_CONTENT_BENCHMARK_ALLOW_REGRESSION !== "1") {
-  console.error(`Collection scale regression exceeded ${options.maxRegression}%`);
+  console.error(
+    `Collection scale regression exceeded ${options.maxRegression}% and ${options.maxAbsoluteRegressionMs} ms`,
+  );
   process.exit(1);
 }
 
@@ -62,7 +65,13 @@ function formatDelta(value) {
 }
 
 function parseOptions(args) {
-  const parsed = { base: null, head: null, append: null, maxRegression: 20 };
+  const parsed = {
+    base: null,
+    head: null,
+    append: null,
+    maxRegression: 20,
+    maxAbsoluteRegressionMs: 0.05,
+  };
   for (let index = 0; index < args.length; index++) {
     const arg = args[index];
     if (arg === "--base" || arg === "--head" || arg === "--append") {
@@ -71,6 +80,10 @@ function parseOptions(args) {
     }
     if (arg === "--max-regression") {
       parsed.maxRegression = Number.parseFloat(readValue(args, ++index, arg));
+      continue;
+    }
+    if (arg === "--max-absolute-regression-ms") {
+      parsed.maxAbsoluteRegressionMs = Number.parseFloat(readValue(args, ++index, arg));
       continue;
     }
     throw new Error(`Unknown argument: ${arg}`);

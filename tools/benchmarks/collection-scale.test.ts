@@ -19,7 +19,14 @@ describe("compare collection scale", () => {
     const result = compareReports(10, 13);
 
     expect(result.status).toBe(1);
-    expect(result.stderr).toContain("regression exceeded 20%");
+    expect(result.stderr).toContain("regression exceeded 20% and 0.05 ms");
+  });
+
+  it("ignores relative noise below the absolute tolerance", () => {
+    const result = compareReports(0.0004, 0.0008);
+
+    expect(result.status).toBe(0);
+    expect(result.report).toContain("+100.0%");
   });
 });
 
