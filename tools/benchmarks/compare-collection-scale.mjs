@@ -79,11 +79,11 @@ function parseOptions(args) {
       continue;
     }
     if (arg === "--max-regression") {
-      parsed.maxRegression = Number.parseFloat(readValue(args, ++index, arg));
+      parsed.maxRegression = readThreshold(args, ++index, arg);
       continue;
     }
     if (arg === "--max-absolute-regression-ms") {
-      parsed.maxAbsoluteRegressionMs = Number.parseFloat(readValue(args, ++index, arg));
+      parsed.maxAbsoluteRegressionMs = readThreshold(args, ++index, arg);
       continue;
     }
     throw new Error(`Unknown argument: ${arg}`);
@@ -94,6 +94,14 @@ function parseOptions(args) {
     }
   }
   return parsed;
+}
+
+function readThreshold(args, index, option) {
+  const value = Number(readValue(args, index, option));
+  if (!Number.isFinite(value) || value < 0) {
+    throw new Error(`${option} requires a finite nonnegative number`);
+  }
+  return value;
 }
 
 function readValue(args, index, option) {
