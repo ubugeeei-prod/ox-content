@@ -679,6 +679,20 @@ type NapiGenerateSsgHtmlPages = (
   navGroups: RustNavGroup[],
   config: NapiSsgConfig,
 ) => NapiSsgHtmlResult[];
+type NapiGenerateSsgHtmlPagesExternalized = (
+  requests: Array<{
+    inputPath: string;
+    outputPath: string;
+    pageData: NapiSsgPageData;
+  }>,
+  navGroups: RustNavGroup[],
+  config: NapiSsgConfig,
+  outDir: string,
+  base: string,
+) => {
+  pages: Array<GeneratedHtmlPage & NapiSsgHtmlResult>;
+  assets: ExternalizedSharedAsset[];
+};
 
 function toNapiSsgPageData(pageData: SsgPageData): NapiSsgPageData {
   return {
@@ -891,11 +905,19 @@ interface GeneratedHtmlPage {
   inputPath: string;
   outputPath: string;
   html: string;
+  /** The native batch already replaced inline theme assets. */
+  assetsExternalized?: boolean;
 }
 
 interface ExternalizedSharedAsset {
   outputPath: string;
+  publicPath?: string;
   content: string;
+}
+
+interface GeneratedHtmlBatch {
+  pages: GeneratedHtmlPage[];
+  assets: ExternalizedSharedAsset[];
 }
 
 async function externalizeSharedPageAssets(
@@ -922,6 +944,26 @@ async function externalizeSharedPageAssets(
   return {
     pages: optimized.pages,
     assets: optimized.assets.map((asset) => asset.outputPath),
+  };
+}
+
+async function externalizePendingPageAssets(
+  pages: GeneratedHtmlPage[],
+  outDir: string,
+  base: string,
+): Promise<{ pages: GeneratedHtmlPage[]; assets: string[] }> {
+  const pending = pages.filter((page) => !page.assetsExternalized);
+  if (pending.length === 0) {
+    return { pages, assets: [] };
+  }
+
+  const optimized = await externalizeSharedPageAssets(pending, outDir, base);
+  let pendingIndex = 0;
+  return {
+    pages: pages.map((page) =>
+      page.assetsExternalized ? page : (optimized.pages[pendingIndex++] ?? page),
+    ),
+    assets: optimized.assets,
   };
 }
 
@@ -1190,7 +1232,9 @@ export async function buildSsg(input: BuildSsgOptions, root: string): Promise<Ss
     collections: context.options.collections,
     base: context.base,
   });
-  const generatedPages = await generateHtmlPages(context, outputPages, collected, errors);
+  const generated = await generateHtmlPages(context, outputPages, collected, errors);
+  const generatedPages = generated.pages;
+  const preExternalizedAssets = generated.assets;
   await appendNotFoundPage(generatedPages, context, collected, errors);
   await appendSectionIndexPages({
     generatedPages,
@@ -1224,9 +1268,10 @@ export async function buildSsg(input: BuildSsgOptions, root: string): Promise<Ss
     errors,
     render: (page) => renderSsgPage(context, toBlogProcessResult(page), collected, listedPages),
   });
-  await applyDocumentationVersions(generatedPages, context, errors);
+  await applyDocumentationVersions(generatedPages, preExternalizedAssets, context, errors);
   await writeGeneratedPages(
     generatedPages,
+    preExternalizedAssets,
     context,
     generatedFiles,
     listedPages,
@@ -1735,12 +1780,15 @@ async function generateHtmlPages(
   pageResults: PageProcessResult[],
   collected: CollectedPageResults,
   errors: string[],
-): Promise<GeneratedHtmlPage[]> {
+): Promise<GeneratedHtmlBatch> {
   const batchResult = await generateBuiltInHtmlPagesBatch(context, pageResults, errors);
   if (batchResult) {
     return batchResult;
   }
-  return generateHtmlPagesSequential(context, pageResults, collected, errors);
+  return {
+    pages: await generateHtmlPagesSequential(context, pageResults, collected, errors),
+    assets: [],
+  };
 }
 
 async function generateHtmlPagesSequential(
@@ -1788,7 +1836,7 @@ async function generateBuiltInHtmlPagesBatch(
   context: BuildSsgContext,
   pageResults: PageProcessResult[],
   errors: string[],
-): Promise<GeneratedHtmlPage[] | undefined> {
+): Promise<GeneratedHtmlBatch | undefined> {
   if (!canBatchBuiltInHtmlPages(context)) {
     return undefined;
   }
@@ -1799,6 +1847,11 @@ async function generateBuiltInHtmlPagesBatch(
   if (!generatePages) {
     return undefined;
   }
+  const generatePagesExternalized = (
+    mod as NapiModule & {
+      generateSsgHtmlPagesExternalized?: NapiGenerateSsgHtmlPagesExternalized;
+    }
+  ).generateSsgHtmlPagesExternalized;
 
   const prepared = pageResults.map((pageResult) => {
     const markdownSource = pageMarkdownSourceHref(context, pageResult);
@@ -1811,27 +1864,49 @@ async function generateBuiltInHtmlPagesBatch(
     return { pageResult, markdownSource, pageData };
   });
 
-  const rendered = generatePages(
-    prepared.map(({ pageData }) => toNapiSsgPageData(pageData)),
-    convertNavGroupsForRust(context.navItems),
-    toNapiSsgConfig({
-      siteName: context.siteName,
-      base: context.base,
-      ogImage: context.ssgOptions.ogImage,
-      theme: context.ssgOptions.theme,
-      pagination: context.ssgOptions.pagination,
-      readerChrome: context.ssgOptions.readerChrome,
-      breadcrumbs: context.ssgOptions.breadcrumbs,
-      localeSwitcher: context.ssgOptions.localeSwitcher,
-      a11y: context.ssgOptions.a11y,
-      team: context.ssgOptions.team ?? { enabled: false, members: [] },
-      pageChrome: context.ssgOptions.pageChrome,
-      jsonLd: context.ssgOptions.jsonLd,
-      siteUrl: context.ssgOptions.siteUrl,
-      headValidation: context.ssgOptions.headValidation,
-      iconsEnabled: Boolean(context.options.icons?.enabled),
-    }),
-  );
+  const navGroups = convertNavGroupsForRust(context.navItems);
+  const config = toNapiSsgConfig({
+    siteName: context.siteName,
+    base: context.base,
+    ogImage: context.ssgOptions.ogImage,
+    theme: context.ssgOptions.theme,
+    pagination: context.ssgOptions.pagination,
+    readerChrome: context.ssgOptions.readerChrome,
+    breadcrumbs: context.ssgOptions.breadcrumbs,
+    localeSwitcher: context.ssgOptions.localeSwitcher,
+    a11y: context.ssgOptions.a11y,
+    team: context.ssgOptions.team ?? { enabled: false, members: [] },
+    pageChrome: context.ssgOptions.pageChrome,
+    jsonLd: context.ssgOptions.jsonLd,
+    siteUrl: context.ssgOptions.siteUrl,
+    headValidation: context.ssgOptions.headValidation,
+    iconsEnabled: Boolean(context.options.icons?.enabled),
+  });
+  let rendered: NapiSsgHtmlResult[];
+  let assets: ExternalizedSharedAsset[] = [];
+  const assetsExternalized =
+    Boolean(generatePagesExternalized) && context.ssgOptions.externalizeAssets !== false;
+  if (generatePagesExternalized && assetsExternalized) {
+    const optimized = generatePagesExternalized(
+      prepared.map(({ pageResult, pageData }) => ({
+        inputPath: pageResult.inputPath,
+        outputPath: pageResult.routePaths.outputPath,
+        pageData: toNapiSsgPageData(pageData),
+      })),
+      navGroups,
+      config,
+      context.outDir,
+      context.base,
+    );
+    rendered = optimized.pages;
+    assets = optimized.assets;
+  } else {
+    rendered = generatePages(
+      prepared.map(({ pageData }) => toNapiSsgPageData(pageData)),
+      navGroups,
+      config,
+    );
+  }
 
   const generatedPages: GeneratedHtmlPage[] = [];
   for (let index = 0; index < prepared.length; index++) {
@@ -1851,6 +1926,7 @@ async function generateBuiltInHtmlPagesBatch(
         inputPath: page.pageResult.inputPath,
         outputPath: page.pageResult.routePaths.outputPath,
         html: applyMarkdownSourceAlternate(context, html, page.markdownSource),
+        assetsExternalized,
       });
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : String(err);
@@ -1858,7 +1934,7 @@ async function generateBuiltInHtmlPagesBatch(
     }
   }
 
-  return generatedPages;
+  return { pages: generatedPages, assets };
 }
 
 function canBatchBuiltInHtmlPages(context: BuildSsgContext): boolean {
@@ -2290,6 +2366,7 @@ async function transformNotFoundMarkdown(
 
 async function applyDocumentationVersions(
   generatedPages: GeneratedHtmlPage[],
+  preExternalizedAssets: ExternalizedSharedAsset[],
   context: BuildSsgContext,
   errors: string[],
 ): Promise<void> {
@@ -2347,7 +2424,9 @@ async function applyDocumentationVersions(
       }),
       redirects: snapContext.options.redirects?.map,
     });
-    const snapPages = await generateHtmlPages(snapContext, outputPages, snapCollected, errors);
+    const snapBatch = await generateHtmlPages(snapContext, outputPages, snapCollected, errors);
+    const snapPages = snapBatch.pages;
+    preExternalizedAssets.push(...snapBatch.assets);
     await appendSectionIndexPages({
       generatedPages: snapPages,
       collectedPages: snapCollected.pageResults,
@@ -2392,18 +2471,27 @@ function pageAliases(frontmatter: Record<string, unknown>): string[] {
 
 async function writeGeneratedPages(
   generatedPages: GeneratedHtmlPage[],
+  preExternalizedAssets: ExternalizedSharedAsset[],
   context: BuildSsgContext,
   generatedFiles: string[],
   listedPages: PageProcessResult[],
   outputPages: PageProcessResult[],
   errors: string[],
 ): Promise<void> {
+  await Promise.all(
+    preExternalizedAssets.map(async (asset) => {
+      await fs.mkdir(path.dirname(asset.outputPath), { recursive: true });
+      await fs.writeFile(asset.outputPath, asset.content, "utf-8");
+    }),
+  );
+  generatedFiles.push(...preExternalizedAssets.map((asset) => asset.outputPath));
+
   // Shared asset extraction needs the complete page set to maximize
   // de-duplication. Only after replacement do we write pages and record both
   // the generated assets and the rewritten HTML files.
   const optimizedOutput =
     context.ssgOptions.externalizeAssets !== false
-      ? await externalizeSharedPageAssets(generatedPages, context.outDir, context.base)
+      ? await externalizePendingPageAssets(generatedPages, context.outDir, context.base)
       : { pages: generatedPages, assets: [] };
   generatedFiles.push(...optimizedOutput.assets);
 

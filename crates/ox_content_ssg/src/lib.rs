@@ -89,7 +89,8 @@ mod site_maps;
 mod vitepress;
 
 pub use assets::{
-    ExternalizedAssets, GeneratedHtmlPage, SharedAsset, externalize_shared_page_assets,
+    ExternalizedAssets, GeneratedHtmlPage, SharedAsset, SharedAssetExternalizer,
+    externalize_shared_page_assets,
 };
 pub use feeds::{
     FeedAttachment, FeedAuthor, FeedFormat, FeedItem, FeedsOptions, FeedsOutput, ParsedDate,

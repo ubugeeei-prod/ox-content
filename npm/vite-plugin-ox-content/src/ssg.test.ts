@@ -587,6 +587,22 @@ describe("SSG routePrefix", () => {
     expect(built.errors).toEqual([]);
   });
 
+  it("preserves built-in theme assets when externalization is disabled", async () => {
+    const root = await makeSite({ "index.md": "# Built-in page\n" });
+    const base = routePrefixOptions();
+    const built = await buildSsg(
+      routePrefixOptions({
+        ssg: { ...base.ssg, bare: false, externalizeAssets: false },
+      }),
+      root,
+    );
+
+    const html = await fs.readFile(path.join(root, "dist", "index.html"), "utf8");
+    expect(html).toContain("<style>");
+    expect(html).toContain("<script>");
+    expect(built.errors).toEqual([]);
+  });
+
   it("keeps existing page paths when routePrefix is omitted", async () => {
     const root = await makeSite({
       "first-post/index.md": "---\ntitle: First\n---\n# First\n",
