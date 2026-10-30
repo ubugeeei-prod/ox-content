@@ -2494,6 +2494,8 @@ export interface JsSsgConfig {
   pageChrome?: boolean
   /** Opt-in JSON-LD structured data. Presence enables the feature. */
   jsonLd?: JsJsonLd
+  /** True only for navigation inferred from the full Markdown collection. */
+  autoNavigation?: boolean
 }
 
 /** One rendered git author on an SSG page. */

@@ -740,6 +740,7 @@ interface NapiSsgConfigInput {
   siteUrl?: string;
   headValidation?: false | "warn" | "strict";
   iconsEnabled?: boolean;
+  autoNavigation?: boolean;
 }
 
 function toNapiSsgConfig({
@@ -762,6 +763,7 @@ function toNapiSsgConfig({
   siteUrl,
   headValidation = false,
   iconsEnabled = false,
+  autoNavigation = false,
 }: NapiSsgConfigInput): NapiSsgConfig {
   const themeForRust = theme
     ? themeToNapi(theme, locale, base, iconsEnabled)
@@ -793,6 +795,7 @@ function toNapiSsgConfig({
     a11y: a11y ? { skipLinkLabel: a11y.skipLinkLabel } : undefined,
     team,
     pageChrome,
+    autoNavigation: autoNavigation || undefined,
     jsonLd: jsonLd
       ? {
           breadcrumbs: jsonLd.breadcrumbs,
@@ -833,6 +836,8 @@ export async function generateHtmlPage(
   iconsEnabled = false,
   /** The home page href, if it is not the root of the site. */
   homeHref?: string,
+  /** True when the sidebar was inferred from the full Markdown collection. */
+  autoNavigation = false,
 ): Promise<string> {
   const mod = await importNapiModule();
   const navGroupsForRust = convertNavGroupsForRust(navGroups);
@@ -859,6 +864,7 @@ export async function generateHtmlPage(
       siteUrl,
       headValidation,
       iconsEnabled,
+      autoNavigation,
     }),
   );
   const html = typeof result === "string" ? result : result.html;
@@ -1123,6 +1129,7 @@ interface BuildSsgContext {
   base: string;
   siteName: string;
   navItems: NavGroup[];
+  autoNavigation: boolean;
   versionNavigation?: VersionNavigationContext;
   shouldGenerateOgImages: boolean;
   markdownSourcePages: PageProcessResult[];
@@ -1328,9 +1335,15 @@ async function createBuildSsgContext(
 ): Promise<BuildSsgContext> {
   const ssgOptions = options.ssg;
   const base = options.base.endsWith("/") ? options.base : options.base + "/";
+  const configuredNavigation = resolveNavigationGroups(
+    ssgOptions.navigation,
+    base,
+    ssgOptions.extension,
+  );
+  const hasThemeSidebar = Boolean(ssgOptions.theme?.sidebar.length);
   const navItems =
-    resolveNavigationGroups(ssgOptions.navigation, base, ssgOptions.extension) ??
-    (ssgOptions.theme?.sidebar.length
+    configuredNavigation ??
+    (hasThemeSidebar
       ? buildThemeNavItems(ssgOptions.theme.sidebar, base, ssgOptions.extension)
       : buildNavItems(markdownFiles, srcDir, base, ssgOptions.extension));
 
@@ -1344,6 +1357,7 @@ async function createBuildSsgContext(
     navItems,
     siteName: await resolveSiteName(root, ssgOptions),
     shouldGenerateOgImages: shouldGenerateOgImages(options),
+    autoNavigation: !configuredNavigation && !hasThemeSidebar,
     markdownSourcePages: [],
     napi:
       ssgOptions.lastUpdated || ssgOptions.contributors || options.siteMaps?.enabled
@@ -1881,6 +1895,7 @@ async function generateBuiltInHtmlPagesBatch(
     siteUrl: context.ssgOptions.siteUrl,
     headValidation: context.ssgOptions.headValidation,
     iconsEnabled: Boolean(context.options.icons?.enabled),
+    autoNavigation: context.autoNavigation,
   });
   let rendered: NapiSsgHtmlResult[];
   let assets: ExternalizedSharedAsset[] = [];
@@ -2132,6 +2147,7 @@ async function renderSsgPage(
         versionNavigation,
         context.ssgOptions.routePrefix,
       ),
+      context.autoNavigation,
     ),
     markdownSource,
   );

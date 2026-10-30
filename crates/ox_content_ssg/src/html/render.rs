@@ -22,6 +22,16 @@ pub fn generate_html_result(
     nav_groups: &[NavGroup],
     config: &SsgConfig,
 ) -> GeneratedHtml {
-    let generated = generate_html_inner(page_data, nav_groups, config);
+    generate_html_result_with_auto_navigation(page_data, nav_groups, config, false)
+}
+
+/// Generates themed HTML and scopes large inferred sidebars when requested.
+pub fn generate_html_result_with_auto_navigation(
+    page_data: &PageData,
+    nav_groups: &[NavGroup],
+    config: &SsgConfig,
+    auto_navigation: bool,
+) -> GeneratedHtml {
+    let generated = generate_html_inner(page_data, nav_groups, config, auto_navigation);
     GeneratedHtml { html: generated.html, diagnostics: generated.head.diagnostics }
 }

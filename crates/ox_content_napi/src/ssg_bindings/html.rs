@@ -19,14 +19,16 @@ pub fn generate_ssg_html(
     nav_groups: Vec<JsSsgNavGroup>,
     config: JsSsgConfig,
 ) -> JsSsgHtmlResult {
+    let auto_navigation = config.auto_navigation.unwrap_or(false);
     let team = convert_team(config.team.clone());
     let ssg_page_data = convert_ssg_page_data(page_data, &team);
     let ssg_nav_groups = convert_nav_groups(nav_groups);
     let ssg_config = convert_ssg_config(config);
-    map_html_result(ox_content_ssg::generate_html_result(
+    map_html_result(ox_content_ssg::generate_html_result_with_auto_navigation(
         &ssg_page_data,
         &ssg_nav_groups,
         &ssg_config,
+        auto_navigation,
     ))
 }
 
@@ -37,6 +39,7 @@ pub fn generate_ssg_html_pages(
     nav_groups: Vec<JsSsgNavGroup>,
     config: JsSsgConfig,
 ) -> Vec<JsSsgHtmlResult> {
+    let auto_navigation = config.auto_navigation.unwrap_or(false);
     let team = convert_team(config.team.clone());
     let ssg_nav_groups = convert_nav_groups(nav_groups);
     let ssg_config = convert_ssg_config(config);
@@ -45,10 +48,11 @@ pub fn generate_ssg_html_pages(
         .into_iter()
         .map(|page_data| {
             let ssg_page_data = convert_ssg_page_data(page_data, &team);
-            map_html_result(ox_content_ssg::generate_html_result(
+            map_html_result(ox_content_ssg::generate_html_result_with_auto_navigation(
                 &ssg_page_data,
                 &ssg_nav_groups,
                 &ssg_config,
+                auto_navigation,
             ))
         })
         .collect()
@@ -67,6 +71,7 @@ pub fn generate_ssg_html_pages_externalized(
     out_dir: String,
     base: String,
 ) -> JsSsgGeneratedExternalizedAssets {
+    let auto_navigation = config.auto_navigation.unwrap_or(false);
     let team = convert_team(config.team.clone());
     let ssg_nav_groups = convert_nav_groups(nav_groups);
     let ssg_config = convert_ssg_config(config);
@@ -75,8 +80,12 @@ pub fn generate_ssg_html_pages_externalized(
 
     for request in requests {
         let ssg_page_data = convert_ssg_page_data(request.page_data, &team);
-        let generated =
-            ox_content_ssg::generate_html_result(&ssg_page_data, &ssg_nav_groups, &ssg_config);
+        let generated = ox_content_ssg::generate_html_result_with_auto_navigation(
+            &ssg_page_data,
+            &ssg_nav_groups,
+            &ssg_config,
+            auto_navigation,
+        );
         let page = externalizer.externalize_page(ox_content_ssg::GeneratedHtmlPage {
             input_path: request.input_path,
             output_path: request.output_path,

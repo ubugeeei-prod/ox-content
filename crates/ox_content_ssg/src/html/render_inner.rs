@@ -14,7 +14,7 @@ use super::heading_permalinks::{push_heading_permalink_body_class, push_heading_
 use super::json_ld::render_json_ld;
 use super::locale_switcher::{render_locale_switcher, render_mobile_locale_switcher};
 use super::mpa_navigation::{MPA_NAVIGATION_CSS, THEME_BOOTSTRAP_JS, view_transitions_enabled};
-use super::nav::{generate_nav_html, sidebar_bootstrap_js};
+use super::nav::{generate_page_nav_html, sidebar_bootstrap_js};
 use super::not_by_ai::push_not_by_ai_css;
 use super::page_js::{PageJsInput, assemble_page_js};
 use super::pagination::resolve_pager;
@@ -44,6 +44,7 @@ pub(super) fn generate_html_inner(
     page_data: &PageData,
     nav_groups: &[NavGroup],
     config: &SsgConfig,
+    auto_navigation: bool,
 ) -> GeneratedPage {
     let theme = config.theme.as_ref();
     let chrome = resolve_page_chrome(
@@ -52,7 +53,7 @@ pub(super) fn generate_html_inner(
         super::aside::aside_enabled(theme),
     );
     let nav_html = if chrome.show_sidebar {
-        generate_nav_html(nav_groups, &page_data.path)
+        generate_page_nav_html(nav_groups, &page_data.path, auto_navigation)
     } else {
         String::new()
     };
@@ -61,7 +62,6 @@ pub(super) fn generate_html_inner(
     let announcement_html =
         theme.and_then(|t| t.announcement.as_ref()).map(render_announcement).unwrap_or_default();
     let embed = theme.and_then(|t| t.embed.as_ref());
-
     let theme_css = theme.map_or(String::new(), generate_theme_css);
     let has_footer = chrome.show_footer
         && theme.is_some_and(|t| {
