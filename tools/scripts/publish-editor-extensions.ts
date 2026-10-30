@@ -196,7 +196,7 @@ async function publishWithRetry(
           "See https://github.com/ubugeeei-prod/ox-content/blob/main/docs/content/release.md#open-vsx-trusted-publishing. " +
           "After setup, rerun only the failed Open VSX job; do not recreate the release tag.",
       );
-      process.exit(1);
+      await exitWithFailure();
     }
 
     const reason = result.error
@@ -207,7 +207,7 @@ async function publishWithRetry(
       console.error(
         `::error::${target.label} publish of ${vsix} failed after ${maxAttempts} attempts (${reason})`,
       );
-      process.exit(1);
+      await exitWithFailure();
     }
 
     console.log(
@@ -216,4 +216,16 @@ async function publishWithRetry(
     await sleep(delay);
     delay = Math.min(delay * 2, maxDelayMs);
   }
+}
+
+async function exitWithFailure(): Promise<never> {
+  await Promise.all(
+    [process.stdout, process.stderr].map(
+      (stream) =>
+        new Promise<void>((resolve, reject) => {
+          stream.write("", (error) => (error ? reject(error) : resolve()));
+        }),
+    ),
+  );
+  process.exit(1);
 }

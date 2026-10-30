@@ -192,15 +192,20 @@ Complete the following once as the maintainer:
    and use it only in the local shell for this initial upload:
 
    ```bash
-   read -rs 'OVSX_PAT?Temporary Open VSX token: '; echo
-   export OVSX_PAT
-   vp exec -- pnpm dlx --allow-build @vscode/vsce-sign --allow-build keytar ovsx@1.2.0 \
+   open_vsx_tools=$(mktemp -d)
+   env -u OVSX_PAT vp env exec --node 26 npm install \
+     --prefix "$open_vsx_tools" --no-audit --no-fund ovsx@1.2.0
+   read -rs 'open_vsx_token?Temporary Open VSX token: '; echo
+   OVSX_PAT="$open_vsx_token" vp env exec --node 26 \
+     "$open_vsx_tools/node_modules/.bin/ovsx" \
      publish /path/to/vscode-ox-content-linux-x64.vsix --skip-duplicate
-   unset OVSX_PAT
+   unset open_vsx_token
+   rm -r "$open_vsx_tools"
    ```
 
    This prompt uses zsh. Do not paste the token into chat, commit it, or add it as
-   a CI secret. Revoke the temporary token after the initial upload.
+   a CI secret. Install the CLI before entering the token so dependency install
+   scripts never receive it. Revoke the temporary token after the initial upload.
 
 5. In [Trusted Publishers](https://open-vsx.org/user-settings/trusted-publishers),
    register `vscode-ox-content` with the identity listed above.

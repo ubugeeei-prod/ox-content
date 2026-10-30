@@ -106,6 +106,7 @@ describe("publish editor extensions", () => {
         VP_FAILURES: "6",
         VP_FAILURE_STREAM: stream,
         VP_FAILURE_MESSAGE: "No trusted publisher matches the presented token.",
+        VP_OUTPUT_SIZE: "131072",
       });
 
       expect(result.status).toBe(1);
@@ -118,6 +119,8 @@ describe("publish editor extensions", () => {
       expect(result.stderr).toContain("publish-editors.yml, environment open-vsx");
       expect(result.stderr).toContain("https://open-vsx.org/user-settings/trusted-publishers");
       expect(result.stderr).toContain("rerun only the failed Open VSX job");
+      expect(result.stdout).toContain("x".repeat(131072) + "STDOUT_END");
+      expect(result.stderr).toContain("x".repeat(131072) + "STDERR_END");
       expect(result.stdout).not.toContain("retrying");
     },
   );
@@ -176,7 +179,11 @@ function createFixture() {
       "fs.appendFileSync(process.env.VP_CALL_LOG, JSON.stringify({ args: process.argv.slice(2), hasOpenVsxPat: process.env.OVSX_PAT !== undefined }) + '\\n');",
       "const attempts = fs.readFileSync(process.env.VP_CALL_LOG, 'utf8').trim().split('\\n').length;",
       "if (attempts <= Number(process.env.VP_FAILURES ?? 0)) {",
-      "  process[process.env.VP_FAILURE_STREAM ?? 'stderr'].write(process.env.VP_FAILURE_MESSAGE + '\\n');",
+      "  if (process.env.VP_OUTPUT_SIZE) {",
+      "    fs.writeFileSync(1, 'x'.repeat(Number(process.env.VP_OUTPUT_SIZE)) + 'STDOUT_END\\n');",
+      "    fs.writeFileSync(2, 'x'.repeat(Number(process.env.VP_OUTPUT_SIZE)) + 'STDERR_END\\n');",
+      "  }",
+      "  fs.writeFileSync(process.env.VP_FAILURE_STREAM === 'stdout' ? 1 : 2, process.env.VP_FAILURE_MESSAGE + '\\n');",
       "  process.exit(1);",
       "}",
       "process.exit(0);",
