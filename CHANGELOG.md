@@ -1,5 +1,11 @@
 # Changelog
 
+## [3.4.2] - 2026-10-30
+
+### Performance
+
+- accelerate large custom host output (#1530) _(affects: crates: ox_content_ssg; tooling)_
+
 ## [3.4.1] - 2026-10-30
 
 ### Bug Fixes
