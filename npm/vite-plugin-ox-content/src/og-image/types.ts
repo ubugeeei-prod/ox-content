@@ -28,7 +28,7 @@ export type OgImageTemplateFn = (props: OgImageTemplateProps) => string | Promis
 /**
  * OG image rendering backend.
  */
-export type OgImageRenderer = "chromium" | "satori";
+export type OgImageRenderer = "chromium" | "satori" | "takumi";
 
 /**
  * Font weight values supported by Satori.
@@ -82,6 +82,9 @@ export interface OgImageSatoriOptions {
   systemFontFallback?: boolean;
 }
 
+/** Font configuration for the browserless Takumi renderer. */
+export interface OgImageTakumiOptions extends OgImageSatoriOptions {}
+
 /**
  * OG image generation options (user-facing).
  */
@@ -90,6 +93,7 @@ export interface OgImageOptions {
    * Rendering backend.
    * - `"chromium"`: full browser rendering, best template compatibility
    * - `"satori"`: fast HTML-to-SVG-to-PNG rendering, limited CSS subset
+   * - `"takumi"`: native HTML/CSS-to-PNG rendering without a browser
    * @default "chromium"
    */
   renderer?: OgImageRenderer;
@@ -111,6 +115,9 @@ export interface OgImageOptions {
    * @default 'vitejs'
    */
   vuePlugin?: "vitejs" | "vizejs";
+
+  /** Runtime for .tsx/.jsx templates. @default "react" */
+  jsxFramework?: "react" | "solid";
 
   /**
    * Image width in pixels.
@@ -141,6 +148,9 @@ export interface OgImageOptions {
    * Options for the Satori renderer.
    */
   satori?: OgImageSatoriOptions;
+
+  /** Fonts for Takumi. Uses known system fonts when omitted. */
+  takumi?: OgImageTakumiOptions;
 }
 
 /**
@@ -150,6 +160,7 @@ export interface ResolvedOgImageOptions {
   renderer: OgImageRenderer;
   template?: string;
   vuePlugin: "vitejs" | "vizejs";
+  jsxFramework?: "react" | "solid";
   width: number;
   height: number;
   cache: boolean;
@@ -158,4 +169,5 @@ export interface ResolvedOgImageOptions {
     fonts: OgImageSatoriFont[];
     systemFontFallback: boolean;
   };
+  takumi?: OgImageTakumiOptions;
 }
