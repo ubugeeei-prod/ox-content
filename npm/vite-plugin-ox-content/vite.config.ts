@@ -54,7 +54,7 @@ export default defineConfig({
         "solid-js",
         "@solidjs/web",
         "@solidjs/compiler",
-        "takumi-js/node",
+        "@takumi-rs/core",
         "typescript",
         "@typescript/native-preview",
         "@typescript/native-preview/unstable/sync",

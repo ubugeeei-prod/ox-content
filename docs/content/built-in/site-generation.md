@@ -291,7 +291,7 @@ the browser and renders HTML to SVG, then PNG, which is much faster for large
 sites. The tradeoff is that templates must stay inside Satori's supported HTML
 and CSS subset, and text needs at least one loadable font.
 
-Takumi is another browserless choice, using the native `takumi-js/node` renderer.
+Takumi is another browserless choice, using `@takumi-rs/core` directly.
 Select it with `renderer: "takumi"` and configure fonts under `takumi` instead of
 `satori`. Chromium remains the default and is recommended for full browser CSS.
 Neither browserless renderer runs client JavaScript or guarantees browser-identical

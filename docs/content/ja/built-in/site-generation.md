@@ -244,7 +244,7 @@ Chromium は互換性重視のレンダラーです。通常のブラウザ CSS�
 サブセットに収め、テキスト用のフォントを少なくとも 1 つ読み込める必要があります。
 
 Takumi もブラウザ不要の選択肢です。`renderer: "takumi"` と指定すると、
-`takumi-js/node` のネイティブレンダラーを使います。フォントは `takumi.fonts` に指定します。
+`@takumi-rs/core` を直接使います。フォントは `takumi.fonts` に指定します。
 既定値は引き続き Chromium です。ブラウザと同じ CSS 描画が必要なら Chromium を選んでください。
 Satori と Takumi はクライアント JavaScript を実行せず、それぞれ対応する CSS の範囲で描画します。
 

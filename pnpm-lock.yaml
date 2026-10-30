@@ -2122,7 +2122,7 @@ importers:
       svelte:
         specifier: ^5.0.0
         version: 5.57.1
-      takumi-js:
+      '@takumi-rs/core':
         specifier: ^2.19.0
         version: 2.19.0(csstype@3.2.3)(preact@10.29.2)(react@19.3.0)
       terser:
@@ -5264,15 +5264,6 @@ packages:
       preact:
         optional: true
       react:
-        optional: true
-
-  '@takumi-rs/wasm@2.19.0':
-    resolution: {integrity: sha512-V9LKPOFVHKZ7lANVQ94WmOkGvgW0EqXUeLEpsWB2Wnnx7WpOWHnbAI9Yb0VnAYeyRicp7nAfG3vF/M7vsw0s2w==}
-    engines: {node: '>=20.19'}
-    peerDependencies:
-      csstype: '*'
-    peerDependenciesMeta:
-      csstype:
         optional: true
 
   '@tanstack/markdown@0.0.15':
@@ -9013,10 +9004,6 @@ packages:
   tabbable@6.4.0:
     resolution: {integrity: sha512-05PUHKSNE8ou2dwIxTngl4EzcnsCDZGJ/iCLtDflR/SHB/ny14rXc+qU5P4mG9JkusiV7EivzY9Mhm55AzAvCg==}
 
-  takumi-js@2.19.0:
-    resolution: {integrity: sha512-WUgzukIpAtoDUeFkdKvT0o4pterWoyM9qcXpIRUQIqUZHriIBdPdPZV42UyzEbNyXvg/1aUaVhBGEyivraT8NQ==}
-    engines: {node: '>=20.19'}
-
   tapable@2.3.3:
     resolution: {integrity: sha512-uxc/zpqFg6x7C8vOE7lh6Lbda8eEL9zmVm/PLeTPBRhh1xCgdWaQ+J1CUieGpIfm2HdtsUpRv+HshiasBMcc6A==}
     engines: {node: '>=6'}
@@ -11962,15 +11949,6 @@ snapshots:
     optionalDependencies:
       preact: 10.29.2
       react: 19.3.0
-
-  '@takumi-rs/wasm@2.19.0(csstype@3.2.3)(preact@10.29.2)(react@19.3.0)':
-    dependencies:
-      '@takumi-rs/helpers': 2.19.0(preact@10.29.2)(react@19.3.0)
-    optionalDependencies:
-      csstype: 3.2.3
-    transitivePeerDependencies:
-      - preact
-      - react
 
   '@tanstack/markdown@0.0.15(react@19.3.0)':
     optionalDependencies:
@@ -16301,16 +16279,6 @@ snapshots:
       sax: 1.6.1
 
   tabbable@6.4.0: {}
-
-  takumi-js@2.19.0(csstype@3.2.3)(preact@10.29.2)(react@19.3.0):
-    dependencies:
-      '@takumi-rs/core': 2.19.0(csstype@3.2.3)(preact@10.29.2)(react@19.3.0)
-      '@takumi-rs/helpers': 2.19.0(preact@10.29.2)(react@19.3.0)
-      '@takumi-rs/wasm': 2.19.0(csstype@3.2.3)(preact@10.29.2)(react@19.3.0)
-    transitivePeerDependencies:
-      - csstype
-      - preact
-      - react
 
   tapable@2.3.3: {}
 

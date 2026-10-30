@@ -5,7 +5,7 @@ import { inlinePublicImages } from "./assets";
 /** Reuse Takumi's native renderer and its registered fonts throughout the batch. */
 export async function createTakumiRenderer(options: ResolvedOgImageOptions, root: string) {
   const [{ Renderer }, fonts] = await Promise.all([
-    import("takumi-js/node"),
+    import("@takumi-rs/core"),
     loadOgFonts(options, root),
   ]);
   const renderer = new Renderer();
