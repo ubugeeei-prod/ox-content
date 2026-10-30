@@ -7,7 +7,7 @@
  *
  * Usage:
  *   node host-output.mjs [--pages N] [--bytes-per-page N] [--iterations N]
- *                        [--json PATH]
+ *                        [--externalize-assets true|false] [--json PATH]
  */
 
 import { execFileSync } from "node:child_process";
@@ -23,7 +23,13 @@ const here = dirname(fileURLToPath(import.meta.url));
 const contentDir = join(here, "content");
 
 function options(argv) {
-  const parsed = { pages: 2000, bytesPerPage: 65_536, iterations: 5, jsonPath: null };
+  const parsed = {
+    pages: 2000,
+    bytesPerPage: 65_536,
+    iterations: 5,
+    externalizeAssets: true,
+    jsonPath: null,
+  };
   for (let index = 0; index < argv.length; index++) {
     const name = argv[index];
     const value = argv[++index];
@@ -31,11 +37,16 @@ function options(argv) {
     if (name === "--pages") parsed.pages = Number(value);
     else if (name === "--bytes-per-page") parsed.bytesPerPage = Number(value);
     else if (name === "--iterations") parsed.iterations = Number(value);
+    else if (name === "--externalize-assets") parsed.externalizeAssets = value !== "false";
     else if (name === "--json") parsed.jsonPath = value;
     else throw new Error(`unknown option: ${name}`);
   }
   for (const [name, value] of Object.entries(parsed)) {
-    if (name !== "jsonPath" && (!Number.isInteger(value) || value < 1)) {
+    if (
+      name !== "jsonPath" &&
+      name !== "externalizeAssets" &&
+      (!Number.isInteger(value) || value < 1)
+    ) {
       throw new Error(`${name} must be a positive integer`);
     }
   }
@@ -52,6 +63,7 @@ function build(config) {
       ...process.env,
       OX_SCALE_HOST_HTML: "1",
       OX_SCALE_HOST_PADDING_BYTES: String(config.bytesPerPage),
+      OX_SCALE_EXTERNALIZE_ASSETS: config.externalizeAssets ? "1" : "0",
       OX_SCALE_OUT_DIR: "dist-host",
     },
   });
@@ -97,6 +109,7 @@ async function main() {
     machine: { cpus: cpus().length, memoryGb: Math.round(totalmem() / 1024 ** 3) },
     pages: config.pages,
     bytesPerPage: config.bytesPerPage,
+    externalizeAssets: config.externalizeAssets,
     outputMb: (config.pages * config.bytesPerPage) / 1024 ** 2,
     samplesMs: samples,
     fastestMs: sorted[0],

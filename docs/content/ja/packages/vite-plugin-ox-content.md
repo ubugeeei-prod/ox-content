@@ -102,12 +102,19 @@ oxContent({
 
 #### SsgOptions
 
-| オプション  | 型        | 既定      | 説明                                     |
-| ----------- | --------- | --------- | ---------------------------------------- |
-| `enabled`   | `boolean` | `true`    | SSG モードのオン / オフ                  |
-| `extension` | `string`  | `'.html'` | 出力ファイル拡張子                       |
-| `clean`     | `boolean` | `false`   | ビルド前に出力ディレクトリを消す         |
-| `bare`      | `boolean` | `false`   | 素の HTML 出力（ナビなし、スタイルなし） |
+| オプション          | 型        | 既定      | 説明                                       |
+| ------------------- | --------- | --------- | ------------------------------------------ |
+| `enabled`           | `boolean` | `true`    | SSG モードのオン / オフ                    |
+| `extension`         | `string`  | `'.html'` | 出力ファイル拡張子                         |
+| `externalizeAssets` | `boolean` | `true`    | 同一のインライン CSS / JavaScript を外部化 |
+| `clean`             | `boolean` | `false`   | ビルド前に出力ディレクトリを消す           |
+| `bare`              | `boolean` | `false`   | 素の HTML 出力（ナビなし、スタイルなし）   |
+
+`externalizeAssets: false` は、CSS と JavaScript をすでに外部ファイルとして
+出力する独自 `render` ホストでだけ指定してください。Ox Content は共有インライン
+asset を探す全ページ走査を省略します。大規模な framework SSG で重複する全 corpus
+処理を除け、この抽出処理はインラインの `<style>` と `<script>` を書き換えません。
+設定済みの HTML minify と PWA tag 挿入は、その後も実行されます。
 
 ### Bare モード（ベンチマーク向け）
 

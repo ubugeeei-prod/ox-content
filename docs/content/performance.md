@@ -318,6 +318,13 @@ The optimizer keeps the rules conservative:
 - Generated scripts are emitted with `defer`, and public asset paths honor the
   configured site `base`.
 
+Custom renderers that already return Vite-style external CSS and module scripts
+can set `ssg.externalizeAssets: false`. This skips the corpus-wide extraction
+pass without rewriting inline assets during extraction. Configured HTML
+minification and PWA tag injection still run afterward. Keep the default for
+the built-in renderer and for hosts that rely on Ox Content to deduplicate
+inline assets.
+
 The goal is not to split every feature into a separate file. The docs shell is
 small enough that excessive chunking can increase startup work. The current
 policy favors stable shared chunks for repeated bytes and avoids moving content

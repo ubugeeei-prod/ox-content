@@ -247,6 +247,13 @@ describe("resolveSsgOptions", () => {
     expect(resolveSsgTransformConcurrency(100)).toBe(32);
     expect(resolveSsgTransformConcurrency(Number.NaN)).toBe(1);
   });
+
+  it("externalizes shared assets unless the host already owns them", () => {
+    expect(resolveSsgOptions(undefined).externalizeAssets).toBe(true);
+    expect(resolveSsgOptions(true).externalizeAssets).toBe(true);
+    expect(resolveSsgOptions({}).externalizeAssets).toBe(true);
+    expect(resolveSsgOptions({ externalizeAssets: false }).externalizeAssets).toBe(false);
+  });
 });
 
 describe("generateBarePage", () => {
@@ -545,6 +552,41 @@ describe("git contributors", () => {
 });
 
 describe("SSG routePrefix", () => {
+  it("keeps buildSsg compatible with resolved options created before externalizeAssets", async () => {
+    const root = await makeSite({ "index.md": "# Legacy host\n" });
+    const base = routePrefixOptions();
+    const { externalizeAssets: _externalizeAssets, ...legacySsg } = base.ssg;
+    const built = await buildSsg({ ...base, ssg: legacySsg }, root);
+
+    expect(built.errors).toEqual([]);
+    expect(built.files.some((file) => file.endsWith("index.html"))).toBe(true);
+  });
+
+  it("preserves host-owned inline assets when externalization is disabled", async () => {
+    const root = await makeSite({ "index.md": "# Host page\n" });
+    const base = routePrefixOptions();
+    const built = await buildSsg(
+      routePrefixOptions({
+        ssg: {
+          ...base.ssg,
+          bare: false,
+          externalizeAssets: false,
+          render: () => ({
+            __html:
+              "<!doctype html><html><head><style>.owned{color:red}</style></head>" +
+              "<body><script>owned()</script></body></html>",
+          }),
+        },
+      }),
+      root,
+    );
+
+    const html = await fs.readFile(path.join(root, "dist", "index.html"), "utf8");
+    expect(html).toContain("<style>.owned{color:red}</style>");
+    expect(html).toContain("<script>owned()</script>");
+    expect(built.errors).toEqual([]);
+  });
+
   it("keeps existing page paths when routePrefix is omitted", async () => {
     const root = await makeSite({
       "first-post/index.md": "---\ntitle: First\n---\n# First\n",

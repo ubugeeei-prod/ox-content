@@ -99,12 +99,20 @@ oxContent({
 
 #### SsgOptions
 
-| Option      | Type      | Default   | Description                                 |
-| ----------- | --------- | --------- | ------------------------------------------- |
-| `enabled`   | `boolean` | `true`    | Enable/disable SSG mode                     |
-| `extension` | `string`  | `'.html'` | Output file extension                       |
-| `clean`     | `boolean` | `false`   | Clean output directory before build         |
-| `bare`      | `boolean` | `false`   | Bare HTML output (no navigation, no styles) |
+| Option              | Type      | Default   | Description                                 |
+| ------------------- | --------- | --------- | ------------------------------------------- |
+| `enabled`           | `boolean` | `true`    | Enable/disable SSG mode                     |
+| `extension`         | `string`  | `'.html'` | Output file extension                       |
+| `externalizeAssets` | `boolean` | `true`    | Extract identical inline CSS and JavaScript |
+| `clean`             | `boolean` | `false`   | Clean output directory before build         |
+| `bare`              | `boolean` | `false`   | Bare HTML output (no navigation, no styles) |
+
+Set `externalizeAssets: false` only for a custom `render` host that already
+emits external CSS and JavaScript. Ox Content then skips scanning every page
+for shared inline assets. This removes a redundant full-corpus pass for large
+framework-rendered sites; this extraction pass does not rewrite inline
+`<style>` or `<script>` blocks. Configured HTML minification and PWA tag
+injection still run afterward.
 
 ### Bare Mode (for benchmarking)
 

@@ -323,6 +323,7 @@ export function resolveSsgOptions(ssg: SsgOptions | boolean | undefined): Resolv
       enabled: false,
       extension: ".html",
       transformConcurrency: resolveSsgTransformConcurrency(undefined),
+      externalizeAssets: true,
       clean: false,
       minifyHtml: false,
       bare: false,
@@ -350,6 +351,7 @@ export function resolveSsgOptions(ssg: SsgOptions | boolean | undefined): Resolv
       enabled: true,
       extension: ".html",
       transformConcurrency: resolveSsgTransformConcurrency(undefined),
+      externalizeAssets: true,
       clean: false,
       minifyHtml: false,
       bare: false,
@@ -378,6 +380,7 @@ export function resolveSsgOptions(ssg: SsgOptions | boolean | undefined): Resolv
     extension: ssg.extension ?? ".html",
     ...resolvedRoutePrefix(ssg.routePrefix),
     transformConcurrency: resolveSsgTransformConcurrency(ssg.transformConcurrency),
+    externalizeAssets: ssg.externalizeAssets ?? true,
     clean: ssg.clean ?? false,
     minifyHtml: ssg.minifyHtml ?? false,
     bare: ssg.bare ?? false,
@@ -1129,9 +1132,26 @@ export interface SsgBuildResult {
 }
 
 /**
+ * Resolved options accepted by the public SSG build entry point.
+ *
+ * `externalizeAssets` was added to the resolved shape after `buildSsg` became
+ * public. Keep accepting hand-built resolved options from older consumers and
+ * apply the current default at this boundary.
+ */
+export type BuildSsgOptions = Omit<ResolvedOptions, "ssg"> & {
+  ssg: Omit<ResolvedSsgOptions, "externalizeAssets"> & {
+    externalizeAssets?: boolean;
+  };
+};
+
+/**
  * Builds all markdown files to static HTML.
  */
-export async function buildSsg(options: ResolvedOptions, root: string): Promise<SsgBuildResult> {
+export async function buildSsg(input: BuildSsgOptions, root: string): Promise<SsgBuildResult> {
+  const options: ResolvedOptions =
+    input.ssg.externalizeAssets === undefined
+      ? { ...input, ssg: { ...input.ssg, externalizeAssets: true } }
+      : (input as ResolvedOptions);
   const ssgOptions = options.ssg;
   if (!ssgOptions.enabled) {
     return { files: [], errors: [], ogImages: {} };
@@ -2381,11 +2401,10 @@ async function writeGeneratedPages(
   // Shared asset extraction needs the complete page set to maximize
   // de-duplication. Only after replacement do we write pages and record both
   // the generated assets and the rewritten HTML files.
-  const optimizedOutput = await externalizeSharedPageAssets(
-    generatedPages,
-    context.outDir,
-    context.base,
-  );
+  const optimizedOutput =
+    context.ssgOptions.externalizeAssets !== false
+      ? await externalizeSharedPageAssets(generatedPages, context.outDir, context.base)
+      : { pages: generatedPages, assets: [] };
   generatedFiles.push(...optimizedOutput.assets);
 
   const pwa = await writePwaFiles({

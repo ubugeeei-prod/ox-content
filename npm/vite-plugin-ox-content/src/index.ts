@@ -992,7 +992,7 @@ export type {
   MarkdownLintFilesResult,
   MarkdownLintFileOptions as MarkdownLintProjectOptions,
 } from "./lint-files";
-export { buildSsg, resolveSsgOptions, DEFAULT_HTML_TEMPLATE } from "./ssg";
+export { buildSsg, resolveSsgOptions, DEFAULT_HTML_TEMPLATE, type BuildSsgOptions } from "./ssg";
 export { renderHead, resolveHeadValidation } from "./page-head";
 export type {
   HeadAlternate,
