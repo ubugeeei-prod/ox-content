@@ -56,7 +56,7 @@ import { reportHeadDiagnostics, resolveHeadValidation } from "./page-head";
 import { resolveTheme, themeToNapi } from "./theme";
 import type { ResolvedThemeConfig, SidebarItem } from "./theme";
 import { normalizeVitePressFrontmatter } from "./vitepress";
-import { renderPage } from "./theme-renderer";
+import { createThemeSiteConfig, renderPage } from "./theme-renderer";
 import type { PageData as ThemePageData } from "./theme-renderer";
 import {
   applyReaderChromeHtml,
@@ -1730,13 +1730,30 @@ async function generateHtmlPagesSequential(
   errors: string[],
 ): Promise<GeneratedHtmlPage[]> {
   const generatedPages: GeneratedHtmlPage[] = [];
+  const themePages = context.ssgOptions.render
+    ? pageResults.map((page) => toThemePageData(page, pageMarkdownSourceHref(context, page)))
+    : undefined;
+  const themeSnapshot = themePages
+    ? {
+        pages: themePages,
+        siteConfig: createThemeSiteConfig({
+          theme: context.ssgOptions.render!,
+          siteName: context.siteName,
+          base: context.base,
+          nav: context.versionNavigation
+            ? rewriteVersionedNavGroups(context.navItems, context.versionNavigation)
+            : context.navItems,
+          pages: themePages,
+        }),
+      }
+    : undefined;
 
   for (const pageResult of pageResults) {
     try {
       generatedPages.push({
         inputPath: pageResult.inputPath,
         outputPath: pageResult.routePaths.outputPath,
-        html: await renderSsgPage(context, pageResult, collected, pageResults),
+        html: await renderSsgPage(context, pageResult, collected, pageResults, themeSnapshot),
       });
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : String(err);
@@ -1839,6 +1856,10 @@ async function renderSsgPage(
   pageResult: PageProcessResult,
   collected: CollectedPageResults,
   allPageResults: PageProcessResult[],
+  themeSnapshot?: {
+    pages: ThemePageData[];
+    siteConfig: ReturnType<typeof createThemeSiteConfig>;
+  },
 ): Promise<string> {
   const { ogImageUrlMap } = collected;
   const pageOgImage =
@@ -1862,9 +1883,12 @@ async function renderSsgPage(
           siteName: context.siteName,
           base: context.base,
           nav,
-          pages: allPageResults.map((page) =>
-            toThemePageData(page, pageMarkdownSourceHref(context, page)),
-          ),
+          pages:
+            themeSnapshot?.pages ??
+            allPageResults.map((page) =>
+              toThemePageData(page, pageMarkdownSourceHref(context, page)),
+            ),
+          siteConfig: themeSnapshot?.siteConfig,
         }),
         context.ssgOptions.readerChrome,
       ),

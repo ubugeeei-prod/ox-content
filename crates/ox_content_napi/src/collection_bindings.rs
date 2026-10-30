@@ -1,10 +1,11 @@
-use std::collections::HashMap;
 use std::fs;
 use std::path::{Path, PathBuf};
+use std::sync::OnceLock;
 
 use napi::bindgen_prelude::*;
 use napi_derive::napi;
 use ox_content_transform::transformer::MarkdownTransformer;
+use rayon::prelude::*;
 use serde_json::{Map, Value, json};
 
 use crate::JsTransformOptions;
@@ -50,15 +51,16 @@ pub struct JsBuildCollectionManifestOptions {
     pub transform_options: Option<JsTransformOptions>,
 }
 
-#[derive(Clone)]
 struct SourceFile {
     path: PathBuf,
     path_key: String,
     relative_path: String,
     extension: String,
+    source: OnceLock<std::result::Result<String, String>>,
+    prepared: OnceLock<PreparedFile>,
+    transformed: OnceLock<TransformedFile>,
 }
 
-#[derive(Clone)]
 struct PreparedFile {
     content: String,
     frontmatter: Map<String, Value>,
@@ -67,15 +69,6 @@ struct PreparedFile {
 struct TransformedFile {
     html: String,
     toc: Vec<Value>,
-}
-
-struct BuildEntryContext<'a> {
-    extensions: &'a [String],
-    include: &'a IncludeSet,
-    prepare_transformer: &'a MarkdownTransformer,
-    base_transform_options: &'a JsTransformOptions,
-    prepared_cache: &'a mut HashMap<String, PreparedFile>,
-    transformed_cache: &'a mut HashMap<String, TransformedFile>,
 }
 
 #[derive(Default)]
@@ -98,32 +91,26 @@ pub fn build_collection_manifest(options: JsBuildCollectionManifestOptions) -> R
         if src_dir.is_dir() { collect_source_files(&src_dir, &extensions) } else { Vec::new() };
     let frontmatter = options.frontmatter.unwrap_or(true);
     let prepare_transformer = MarkdownTransformer::with_frontmatter(frontmatter);
-    let mut prepared_cache = HashMap::new();
-    let mut transformed_cache = HashMap::new();
     let base_transform_options = options.transform_options.unwrap_or_default();
 
     let mut collections = Map::new();
     for collection in options.collections {
         let patterns = normalize_source_patterns(&collection.source);
         let include = IncludeSet::from_fields(&collection.include);
-        let mut entries = Vec::new();
-        let mut context = BuildEntryContext {
-            extensions: &extensions,
-            include: &include,
-            prepare_transformer: &prepare_transformer,
-            base_transform_options: &base_transform_options,
-            prepared_cache: &mut prepared_cache,
-            transformed_cache: &mut transformed_cache,
-        };
-
-        for file in &files {
-            if !patterns.iter().any(|pattern| pattern.matches(&file.relative_path)) {
-                continue;
-            }
-
-            let entry = build_entry(file, &collection.name, &mut context)?;
-            entries.push(entry);
-        }
+        let entries = files
+            .par_iter()
+            .filter(|file| patterns.iter().any(|pattern| pattern.matches(&file.relative_path)))
+            .map(|file| {
+                build_entry(
+                    file,
+                    &collection.name,
+                    &extensions,
+                    &include,
+                    &prepare_transformer,
+                    &base_transform_options,
+                )
+            })
+            .collect::<Result<Vec<_>>>()?;
 
         collections.insert(collection.name, Value::Array(entries));
     }
@@ -135,13 +122,26 @@ pub fn build_collection_manifest(options: JsBuildCollectionManifestOptions) -> R
 fn build_entry(
     file: &SourceFile,
     collection_name: &str,
-    context: &mut BuildEntryContext<'_>,
+    extensions: &[String],
+    include: &IncludeSet,
+    prepare_transformer: &MarkdownTransformer,
+    base_transform_options: &JsTransformOptions,
 ) -> Result<Value> {
-    let prepared = get_prepared_file(file, context.prepare_transformer, context.prepared_cache)?;
-    let route_path = collection_path(&file.relative_path, context.extensions);
+    let source = file
+        .source
+        .get_or_init(|| {
+            fs::read_to_string(&file.path)
+                .map_err(|error| format!("failed to read {}: {error}", file.path_key))
+        })
+        .as_deref()
+        .map_err(|reason| Error::from_reason(reason.clone()))?;
+    let prepared = file.prepared.get_or_init(|| prepare_source(source, prepare_transformer));
+    let route_path = collection_path(&file.relative_path, extensions);
     let stem = route_path.strip_prefix('/').unwrap_or(&route_path).to_string();
-    let transformed = if context.include.html || context.include.toc {
-        Some(get_transformed_file(file, context.base_transform_options, context.transformed_cache)?)
+    let transformed = if include.html || include.toc {
+        Some(
+            file.transformed.get_or_init(|| transform_source(file, source, base_transform_options)),
+        )
     } else {
         None
     };
@@ -163,14 +163,14 @@ fn build_entry(
     }
     entry.insert("frontmatter".to_string(), Value::Object(prepared.frontmatter.clone()));
 
-    if context.include.body {
+    if include.body {
         entry.insert("body".to_string(), json!(prepared.content));
     }
     if let Some(transformed) = transformed {
-        if context.include.html {
+        if include.html {
             entry.insert("html".to_string(), json!(transformed.html));
         }
-        if context.include.toc {
+        if include.toc {
             entry.insert("toc".to_string(), Value::Array(transformed.toc.clone()));
         }
     }
@@ -178,50 +178,27 @@ fn build_entry(
     Ok(Value::Object(entry))
 }
 
-fn get_prepared_file(
-    file: &SourceFile,
-    transformer: &MarkdownTransformer,
-    cache: &mut HashMap<String, PreparedFile>,
-) -> Result<PreparedFile> {
-    if let Some(prepared) = cache.get(&file.path_key) {
-        return Ok(prepared.clone());
-    }
-
-    let source = fs::read_to_string(&file.path).map_err(|error| {
-        Error::from_reason(format!("failed to read {}: {error}", file.path_key))
-    })?;
-    let prepared = transformer.prepare_source(&source);
-    let prepared = PreparedFile {
+fn prepare_source(source: &str, transformer: &MarkdownTransformer) -> PreparedFile {
+    let prepared = transformer.prepare_source(source);
+    PreparedFile {
         content: prepared.content,
         frontmatter: prepared.frontmatter.into_iter().collect(),
-    };
-    cache.insert(file.path_key.clone(), prepared.clone());
-    Ok(prepared)
+    }
 }
 
-fn get_transformed_file<'a>(
+fn transform_source(
     file: &SourceFile,
+    source: &str,
     base_options: &JsTransformOptions,
-    cache: &'a mut HashMap<String, TransformedFile>,
-) -> Result<&'a TransformedFile> {
-    if !cache.contains_key(&file.path_key) {
-        let source = fs::read_to_string(&file.path).map_err(|error| {
-            Error::from_reason(format!("failed to read {}: {error}", file.path_key))
-        })?;
-        let mut options = base_options.clone();
-        options.source_path = Some(file.path_key.clone());
-        let core_options = options.into();
-        let result = MarkdownTransformer::from_options(&core_options).transform(&source);
-        let transformed = TransformedFile {
-            html: result.html,
-            toc: result.toc.into_iter().map(toc_entry_to_value).collect(),
-        };
-        cache.insert(file.path_key.clone(), transformed);
+) -> TransformedFile {
+    let mut options = base_options.clone();
+    options.source_path = Some(file.path_key.clone());
+    let core_options = options.into();
+    let result = MarkdownTransformer::from_options(&core_options).transform(source);
+    TransformedFile {
+        html: result.html,
+        toc: result.toc.into_iter().map(toc_entry_to_value).collect(),
     }
-
-    cache.get(&file.path_key).ok_or_else(|| {
-        Error::from_reason(format!("transformed file missing from cache: {}", file.path_key))
-    })
 }
 
 fn collect_source_files(src_dir: &Path, extensions: &[String]) -> Vec<SourceFile> {
@@ -264,6 +241,9 @@ fn collect_source_files_inner(
                 relative_path: path_to_slash(relative),
                 path,
                 extension,
+                source: OnceLock::new(),
+                prepared: OnceLock::new(),
+                transformed: OnceLock::new(),
             });
         }
     }

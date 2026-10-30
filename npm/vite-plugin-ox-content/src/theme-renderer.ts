@@ -75,6 +75,8 @@ export interface ThemeRenderOptions {
   nav: NavGroup[];
   /** All pages (for site context) */
   pages: PageData[];
+  /** Precomputed site context reused by large multi-page renders. */
+  siteConfig?: SiteConfig;
   /** Output directory for type definitions */
   typesOutDir?: string;
 }
@@ -87,42 +89,13 @@ export interface ThemeRenderOptions {
  * @returns Rendered HTML string
  */
 export function renderPage(page: PageData, options: ThemeRenderOptions): string {
-  const { theme, siteName, base, nav, pages } = options;
+  const { theme } = options;
 
   // Build page props
-  const pageProps: PageProps = {
-    title: page.title,
-    description: page.description,
-    html: page.html,
-    toc: page.toc,
-    lastUpdated: page.lastUpdated,
-    contributors: page.contributors,
-    path: page.path,
-    url: page.url,
-    markdownSource: page.markdownSource,
-    frontmatter: page.frontmatter,
-    layout: page.layout,
-  };
+  const pageProps = toPageProps(page);
 
   // Build site config
-  const siteConfig: SiteConfig = {
-    name: siteName,
-    base,
-    nav,
-    pages: pages.map((p) => ({
-      title: p.title,
-      description: p.description,
-      html: p.html,
-      toc: p.toc,
-      lastUpdated: p.lastUpdated,
-      contributors: p.contributors,
-      path: p.path,
-      url: p.url,
-      markdownSource: p.markdownSource,
-      frontmatter: p.frontmatter,
-      layout: p.layout,
-    })),
-  };
+  const siteConfig = options.siteConfig ?? createThemeSiteConfig(options);
 
   // Set render context
   const context: RenderContext = {
@@ -151,6 +124,32 @@ export function renderPage(page: PageData, options: ThemeRenderOptions): string 
   }
 }
 
+/** Precomputes the immutable site-wide context shared by every page render. */
+export function createThemeSiteConfig(options: ThemeRenderOptions): SiteConfig {
+  return {
+    name: options.siteName,
+    base: options.base,
+    nav: options.nav,
+    pages: options.pages.map(toPageProps),
+  };
+}
+
+function toPageProps(page: PageData): PageProps {
+  return {
+    title: page.title,
+    description: page.description,
+    html: page.html,
+    toc: page.toc,
+    lastUpdated: page.lastUpdated,
+    contributors: page.contributors,
+    path: page.path,
+    url: page.url,
+    markdownSource: page.markdownSource,
+    frontmatter: page.frontmatter,
+    layout: page.layout,
+  };
+}
+
 /**
  * Renders all pages and generates type definitions.
  *
@@ -163,10 +162,11 @@ export async function renderAllPages(
   options: ThemeRenderOptions,
 ): Promise<Map<string, string>> {
   const results = new Map<string, string>();
+  const siteConfig = options.siteConfig ?? createThemeSiteConfig({ ...options, pages });
 
   // Render each page
   for (const page of pages) {
-    const html = renderPage(page, { ...options, pages });
+    const html = renderPage(page, { ...options, pages, siteConfig });
     results.set(page.url, html);
   }
 

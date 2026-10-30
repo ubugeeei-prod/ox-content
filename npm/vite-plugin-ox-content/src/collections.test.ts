@@ -3,6 +3,7 @@ import * as os from "node:os";
 import * as path from "node:path";
 import { afterEach, describe, expect, it } from "vite-plus/test";
 import { CollectionValidationError } from "./collection-validation";
+import { generateCollectionsModule } from "./collections-runtime";
 import {
   buildCollectionManifest,
   generateCollectionsVirtualModule,
@@ -69,6 +70,54 @@ describe("collections", () => {
     await expect(
       mod.queryCollection("blog").where("path", "LIKE", "/blog/%").count(),
     ).resolves.toBe(2);
+  });
+
+  it("queries collections larger than 2,000 entries without changing semantics", async () => {
+    const entries = Array.from({ length: 2_500 }, (_, index) => ({
+      id: `docs/${index}`,
+      collection: "docs",
+      path: `/docs/${index}`,
+      stem: `docs/${index}`,
+      source: `docs/${index}.md`,
+      extension: ".md",
+      title: `Page ${index}`,
+      category: `group-${index % 20}`,
+      rank: 2_500 - index,
+      frontmatter: { draft: index % 7 === 0 },
+    }));
+    const code = generateCollectionsModule({ collections: { docs: entries } });
+    const mod = await import(`data:text/javascript;charset=utf-8,${encodeURIComponent(code)}`);
+
+    await expect(
+      mod.queryCollection("docs").path("docs/2499/").select("path", "title").first(),
+    ).resolves.toEqual({ path: "/docs/2499", title: "Page 2499" });
+    await expect(
+      mod
+        .queryCollection("docs")
+        .path("/missing")
+        .orWhere((query) => query.where("path", "/docs/2499"))
+        .first(),
+    ).resolves.toMatchObject({ path: "/docs/2499" });
+    await expect(
+      mod.queryCollection("docs").where("path", "LIKE", "/docs/2%5").count(),
+    ).resolves.toBe(61);
+    await expect(
+      mod.queryCollection("docs").where("frontmatter.draft", true).count(),
+    ).resolves.toBe(358);
+    await expect(
+      mod
+        .queryCollection("docs")
+        .where("category", "IN", ["group-3", "group-7"])
+        .order("rank", "ASC")
+        .skip(1)
+        .limit(3)
+        .select("path", "rank")
+        .all(),
+    ).resolves.toEqual([
+      { path: "/docs/2483", rank: 17 },
+      { path: "/docs/2467", rank: 33 },
+      { path: "/docs/2463", rank: 37 },
+    ]);
   });
 
   it("runs validate hooks with file-tree paths before permalink rewrites", async () => {

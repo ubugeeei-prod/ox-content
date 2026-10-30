@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vite-plus/test";
-import { createTheme, renderPage, type PageData } from "./theme-renderer";
+import { createTheme, createThemeSiteConfig, renderPage, type PageData } from "./theme-renderer";
 import { usePageProps, useSiteConfig } from "./page-context";
 import { jsx, raw } from "./jsx-html";
 
@@ -42,6 +42,26 @@ describe("renderPage", () => {
     // No theme stylesheet, no runtime scripts — the component decides.
     expect(html).not.toContain("ox-content-core.js");
     expect(html).not.toContain("--octc-");
+  });
+
+  it("reuses a precomputed site context without walking every page again", () => {
+    const options = {
+      theme: ({ children }: { children: { __html: string } }) => children,
+      siteName: "Docs",
+      base: "/",
+      nav: [],
+      pages: [page],
+    };
+    const siteConfig = createThemeSiteConfig(options);
+    const inaccessiblePages = new Proxy([] as PageData[], {
+      get() {
+        throw new Error("pages should not be traversed after the site context is prepared");
+      },
+    });
+
+    expect(renderPage(page, { ...options, pages: inaccessiblePages, siteConfig })).toContain(
+      "<p>body</p>",
+    );
   });
 
   it("picks the layout named by the page's frontmatter", () => {

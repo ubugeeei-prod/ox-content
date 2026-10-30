@@ -47,12 +47,22 @@ const budgetStatus = run("node", [
   commentPath,
 ]);
 
+const collectionStatus = run("node", [
+  "tools/benchmarks/compare-collection-scale.mjs",
+  "--base",
+  join(runnerTemp, "collections-base.json"),
+  "--head",
+  join(runnerTemp, "collections-head.json"),
+  "--append",
+  commentPath,
+]);
+
 if (process.env.GITHUB_STEP_SUMMARY) {
   appendFileSync(process.env.GITHUB_STEP_SUMMARY, `${readFileSync(commentPath, "utf8")}\n`);
 }
 
-if (status !== 0 || budgetStatus !== 0) {
-  process.exit(status !== 0 ? status : budgetStatus);
+if (status !== 0 || budgetStatus !== 0 || collectionStatus !== 0) {
+  process.exit(status !== 0 ? status : budgetStatus !== 0 ? budgetStatus : collectionStatus);
 }
 
 /**

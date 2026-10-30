@@ -1773,6 +1773,7 @@ dependencies = [
  "ox_content_ssg",
  "ox_content_transform",
  "oxc_span 0.153.0",
+ "rayon",
  "rustc-hash",
  "serde_json",
  "tokio",
