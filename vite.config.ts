@@ -180,7 +180,9 @@ export default defineConfig({
           "bundle-size/pr-benchmark-scope.test.ts",
         )} ${benchmarkPath("bundle-size/run-pr-benchmark.test.ts")} ${benchmarkPath(
           "bundle-size/check-budgets.test.ts",
-        )} ${benchmarkPath("bundle-size/astro-remote-cache.test.ts")}`,
+        )} ${benchmarkPath("bundle-size/astro-remote-cache.test.ts")} ${benchmarkPath(
+          "collection-scale.test.ts",
+        )}`,
       ),
       "test:editor-publish-scripts": task(
         `vp test ${scriptPath("publish-editor-extensions.test.ts")}`,

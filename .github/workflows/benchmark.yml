@@ -122,6 +122,7 @@ jobs:
             --source "$GITHUB_WORKSPACE" \
             --runs "$OX_CONTENT_BENCHMARK_RUNS" \
             --runtime-json "$RUNNER_TEMP/benchmark-base.json" \
+            --collections-json "$RUNNER_TEMP/collections-base.json" \
             --bundle-json "$RUNNER_TEMP/bundle-base.json" \
             --artifacts-json "$RUNNER_TEMP/artifacts-base.json"
 
@@ -143,6 +144,7 @@ jobs:
             --source "$GITHUB_WORKSPACE" \
             --runs "$OX_CONTENT_BENCHMARK_RUNS" \
             --runtime-json "$RUNNER_TEMP/benchmark-head.json" \
+            --collections-json "$RUNNER_TEMP/collections-head.json" \
             --bundle-json "$RUNNER_TEMP/bundle-head.json" \
             --artifacts-json "$RUNNER_TEMP/artifacts-head.json"
 

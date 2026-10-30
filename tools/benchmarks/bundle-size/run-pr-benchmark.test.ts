@@ -15,6 +15,7 @@ describe("run-pr-benchmark", () => {
     const dir = mkdtempSync(join(tmpdir(), "ox-pr-benchmark-"));
     const runtimeJson = join(dir, "runtime.json");
     const bundleJson = join(dir, "bundle.json");
+    const collectionsJson = join(dir, "collections.json");
 
     const result = spawnSync(
       process.execPath,
@@ -26,6 +27,8 @@ describe("run-pr-benchmark", () => {
         runtimeJson,
         "--bundle-json",
         bundleJson,
+        "--collections-json",
+        collectionsJson,
       ],
       {
         encoding: "utf8",
@@ -43,6 +46,11 @@ describe("run-pr-benchmark", () => {
       name: "Bundle Size Benchmark",
       skipped: true,
       results: [],
+    });
+    expect(JSON.parse(readFileSync(collectionsJson, "utf8"))).toMatchObject({
+      name: "Collection Scale Benchmark",
+      skipped: true,
+      sizes: {},
     });
   });
 
@@ -74,6 +82,7 @@ describe("run-pr-benchmark", () => {
     const runtimeJson = join(root, "runtime.json");
     const bundleJson = join(root, "bundle.json");
     const artifactsJson = join(root, "artifacts.json");
+    const collectionsJson = join(root, "collections.json");
 
     mkdirSync(bin, { recursive: true });
     writeExecutable(join(bin, "vp"), "#!/bin/sh\nexit 0\n");
@@ -88,6 +97,7 @@ describe("run-pr-benchmark", () => {
       join(source, "tools/benchmarks/bundle-size/measure-artifacts.mjs"),
       writesInvokedScriptJson,
     );
+    writeFile(join(source, "tools/benchmarks/collection-scale.mjs"), writesInvokedScriptJson);
     writeFile(join(source, "tools/benchmarks/bundle-size/package.json"), '{"type":"module"}\n');
 
     for (const file of [
@@ -120,6 +130,8 @@ describe("run-pr-benchmark", () => {
         bundleJson,
         "--artifacts-json",
         artifactsJson,
+        "--collections-json",
+        collectionsJson,
       ],
       {
         cwd: checkout,
@@ -138,6 +150,7 @@ describe("run-pr-benchmark", () => {
       artifactsJson,
       join("benchmarks", "bundle-size", "measure-artifacts.mjs"),
     );
+    expectBenchmarkScript(collectionsJson, join("benchmarks", "collection-scale.mjs"));
   });
 
   it("keeps benchmark app workspace links relative to the moved benchmark root", () => {

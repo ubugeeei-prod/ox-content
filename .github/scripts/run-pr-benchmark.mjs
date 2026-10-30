@@ -11,6 +11,9 @@ const checkoutRoot = process.cwd();
 if (options.skipRuntime && options.skipBundle) {
   writeSkippedRuntimeReport(options.runtimeJson);
   writeSkippedBundleReport(options.bundleJson);
+  if (options.collectionsJson) {
+    writeSkippedCollectionsReport(options.collectionsJson);
+  }
   process.exit(0);
 }
 
@@ -22,6 +25,7 @@ const benchmarkPath = (path) => join(checkoutBenchmarkRoot, path);
 for (const file of [
   "mizchi-markdown-native.mjs",
   "mizchi-markdown-native-template.mjs",
+  "collection-scale.mjs",
   "bundle-size/package.json",
   "bundle-size/parse-benchmark.mjs",
   "bundle-size/parse-benchmark-bun.mjs",
@@ -49,6 +53,9 @@ run("vp", ["install", "--no-frozen-lockfile"]);
 run("vp", ["run", "build:npm"]);
 if (options.skipRuntime) {
   writeSkippedRuntimeReport(options.runtimeJson);
+  if (options.collectionsJson) {
+    writeSkippedCollectionsReport(options.collectionsJson);
+  }
 } else {
   run("node", [
     benchmarkPath("bundle-size/parse-benchmark.mjs"),
@@ -57,6 +64,15 @@ if (options.skipRuntime) {
     "--json",
     options.runtimeJson,
   ]);
+  if (options.collectionsJson) {
+    run("node", [
+      benchmarkPath("collection-scale.mjs"),
+      "--runs",
+      options.runs,
+      "--json",
+      options.collectionsJson,
+    ]);
+  }
 }
 if (options.skipBundle) {
   writeSkippedBundleReport(options.bundleJson);
@@ -86,6 +102,7 @@ if (options.artifactsJson) {
  *   source: string | null;
  *   runtimeJson: string;
  *   bundleJson: string;
+ *   collectionsJson: string | null;
  *   runs: string;
  *   skipRuntime: boolean;
  *   skipBundle: boolean;
@@ -96,6 +113,7 @@ function parseOptions(args) {
     source: null,
     runtimeJson: null,
     bundleJson: null,
+    collectionsJson: null,
     artifactsJson: null,
     runs: process.env.OX_CONTENT_BENCHMARK_RUNS || "5",
     skipRuntime: false,
@@ -118,6 +136,10 @@ function parseOptions(args) {
     }
     if (arg === "--artifacts-json") {
       parsed.artifactsJson = readOptionValue(args, ++index, "--artifacts-json");
+      continue;
+    }
+    if (arg === "--collections-json") {
+      parsed.collectionsJson = readOptionValue(args, ++index, "--collections-json");
       continue;
     }
     if (arg === "--runs") {
@@ -266,6 +288,26 @@ function writeSkippedBundleReport(path) {
         skipped: true,
         environment: collectEnvironment(),
         results: [],
+      },
+      null,
+      2,
+    )}\n`,
+  );
+}
+
+/**
+ * @param {string} path
+ */
+function writeSkippedCollectionsReport(path) {
+  writeFileSync(
+    path,
+    `${JSON.stringify(
+      {
+        name: "Collection Scale Benchmark",
+        generatedAt: new Date().toISOString(),
+        skipped: true,
+        runs: Number.parseInt(options.runs, 10),
+        sizes: {},
       },
       null,
       2,

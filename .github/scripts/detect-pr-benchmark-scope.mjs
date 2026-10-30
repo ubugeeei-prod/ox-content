@@ -7,6 +7,7 @@ const RUNTIME_AND_BUNDLE_PATTERNS = [
   /^\.github\/scripts\/(?:detect-pr-benchmark-scope|run-pr-benchmark|compare-pr-benchmark)\.mjs$/,
   /^tools\/benchmarks\/bundle-size\/(?:parse-benchmark|parse-benchmark-bun|compare-pr-benchmark)\.(?:mjs|test\.ts)$/,
   /^tools\/benchmarks\/native-competitors\//,
+  /^npm\/vite-plugin-ox-content\/src\/collections-runtime\.ts$/,
   /^crates\/(?:ox_content_allocator|ox_content_napi|ox_content_parser|ox_content_renderer|ox_content_wasm)\//,
   /^Cargo\.(?:toml|lock)$/,
   /^package\.json$/,
@@ -17,6 +18,7 @@ const RUNTIME_AND_BUNDLE_PATTERNS = [
 const RUNTIME_PATTERNS = [
   /^tools\/benchmarks\/commonmark-conformance\//,
   /^tools\/benchmarks\/polonius-borrowck\//,
+  /^tools\/benchmarks\/(?:collection-scale|compare-collection-scale)\.mjs$/,
 ];
 
 const TEST_ONLY_PATTERNS = [

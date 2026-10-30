@@ -1,11 +1,19 @@
 import type { CollectionManifest } from "./types";
 
 const runtime = String.raw`
-function getValue(row, field) {
-  if (field in row) return row[field];
-  return String(field)
-    .split(".")
-    .reduce((value, key) => (value == null ? undefined : value[key]), row);
+function createGetter(field) {
+  const direct = String(field);
+  const nested = direct.includes(".") ? direct.split(".") : undefined;
+  if (!nested) return (row) => row[direct];
+  return (row) => {
+    if (direct in row) return row[direct];
+    let value = row;
+    for (const key of nested) {
+      if (value == null) return undefined;
+      value = value[key];
+    }
+    return value;
+  };
 }
 
 function normalizePath(value) {
@@ -19,6 +27,21 @@ function likePattern(value) {
   return new RegExp("^" + escaped.replace(/%/g, ".*").replace(/_/g, ".") + "$", "i");
 }
 
+const pathIndexes = new WeakMap();
+
+function getPathIndex(rows) {
+  let index = pathIndexes.get(rows);
+  if (index) return index;
+  index = new Map();
+  for (const row of rows) {
+    if (!index.has(row.path)) index.set(row.path, row);
+  }
+  pathIndexes.set(rows, index);
+  return index;
+}
+
+const collator = new Intl.Collator(undefined, { numeric: true, sensitivity: "base" });
+
 function compare(left, right) {
   if (left == null && right == null) return 0;
   if (left == null) return -1;
@@ -27,10 +50,7 @@ function compare(left, right) {
   if (left instanceof Date || right instanceof Date) {
     return new Date(left).getTime() - new Date(right).getTime();
   }
-  return String(left).localeCompare(String(right), undefined, {
-    numeric: true,
-    sensitivity: "base",
-  });
+  return collator.compare(String(left), String(right));
 }
 
 function createPredicate(field, operator, value) {
@@ -41,8 +61,14 @@ function createPredicate(field, operator, value) {
     expected = operator;
   }
 
+  const get = createGetter(field);
+  const lookup = (op === "IN" || op === "NOT IN") && Array.isArray(expected)
+    ? new Set(expected)
+    : undefined;
+  const pattern = (op === "LIKE" || op === "NOT LIKE") ? likePattern(expected) : undefined;
+
   return (row) => {
-    const actual = getValue(row, field);
+    const actual = get(row);
     switch (op) {
       case "=":
       case "==":
@@ -59,9 +85,9 @@ function createPredicate(field, operator, value) {
       case "<=":
         return compare(actual, expected) <= 0;
       case "IN":
-        return Array.isArray(expected) && expected.includes(actual);
+        return lookup ? lookup.has(actual) : false;
       case "NOT IN":
-        return Array.isArray(expected) && !expected.includes(actual);
+        return lookup ? !lookup.has(actual) : false;
       case "BETWEEN":
         return Array.isArray(expected) && expected.length >= 2
           ? compare(actual, expected[0]) >= 0 && compare(actual, expected[1]) <= 0
@@ -75,9 +101,9 @@ function createPredicate(field, operator, value) {
       case "IS NOT NULL":
         return actual != null;
       case "LIKE":
-        return likePattern(expected).test(String(actual ?? ""));
+        return pattern.test(String(actual ?? ""));
       case "NOT LIKE":
-        return !likePattern(expected).test(String(actual ?? ""));
+        return !pattern.test(String(actual ?? ""));
       default:
         throw new Error("Unsupported collection query operator: " + op);
     }
@@ -130,19 +156,21 @@ class CollectionQueryBuilder extends QueryGroup {
     this.selected = undefined;
     this.offset = 0;
     this.max = undefined;
+    this.exactPath = undefined;
   }
 
   path(path) {
-    return this.where("path", "=", normalizePath(path));
+    this.exactPath = normalizePath(path);
+    return this.where("path", "=", this.exactPath);
   }
 
   select(...fields) {
-    this.selected = fields;
+    this.selected = fields.map((field) => ({ field, get: createGetter(field) }));
     return this;
   }
 
   order(field, direction = "ASC") {
-    this.orders.push({ field, direction: String(direction).toUpperCase() });
+    this.orders.push({ get: createGetter(field), direction: String(direction).toUpperCase() });
     return this;
   }
 
@@ -157,11 +185,25 @@ class CollectionQueryBuilder extends QueryGroup {
   }
 
   materialize() {
-    let rows = this.conditions.length ? this.rows.filter((row) => this.test(row)) : this.rows;
+    let rows;
+    if (!this.conditions.length) {
+      rows = this.rows;
+    } else if (!this.orders.length && this.max !== undefined) {
+      rows = [];
+      const end = this.offset + this.max;
+      for (const row of this.rows) {
+        if (this.test(row)) {
+          rows.push(row);
+          if (rows.length >= end) break;
+        }
+      }
+    } else {
+      rows = this.rows.filter((row) => this.test(row));
+    }
     if (this.orders.length) {
       rows = [...rows].sort((left, right) => {
         for (const order of this.orders) {
-          const result = compare(getValue(left, order.field), getValue(right, order.field));
+          const result = compare(order.get(left), order.get(right));
           if (result !== 0) return order.direction === "DESC" ? -result : result;
         }
         return 0;
@@ -171,11 +213,14 @@ class CollectionQueryBuilder extends QueryGroup {
       rows = rows.slice(this.offset, this.max === undefined ? undefined : this.offset + this.max);
     }
     if (!this.selected) return rows;
-    return rows.map((row) => {
-      const selected = {};
-      for (const field of this.selected) selected[field] = getValue(row, field);
-      return selected;
-    });
+    return rows.map((row) => this.project(row));
+  }
+
+  project(row) {
+    if (!this.selected) return row;
+    const selected = {};
+    for (const field of this.selected) selected[field.field] = field.get(row);
+    return selected;
   }
 
   async all() {
@@ -183,13 +228,33 @@ class CollectionQueryBuilder extends QueryGroup {
   }
 
   async first() {
-    return this.materialize()[0] ?? null;
+    if (this.max === 0) return null;
+    if (
+      this.exactPath !== undefined &&
+      this.conditions.length === 1 &&
+      !this.orders.length &&
+      this.offset === 0
+    ) {
+      const row = getPathIndex(this.rows).get(this.exactPath);
+      return row && this.test(row) ? this.project(row) : null;
+    }
+    if (this.orders.length) return this.materialize()[0] ?? null;
+    let skipped = 0;
+    for (const row of this.rows) {
+      if (this.conditions.length && !this.test(row)) continue;
+      if (skipped++ < this.offset) continue;
+      return this.project(row);
+    }
+    return null;
   }
 
   async count() {
-    return this.conditions.length
-      ? this.rows.filter((row) => this.test(row)).length
-      : this.rows.length;
+    if (!this.conditions.length) return this.rows.length;
+    let count = 0;
+    for (const row of this.rows) {
+      if (this.test(row)) count++;
+    }
+    return count;
   }
 }
 

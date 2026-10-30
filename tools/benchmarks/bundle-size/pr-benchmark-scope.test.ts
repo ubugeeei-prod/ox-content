@@ -58,6 +58,13 @@ describe("detect-pr-benchmark-scope", () => {
     expect(parseOutputs(result.stdout)).toEqual({ runtime: "false", bundle: "true" });
   });
 
+  it("runs the runtime and bundle gates for collection query changes", () => {
+    const result = runScope(["npm/vite-plugin-ox-content/src/collections-runtime.ts"]);
+
+    expect(result.status).toBe(0);
+    expect(parseOutputs(result.stdout)).toEqual({ runtime: "true", bundle: "true" });
+  });
+
   it("skips package preview helper edits", () => {
     const result = runScope([
       ".github/scripts/detect-pr-preview-scope.mjs",
