@@ -166,10 +166,37 @@ async function publishWithRetry(
   let delay = initialDelayMs;
 
   for (let attempt = 1; attempt <= maxAttempts; attempt++) {
-    const result = spawnSync("vp", target.args(vsix), { stdio: "inherit", env });
+    const result = spawnSync("vp", target.args(vsix), {
+      stdio: ["inherit", "pipe", "pipe"],
+      encoding: "utf8",
+      maxBuffer: 10 * 1024 * 1024,
+      env,
+    });
+    process.stdout.write(result.stdout ?? "");
+    process.stderr.write(result.stderr ?? "");
 
     if (result.status === 0) {
       return;
+    }
+
+    // A missing registration cannot recover during a backoff. Keep the job
+    // failed and point at the one-time setup instead of retrying for 13 minutes.
+    if (
+      target === registries["open-vsx"] &&
+      `${result.stdout ?? ""}\n${result.stderr ?? ""}`.includes(
+        "No trusted publisher matches the presented token",
+      )
+    ) {
+      console.error(
+        "::error::Open VSX trusted publisher setup is incomplete or does not match this workflow. " +
+          "A namespace owner must sign the Publisher Agreement, publish an initial active version of " +
+          "ubugeeei.vscode-ox-content with local authentication, and register GitHub Actions " +
+          "repository ubugeeei-prod/ox-content, workflow publish-editors.yml, environment open-vsx at " +
+          "https://open-vsx.org/user-settings/trusted-publishers. " +
+          "See https://github.com/ubugeeei-prod/ox-content/blob/main/docs/content/release.md#open-vsx-trusted-publishing. " +
+          "After setup, rerun only the failed Open VSX job; do not recreate the release tag.",
+      );
+      process.exit(1);
     }
 
     const reason = result.error

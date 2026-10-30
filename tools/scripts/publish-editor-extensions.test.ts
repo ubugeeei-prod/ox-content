@@ -91,6 +91,70 @@ describe("publish editor extensions", () => {
     expect(result.stdout).toContain("Packaging-only dispatch");
     expect(existsSync(fixture.callLog)).toBe(false);
   });
+
+  it.each(["stdout", "stderr"])(
+    "fails immediately with setup instructions when Open VSX rejects trust on %s",
+    (stream) => {
+      const fixture = createFixture();
+      writeFileSync(
+        join(fixture.root, "dist", "vscode", "vscode-ox-content-darwin-arm64.vsix"),
+        "",
+      );
+      const result = runPublisher(fixture, "open-vsx", {
+        ACTIONS_ID_TOKEN_REQUEST_URL: "https://example.invalid/oidc",
+        ACTIONS_ID_TOKEN_REQUEST_TOKEN: "test-oidc-request-token",
+        VP_FAILURES: "6",
+        VP_FAILURE_STREAM: stream,
+        VP_FAILURE_MESSAGE: "No trusted publisher matches the presented token.",
+      });
+
+      expect(result.status).toBe(1);
+      expect(readFileSync(fixture.callLog, "utf8").trim().split("\n")).toHaveLength(1);
+      expect(result[stream as "stdout" | "stderr"]).toContain(
+        "No trusted publisher matches the presented token.",
+      );
+      expect(result.stderr).toContain("ubugeeei.vscode-ox-content");
+      expect(result.stderr).toContain("ubugeeei-prod/ox-content");
+      expect(result.stderr).toContain("publish-editors.yml, environment open-vsx");
+      expect(result.stderr).toContain("https://open-vsx.org/user-settings/trusted-publishers");
+      expect(result.stderr).toContain("rerun only the failed Open VSX job");
+      expect(result.stdout).not.toContain("retrying");
+    },
+  );
+
+  it.each(["open-vsx", "vscode-marketplace"] as const)(
+    "retries temporary %s failures and continues publishing",
+    (registry) => {
+      const fixture = createFixture();
+      const result = runPublisher(fixture, registry, {
+        VSCE_PAT: "test-token",
+        ACTIONS_ID_TOKEN_REQUEST_URL: "https://example.invalid/oidc",
+        ACTIONS_ID_TOKEN_REQUEST_TOKEN: "test-oidc-request-token",
+        VP_FAILURES: "1",
+        VP_FAILURE_MESSAGE: "503 Service Unavailable",
+      });
+
+      expect(result.status).toBe(0);
+      expect(readFileSync(fixture.callLog, "utf8").trim().split("\n")).toHaveLength(2);
+      expect(result.stderr).toContain("503 Service Unavailable");
+      expect(result.stdout).toContain("attempt 1/6, retrying in 30s");
+      expect(result.stderr).not.toContain("trusted publisher setup is incomplete");
+    },
+  );
+
+  it("still fails after exhausting retries for a temporary Open VSX failure", () => {
+    const fixture = createFixture();
+    const result = runPublisher(fixture, "open-vsx", {
+      ACTIONS_ID_TOKEN_REQUEST_URL: "https://example.invalid/oidc",
+      ACTIONS_ID_TOKEN_REQUEST_TOKEN: "test-oidc-request-token",
+      VP_FAILURES: "6",
+      VP_FAILURE_MESSAGE: "503 Service Unavailable",
+    });
+
+    expect(result.status).toBe(1);
+    expect(readFileSync(fixture.callLog, "utf8").trim().split("\n")).toHaveLength(6);
+    expect(result.stderr).toContain("failed after 6 attempts");
+  });
 });
 
 function createFixture() {
@@ -110,12 +174,25 @@ function createFixture() {
       "#!/usr/bin/env node",
       "const fs = require('node:fs');",
       "fs.appendFileSync(process.env.VP_CALL_LOG, JSON.stringify({ args: process.argv.slice(2), hasOpenVsxPat: process.env.OVSX_PAT !== undefined }) + '\\n');",
+      "const attempts = fs.readFileSync(process.env.VP_CALL_LOG, 'utf8').trim().split('\\n').length;",
+      "if (attempts <= Number(process.env.VP_FAILURES ?? 0)) {",
+      "  process[process.env.VP_FAILURE_STREAM ?? 'stderr'].write(process.env.VP_FAILURE_MESSAGE + '\\n');",
+      "  process.exit(1);",
+      "}",
       "process.exit(0);",
     ].join("\n"),
   );
   chmodSync(vpPath, 0o755);
 
-  return { root, binDir, callLog };
+  // Exercise the real retry loop without waiting through production backoffs.
+  const skipDelayPath = join(root, "skip-delay.cjs");
+  writeFileSync(
+    skipDelayPath,
+    "require('node:timers/promises').setTimeout = async () => {};\n" +
+      "require('node:module').syncBuiltinESMExports();\n",
+  );
+
+  return { root, binDir, callLog, skipDelayPath };
 }
 
 function runPublisher(
@@ -123,9 +200,10 @@ function runPublisher(
   registry: "open-vsx" | "vscode-marketplace",
   env: Record<string, string>,
 ) {
-  return spawnSync(process.execPath, [scriptPath, registry], {
+  return spawnSync(process.execPath, ["--require", fixture.skipDelayPath, scriptPath, registry], {
     cwd: fixture.root,
     encoding: "utf8",
+    timeout: 10_000,
     env: {
       ...process.env,
       ACTIONS_ID_TOKEN_REQUEST_URL: "",
