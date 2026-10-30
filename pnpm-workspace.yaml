@@ -51,16 +51,24 @@ overrides:
   # GHSA-6j4f-fj2g-mc7p and GHSA-qhr7-859c-m2p7: brace-expansion recursion DoS.
   brace-expansion@2: "2.1.7"
   brace-expansion@5: "5.0.12"
-  # GHSA-rfgv-xxqx-mfg5, GHSA-vp8m-p9jh-q5pm, GHSA-w293-vg96-wgc3: fixed in 8.10.2.
-  undici@8: "8.10.2"
+  # GHSA-2m5v-pch6-74hx, GHSA-4w7w-5xrc-9h26, GHSA-qrxm-fqhp-jwvm,
+  # GHSA-xjj6-f33q-929c: fixed in 7.30.1 and 8.12.2.
+  undici@7: "7.30.1"
+  undici@8: "8.12.2"
   # GHSA-28wg-ghj8-5hjv, GHSA-2v37-7h3g-55p8: nanoid, patched in 3.3.17.
   nanoid@3: "3.3.18"
   # GHSA-2883-xcg3-v3hh: js-yaml, patched in 4.3.2.
   js-yaml@4: "4.3.2"
   # GHSA-5c6j-r48x-rmvq, GHSA-8vm4-qpp2-4pmw: serialize-javascript, patched in 7.0.5.
   serialize-javascript@6: "7.0.5"
-  # GHSA-fx2h-pf6j-xcff: Vite Windows path bypass, patched in 8.0.16.
-  vite@8: "8.0.16"
+  # GHSA-587h-7wmj-h5pm: Vite Windows path bypass, patched in 8.1.6.
+  vite@8: "8.1.6"
+  # Current high-severity advisories patched without changing package APIs.
+  dompurify: "3.4.17"
+  launch-editor: "2.14.2"
+  markdown-it: "15.0.3"
+  seroval: "1.6.8"
+  zod@4: "4.6.6"
   # GHSA-r28c-9q8g-f849, GHSA-fxqj-8p7j-g6m6: postcss, patched in 8.5.23.
   postcss@8: "8.5.26"
   # GHSA-5jgf-p345-68v8, GHSA-f65p-4m7j-42xc, GHSA-fph4-wmhf-6fwf, GHSA-jqff-g426-hqxp,

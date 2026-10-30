@@ -209,7 +209,7 @@
     "mermaid": "^11.14.0",
     "minimatch": "^10.2.6",
     "playwright": "^1.63.0",
-    "puppeteer": "^25.11.0",
+    "puppeteer": "^25.16.0",
     "rehype-parse": "^9.0.1",
     "rehype-stringify": "^10.0.1",
     "rolldown": "^1.2.9",
@@ -234,7 +234,7 @@
     "vite": "catalog:",
     "vite-plus": "catalog:",
     "yaml": "^2.9.0",
-    "zod": "^4.5.4"
+    "zod": "^4.6.6"
   },
   "peerDependencies": {
     "@vue/compiler-sfc": "^3.4.0",

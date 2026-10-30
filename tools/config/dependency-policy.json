@@ -3,6 +3,11 @@
     "minimumSeverity": "high",
     "advisoryAllowlist": [
       {
+        "id": "GHSA-587h-7wmj-h5pm",
+        "reason": "Vite+ 0.3 toolchain compatibility is retained while its vulnerable launch-editor dependency is overridden to patched 2.14.2.",
+        "expires": "2026-12-31"
+      },
+      {
         "id": "GHSA-g2pg-6438-jwpf",
         "reason": "Current benchmark/example dependency; revisit during scheduled dependency refresh.",
         "expires": "2026-08-31"
@@ -200,6 +205,7 @@
       "MIT",
       "MIT OR Apache-2.0",
       "MPL-2.0",
+      "PSF-2.0",
       "Unlicense"
     ],
     "exceptions": [
