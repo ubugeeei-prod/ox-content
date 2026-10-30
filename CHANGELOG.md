@@ -1,5 +1,11 @@
 # Changelog
 
+## [3.5.0] - 2026-10-30
+
+### Features
+
+- support Takumi OG images across framework templates (#1536) _(affects: npm: @ox-content/vite-plugin; ci, docs, tooling, workspace metadata)_
+
 ## [3.4.3] - 2026-10-30
 
 ### Performance
