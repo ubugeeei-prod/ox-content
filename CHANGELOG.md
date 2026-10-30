@@ -1,5 +1,15 @@
 # Changelog
 
+## [3.4.1] - 2026-10-30
+
+### Bug Fixes
+
+- update dependencies for security advisories (#1527) _(affects: npm: @ox-content/vite-plugin; tooling, workspace metadata)_
+
+### Performance
+
+- scale collection queries and theme rendering (#1528) _(affects: crates: ox_content_napi; npm: @ox-content/napi, @ox-content/vite-plugin; ci, tooling, workspace metadata)_
+
 ## [3.4.0] - 2026-10-20
 
 ### Features
