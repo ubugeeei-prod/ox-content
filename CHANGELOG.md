@@ -1,5 +1,13 @@
 # Changelog
 
+## [3.4.3] - 2026-10-30
+
+### Performance
+
+- scope large generated navigation (#1534) _(affects: crates: ox_content_napi, ox_content_ssg; npm: @ox-content/napi, @ox-content/vite-plugin; tooling)_
+- stream native SSG asset extraction (#1533) _(affects: crates: ox_content_napi, ox_content_ssg; npm: @ox-content/napi, @ox-content/vite-plugin)_
+- skip asset extraction for pre-bundled hosts (#1532) _(affects: npm: @ox-content/vite-plugin; docs, tooling)_
+
 ## [3.4.2] - 2026-10-30
 
 ### Performance
