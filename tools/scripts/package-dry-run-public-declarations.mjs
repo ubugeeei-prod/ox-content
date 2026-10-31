@@ -240,12 +240,21 @@ function typeReference(name, prefix) {
 }
 
 function cjsTypeAliases(types, specifier) {
+  const metadataTypes = new Set([
+    "OxContentCustomHostMarkdownInput",
+    "OxContentCustomHostMarkdownRenderResult",
+    "OxContentCustomHostMarkdownResult",
+  ]);
   return types
-    .map((name) =>
-      name === "MaybePromise"
-        ? `type ${name}<T> = import(${JSON.stringify(specifier)}).${name}<T>;`
-        : `type ${name} = import(${JSON.stringify(specifier)}).${name};`,
-    )
+    .map((name) => {
+      if (name === "MaybePromise") {
+        return `type ${name}<T> = import(${JSON.stringify(specifier)}).${name}<T>;`;
+      }
+      if (metadataTypes.has(name)) {
+        return `type ${name}<Metadata = unknown> = import(${JSON.stringify(specifier)}).${name}<Metadata>;`;
+      }
+      return `type ${name} = import(${JSON.stringify(specifier)}).${name};`;
+    })
     .join("\n");
 }
 
