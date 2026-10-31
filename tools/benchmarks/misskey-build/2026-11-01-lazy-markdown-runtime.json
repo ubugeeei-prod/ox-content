@@ -1,0 +1,122 @@
+{
+  "base": "c842dc52cf97653deaf3392c6eb22438ab2e3a53",
+  "sourceHead": "3862089342b2fb473c1dc8e063eaa939b2d39058",
+  "consumer": "odanado/misskey-hub-next",
+  "consumerHead": "af92e493ce46d27c27600eda8924de05593e4c94",
+  "archiveRef": "6cbe059c5d3b358557f6493b606f196c2ca06e8a",
+  "node": "26.13.0",
+  "vite": "8.3.5",
+  "vue": "3.5.25",
+  "napi": "3.7.2",
+  "condition": "Full-site diagnostic worker pipeline. Published 3.7.2 versus locally built source; identical dependency closure, Node runtime, inline worker host, custom-host subpath and byte outputs. No staging prototype. Resources and HTML minification disabled. Browser workload stopped and verified idle. First A is warmup; timed order A/A/B/B/A. Node startup and natural process exit included; pnpm launch excluded. Blocking waitpid with independent deadline timer. Output validation follows timing.",
+  "runs": [
+    {
+      "variant": "published3.7.2",
+      "warmup": true,
+      "processSeconds": 8.770054583,
+      "osRealSeconds": 8.76,
+      "buildSeconds": 8.317904792,
+      "hostRoutesDataMs": 140.77766599999995,
+      "htmlFiles": 1991,
+      "publicFiles": 750,
+      "changedFiles": 0
+    },
+    {
+      "variant": "published3.7.2",
+      "warmup": false,
+      "processSeconds": 6.1502005,
+      "osRealSeconds": 6.14,
+      "buildSeconds": 6.014574666000001,
+      "hostRoutesDataMs": 71.3625420000003,
+      "htmlFiles": 1991,
+      "publicFiles": 750,
+      "changedFiles": 0
+    },
+    {
+      "variant": "candidate",
+      "warmup": false,
+      "processSeconds": 6.221736667000002,
+      "osRealSeconds": 6.21,
+      "buildSeconds": 6.090155167,
+      "hostRoutesDataMs": 0.037916999999652035,
+      "htmlFiles": 1991,
+      "publicFiles": 750,
+      "changedFiles": 0
+    },
+    {
+      "variant": "candidate",
+      "warmup": false,
+      "processSeconds": 6.281798250000001,
+      "osRealSeconds": 6.27,
+      "buildSeconds": 6.162268125000001,
+      "hostRoutesDataMs": 0.06749999999965439,
+      "htmlFiles": 1991,
+      "publicFiles": 750,
+      "changedFiles": 0
+    },
+    {
+      "variant": "published3.7.2",
+      "warmup": false,
+      "processSeconds": 6.201476667000001,
+      "osRealSeconds": 6.19,
+      "buildSeconds": 6.072913,
+      "hostRoutesDataMs": 59.729915999999776,
+      "htmlFiles": 1991,
+      "publicFiles": 750,
+      "changedFiles": 0
+    }
+  ],
+  "entryImportMs": {
+    "import": {
+      "control": [
+        326.259708,
+        138.679583,
+        161.592292
+      ],
+      "candidate": [
+        117.889167,
+        118.03824999999999,
+        118.99983300000001
+      ]
+    },
+    "require": {
+      "control": [
+        154.173792,
+        140.187083,
+        141.99687500000002
+      ],
+      "candidate": [
+        114.968083,
+        114.079834,
+        113.935833
+      ]
+    }
+  },
+  "packagedContextAcceptance": [
+    {
+      "variant": "published3.7.2",
+      "format": "import",
+      "node": "v22.22.3",
+      "htmlSha256": "3f454b218a19cef7a45345d31e9838be08bd95bfa701896da88033f848cb4ccb"
+    },
+    {
+      "variant": "published3.7.2",
+      "format": "require",
+      "node": "v22.22.3",
+      "htmlSha256": "3f454b218a19cef7a45345d31e9838be08bd95bfa701896da88033f848cb4ccb"
+    },
+    {
+      "variant": "candidate",
+      "format": "import",
+      "node": "v22.22.3",
+      "htmlSha256": "3f454b218a19cef7a45345d31e9838be08bd95bfa701896da88033f848cb4ccb"
+    },
+    {
+      "variant": "candidate",
+      "format": "require",
+      "node": "v22.22.3",
+      "htmlSha256": "3f454b218a19cef7a45345d31e9838be08bd95bfa701896da88033f848cb4ccb"
+    }
+  ],
+  "limits": "M2 Max 12core96GB. Whole-build control 6.150-6.201s and candidate 6.222-6.282s do not establish a whole-build speedup. Custom-host entry initialization improves by tens of milliseconds in isolated package measurements. Source graph counts are not production bundle evaluation counts. Diagnostic pipeline only, not unmodified consumer performance. No five-second claim."
+}
