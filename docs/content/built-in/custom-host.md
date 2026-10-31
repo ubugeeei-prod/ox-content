@@ -193,6 +193,13 @@ inside the renderer callback are tracked by the same development lifecycle as
 `ctx.loadModule()` and `ctx.assets.stylesheets()`, so a failed or changed
 renderer can recover without a process-global cache.
 
+Inside `renderHtml(markdown)`, `markdown.parseHtml()` returns the callback's
+input HTML as a HAST fragment. Parsing happens on the first call, and repeated
+calls reuse the same mutable tree for that render. The tree omits source
+positions, which avoids tracking offsets in generated HTML when an adapter only
+needs its elements, attributes, and text. Return serialized HTML from the
+callback to apply tree edits to the output. Each render receives its own tree.
+
 The framework integration remains host-owned. The framework-neutral island
 contract is available from `@ox-content/vite-plugin/html-host` for adapters that
 own server rendering, head output, slots, browser hydration, mounting, and
