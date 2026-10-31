@@ -1,0 +1,479 @@
+{
+  "baseSource": "9893f8383a57b7f6e4d9db6c783eb7daa856f775",
+  "node": "22.22.3",
+  "nativeVersion": "3.5.0",
+  "vite": "7.3.1",
+  "documents": 1434,
+  "policy": "One complete warmup and nine samples per fresh process; A/B/B/A separately for HTML-only and requested module code. Same dependencies/native binding. Hashing outside timers. No concurrent builds/captures.",
+  "modes": {
+    "html": {
+      "fixed": {
+        "medianMilliseconds": 208.89847899999995,
+        "processes": [
+          {
+            "node": "v22.22.3",
+            "corpusSha256": "14880955b2ae37d7771c612c642bfef5ddeb5d454264f1227c224089df5bbba1",
+            "documents": 1434,
+            "includeModuleCode": false,
+            "inputBytes": 6316865,
+            "medianMilliseconds": 208.82074999999986,
+            "rows": [
+              {
+                "milliseconds": 215.750042,
+                "htmlBytes": 7573821,
+                "sha256": "6289471b841fe62017d36c5fcb00ebfed76d815cfb1aab68c33ce4ef18146ca5"
+              },
+              {
+                "milliseconds": 215.33687499999996,
+                "htmlBytes": 7573821,
+                "sha256": "6289471b841fe62017d36c5fcb00ebfed76d815cfb1aab68c33ce4ef18146ca5"
+              },
+              {
+                "milliseconds": 211.19274999999993,
+                "htmlBytes": 7573821,
+                "sha256": "6289471b841fe62017d36c5fcb00ebfed76d815cfb1aab68c33ce4ef18146ca5"
+              },
+              {
+                "milliseconds": 207.88979200000017,
+                "htmlBytes": 7573821,
+                "sha256": "6289471b841fe62017d36c5fcb00ebfed76d815cfb1aab68c33ce4ef18146ca5"
+              },
+              {
+                "milliseconds": 208.82074999999986,
+                "htmlBytes": 7573821,
+                "sha256": "6289471b841fe62017d36c5fcb00ebfed76d815cfb1aab68c33ce4ef18146ca5"
+              },
+              {
+                "milliseconds": 207.97575000000006,
+                "htmlBytes": 7573821,
+                "sha256": "6289471b841fe62017d36c5fcb00ebfed76d815cfb1aab68c33ce4ef18146ca5"
+              },
+              {
+                "milliseconds": 206.45749999999998,
+                "htmlBytes": 7573821,
+                "sha256": "6289471b841fe62017d36c5fcb00ebfed76d815cfb1aab68c33ce4ef18146ca5"
+              },
+              {
+                "milliseconds": 210.86287500000026,
+                "htmlBytes": 7573821,
+                "sha256": "6289471b841fe62017d36c5fcb00ebfed76d815cfb1aab68c33ce4ef18146ca5"
+              },
+              {
+                "milliseconds": 206.8184580000002,
+                "htmlBytes": 7573821,
+                "sha256": "6289471b841fe62017d36c5fcb00ebfed76d815cfb1aab68c33ce4ef18146ca5"
+              }
+            ]
+          },
+          {
+            "node": "v22.22.3",
+            "corpusSha256": "14880955b2ae37d7771c612c642bfef5ddeb5d454264f1227c224089df5bbba1",
+            "documents": 1434,
+            "includeModuleCode": false,
+            "inputBytes": 6316865,
+            "medianMilliseconds": 208.97620800000004,
+            "rows": [
+              {
+                "milliseconds": 226.72000000000003,
+                "htmlBytes": 7573821,
+                "sha256": "6289471b841fe62017d36c5fcb00ebfed76d815cfb1aab68c33ce4ef18146ca5"
+              },
+              {
+                "milliseconds": 212.58783300000005,
+                "htmlBytes": 7573821,
+                "sha256": "6289471b841fe62017d36c5fcb00ebfed76d815cfb1aab68c33ce4ef18146ca5"
+              },
+              {
+                "milliseconds": 208.97620800000004,
+                "htmlBytes": 7573821,
+                "sha256": "6289471b841fe62017d36c5fcb00ebfed76d815cfb1aab68c33ce4ef18146ca5"
+              },
+              {
+                "milliseconds": 209.98633300000006,
+                "htmlBytes": 7573821,
+                "sha256": "6289471b841fe62017d36c5fcb00ebfed76d815cfb1aab68c33ce4ef18146ca5"
+              },
+              {
+                "milliseconds": 207.56320800000003,
+                "htmlBytes": 7573821,
+                "sha256": "6289471b841fe62017d36c5fcb00ebfed76d815cfb1aab68c33ce4ef18146ca5"
+              },
+              {
+                "milliseconds": 207.18049999999994,
+                "htmlBytes": 7573821,
+                "sha256": "6289471b841fe62017d36c5fcb00ebfed76d815cfb1aab68c33ce4ef18146ca5"
+              },
+              {
+                "milliseconds": 206.51637500000015,
+                "htmlBytes": 7573821,
+                "sha256": "6289471b841fe62017d36c5fcb00ebfed76d815cfb1aab68c33ce4ef18146ca5"
+              },
+              {
+                "milliseconds": 212.68541700000014,
+                "htmlBytes": 7573821,
+                "sha256": "6289471b841fe62017d36c5fcb00ebfed76d815cfb1aab68c33ce4ef18146ca5"
+              },
+              {
+                "milliseconds": 206.54941699999972,
+                "htmlBytes": 7573821,
+                "sha256": "6289471b841fe62017d36c5fcb00ebfed76d815cfb1aab68c33ce4ef18146ca5"
+              }
+            ]
+          }
+        ]
+      },
+      "deferred": {
+        "medianMilliseconds": 193.59449949999976,
+        "processes": [
+          {
+            "node": "v22.22.3",
+            "corpusSha256": "14880955b2ae37d7771c612c642bfef5ddeb5d454264f1227c224089df5bbba1",
+            "documents": 1434,
+            "includeModuleCode": false,
+            "inputBytes": 6316865,
+            "medianMilliseconds": 194.18950000000018,
+            "rows": [
+              {
+                "milliseconds": 205.6775409999999,
+                "htmlBytes": 7573821,
+                "sha256": "6289471b841fe62017d36c5fcb00ebfed76d815cfb1aab68c33ce4ef18146ca5"
+              },
+              {
+                "milliseconds": 197.910208,
+                "htmlBytes": 7573821,
+                "sha256": "6289471b841fe62017d36c5fcb00ebfed76d815cfb1aab68c33ce4ef18146ca5"
+              },
+              {
+                "milliseconds": 193.73741600000017,
+                "htmlBytes": 7573821,
+                "sha256": "6289471b841fe62017d36c5fcb00ebfed76d815cfb1aab68c33ce4ef18146ca5"
+              },
+              {
+                "milliseconds": 195.8536670000001,
+                "htmlBytes": 7573821,
+                "sha256": "6289471b841fe62017d36c5fcb00ebfed76d815cfb1aab68c33ce4ef18146ca5"
+              },
+              {
+                "milliseconds": 194.18950000000018,
+                "htmlBytes": 7573821,
+                "sha256": "6289471b841fe62017d36c5fcb00ebfed76d815cfb1aab68c33ce4ef18146ca5"
+              },
+              {
+                "milliseconds": 194.4206250000002,
+                "htmlBytes": 7573821,
+                "sha256": "6289471b841fe62017d36c5fcb00ebfed76d815cfb1aab68c33ce4ef18146ca5"
+              },
+              {
+                "milliseconds": 193.5933329999998,
+                "htmlBytes": 7573821,
+                "sha256": "6289471b841fe62017d36c5fcb00ebfed76d815cfb1aab68c33ce4ef18146ca5"
+              },
+              {
+                "milliseconds": 193.5956659999997,
+                "htmlBytes": 7573821,
+                "sha256": "6289471b841fe62017d36c5fcb00ebfed76d815cfb1aab68c33ce4ef18146ca5"
+              },
+              {
+                "milliseconds": 190.10454100000015,
+                "htmlBytes": 7573821,
+                "sha256": "6289471b841fe62017d36c5fcb00ebfed76d815cfb1aab68c33ce4ef18146ca5"
+              }
+            ]
+          },
+          {
+            "node": "v22.22.3",
+            "corpusSha256": "14880955b2ae37d7771c612c642bfef5ddeb5d454264f1227c224089df5bbba1",
+            "documents": 1434,
+            "includeModuleCode": false,
+            "inputBytes": 6316865,
+            "medianMilliseconds": 189.7018750000002,
+            "rows": [
+              {
+                "milliseconds": 207.29754200000002,
+                "htmlBytes": 7573821,
+                "sha256": "6289471b841fe62017d36c5fcb00ebfed76d815cfb1aab68c33ce4ef18146ca5"
+              },
+              {
+                "milliseconds": 194.46195799999987,
+                "htmlBytes": 7573821,
+                "sha256": "6289471b841fe62017d36c5fcb00ebfed76d815cfb1aab68c33ce4ef18146ca5"
+              },
+              {
+                "milliseconds": 190.21454100000005,
+                "htmlBytes": 7573821,
+                "sha256": "6289471b841fe62017d36c5fcb00ebfed76d815cfb1aab68c33ce4ef18146ca5"
+              },
+              {
+                "milliseconds": 190.01724999999988,
+                "htmlBytes": 7573821,
+                "sha256": "6289471b841fe62017d36c5fcb00ebfed76d815cfb1aab68c33ce4ef18146ca5"
+              },
+              {
+                "milliseconds": 187.0902500000002,
+                "htmlBytes": 7573821,
+                "sha256": "6289471b841fe62017d36c5fcb00ebfed76d815cfb1aab68c33ce4ef18146ca5"
+              },
+              {
+                "milliseconds": 189.7018750000002,
+                "htmlBytes": 7573821,
+                "sha256": "6289471b841fe62017d36c5fcb00ebfed76d815cfb1aab68c33ce4ef18146ca5"
+              },
+              {
+                "milliseconds": 187.95325000000003,
+                "htmlBytes": 7573821,
+                "sha256": "6289471b841fe62017d36c5fcb00ebfed76d815cfb1aab68c33ce4ef18146ca5"
+              },
+              {
+                "milliseconds": 187.36600000000044,
+                "htmlBytes": 7573821,
+                "sha256": "6289471b841fe62017d36c5fcb00ebfed76d815cfb1aab68c33ce4ef18146ca5"
+              },
+              {
+                "milliseconds": 189.09087499999987,
+                "htmlBytes": 7573821,
+                "sha256": "6289471b841fe62017d36c5fcb00ebfed76d815cfb1aab68c33ce4ef18146ca5"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    "modules": {
+      "fixed": {
+        "medianMilliseconds": 209.63999950000004,
+        "processes": [
+          {
+            "node": "v22.22.3",
+            "corpusSha256": "14880955b2ae37d7771c612c642bfef5ddeb5d454264f1227c224089df5bbba1",
+            "documents": 1434,
+            "includeModuleCode": true,
+            "inputBytes": 6316865,
+            "medianMilliseconds": 209.933583,
+            "rows": [
+              {
+                "milliseconds": 223.486625,
+                "htmlBytes": 7573821,
+                "sha256": "31e23b30fb689c18de874f1cc77b1897721d52b2aa8d893e125c5d46e26dd24f"
+              },
+              {
+                "milliseconds": 214.2807499999999,
+                "htmlBytes": 7573821,
+                "sha256": "31e23b30fb689c18de874f1cc77b1897721d52b2aa8d893e125c5d46e26dd24f"
+              },
+              {
+                "milliseconds": 211.02895799999988,
+                "htmlBytes": 7573821,
+                "sha256": "31e23b30fb689c18de874f1cc77b1897721d52b2aa8d893e125c5d46e26dd24f"
+              },
+              {
+                "milliseconds": 209.933583,
+                "htmlBytes": 7573821,
+                "sha256": "31e23b30fb689c18de874f1cc77b1897721d52b2aa8d893e125c5d46e26dd24f"
+              },
+              {
+                "milliseconds": 210.9683329999998,
+                "htmlBytes": 7573821,
+                "sha256": "31e23b30fb689c18de874f1cc77b1897721d52b2aa8d893e125c5d46e26dd24f"
+              },
+              {
+                "milliseconds": 208.5630839999999,
+                "htmlBytes": 7573821,
+                "sha256": "31e23b30fb689c18de874f1cc77b1897721d52b2aa8d893e125c5d46e26dd24f"
+              },
+              {
+                "milliseconds": 205.04929200000015,
+                "htmlBytes": 7573821,
+                "sha256": "31e23b30fb689c18de874f1cc77b1897721d52b2aa8d893e125c5d46e26dd24f"
+              },
+              {
+                "milliseconds": 204.1112079999998,
+                "htmlBytes": 7573821,
+                "sha256": "31e23b30fb689c18de874f1cc77b1897721d52b2aa8d893e125c5d46e26dd24f"
+              },
+              {
+                "milliseconds": 205.1182920000001,
+                "htmlBytes": 7573821,
+                "sha256": "31e23b30fb689c18de874f1cc77b1897721d52b2aa8d893e125c5d46e26dd24f"
+              }
+            ]
+          },
+          {
+            "node": "v22.22.3",
+            "corpusSha256": "14880955b2ae37d7771c612c642bfef5ddeb5d454264f1227c224089df5bbba1",
+            "documents": 1434,
+            "includeModuleCode": true,
+            "inputBytes": 6316865,
+            "medianMilliseconds": 209.3464160000001,
+            "rows": [
+              {
+                "milliseconds": 225.12520799999993,
+                "htmlBytes": 7573821,
+                "sha256": "31e23b30fb689c18de874f1cc77b1897721d52b2aa8d893e125c5d46e26dd24f"
+              },
+              {
+                "milliseconds": 213.48058400000014,
+                "htmlBytes": 7573821,
+                "sha256": "31e23b30fb689c18de874f1cc77b1897721d52b2aa8d893e125c5d46e26dd24f"
+              },
+              {
+                "milliseconds": 209.3464160000001,
+                "htmlBytes": 7573821,
+                "sha256": "31e23b30fb689c18de874f1cc77b1897721d52b2aa8d893e125c5d46e26dd24f"
+              },
+              {
+                "milliseconds": 210.32845799999996,
+                "htmlBytes": 7573821,
+                "sha256": "31e23b30fb689c18de874f1cc77b1897721d52b2aa8d893e125c5d46e26dd24f"
+              },
+              {
+                "milliseconds": 230.0082080000002,
+                "htmlBytes": 7573821,
+                "sha256": "31e23b30fb689c18de874f1cc77b1897721d52b2aa8d893e125c5d46e26dd24f"
+              },
+              {
+                "milliseconds": 204.3449169999999,
+                "htmlBytes": 7573821,
+                "sha256": "31e23b30fb689c18de874f1cc77b1897721d52b2aa8d893e125c5d46e26dd24f"
+              },
+              {
+                "milliseconds": 207.43437499999982,
+                "htmlBytes": 7573821,
+                "sha256": "31e23b30fb689c18de874f1cc77b1897721d52b2aa8d893e125c5d46e26dd24f"
+              },
+              {
+                "milliseconds": 205.17324999999983,
+                "htmlBytes": 7573821,
+                "sha256": "31e23b30fb689c18de874f1cc77b1897721d52b2aa8d893e125c5d46e26dd24f"
+              },
+              {
+                "milliseconds": 205.64662499999986,
+                "htmlBytes": 7573821,
+                "sha256": "31e23b30fb689c18de874f1cc77b1897721d52b2aa8d893e125c5d46e26dd24f"
+              }
+            ]
+          }
+        ]
+      },
+      "deferred": {
+        "medianMilliseconds": 212.76577149999991,
+        "processes": [
+          {
+            "node": "v22.22.3",
+            "corpusSha256": "14880955b2ae37d7771c612c642bfef5ddeb5d454264f1227c224089df5bbba1",
+            "documents": 1434,
+            "includeModuleCode": true,
+            "inputBytes": 6316865,
+            "medianMilliseconds": 207.73429099999976,
+            "rows": [
+              {
+                "milliseconds": 221.57041600000002,
+                "htmlBytes": 7573821,
+                "sha256": "31e23b30fb689c18de874f1cc77b1897721d52b2aa8d893e125c5d46e26dd24f"
+              },
+              {
+                "milliseconds": 209.67745800000012,
+                "htmlBytes": 7573821,
+                "sha256": "31e23b30fb689c18de874f1cc77b1897721d52b2aa8d893e125c5d46e26dd24f"
+              },
+              {
+                "milliseconds": 206.853791,
+                "htmlBytes": 7573821,
+                "sha256": "31e23b30fb689c18de874f1cc77b1897721d52b2aa8d893e125c5d46e26dd24f"
+              },
+              {
+                "milliseconds": 207.37024999999994,
+                "htmlBytes": 7573821,
+                "sha256": "31e23b30fb689c18de874f1cc77b1897721d52b2aa8d893e125c5d46e26dd24f"
+              },
+              {
+                "milliseconds": 213.00308399999972,
+                "htmlBytes": 7573821,
+                "sha256": "31e23b30fb689c18de874f1cc77b1897721d52b2aa8d893e125c5d46e26dd24f"
+              },
+              {
+                "milliseconds": 204.53595900000028,
+                "htmlBytes": 7573821,
+                "sha256": "31e23b30fb689c18de874f1cc77b1897721d52b2aa8d893e125c5d46e26dd24f"
+              },
+              {
+                "milliseconds": 207.73429099999976,
+                "htmlBytes": 7573821,
+                "sha256": "31e23b30fb689c18de874f1cc77b1897721d52b2aa8d893e125c5d46e26dd24f"
+              },
+              {
+                "milliseconds": 204.93566699999974,
+                "htmlBytes": 7573821,
+                "sha256": "31e23b30fb689c18de874f1cc77b1897721d52b2aa8d893e125c5d46e26dd24f"
+              },
+              {
+                "milliseconds": 211.16108299999996,
+                "htmlBytes": 7573821,
+                "sha256": "31e23b30fb689c18de874f1cc77b1897721d52b2aa8d893e125c5d46e26dd24f"
+              }
+            ]
+          },
+          {
+            "node": "v22.22.3",
+            "corpusSha256": "14880955b2ae37d7771c612c642bfef5ddeb5d454264f1227c224089df5bbba1",
+            "documents": 1434,
+            "includeModuleCode": true,
+            "inputBytes": 6316865,
+            "medianMilliseconds": 214.5079999999998,
+            "rows": [
+              {
+                "milliseconds": 225.396166,
+                "htmlBytes": 7573821,
+                "sha256": "31e23b30fb689c18de874f1cc77b1897721d52b2aa8d893e125c5d46e26dd24f"
+              },
+              {
+                "milliseconds": 233.047916,
+                "htmlBytes": 7573821,
+                "sha256": "31e23b30fb689c18de874f1cc77b1897721d52b2aa8d893e125c5d46e26dd24f"
+              },
+              {
+                "milliseconds": 213.99179099999992,
+                "htmlBytes": 7573821,
+                "sha256": "31e23b30fb689c18de874f1cc77b1897721d52b2aa8d893e125c5d46e26dd24f"
+              },
+              {
+                "milliseconds": 215.05258300000014,
+                "htmlBytes": 7573821,
+                "sha256": "31e23b30fb689c18de874f1cc77b1897721d52b2aa8d893e125c5d46e26dd24f"
+              },
+              {
+                "milliseconds": 218.036333,
+                "htmlBytes": 7573821,
+                "sha256": "31e23b30fb689c18de874f1cc77b1897721d52b2aa8d893e125c5d46e26dd24f"
+              },
+              {
+                "milliseconds": 212.5284590000001,
+                "htmlBytes": 7573821,
+                "sha256": "31e23b30fb689c18de874f1cc77b1897721d52b2aa8d893e125c5d46e26dd24f"
+              },
+              {
+                "milliseconds": 214.5079999999998,
+                "htmlBytes": 7573821,
+                "sha256": "31e23b30fb689c18de874f1cc77b1897721d52b2aa8d893e125c5d46e26dd24f"
+              },
+              {
+                "milliseconds": 210.65729200000033,
+                "htmlBytes": 7573821,
+                "sha256": "31e23b30fb689c18de874f1cc77b1897721d52b2aa8d893e125c5d46e26dd24f"
+              },
+              {
+                "milliseconds": 214.49212500000021,
+                "htmlBytes": 7573821,
+                "sha256": "31e23b30fb689c18de874f1cc77b1897721d52b2aa8d893e125c5d46e26dd24f"
+              }
+            ]
+          }
+        ]
+      }
+    }
+  },
+  "candidateFiles": {
+    "npm/vite-plugin-ox-content/src/transform.ts": "1aa048488254ecb07e1788b4f71f5686cdab1cb96232849a82936a4f41014788",
+    "npm/vite-plugin-ox-content/src/custom-host-markdown.ts": "1e957d3db66b2c10233053d0bb95b336e99660faa01d52d0a328b7630546739b",
+    "npm/vite-plugin-ox-content/src/transform-module-code.ts": "da190346df28993f2e80d6cd35668f7ac249b9359c6d6773acd45a6ea995e9cc"
+  }
+}

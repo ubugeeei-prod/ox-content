@@ -1,4 +1,4 @@
-// node tools/benchmarks/custom-host-markdown.mjs corpus.json /path/to/plugin [samples]
+// node tools/benchmarks/custom-host-markdown.mjs corpus.json /path/to/plugin [samples] [--module-code]
 // Corpus: { root, options, documents: [{ documentPath, source, convertMdLinks? }] }.
 // Prepare the corpus before timing. Keep it local when it contains consumer text.
 import assert from "node:assert/strict";
@@ -10,6 +10,7 @@ import { join, resolve } from "node:path";
 import { pathToFileURL } from "node:url";
 
 const [corpusFile, packageDirectory, sampleArgument = "9"] = process.argv.slice(2);
+const includeModuleCode = process.argv.includes("--module-code");
 assert.ok(corpusFile && packageDirectory, "Pass a corpus JSON and a built plugin directory");
 const samples = Number(sampleArgument);
 assert.ok(Number.isSafeInteger(samples) && samples > 0, "Samples must be a positive integer");
@@ -49,9 +50,12 @@ try {
             // One complete warmup; hashing and output checks stay outside timers.
             for (let index = 0; index <= samples; index++) {
               const rendered = [];
+              const modules = [];
               const start = performance.now();
               for (const input of corpus.documents) {
-                rendered.push(await host.markdown.render(input));
+                const result = await host.markdown.render(input);
+                rendered.push(result);
+                if (includeModuleCode) modules.push(result.transform.code);
               }
               const milliseconds = performance.now() - start;
               const hash = createHash("sha256");
@@ -62,10 +66,15 @@ try {
                 hash.update(
                   JSON.stringify({
                     ...result,
-                    transform: { ...result.transform, code: undefined },
+                    transform: Object.fromEntries(
+                      Object.keys(result.transform)
+                        .filter((key) => key !== "code")
+                        .map((key) => [key, Reflect.get(result.transform, key)]),
+                    ),
                   }),
                 );
               }
+              for (const code of modules) hash.update(code);
               const sha256 = hash.digest("hex");
               expected ??= sha256;
               assert.equal(sha256, expected, "Rendered output changed between samples");
@@ -89,6 +98,7 @@ console.log(
       node: process.version,
       corpusSha256: createHash("sha256").update(corpusBytes).digest("hex"),
       documents: corpus.documents.length,
+      includeModuleCode,
       inputBytes: corpus.documents.reduce((sum, input) => sum + Buffer.byteLength(input.source), 0),
       medianMilliseconds:
         (sorted[Math.floor((samples - 1) / 2)] + sorted[Math.floor(samples / 2)]) / 2,
