@@ -37,6 +37,10 @@ The normal development server still uses its watcher. Across both full-build
 series, all HTML and generated assets are byte-identical to each series' baseline;
 all 750 original public files are also byte-identical. This verifies preservation
 of the existing candidate output, not visual parity with the original Nuxt site.
+The consumer's compatibility config already specifies `server.watch: null`, so
+the watcher change is a general build-loader improvement; no watcher speedup is
+claimed for this consumer. The resolved-config hook also handles consumer server
+objects correctly: Vite skips nested null overrides during config merging.
 
 ## Reproduction
 

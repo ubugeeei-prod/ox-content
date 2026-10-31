@@ -26,9 +26,18 @@ export async function createHostLoaderServer(config: ResolvedConfig): Promise<Vi
       configFile: config.configFile ?? false,
       appType: "custom",
       logLevel: config.logLevel,
-      // This server only loads the host during a single build. Watching the
-      // source tree also watches content and generated pages we never reload.
-      server: { middlewareMode: true, watch: null },
+      server: { middlewareMode: true },
+      plugins: [
+        {
+          name: "ox-content:custom-host-build-loader",
+          enforce: "post",
+          configResolved(resolved) {
+            // Vite's config merge skips null overrides inside consumer server
+            // options. Disable the build-only watcher after that merge.
+            resolved.server.watch = null;
+          },
+        },
+      ],
     });
   } finally {
     if (previous === undefined) {
