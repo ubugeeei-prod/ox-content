@@ -99,6 +99,16 @@
         "default": "./dist/custom-host.cjs"
       }
     },
+    "./markdown": {
+      "import": {
+        "types": "./dist/markdown-public.d.mts",
+        "default": "./dist/markdown-public.mjs"
+      },
+      "require": {
+        "types": "./dist/markdown-public.d.cts",
+        "default": "./dist/markdown-public.cjs"
+      }
+    },
     "./html-host": {
       "import": {
         "types": "./dist/html-host-public.d.mts",
