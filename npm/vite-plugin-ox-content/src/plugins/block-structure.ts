@@ -1,11 +1,10 @@
 import type { Element, ElementContent, Root } from "hast";
-import rehypeParsePlugin from "rehype-parse";
 import rehypeStringifyPlugin from "rehype-stringify";
 import { unified } from "unified";
 import { interopDefault } from "../interop";
 import { importNapiModule } from "../napi";
+import { rehypeParseFragment } from "../html-fragment";
 
-const rehypeParse = interopDefault(rehypeParsePlugin);
 const rehypeStringify = interopDefault(rehypeStringifyPlugin);
 
 const BLOCK_EMBED_CLASSES = new Set([
@@ -71,7 +70,7 @@ export async function normalizeBlockEmbedParagraphs(html: string): Promise<strin
   if (!shouldNormalizeBlockEmbeds(html, tags)) return html;
 
   const result = await unified()
-    .use(rehypeParse, { fragment: true })
+    .use(rehypeParseFragment)
     .use(rehypeBlockEmbedParagraphs(tags))
     .use(rehypeStringify)
     .process(html);

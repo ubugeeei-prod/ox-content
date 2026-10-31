@@ -2071,6 +2071,12 @@ importers:
       '@standard-schema/spec':
         specifier: ^1.1.0
         version: 1.1.0
+      '@takumi-rs/core':
+        specifier: ^2.19.0
+        version: 2.19.0(csstype@3.2.3)(preact@10.29.2)(react@19.3.0)
+      '@types/hast':
+        specifier: ^3.0.5
+        version: 3.0.5
       '@vue/compiler-sfc':
         specifier: ^3.4.0
         version: 3.5.43
@@ -2083,6 +2089,9 @@ importers:
       glob:
         specifier: ^13.0.6
         version: 13.0.6
+      hast-util-from-parse5:
+        specifier: ^8.0.3
+        version: 8.0.3
       html-minifier-terser:
         specifier: ^7.2.0
         version: 7.2.0
@@ -2092,6 +2101,9 @@ importers:
       minimatch:
         specifier: ^10.2.6
         version: 10.2.6
+      parse5:
+        specifier: ^7.3.0
+        version: 7.3.0
       playwright:
         specifier: ^1.63.0
         version: 1.63.0
@@ -2122,9 +2134,6 @@ importers:
       svelte:
         specifier: ^5.0.0
         version: 5.57.1
-      '@takumi-rs/core':
-        specifier: ^2.19.0
-        version: 2.19.0(csstype@3.2.3)(preact@10.29.2)(react@19.3.0)
       terser:
         specifier: ^5.51.2
         version: 5.51.2
@@ -2150,9 +2159,6 @@ importers:
       '@solidjs/web':
         specifier: 'catalog:'
         version: 2.0.0-rc.9(solid-js@2.0.0-rc.9)
-      '@types/hast':
-        specifier: ^3.0.5
-        version: 3.0.5
       '@types/node':
         specifier: 'catalog:'
         version: 26.6.2

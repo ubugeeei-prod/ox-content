@@ -1,4 +1,6 @@
 import * as path from "node:path";
+import type { Root } from "hast";
+import { createCachedHtmlParser } from "./html-fragment";
 import { hasIslands, resetIslandCounter, transformIslands } from "./island";
 import { resetTabGroupCounter, transformAllPlugins, type TransformAllOptions } from "./plugins";
 import { protectMermaidSvgs, restoreMermaidSvgs } from "./plugins/mermaid-protect";
@@ -38,6 +40,11 @@ export interface OxContentCustomHostMarkdownInput<Metadata = unknown> {
 
 export interface OxContentCustomHostMarkdownRenderContext {
   html: string;
+  /**
+   * Parse this callback's input HTML into a cached HAST fragment, without source
+   * positions. Each render owns its tree. Return serialized HTML to apply edits.
+   */
+  parseHtml(): Root;
   transform: TransformResult;
   source: string;
   documentPath: string;
@@ -98,6 +105,7 @@ export function createCustomHostMarkdownRenderer(
       if (input.renderHtml) {
         const rendered = await input.renderHtml({
           html,
+          parseHtml: createCachedHtmlParser(html),
           transform,
           source: input.source,
           documentPath,

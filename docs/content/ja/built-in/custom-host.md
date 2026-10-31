@@ -160,6 +160,13 @@ const styles = ctx.assets.stylesheets({
 `ctx.loadModule()` / `ctx.assets.stylesheets()` と同じ development lifecycle で追跡されます。
 そのため、失敗した renderer や変更された renderer は process-global cache なしで復帰できます。
 
+`renderHtml(markdown)` 内の `markdown.parseHtml()` は、callback に渡された HTML を
+HAST fragment として返します。最初の呼び出し時に解析し、同じ render 内では同じ
+mutable tree を再利用します。生成後の HTML の位置情報を省くため、element、attribute、
+text だけを必要とする adapter で余分な位置計算を避けられます。tree の変更を出力へ
+反映する場合は、serialize した HTML を callback から返してください。tree は render
+ごとに分かれています。
+
 framework integration は host-owned のままです。Solid HTML-string host では callback 内で
 `@ox-content/vite-plugin-solid` の `createSolidHtmlHostRenderer()` を使い、返された
 `html` と、host が asset / hydration に必要とする `clientModules` や diagnostics metadata を

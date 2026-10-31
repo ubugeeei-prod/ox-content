@@ -1,0 +1,95 @@
+{
+  "experiment": "Misskey Hub full-site generated HTML tree API ABBA",
+  "recordedAt": "2026-10-31T15:44:14.617483+00:00",
+  "consumer": {
+    "repository": "odanado/misskey-hub-next",
+    "reportPullRequest": 1,
+    "sourceCommit": "6cbe059c5d3b358557f6493b606f196c2ca06e8a",
+    "pages": 1991,
+    "markdownDocuments": 1434
+  },
+  "runtime": {
+    "node": "22.22.3",
+    "vite": "8.3.5",
+    "vue": "3.5.25",
+    "platform": "darwin-arm64",
+    "cpu": "Apple M2 Max"
+  },
+  "method": [
+    "Fresh Node process per sample; A/B/B/A; all 1991 routes built and verified.",
+    "Same locally built Ox candidate in every sample; API unused in control, used in candidate.",
+    "Existing diagnostic improvements enabled identically: snippet deduplication and workers, router/path caches, inactive sidebar cache, pooled MDC parser, CSS compatibility.",
+    "Candidate passes renderHtml.parseHtml() directly to the existing AST bridge. API parsing is timed separately; combined parse-plus-bridge includes both timers.",
+    "These are diagnostic consumer transforms, not a shipped reference implementation."
+  ],
+  "samples": [
+    {
+      "variant": "consumer-fromHtml",
+      "buildSeconds": 18.011396959000002,
+      "dataPreparationMs": 3098.704417000001,
+      "apiParseMs": 0,
+      "consumerBridgeTocStylesMs": 1465.747177000021,
+      "combinedParseBridgeTocStylesMs": 1465.747177000021,
+      "htmlFiles": 1991,
+      "unchangedPublicFiles": 750,
+      "changedFiles": 0
+    },
+    {
+      "variant": "parseHtml",
+      "buildSeconds": 16.647675084,
+      "dataPreparationMs": 2465.1292920000005,
+      "apiParseMs": 354.9213950000267,
+      "consumerBridgeTocStylesMs": 468.2779519999913,
+      "combinedParseBridgeTocStylesMs": 823.199347000018,
+      "htmlFiles": 1991,
+      "unchangedPublicFiles": 750,
+      "changedFiles": 0
+    },
+    {
+      "variant": "parseHtml",
+      "buildSeconds": 16.138277125000002,
+      "dataPreparationMs": 2488.618042,
+      "apiParseMs": 360.40359699998953,
+      "consumerBridgeTocStylesMs": 460.74941799998123,
+      "combinedParseBridgeTocStylesMs": 821.1530149999708,
+      "htmlFiles": 1991,
+      "unchangedPublicFiles": 750,
+      "changedFiles": 0
+    },
+    {
+      "variant": "consumer-fromHtml",
+      "buildSeconds": 17.000733916,
+      "dataPreparationMs": 3036.665916000001,
+      "apiParseMs": 0,
+      "consumerBridgeTocStylesMs": 1435.5810780000138,
+      "combinedParseBridgeTocStylesMs": 1435.5810780000138,
+      "htmlFiles": 1991,
+      "unchangedPublicFiles": 750,
+      "changedFiles": 0
+    }
+  ],
+  "outputProof": {
+    "allGeneratedFilesByteIdentical": true,
+    "files": 2783,
+    "manifestSha256": "b8552d96d1419ed89b5865f6aaea73da5987885696ac0a9e4dc7e54f53621f9a"
+  },
+  "limits": [
+    "Four samples on one machine; cold configuration/module startup varies.",
+    "Do not infer this optimization alone brings the published default build to these whole-build times.",
+    "The API is opt-in; callers that never parse HTML retain lazy behavior."
+  ],
+  "medians": {
+    "buildSeconds": {
+      "consumer-fromHtml": 17.506065437500002,
+      "parseHtml": 16.3929761045
+    },
+    "dataPreparationMs": {
+      "consumer-fromHtml": 3067.685166500001,
+      "parseHtml": 2476.8736670000003
+    },
+    "combinedParseBridgeTocStylesMs": {
+      "consumer-fromHtml": 1450.6641275000175,
+      "parseHtml": 822.1761809999944
+    }
+  }
+}
