@@ -1,5 +1,11 @@
 # Changelog
 
+## [3.5.2] - 2026-10-31
+
+### Performance
+
+- defer unused module generation in custom hosts (#1542) _(affects: npm: @ox-content/vite-plugin; tooling)_
+
 ## [3.5.1] - 2026-10-31
 
 ### Bug Fixes
