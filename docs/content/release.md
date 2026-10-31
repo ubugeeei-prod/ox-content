@@ -170,6 +170,50 @@ The namespace owner must also sign the Open VSX Publisher Agreement. See the
 [Open VSX trusted publishing guide](https://github.com/eclipse-openvsx/openvsx/wiki/Trusted-Publishing)
 for the initial publication and registration requirements.
 
+### Bootstrap and recover Open VSX
+
+`No trusted publisher matches the presented token` is a registration failure.
+The publisher exits immediately with setup instructions; retrying cannot create
+the extension or register its trusted publisher. Temporary registry failures
+still use the normal retry backoff.
+
+Complete the following once as the maintainer:
+
+1. Sign in to [Open VSX settings](https://open-vsx.org/user-settings/profile),
+   connect the Eclipse account, and review and sign the Publisher Agreement.
+2. Check that the account owns the `ubugeeei` namespace. A namespace contributor
+   can publish but cannot register a trusted publisher. If necessary, follow
+   [namespace ownership instructions](https://github.com/eclipse-openvsx/openvsx/wiki/Namespace-Access#how-to-claim-a-namespace).
+3. Download `vscode-vsix-linux-x64` from the existing release's **Publish editor
+   extensions** run. Extract and inspect the VSIX: its publisher must be
+   `ubugeeei`, name `vscode-ox-content`, version the intended release, and target
+   `linux-x64`. Keep the release tag and the existing artifacts intact.
+4. Generate a temporary token in [Access Tokens](https://open-vsx.org/user-settings/tokens)
+   and use it only in the local shell for this initial upload:
+
+   ```zsh
+   open_vsx_tools=$(mktemp -d)
+   env -u OVSX_PAT vp env exec --node 26 npm install \
+     --prefix "$open_vsx_tools" --no-audit --no-fund ovsx@1.2.0
+   read -rs 'open_vsx_token?Temporary Open VSX token: '; echo
+   OVSX_PAT="$open_vsx_token" vp env exec --node 26 \
+     "$open_vsx_tools/node_modules/.bin/ovsx" \
+     publish /path/to/vscode-ox-content-linux-x64.vsix --skip-duplicate
+   unset open_vsx_token
+   rm -r "$open_vsx_tools"
+   ```
+
+   This prompt uses zsh. Do not paste the token into chat, commit it, or add it as
+   a CI secret. Install the CLI before entering the token so dependency install
+   scripts never receive it. Revoke the temporary token after the initial upload.
+
+5. In [Trusted Publishers](https://open-vsx.org/user-settings/trusted-publishers),
+   register `vscode-ox-content` with the identity listed above.
+6. Rerun only the failed **Publish Open VSX** job from the same release run.
+   Verify the exact version in the public API for `darwin-arm64`, `darwin-x64`,
+   `linux-x64`, and `win32-x64`, using
+   `https://open-vsx.org/api/ubugeeei/vscode-ox-content/<target>/<version>`.
+
 ## First-Time Crate Publishing
 
 The crates.io job uses GitHub Actions Trusted Publishing. Trusted Publishing can
