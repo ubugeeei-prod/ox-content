@@ -9,7 +9,7 @@ import type {
   OxContentCustomHostOptions,
   OxContentCustomHostRoute,
 } from "./custom-host-types";
-import { createCustomHostMarkdownRenderer } from "./custom-host-markdown";
+import { createLazyCustomHostMarkdownRenderer } from "./custom-host-markdown-lazy";
 import {
   deserializeResponse,
   normalizeRoutePath,
@@ -123,7 +123,7 @@ export function createTrackedContext<T extends OxContentCustomHostBaseContext>(
       },
     },
   };
-  return { ...tracked, markdown: createCustomHostMarkdownRenderer(tracked) } as T;
+  return { ...tracked, markdown: createLazyCustomHostMarkdownRenderer(tracked) } as T;
 }
 
 async function renderDevResponse(

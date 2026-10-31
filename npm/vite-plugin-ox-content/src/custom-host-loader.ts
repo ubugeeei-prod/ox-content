@@ -12,7 +12,7 @@ import type {
   OxContentCustomHostRoute,
   OxContentCustomHostRoutesContext,
 } from "./custom-host-types";
-import { createCustomHostMarkdownRenderer } from "./custom-host-markdown";
+import { createLazyCustomHostMarkdownRenderer } from "./custom-host-markdown-lazy";
 import { canonicalFilePath } from "./custom-host-utils";
 import type { ResolvedOptions } from "./types";
 
@@ -109,7 +109,7 @@ export function createBaseContext(
     loadModule,
     assets,
   };
-  return { ...context, markdown: createCustomHostMarkdownRenderer(context) };
+  return { ...context, markdown: createLazyCustomHostMarkdownRenderer(context) };
 }
 
 export function createContextMemo(): OxContentCustomHostMemo {
