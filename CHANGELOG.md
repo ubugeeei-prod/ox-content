@@ -1,5 +1,11 @@
 # Changelog
 
+## [3.7.2] - 2026-10-31
+
+### Performance
+
+- initialize build loader only when needed (#1550) _(affects: npm: @ox-content/vite-plugin; tooling)_
+
 ## [3.7.1] - 2026-10-31
 
 ### Performance
