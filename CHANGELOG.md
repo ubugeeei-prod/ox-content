@@ -1,5 +1,11 @@
 # Changelog
 
+## [3.7.3] - 2026-10-31
+
+### Performance
+
+- defer unused Markdown runtime (#1552) _(affects: npm: @ox-content/vite-plugin; tooling)_
+
 ## [3.7.2] - 2026-10-31
 
 ### Performance
