@@ -27,6 +27,17 @@ export async function createHostLoaderServer(config: ResolvedConfig): Promise<Vi
       appType: "custom",
       logLevel: config.logLevel,
       server: { middlewareMode: true },
+      plugins: [
+        {
+          name: "ox-content:custom-host-build-loader",
+          enforce: "post",
+          configResolved(resolved) {
+            // Vite's config merge skips null overrides inside consumer server
+            // options. Disable the build-only watcher after that merge.
+            resolved.server.watch = null;
+          },
+        },
+      ],
     });
   } finally {
     if (previous === undefined) {

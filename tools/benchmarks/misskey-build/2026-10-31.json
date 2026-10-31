@@ -1,0 +1,423 @@
+{
+  "consumerPr": "https://github.com/odanado/misskey-hub-next/pull/1",
+  "consumerHead": "af92e493ce46d27c27600eda8924de05593e4c94",
+  "instrumentedConsumerRef": "6cbe059c5d3b358557f6493b606f196c2ca06e8a",
+  "oxBase": "a4a74fa3994298e719fe201ace32f234b5d9d5a2",
+  "node": "22.22.3",
+  "cpu": "Apple M2 Max",
+  "nativeVersion": "3.5.0",
+  "vite": "7.3.1",
+  "vue": "3.5.25",
+  "sourceFingerprint": "d5619a11be3138bcce14442ac0b63b04969f143a7b5f53cd08826a9af52e716f",
+  "pipeline": {
+    "baseline": {
+      "medianMilliseconds": 227.7436459999999,
+      "processes": [
+        {
+          "node": "v22.22.3",
+          "corpusSha256": "14880955b2ae37d7771c612c642bfef5ddeb5d454264f1227c224089df5bbba1",
+          "documents": 1434,
+          "inputBytes": 6316865,
+          "medianMilliseconds": 227.97412499999996,
+          "rows": [
+            {
+              "milliseconds": 308.9759999999999,
+              "htmlBytes": 7573821,
+              "sha256": "6289471b841fe62017d36c5fcb00ebfed76d815cfb1aab68c33ce4ef18146ca5"
+            },
+            {
+              "milliseconds": 227.97412499999996,
+              "htmlBytes": 7573821,
+              "sha256": "6289471b841fe62017d36c5fcb00ebfed76d815cfb1aab68c33ce4ef18146ca5"
+            },
+            {
+              "milliseconds": 226.0006249999999,
+              "htmlBytes": 7573821,
+              "sha256": "6289471b841fe62017d36c5fcb00ebfed76d815cfb1aab68c33ce4ef18146ca5"
+            },
+            {
+              "milliseconds": 227.23345800000016,
+              "htmlBytes": 7573821,
+              "sha256": "6289471b841fe62017d36c5fcb00ebfed76d815cfb1aab68c33ce4ef18146ca5"
+            },
+            {
+              "milliseconds": 226.3806669999999,
+              "htmlBytes": 7573821,
+              "sha256": "6289471b841fe62017d36c5fcb00ebfed76d815cfb1aab68c33ce4ef18146ca5"
+            },
+            {
+              "milliseconds": 228.385084,
+              "htmlBytes": 7573821,
+              "sha256": "6289471b841fe62017d36c5fcb00ebfed76d815cfb1aab68c33ce4ef18146ca5"
+            },
+            {
+              "milliseconds": 232.12575000000015,
+              "htmlBytes": 7573821,
+              "sha256": "6289471b841fe62017d36c5fcb00ebfed76d815cfb1aab68c33ce4ef18146ca5"
+            },
+            {
+              "milliseconds": 229.60333300000002,
+              "htmlBytes": 7573821,
+              "sha256": "6289471b841fe62017d36c5fcb00ebfed76d815cfb1aab68c33ce4ef18146ca5"
+            },
+            {
+              "milliseconds": 226.5314589999998,
+              "htmlBytes": 7573821,
+              "sha256": "6289471b841fe62017d36c5fcb00ebfed76d815cfb1aab68c33ce4ef18146ca5"
+            }
+          ]
+        },
+        {
+          "node": "v22.22.3",
+          "corpusSha256": "14880955b2ae37d7771c612c642bfef5ddeb5d454264f1227c224089df5bbba1",
+          "documents": 1434,
+          "inputBytes": 6316865,
+          "medianMilliseconds": 227.51316699999984,
+          "rows": [
+            {
+              "milliseconds": 311.43399999999997,
+              "htmlBytes": 7573821,
+              "sha256": "6289471b841fe62017d36c5fcb00ebfed76d815cfb1aab68c33ce4ef18146ca5"
+            },
+            {
+              "milliseconds": 232.74370799999997,
+              "htmlBytes": 7573821,
+              "sha256": "6289471b841fe62017d36c5fcb00ebfed76d815cfb1aab68c33ce4ef18146ca5"
+            },
+            {
+              "milliseconds": 225.09287500000005,
+              "htmlBytes": 7573821,
+              "sha256": "6289471b841fe62017d36c5fcb00ebfed76d815cfb1aab68c33ce4ef18146ca5"
+            },
+            {
+              "milliseconds": 227.51316699999984,
+              "htmlBytes": 7573821,
+              "sha256": "6289471b841fe62017d36c5fcb00ebfed76d815cfb1aab68c33ce4ef18146ca5"
+            },
+            {
+              "milliseconds": 224.9229580000001,
+              "htmlBytes": 7573821,
+              "sha256": "6289471b841fe62017d36c5fcb00ebfed76d815cfb1aab68c33ce4ef18146ca5"
+            },
+            {
+              "milliseconds": 226.4665,
+              "htmlBytes": 7573821,
+              "sha256": "6289471b841fe62017d36c5fcb00ebfed76d815cfb1aab68c33ce4ef18146ca5"
+            },
+            {
+              "milliseconds": 230.503917,
+              "htmlBytes": 7573821,
+              "sha256": "6289471b841fe62017d36c5fcb00ebfed76d815cfb1aab68c33ce4ef18146ca5"
+            },
+            {
+              "milliseconds": 229.0664999999999,
+              "htmlBytes": 7573821,
+              "sha256": "6289471b841fe62017d36c5fcb00ebfed76d815cfb1aab68c33ce4ef18146ca5"
+            },
+            {
+              "milliseconds": 225.0761249999996,
+              "htmlBytes": 7573821,
+              "sha256": "6289471b841fe62017d36c5fcb00ebfed76d815cfb1aab68c33ce4ef18146ca5"
+            }
+          ]
+        }
+      ]
+    },
+    "normalize": {
+      "medianMilliseconds": 208.1136459999999,
+      "processes": [
+        {
+          "node": "v22.22.3",
+          "corpusSha256": "14880955b2ae37d7771c612c642bfef5ddeb5d454264f1227c224089df5bbba1",
+          "documents": 1434,
+          "inputBytes": 6316865,
+          "medianMilliseconds": 209.73974999999973,
+          "rows": [
+            {
+              "milliseconds": 293.750459,
+              "htmlBytes": 7573821,
+              "sha256": "6289471b841fe62017d36c5fcb00ebfed76d815cfb1aab68c33ce4ef18146ca5"
+            },
+            {
+              "milliseconds": 213.916291,
+              "htmlBytes": 7573821,
+              "sha256": "6289471b841fe62017d36c5fcb00ebfed76d815cfb1aab68c33ce4ef18146ca5"
+            },
+            {
+              "milliseconds": 205.54612499999985,
+              "htmlBytes": 7573821,
+              "sha256": "6289471b841fe62017d36c5fcb00ebfed76d815cfb1aab68c33ce4ef18146ca5"
+            },
+            {
+              "milliseconds": 205.93454199999996,
+              "htmlBytes": 7573821,
+              "sha256": "6289471b841fe62017d36c5fcb00ebfed76d815cfb1aab68c33ce4ef18146ca5"
+            },
+            {
+              "milliseconds": 210.11816700000008,
+              "htmlBytes": 7573821,
+              "sha256": "6289471b841fe62017d36c5fcb00ebfed76d815cfb1aab68c33ce4ef18146ca5"
+            },
+            {
+              "milliseconds": 208.0636669999999,
+              "htmlBytes": 7573821,
+              "sha256": "6289471b841fe62017d36c5fcb00ebfed76d815cfb1aab68c33ce4ef18146ca5"
+            },
+            {
+              "milliseconds": 209.73974999999973,
+              "htmlBytes": 7573821,
+              "sha256": "6289471b841fe62017d36c5fcb00ebfed76d815cfb1aab68c33ce4ef18146ca5"
+            },
+            {
+              "milliseconds": 210.36250000000018,
+              "htmlBytes": 7573821,
+              "sha256": "6289471b841fe62017d36c5fcb00ebfed76d815cfb1aab68c33ce4ef18146ca5"
+            },
+            {
+              "milliseconds": 203.39091599999983,
+              "htmlBytes": 7573821,
+              "sha256": "6289471b841fe62017d36c5fcb00ebfed76d815cfb1aab68c33ce4ef18146ca5"
+            }
+          ]
+        },
+        {
+          "node": "v22.22.3",
+          "corpusSha256": "14880955b2ae37d7771c612c642bfef5ddeb5d454264f1227c224089df5bbba1",
+          "documents": 1434,
+          "inputBytes": 6316865,
+          "medianMilliseconds": 205.8277909999997,
+          "rows": [
+            {
+              "milliseconds": 288.000416,
+              "htmlBytes": 7573821,
+              "sha256": "6289471b841fe62017d36c5fcb00ebfed76d815cfb1aab68c33ce4ef18146ca5"
+            },
+            {
+              "milliseconds": 210.356084,
+              "htmlBytes": 7573821,
+              "sha256": "6289471b841fe62017d36c5fcb00ebfed76d815cfb1aab68c33ce4ef18146ca5"
+            },
+            {
+              "milliseconds": 204.802459,
+              "htmlBytes": 7573821,
+              "sha256": "6289471b841fe62017d36c5fcb00ebfed76d815cfb1aab68c33ce4ef18146ca5"
+            },
+            {
+              "milliseconds": 208.1636249999999,
+              "htmlBytes": 7573821,
+              "sha256": "6289471b841fe62017d36c5fcb00ebfed76d815cfb1aab68c33ce4ef18146ca5"
+            },
+            {
+              "milliseconds": 203.52737500000012,
+              "htmlBytes": 7573821,
+              "sha256": "6289471b841fe62017d36c5fcb00ebfed76d815cfb1aab68c33ce4ef18146ca5"
+            },
+            {
+              "milliseconds": 204.08895799999982,
+              "htmlBytes": 7573821,
+              "sha256": "6289471b841fe62017d36c5fcb00ebfed76d815cfb1aab68c33ce4ef18146ca5"
+            },
+            {
+              "milliseconds": 205.8277909999997,
+              "htmlBytes": 7573821,
+              "sha256": "6289471b841fe62017d36c5fcb00ebfed76d815cfb1aab68c33ce4ef18146ca5"
+            },
+            {
+              "milliseconds": 209.59641699999975,
+              "htmlBytes": 7573821,
+              "sha256": "6289471b841fe62017d36c5fcb00ebfed76d815cfb1aab68c33ce4ef18146ca5"
+            },
+            {
+              "milliseconds": 199.92641600000024,
+              "htmlBytes": 7573821,
+              "sha256": "6289471b841fe62017d36c5fcb00ebfed76d815cfb1aab68c33ce4ef18146ca5"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "fullBuildSeries": {
+    "library-abba": [
+      {
+        "label": "baseline",
+        "processSeconds": 32.07033025,
+        "buildSeconds": 30.965237083,
+        "marks": {
+          "configResolved": 1573.495167,
+          "buildStart": 1998.160958,
+          "graphEnd": 7667.6543329999995,
+          "generateBundleEnd": 10337.254583,
+          "writeBundleEnd": 10343.622125,
+          "customHostStart": 10344.657667,
+          "hostRoutesStart": 13115.163042,
+          "hostDataEnd": 22223.334375000002,
+          "hostRoutesEnd": 22227.023458000003,
+          "lastPageEnd": 30393.455958000002,
+          "customHostEnd": 30965.208875,
+          "buildComplete": 30965.237083
+        },
+        "htmlFiles": 1991,
+        "publicFiles": 750,
+        "changedFiles": []
+      },
+      {
+        "label": "watch",
+        "processSeconds": 27.482961541999998,
+        "buildSeconds": 26.969039083,
+        "marks": {
+          "configResolved": 779.18775,
+          "buildStart": 1053.885625,
+          "graphEnd": 6141.8842079999995,
+          "generateBundleEnd": 8118.434291,
+          "writeBundleEnd": 8124.762708,
+          "customHostStart": 8125.800791,
+          "hostRoutesStart": 10636.684333000001,
+          "hostDataEnd": 18280.401208,
+          "hostRoutesEnd": 18284.084666,
+          "lastPageEnd": 26399.953332999998,
+          "customHostEnd": 26969.010833,
+          "buildComplete": 26969.039083
+        },
+        "htmlFiles": 1991,
+        "publicFiles": 750,
+        "changedFiles": []
+      },
+      {
+        "label": "watch",
+        "processSeconds": 27.812402125000006,
+        "buildSeconds": 27.289110833000002,
+        "marks": {
+          "configResolved": 753.673458,
+          "buildStart": 1024.799833,
+          "graphEnd": 6086.967874999999,
+          "generateBundleEnd": 8057.055458,
+          "writeBundleEnd": 8062.853042,
+          "customHostStart": 8063.847708,
+          "hostRoutesStart": 10589.565542,
+          "hostDataEnd": 18318.012917,
+          "hostRoutesEnd": 18321.708958000003,
+          "lastPageEnd": 26725.322750000003,
+          "customHostEnd": 27289.079875000003,
+          "buildComplete": 27289.110833000002
+        },
+        "htmlFiles": 1991,
+        "publicFiles": 750,
+        "changedFiles": []
+      },
+      {
+        "label": "baseline",
+        "processSeconds": 28.044173625,
+        "buildSeconds": 27.510699833,
+        "marks": {
+          "configResolved": 766.688666,
+          "buildStart": 1041.073958,
+          "graphEnd": 6144.947291,
+          "generateBundleEnd": 8119.936291,
+          "writeBundleEnd": 8126.31725,
+          "customHostStart": 8127.351708,
+          "hostRoutesStart": 10774.077125,
+          "hostDataEnd": 18468.899458,
+          "hostRoutesEnd": 18472.823875,
+          "lastPageEnd": 26921.769708,
+          "customHostEnd": 27510.662582999998,
+          "buildComplete": 27510.699833
+        },
+        "htmlFiles": 1991,
+        "publicFiles": 750,
+        "changedFiles": []
+      }
+    ],
+    "library-normalize-abba": [
+      {
+        "label": "baseline",
+        "processSeconds": 29.496495875,
+        "buildSeconds": 28.779448499999997,
+        "marks": {
+          "configResolved": 1276.038042,
+          "buildStart": 1695.163709,
+          "graphEnd": 6978.084459,
+          "generateBundleEnd": 9538.350709,
+          "writeBundleEnd": 9546.778375,
+          "customHostStart": 9547.894,
+          "hostRoutesStart": 12292.512250000002,
+          "hostDataEnd": 19966.153209,
+          "hostRoutesEnd": 19970.169334,
+          "lastPageEnd": 28196.020167,
+          "customHostEnd": 28779.418374999997,
+          "buildComplete": 28779.4485
+        },
+        "htmlFiles": 1991,
+        "publicFiles": 750,
+        "changedFiles": []
+      },
+      {
+        "label": "normalize",
+        "processSeconds": 27.424772499999996,
+        "buildSeconds": 26.869669458999997,
+        "marks": {
+          "configResolved": 809.070917,
+          "buildStart": 1080.99325,
+          "graphEnd": 6180.266167000001,
+          "generateBundleEnd": 8260.294542,
+          "writeBundleEnd": 8267.413209,
+          "customHostStart": 8268.440209,
+          "hostRoutesStart": 10818.294542,
+          "hostDataEnd": 18337.819124999998,
+          "hostRoutesEnd": 18341.570208999998,
+          "lastPageEnd": 26297.842542,
+          "customHostEnd": 26869.639334,
+          "buildComplete": 26869.669458999997
+        },
+        "htmlFiles": 1991,
+        "publicFiles": 750,
+        "changedFiles": []
+      },
+      {
+        "label": "normalize",
+        "processSeconds": 27.638959958000008,
+        "buildSeconds": 27.100309457999998,
+        "marks": {
+          "configResolved": 750.597167,
+          "buildStart": 1022.4542499999999,
+          "graphEnd": 6023.161458,
+          "generateBundleEnd": 8069.927125,
+          "writeBundleEnd": 8075.252917,
+          "customHostStart": 8076.296208,
+          "hostRoutesStart": 10693.890167000001,
+          "hostDataEnd": 18469.221708,
+          "hostRoutesEnd": 18472.974042,
+          "lastPageEnd": 26487.780917,
+          "customHostEnd": 27100.276083,
+          "buildComplete": 27100.309458
+        },
+        "htmlFiles": 1991,
+        "publicFiles": 750,
+        "changedFiles": []
+      },
+      {
+        "label": "baseline",
+        "processSeconds": 27.749885375000005,
+        "buildSeconds": 27.207709207999997,
+        "marks": {
+          "configResolved": 771.365042,
+          "buildStart": 1038.731625,
+          "graphEnd": 6036.311667,
+          "generateBundleEnd": 8079.17575,
+          "writeBundleEnd": 8086.003917,
+          "customHostStart": 8087.056917,
+          "hostRoutesStart": 10588.836167,
+          "hostDataEnd": 18606.215042,
+          "hostRoutesEnd": 18609.86225,
+          "lastPageEnd": 26603.412833,
+          "customHostEnd": 27207.671791999997,
+          "buildComplete": 27207.709207999997
+        },
+        "htmlFiles": 1991,
+        "publicFiles": 750,
+        "changedFiles": []
+      }
+    ]
+  },
+  "published343BuildSeconds": [28.948112582999997, 27.622618166, 27.100103291]
+}
