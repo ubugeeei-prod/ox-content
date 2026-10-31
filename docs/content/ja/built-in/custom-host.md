@@ -189,6 +189,9 @@ framework module や client asset manifest を使う場合は `loadModule` と `
 渡してください。Rendering のスケジュールと、返された `dependencies` の扱いは
 caller が管理します。`TransformResult` を使う場合に向けて、この entry からも
 `createMarkdownProcessor` と `renderMarkdown` を export しています。
+`loadModule` が読むファイルは caller で追跡するか、`renderHtml` の戻り値の
+`dependencies` に含めてください。Standalone の loader 呼び出しで読んだファイルは、
+このリストへ自動では追加されません。
 
 framework integration は host-owned のままです。Solid HTML-string host では callback 内で
 `@ox-content/vite-plugin-solid` の `createSolidHtmlHostRenderer()` を使い、返された

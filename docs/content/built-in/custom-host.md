@@ -222,6 +222,9 @@ module loader. Pass `loadModule` and `assets` when callbacks need framework
 modules or a client asset manifest. The caller schedules rendering and handles
 the returned `dependencies`. The entry also exports `createMarkdownProcessor`
 and `renderMarkdown` for callers that only need a `TransformResult`.
+Include files read by `loadModule` in the `dependencies` returned from
+`renderHtml`, or track them in the caller. Standalone loader calls do not add
+those files to the dependency list automatically.
 
 The framework integration remains host-owned. The framework-neutral island
 contract is available from `@ox-content/vite-plugin/html-host` for adapters that

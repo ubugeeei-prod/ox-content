@@ -67,12 +67,20 @@ describe("standalone Custom Host Markdown", () => {
         expect(context.parseHtml()).toBe(context.parseHtml());
         expect(context.parseHtml().position).toBeUndefined();
         const metadata = (await context.loadModule("./renderer.mjs")) as { suffix: string };
-        return { html: context.html + metadata.suffix, metadata };
+        return {
+          html: context.html + metadata.suffix,
+          metadata,
+          dependencies: [path.join(root, "renderer.mjs")],
+        };
       },
     });
     expect(loaded).toEqual(["./renderer.mjs"]);
     expect(result.metadata).toEqual({ suffix: "done" });
     expect(result.html).toContain("done");
+    expect(result.dependencies).toEqual([
+      path.join(root, "content/guide.md"),
+      path.join(root, "renderer.mjs"),
+    ]);
   });
 
   it("requires an explicit loader only when a callback requests a module", async () => {
