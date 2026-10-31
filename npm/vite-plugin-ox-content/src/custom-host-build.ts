@@ -160,7 +160,11 @@ async function writeCoordinatedOutputs(
         inputPath: resolveInputPath(entry.result.inputPath ?? entry.route.inputPath, root),
         urlPath: ssgUrlPath(entry.routePath),
         outputPath: entry.outputPath,
-        html: typeof entry.body === "string" ? entry.body : new TextDecoder().decode(entry.body),
+        html: options.resources.enabled
+          ? typeof entry.body === "string"
+            ? entry.body
+            : new TextDecoder().decode(entry.body)
+          : undefined,
         source: entry.result.source ?? entry.route.source,
         title: entry.result.title ?? entry.route.title,
         description: entry.result.description ?? entry.route.description,

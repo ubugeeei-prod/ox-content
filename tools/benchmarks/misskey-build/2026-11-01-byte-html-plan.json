@@ -1,0 +1,58 @@
+{
+  "base": "2b30772aa371fd0afb0b12e652b4b8d0fa03e6f9",
+  "consumer": "odanado/misskey-hub-next",
+  "consumerHead": "af92e493ce46d27c27600eda8924de05593e4c94",
+  "archiveRef": "6cbe059c5d3b358557f6493b606f196c2ca06e8a",
+  "node": "26.13.0",
+  "vite": "8.3.5",
+  "vue": "3.5.25",
+  "oxContent": "3.7.0",
+  "napi": "3.7.0",
+  "condition": "Same diagnostic Vue/Vite8 full-site worker pipeline with byte HTML transfers; resources and HTML minification disabled. Candidate changes only compiled equivalent of the source output-plan HTML guard. A/B/B/A.",
+  "runs": [
+    {
+      "variant": "published3.7.0",
+      "buildSeconds": 5.756723083,
+      "processSeconds": 6.139741458,
+      "postRenderMs": 460.2570829999995,
+      "htmlFiles": 1991,
+      "publicFiles": 750,
+      "changedFiles": 0
+    },
+    {
+      "variant": "skip-unused-decode",
+      "buildSeconds": 5.525501667,
+      "processSeconds": 5.883782583,
+      "postRenderMs": 245.69395900000018,
+      "htmlFiles": 1991,
+      "publicFiles": 750,
+      "changedFiles": 0
+    },
+    {
+      "variant": "skip-unused-decode",
+      "buildSeconds": 6.248024125,
+      "processSeconds": 6.633788499999998,
+      "postRenderMs": 265.09000000000015,
+      "htmlFiles": 1991,
+      "publicFiles": 750,
+      "changedFiles": 0
+    },
+    {
+      "variant": "published3.7.0",
+      "buildSeconds": 6.4982345829999995,
+      "processSeconds": 6.869971000000003,
+      "postRenderMs": 385.66783399999986,
+      "htmlFiles": 1991,
+      "publicFiles": 750,
+      "changedFiles": 0
+    }
+  ],
+  "median": {
+    "controlBuildSeconds": 6.127478833,
+    "candidateBuildSeconds": 5.8867628960000005,
+    "controlPostRenderMs": 422.9624584999997,
+    "candidatePostRenderMs": 255.39197950000016
+  },
+  "output": "All2783 output files byte-identical to control,1991HTML and750original public assets.",
+  "limits": "Local M2Max12core96GB run, with startup and filesystem variance. Post-render interval includes planning,writes,and loader cleanup. This is a diagnostic pipeline measurement, not an unmodified consumer build claim. No5second claim."
+}
