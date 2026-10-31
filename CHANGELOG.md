@@ -1,5 +1,11 @@
 # Changelog
 
+## [3.6.0] - 2026-10-31
+
+### Features
+
+- expose lazy generated HTML trees (#1544) _(affects: npm: @ox-content/vite-plugin; docs, tooling, workspace metadata)_
+
 ## [3.5.2] - 2026-10-31
 
 ### Performance
