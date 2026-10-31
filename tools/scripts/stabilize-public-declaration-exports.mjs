@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-import { readFile, rm, writeFile } from "node:fs/promises";
+import { readFile, readdir, rm, writeFile } from "node:fs/promises";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { publicDeclarationEntries } from "./public-declaration-contracts.mjs";
@@ -25,8 +25,8 @@ for (const entry of entries) {
       "dist",
       `${entry.distBase}.d.${extension}`,
     );
-    const declaration = await readFile(declarationFile, "utf8");
-    const stableDeclaration = stabilizeDeclaration(declaration, entry, extension);
+    const { declaration, facade } = await readDeclaration(declarationFile, entry, extension);
+    const stableDeclaration = stabilizeDeclaration(declaration, entry, extension, facade);
     const outputBase = entry.publicDistBase ?? entry.distBase;
     const outputFile = join(root, entry.packageDir, "dist", `${outputBase}.d.${extension}`);
     await writeFile(outputFile, stableDeclaration);
@@ -34,7 +34,36 @@ for (const entry of entries) {
   }
 }
 
-function stabilizeDeclaration(declaration, entry, extension) {
+async function readDeclaration(file, entry, extension) {
+  const declaration = await readFile(file, "utf8");
+  const names = [...entry.values, ...entry.types];
+  const complete = (source) =>
+    names.every((name) => new RegExp(`\\b${escapeRegExp(name)}\\b`).test(source));
+  if (complete(declaration)) return { declaration, facade: false };
+
+  // Shared type chunks can move the complete entry facade to a numbered file.
+  // Keep its imports instead of assuming every public type lives in the first chunk.
+  const pattern = new RegExp(`^${escapeRegExp(entry.distBase)}\\d+\\.d\\.${extension}$`);
+  const candidates = await Promise.all(
+    (await readdir(dirname(file)))
+      .filter((name) => pattern.test(name))
+      .map((name) => readFile(join(dirname(file), name), "utf8")),
+  );
+  const matches = candidates.filter((source) => {
+    const exportStart = source.lastIndexOf("export {");
+    if (!complete(source) || exportStart === -1) return false;
+    const exports = parseExportedNames(source.slice(exportStart));
+    return names.every((name) => exports.has(name));
+  });
+  if (matches.length > 1) {
+    throw new Error(`${entry.specifier} has multiple complete declaration facades`);
+  }
+  return matches.length === 1
+    ? { declaration: matches[0], facade: true }
+    : { declaration, facade: false };
+}
+
+function stabilizeDeclaration(declaration, entry, extension, facade = false) {
   const expectedNames = [...entry.values, ...entry.types];
   for (const name of expectedNames) {
     if (!new RegExp(`\\b${escapeRegExp(name)}\\b`).test(declaration)) {
@@ -47,12 +76,15 @@ function stabilizeDeclaration(declaration, entry, extension) {
     throw new Error(`${entry.specifier} declaration is missing a final export block`);
   }
 
-  if (entry.publicDistBase && entry.publicDistBase !== entry.distBase) {
+  if (!facade && entry.publicDistBase && entry.publicDistBase !== entry.distBase) {
     return stableFacadeDeclaration(declaration.slice(exportStart), entry, extension);
   }
 
   return [
-    declaration.slice(0, exportStart).trimEnd(),
+    declaration
+      .slice(0, exportStart)
+      .replace(/^export\s+(?=(?:declare|interface|type|abstract|class|function|const)\b)/gm, "")
+      .trimEnd(),
     `export { ${entry.values.join(", ")} };`,
     `export type { ${entry.types.join(", ")} };`,
     "",
@@ -81,7 +113,7 @@ function parseExportedNames(exportBlock) {
   }
 
   for (const specifier of exportBlock.slice(bodyStart + 1, bodyEnd).split(",")) {
-    const trimmed = specifier.trim();
+    const trimmed = specifier.trim().replace(/^type\s+/u, "");
     if (!trimmed) continue;
     const alias = /^(?<local>[$A-Z_a-z][$\w]*)\s+as\s+(?<exported>[$A-Z_a-z][$\w]*)$/.exec(trimmed);
     if (alias?.groups) {

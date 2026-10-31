@@ -167,6 +167,32 @@ text だけを必要とする adapter で余分な位置計算を避けられま
 反映する場合は、serialize した HTML を callback から返してください。tree は render
 ごとに分かれています。
 
+Worker 内でデータを準備する場合は、programmatic Markdown entry を使えます。
+
+```ts
+import { createOxContentMarkdownRenderer } from "@ox-content/vite-plugin/markdown";
+
+const markdown = createOxContentMarkdownRenderer({
+  root: process.cwd(),
+  oxContent: { srcDir: "content", embeds: false },
+});
+const page = await markdown.render({
+  source: "# Hello",
+  documentPath: "content/hello.md",
+  renderHtml: ({ html, parseHtml }) => ({ html, metadata: parseHtml() }),
+});
+```
+
+Renderer は各 Worker 内で作成します。Options を一度だけ解決し、Vite の server module
+loader を初期化せずに同じ Custom Host Markdown pipeline を実行します。Callback が
+framework module や client asset manifest を使う場合は `loadModule` と `assets` を
+渡してください。Rendering のスケジュールと、返された `dependencies` の扱いは
+caller が管理します。`TransformResult` を使う場合に向けて、この entry からも
+`createMarkdownProcessor` と `renderMarkdown` を export しています。
+`loadModule` が読むファイルは caller で追跡するか、`renderHtml` の戻り値の
+`dependencies` に含めてください。Standalone の loader 呼び出しで読んだファイルは、
+このリストへ自動では追加されません。
+
 framework integration は host-owned のままです。Solid HTML-string host では callback 内で
 `@ox-content/vite-plugin-solid` の `createSolidHtmlHostRenderer()` を使い、返された
 `html` と、host が asset / hydration に必要とする `clientModules` や diagnostics metadata を

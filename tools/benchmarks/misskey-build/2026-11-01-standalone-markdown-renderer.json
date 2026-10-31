@@ -1,0 +1,89 @@
+{
+  "experiment": "Misskey Hub standalone Markdown renderer, complete package build, A/B/B/A",
+  "recordedAt": "2026-10-31T17:04:30.467910+00:00",
+  "consumer": {
+    "repository": "odanado/misskey-hub-next",
+    "reportPullRequest": 1,
+    "sourceCommit": "6cbe059c5d3b358557f6493b606f196c2ca06e8a",
+    "pages": 1991,
+    "markdownDocuments": 1434
+  },
+  "runtime": {
+    "node": "22.22.3",
+    "vite": "8.3.5",
+    "vue": "3.5.25",
+    "napi": "3.6.0",
+    "platform": "darwin-arm64",
+    "cpu": "Apple M2 Max"
+  },
+  "method": [
+    "One fully built local candidate package is used in every sample, with the standalone entry unused in the control.",
+    "Fresh Node process per sample; original files read and all 1991 routes regenerated. No persisted content, renderer, or output cache.",
+    "Both variants use identical diagnostic snippet preparation, router/sidebar caches, parallel data preparation, 8 render workers, renderer pre-bundling, asynchronous output preparation, and generated HTML tree API.",
+    "Candidate imports createOxContentMarkdownRenderer from the compiled /markdown entry instead of creating a Vite server to obtain a host Markdown context. Source load hooks transpile the archived consumer TypeScript helpers.",
+    "Timer includes client compilation, data/renderer worker startup and cleanup, public file copying and old output cleanup, page rendering and output writes.",
+    "Verification and SHA256 comparisons run outside the timed build. These diagnostics are not a published Misskey reference implementation."
+  ],
+  "samples": [
+    {
+      "variant": "vite-host-context",
+      "buildSeconds": 9.737810625,
+      "processSeconds": 10.2929015,
+      "dataAvailableAfterBuildStartMs": 5263.76225,
+      "standaloneImportMs": null,
+      "pages": 1991,
+      "unchangedPublicFiles": 750,
+      "changedOutputFiles": 0
+    },
+    {
+      "variant": "standalone",
+      "buildSeconds": 8.337672000000001,
+      "processSeconds": 8.874286499999998,
+      "dataAvailableAfterBuildStartMs": 4271.570749999999,
+      "standaloneImportMs": 1191.4168750000001,
+      "pages": 1991,
+      "unchangedPublicFiles": 750,
+      "changedOutputFiles": 0
+    },
+    {
+      "variant": "standalone",
+      "buildSeconds": 8.748415875000001,
+      "processSeconds": 9.260424041999997,
+      "dataAvailableAfterBuildStartMs": 4751.46575,
+      "standaloneImportMs": 1088.1387499999998,
+      "pages": 1991,
+      "unchangedPublicFiles": 750,
+      "changedOutputFiles": 0
+    },
+    {
+      "variant": "vite-host-context",
+      "buildSeconds": 8.76629925,
+      "processSeconds": 9.296842874999996,
+      "dataAvailableAfterBuildStartMs": 5219.526459,
+      "standaloneImportMs": null,
+      "pages": 1991,
+      "unchangedPublicFiles": 750,
+      "changedOutputFiles": 0
+    }
+  ],
+  "outputProof": {
+    "allGeneratedFilesByteIdentical": true,
+    "files": 2783,
+    "manifestSha256": "b8552d96d1419ed89b5865f6aaea73da5987885696ac0a9e4dc7e54f53621f9a"
+  },
+  "limits": [
+    "Four samples on one machine; startup timing varies.",
+    "Whole-build timings include other diagnostic consumer improvements and are not the published default consumer behavior.",
+    "The existing whole-site published 3.6.0 default build remains about 28 seconds."
+  ],
+  "medians": {
+    "buildSeconds": {
+      "vite-host-context": 9.252054937499999,
+      "standalone": 8.543043937500002
+    },
+    "dataAvailableAfterBuildStartMs": {
+      "vite-host-context": 5241.6443545,
+      "standalone": 4511.518249999999
+    }
+  }
+}

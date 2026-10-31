@@ -6,7 +6,9 @@ import { resolveThemeTokens } from "./custom-host-assets";
 import { createCustomHostSsrStylesheetController } from "./custom-host-ssr-stylesheets";
 import type { OxContentCustomHostOptions } from "./custom-host-types";
 import { resolveOptions } from "./resolve-options";
-import type { OxContentOptions } from "./types";
+import { customHostOxContentOptions } from "./custom-host-options";
+
+export { customHostOxContentOptions } from "./custom-host-options";
 
 export type {
   OxContentCustomHostMarkdownInput,
@@ -130,11 +132,4 @@ export function createOxContentCustomHostPlugin(input: OxContentCustomHostOption
       await buildRun;
     },
   };
-}
-
-export function customHostOxContentOptions(options: OxContentOptions = {}): OxContentOptions {
-  const ssg = options.ssg;
-  const disabledSsg =
-    ssg && typeof ssg === "object" ? { ...ssg, enabled: false } : { enabled: false };
-  return { ...options, ssg: disabledSsg };
 }

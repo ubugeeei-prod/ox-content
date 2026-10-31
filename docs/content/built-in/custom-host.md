@@ -200,6 +200,32 @@ positions, which avoids tracking offsets in generated HTML when an adapter only
 needs its elements, attributes, and text. Return serialized HTML from the
 callback to apply tree edits to the output. Each render receives its own tree.
 
+For worker-owned data preparation, use the programmatic Markdown entry:
+
+```ts
+import { createOxContentMarkdownRenderer } from "@ox-content/vite-plugin/markdown";
+
+const markdown = createOxContentMarkdownRenderer({
+  root: process.cwd(),
+  oxContent: { srcDir: "content", embeds: false },
+});
+const page = await markdown.render({
+  source: "# Hello",
+  documentPath: "content/hello.md",
+  renderHtml: ({ html, parseHtml }) => ({ html, metadata: parseHtml() }),
+});
+```
+
+Create the renderer inside each worker. It resolves options once and runs the
+same Custom Host Markdown pipeline directly, without initializing Vite's server
+module loader. Pass `loadModule` and `assets` when callbacks need framework
+modules or a client asset manifest. The caller schedules rendering and handles
+the returned `dependencies`. The entry also exports `createMarkdownProcessor`
+and `renderMarkdown` for callers that only need a `TransformResult`.
+Include files read by `loadModule` in the `dependencies` returned from
+`renderHtml`, or track them in the caller. Standalone loader calls do not add
+those files to the dependency list automatically.
+
 The framework integration remains host-owned. The framework-neutral island
 contract is available from `@ox-content/vite-plugin/html-host` for adapters that
 own server rendering, head output, slots, browser hydration, mounting, and
