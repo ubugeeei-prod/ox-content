@@ -1,5 +1,11 @@
 # Changelog
 
+## [3.7.1] - 2026-10-31
+
+### Performance
+
+- skip unused byte HTML decoding (#1548) _(affects: npm: @ox-content/vite-plugin; tooling)_
+
 ## [3.7.0] - 2026-10-31
 
 ### Features
