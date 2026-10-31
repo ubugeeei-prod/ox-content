@@ -284,7 +284,8 @@ export async function transformAllPlugins(
     webContainer = false,
   } = options;
 
-  let result = await normalizeBlockEmbedParagraphs(normalizeSelfClosingEmbeds(html));
+  const normalized = await normalizeBlockEmbedParagraphs(normalizeSelfClosingEmbeds(html));
+  let result = normalized;
   const ogpOptions = openGraph ?? ogp ?? true;
 
   // Order matters: process in dependency order
@@ -349,7 +350,9 @@ export async function transformAllPlugins(
     result = await transformMediaEmbeds(result, mediaOptions);
   }
 
-  result = await normalizeBlockEmbedParagraphs(result);
+  if (result !== normalized) {
+    result = await normalizeBlockEmbedParagraphs(result);
+  }
 
   // 5. Mermaid (requires mermaid library)
   if (mermaid) {
@@ -378,9 +381,10 @@ export async function transformBuiltinEmbeds(
     localNames?: Iterable<string>;
   } & MediaEmbedOptions,
 ): Promise<string> {
-  let result = await normalizeBlockEmbedParagraphs(
+  const normalized = await normalizeBlockEmbedParagraphs(
     restoreReservedBuiltinIslands(normalizeSelfClosingEmbeds(html), options.localNames),
   );
+  let result = normalized;
 
   if (options.github) {
     result = await transformGitHub(result, undefined, {
@@ -430,5 +434,5 @@ export async function transformBuiltinEmbeds(
     result = await transformMediaEmbeds(result, mediaOptions);
   }
 
-  return normalizeBlockEmbedParagraphs(result);
+  return result === normalized ? result : normalizeBlockEmbedParagraphs(result);
 }
