@@ -67,3 +67,26 @@ Vite 7.3.1. Run fresh processes sequentially with no competing builds. Hash outp
 and verify public assets outside timers. The replay excludes the consumer's
 `renderHtml` callback, MDC/Shiki compatibility work, Vue SSR and Vite client build;
 it measures the portion Ox owns. The JSON beside this file records all samples.
+
+## Follow-up: deferred module generation
+
+Custom Host Markdown callers usually consume HTML and metadata. Defer escaping
+that HTML and constructing its JavaScript module until `transform.code` is read.
+Snapshot mutable metadata before returning, so callback edits do not change what
+that module would have exported. The ordinary Vite Markdown transform remains
+an eager module producer.
+
+With the same 1,434-input corpus, two fresh processes per side and nine samples
+after one warmup, the HTML-only pipeline measured **208.90 → 193.59 ms (7.3%)**.
+The mode that requests module code measured **209.64 → 212.77 ms**; sample ranges
+overlap (204–233 ms), so this is an HTML-consumption optimization, not a claim
+that every caller becomes faster. HTML/structured metadata match on both sides;
+the requested generated modules are also byte-identical. Complete samples are
+in `2026-10-31-deferred.json`.
+
+The replay now avoids accessing `code` during outside-timer output checks. To
+include module generation inside the timer and hash its output as well, run:
+
+```sh
+node tools/benchmarks/custom-host-markdown.mjs corpus.json /path/to/plugin 9 --module-code
+```

@@ -80,6 +80,7 @@ export function createCustomHostMarkdownRenderer(
 
       resetTabAndIslandCounters();
       const transform = await transformMarkdown(input.source, documentPath, context.options, {
+        deferModuleCode: true,
         convertMdLinks: input.convertMdLinks ?? true,
         baseUrl: base,
         sourcePath: documentPath,
