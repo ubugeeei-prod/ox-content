@@ -60,7 +60,8 @@ export async function runCustomHostBuild(
 ): Promise<void> {
   const root = config.root;
   const outDir = resolveOutDir(config, options, root);
-  const loaderServer = await createHostLoaderServer(config);
+  let loaderServer: Promise<ViteDevServer> | undefined;
+  const getLoaderServer = () => (loaderServer ??= createHostLoaderServer(config));
   const clientManifest = await readClientManifest(outDir);
   await ssrStylesheets.write(outDir);
   let loadCollectionManifest: () => Promise<CollectionAssetManifest | undefined> = async () =>
@@ -75,7 +76,7 @@ export async function runCustomHostBuild(
     () => loadCollectionManifest(),
     ssrStylesheets,
   );
-  const loadModule = (moduleId: string) => loaderServer.ssrLoadModule(moduleId);
+  const loadModule = async (moduleId: string) => (await getLoaderServer()).ssrLoadModule(moduleId);
 
   try {
     const baseContext = createBaseContext("build", root, outDir, options, loadModule, assets);
@@ -90,7 +91,7 @@ export async function runCustomHostBuild(
     const outputData = options.feeds?.enabled
       ? await loadOutputs(host, createOutputsContext(baseContext, routes, memo))
       : undefined;
-    const rendered = await renderBuildRoutes(host, routes, baseContext, input, loaderServer);
+    const rendered = await renderBuildRoutes(host, routes, baseContext, input, getLoaderServer);
 
     await writeThemeTokens(outDir, themeTokens);
     const collectionAssetFiles = await collectionAssets.write();
@@ -105,7 +106,9 @@ export async function runCustomHostBuild(
       input.build?.minifyHtml ?? options.ssg.minifyHtml,
     );
   } finally {
-    await loaderServer.close();
+    if (loaderServer) {
+      await (await loaderServer).close();
+    }
   }
 }
 
@@ -114,7 +117,7 @@ async function renderBuildRoutes(
   routes: readonly OxContentCustomHostRoute[],
   context: OxContentCustomHostBaseContext,
   input: OxContentCustomHostOptions,
-  server: ViteDevServer,
+  getLoaderServer: () => Promise<ViteDevServer>,
 ): Promise<RenderedBuildRoute[]> {
   const rendered: RenderedBuildRoute[] = [];
   const owners = new Map<string, string>();
@@ -134,6 +137,7 @@ async function renderBuildRoutes(
     claimOutput(owners, outputPath, routePath);
     let body = resultBody(renderedResult);
     if (typeof body === "string" && shouldTransformHtml(contentType, input.build?.transformHtml)) {
+      const server = await getLoaderServer();
       body = await server.transformIndexHtml(routePath, body);
     }
     rendered.push({ route, routePath, outputPath, contentType, body, result: renderedResult });
