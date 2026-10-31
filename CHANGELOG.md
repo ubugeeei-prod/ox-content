@@ -1,5 +1,15 @@
 # Changelog
 
+## [3.5.1] - 2026-10-31
+
+### Bug Fixes
+
+- fail fast on Open VSX trust configuration errors (#1539) _(affects: docs, tooling)_
+
+### Performance
+
+- reduce redundant build and markdown work (#1540) _(affects: npm: @ox-content/vite-plugin; tooling)_
+
 ## [3.5.0] - 2026-10-30
 
 ### Features
