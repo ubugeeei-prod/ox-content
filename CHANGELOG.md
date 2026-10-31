@@ -1,5 +1,11 @@
 # Changelog
 
+## [3.7.0] - 2026-10-31
+
+### Features
+
+- add a standalone custom-host renderer (#1546) _(affects: npm: @ox-content/vite-plugin; docs, tooling)_
+
 ## [3.6.0] - 2026-10-31
 
 ### Features
