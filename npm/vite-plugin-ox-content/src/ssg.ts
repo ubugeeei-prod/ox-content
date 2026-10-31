@@ -5,7 +5,7 @@
 import * as fs from "fs/promises";
 import * as path from "path";
 import { transformMarkdown } from "./transform";
-import { normalizeRoutePrefix } from "./ssg-options";
+import { normalizeRoutePrefix, resolveSsgTransformConcurrency } from "./ssg-options";
 import { generateOgImages } from "./og-image";
 import type { OgImagePageEntry } from "./og-image";
 import { transformAllPlugins } from "./plugins";
