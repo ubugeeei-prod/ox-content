@@ -33,7 +33,7 @@ import { resolveImageOptions } from "./resolve-image-options";
 import { resolveResourcesOptions } from "./resources";
 import { resolveSearchOptions } from "./search";
 import { resolveSiteMapsOptions } from "./site-maps";
-import { resolveSsgOptions } from "./ssg";
+import { resolveSsgOptions } from "./ssg-options";
 import { resolveStepsOptions } from "./step-options";
 import { resolveTaxonomiesOptions } from "./taxonomies";
 import { resolveTimelineOptions } from "./timeline-options";

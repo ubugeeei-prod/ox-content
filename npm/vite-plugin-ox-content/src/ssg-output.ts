@@ -11,7 +11,7 @@ import { shouldPublishMarkdownSource, type MarkdownSourcePageInput } from "./mar
 import { resolvePublishStateOptions } from "./publish-state";
 import { resolveResourcesOptions } from "./resources";
 import { resolveSiteMapsOptions, writeSiteMapFiles, type SiteMapPageInput } from "./site-maps";
-import { resolveSsgOptions } from "./ssg";
+import { resolveSsgOptions } from "./ssg-options";
 import {
   writeSelfHostedAssets,
   type SelfHostedAssetOptions,
