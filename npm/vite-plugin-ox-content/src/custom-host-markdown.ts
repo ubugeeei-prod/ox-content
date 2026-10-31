@@ -9,7 +9,7 @@ import {
   type ReaderChromeInput,
   resolveReaderChromeInput,
 } from "./reader-chrome";
-import { normalizeRoutePrefix } from "./ssg";
+import { normalizeRoutePrefix } from "./ssg-options";
 import { transformMarkdown } from "./transform";
 import type { TransformResult } from "./types";
 import type {
