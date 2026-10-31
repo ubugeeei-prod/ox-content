@@ -1,4 +1,7 @@
 export function publicDeclarationValueUsage(entry, prefix) {
+  if (entry.specifier === "@ox-content/vite-plugin/markdown") {
+    return markdownValueUsage(prefix);
+  }
   if (entry.distBase === "custom-host") {
     return customHostValueUsage(prefix);
   }
@@ -9,6 +12,29 @@ export function publicDeclarationValueUsage(entry, prefix) {
     return genericHtmlHostClientValueUsage(prefix);
   }
   return htmlHostClientValueUsage(entry, prefix);
+}
+
+function markdownValueUsage(prefix) {
+  return [
+    'const markdownInput: CreateOxContentMarkdownRendererInput = { root: ".", oxContent: { embeds: false } };',
+    `const markdownRenderer: OxContentCustomHostMarkdownRenderer = ${prefix}createOxContentMarkdownRenderer(markdownInput);`,
+    "const markdownPage: Promise<OxContentCustomHostMarkdownResult<{ nodes: number }>> = markdownRenderer.render({",
+    '  source: "# Guide",',
+    '  documentPath: "content/guide.md",',
+    "  renderHtml(context: OxContentCustomHostMarkdownRenderContext) {",
+    "    const tree = context.parseHtml();",
+    '    const kind: "root" = tree.type;',
+    "    void kind;",
+    "    return { html: context.html, metadata: { nodes: tree.children.length } };",
+    "  },",
+    "});",
+    `const markdownProcessor: MarkdownProcessor = ${prefix}createMarkdownProcessor();`,
+    'const markdownTransform: Promise<TransformResult> = markdownProcessor.render("# Guide", "guide.md");',
+    `const markdownRendered: Promise<TransformResult> = ${prefix}renderMarkdown("# Guide", "guide.md");`,
+    "void markdownPage;",
+    "void markdownTransform;",
+    "void markdownRendered;",
+  ].join("\n");
 }
 
 function customHostValueUsage(prefix) {
