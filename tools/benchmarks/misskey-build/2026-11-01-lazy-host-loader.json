@@ -1,0 +1,73 @@
+{
+  "base": "9a4293bd6d772e1f9f975a9eb38ebd1091e4b3a7",
+  "consumer": "odanado/misskey-hub-next",
+  "consumerHead": "af92e493ce46d27c27600eda8924de05593e4c94",
+  "archiveRef": "6cbe059c5d3b358557f6493b606f196c2ca06e8a",
+  "node": "26.13.0",
+  "vite": "8.3.5",
+  "vue": "3.5.25",
+  "napi": "3.7.1",
+  "condition": "Full-site diagnostic worker pipeline, same inline host and byte outputs, resources/minification disabled. Control: published 3.7.1 with UnoCSS loader-only filesystem scanning disabled to permit natural exit. Candidate: locally built source with lazy loader and no UnoCSS workaround. All processes exit naturally. A/B/C/C/B/A; C also probes public-file cloning and is excluded from loader comparison.",
+  "runs": [
+    {
+      "variant": "published3.7.1",
+      "processSeconds": 6.857799540999999,
+      "buildSeconds": 6.419852166,
+      "afterClientBeforeRoutesMs": 123.82758300000023,
+      "htmlFiles": 1991,
+      "publicFiles": 750,
+      "changedFiles": 0
+    },
+    {
+      "variant": "lazy-loader",
+      "processSeconds": 6.791193999999999,
+      "buildSeconds": 6.633184709,
+      "afterClientBeforeRoutesMs": 11.286040999999386,
+      "htmlFiles": 1991,
+      "publicFiles": 750,
+      "changedFiles": 0
+    },
+    {
+      "variant": "clone-public-probe",
+      "processSeconds": 5.477287958000002,
+      "buildSeconds": 5.285671875,
+      "afterClientBeforeRoutesMs": 9.903291000000081,
+      "htmlFiles": 1991,
+      "publicFiles": 750,
+      "changedFiles": 0
+    },
+    {
+      "variant": "clone-public-probe",
+      "processSeconds": 6.108683084000003,
+      "buildSeconds": 5.913999084,
+      "afterClientBeforeRoutesMs": 11.059374999999818,
+      "htmlFiles": 1991,
+      "publicFiles": 750,
+      "changedFiles": 0
+    },
+    {
+      "variant": "lazy-loader",
+      "processSeconds": 5.794339041000001,
+      "buildSeconds": 5.639060541999999,
+      "afterClientBeforeRoutesMs": 10.36245800000006,
+      "htmlFiles": 1991,
+      "publicFiles": 750,
+      "changedFiles": 0
+    },
+    {
+      "variant": "published3.7.1",
+      "processSeconds": 6.610020958,
+      "buildSeconds": 6.41558025,
+      "afterClientBeforeRoutesMs": 91.46570800000018,
+      "htmlFiles": 1991,
+      "publicFiles": 750,
+      "changedFiles": 0
+    }
+  ],
+  "limits": "M2 Max 12core96GB. Startup and filesystem timing vary substantially. The measured interval also includes manifest/context setup. Whole-build timings are recorded for transparency, not a stable whole-build speedup claim. Diagnostic pipeline only; not unmodified consumer performance. No 5second claim.",
+  "medianAfterClientBeforeRoutesMs": {
+    "published3.7.1": 107.6466455000002,
+    "lazy-loader": 10.824249499999723
+  },
+  "output": "All 2783 output files byte-identical; 1991 HTML and 750 original public files verified after timing."
+}
