@@ -1,4 +1,4 @@
 [
-  { "Name": "highlight", "Type": "boolean", "Default": false },
+  { "Name": "highlight", "Type": "boolean / HighlightOptions", "Default": false },
   { "Name": "lineNumbers", "Type": "boolean", "Default": true }
 ]

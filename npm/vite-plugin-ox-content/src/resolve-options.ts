@@ -84,7 +84,9 @@ export function resolveOptions(options: OxContentOptions): ResolvedOptions {
     autolinkTargetBlank: options.autolinkTargetBlank ?? true,
     linkTargetBlank: options.linkTargetBlank ?? true,
     sourceSpans: options.sourceSpans ?? false,
-    highlight: options.highlight ?? false,
+    highlight: Boolean(options.highlight),
+    highlightOptions:
+      options.highlight && typeof options.highlight === "object" ? options.highlight : undefined,
     codeAnnotations: resolveCodeAnnotationsOptions(options.codeAnnotations),
     wikiLinks: resolveWikiLinkOptions(options.wikiLinks, options.base ?? "/"),
     emojiShortcodes: resolveEmojiShortcodeOptions(options.emojiShortcodes),

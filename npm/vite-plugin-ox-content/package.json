@@ -210,6 +210,7 @@
     "@cspell/dict-fr-fr": "^2.3.2",
     "@cspell/dict-pl_pl": "^3.0.6",
     "@ox-content/napi": "workspace:*",
+    "@pierre/highlights": "0.3.0",
     "@resvg/resvg-js": "^2.6.2",
     "@standard-schema/spec": "^1.1.0",
     "@takumi-rs/core": "^2.19.0",
