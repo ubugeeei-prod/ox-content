@@ -1,5 +1,15 @@
 # Changelog
 
+## [3.8.0] - 2026-11-01
+
+### Features
+
+- add an opt-in Pierre Highlights backend (#1554) _(affects: npm: @ox-content/vite-plugin; docs, tooling, workspace metadata)_
+
+### Bug Fixes
+
+- keep plain code keyboard-scrollable (#1555) _(affects: npm: @ox-content/vite-plugin)_
+
 ## [3.7.3] - 2026-10-31
 
 ### Performance
