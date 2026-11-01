@@ -42,6 +42,13 @@ function main() {
 
 export function checkLicensePolicy(report, policy) {
   const allowedLicenses = new Set(policy.licenses?.allowed ?? []);
+  // SPDX license identifiers are case-insensitive. Keep compound expressions
+  // and package-specific exceptions exact; this does not approve new licenses.
+  const allowedIdentifiers = new Set(
+    [...allowedLicenses]
+      .filter((license) => /^[A-Za-z0-9][A-Za-z0-9.+-]*$/.test(license))
+      .map((license) => license.toLowerCase()),
+  );
   const exceptions = new Set(
     (policy.licenses?.exceptions ?? []).map((item) => `${item.name}\0${item.license}`),
   );
@@ -51,7 +58,12 @@ export function checkLicensePolicy(report, policy) {
   for (const { license, packages } of licenseGroups) {
     for (const pkg of packages) {
       const key = `${pkg.name}\0${license}`;
-      if (isPnpmRuntimePackage(pkg) || allowedLicenses.has(license) || exceptions.has(key)) {
+      if (
+        isPnpmRuntimePackage(pkg) ||
+        allowedLicenses.has(license) ||
+        allowedIdentifiers.has(license.toLowerCase()) ||
+        exceptions.has(key)
+      ) {
         continue;
       }
 

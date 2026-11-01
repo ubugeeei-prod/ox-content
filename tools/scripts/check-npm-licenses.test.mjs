@@ -10,6 +10,22 @@ const policy = {
 };
 
 describe("check-npm-licenses", () => {
+  it("matches approved single SPDX identifiers regardless of case", () => {
+    const report = {
+      "apache-2.0": { packages: [{ name: "@pierre/highlights", versions: ["0.3.0"] }] },
+    };
+    expect(
+      checkLicensePolicy(report, { licenses: { allowed: ["Apache-2.0"] } }).violations,
+    ).toEqual([]);
+  });
+
+  it("keeps unapproved licenses and compound expressions blocked", () => {
+    const packages = [{ name: "dependency", versions: ["1.0.0"] }];
+    const report = { "gpl-3.0": { packages }, "mit OR apache-2.0": { packages } };
+    const result = checkLicensePolicy(report, { licenses: { allowed: ["MIT", "Apache-2.0"] } });
+    expect(result.violations).toHaveLength(2);
+  });
+
   it("ignores pnpm managed devEngines runtime packages", () => {
     const runtimePackage = {
       name: "node",
