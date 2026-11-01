@@ -1,5 +1,11 @@
 # Changelog
 
+## [3.8.1] - 2026-11-01
+
+### Bug Fixes
+
+- update ox_jsdoc to v0.1.1 (#1557) _(affects: workspace metadata)_
+
 ## [3.8.0] - 2026-11-01
 
 ### Features
