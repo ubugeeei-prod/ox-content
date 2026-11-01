@@ -55,7 +55,10 @@ describe("Highlights backend", () => {
   );
 
   it("preserves explicit tabindex and metadata on plain code blocks", async () => {
-    const result = await highlightCode('<pre tabindex="-1" class="example" data-note="keep"><code class="language-text">plain</code></pre>', options);
+    const result = await highlightCode(
+      '<pre tabindex="-1" class="example" data-note="keep"><code class="language-text">plain</code></pre>',
+      options,
+    );
     expect(result).toContain('tabindex="-1"');
     expect(result).toContain('class="example"');
     expect(result).toContain('data-note="keep"');
