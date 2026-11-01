@@ -49,9 +49,18 @@ describe("Highlights backend", () => {
         options,
       );
       expect(result).not.toContain("ox-highlight");
+      expect(result).toContain('tabindex="0"');
       expect(getTextContent(parseHtmlFragment(result))).toBe("const 雪 = 1;\n");
     },
   );
+
+  it("preserves explicit tabindex and metadata on plain code blocks", async () => {
+    const result = await highlightCode('<pre tabindex="-1" class="example" data-note="keep"><code class="language-text">plain</code></pre>', options);
+    expect(result).toContain('tabindex="-1"');
+    expect(result).toContain('class="example"');
+    expect(result).toContain('data-note="keep"');
+    expect(result).not.toContain("ox-highlight");
+  });
 
   it("leaves unsupported languages unhighlighted", async () => {
     const result = await highlightCode(

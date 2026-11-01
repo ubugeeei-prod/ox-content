@@ -119,6 +119,13 @@ function rehypeCodeHighlight(highlighter = highlightNatively) {
             const highlightedPre = highlightBlockCode(codeElement);
             if (highlightedPre) {
               node.children[i] = highlightedPre;
+            } else {
+              const tag = normalizeClassName(codeElement.properties?.className)
+                .find((value) => value.startsWith("language-"))?.slice("language-".length) ?? "text";
+              if (["text", "plain", "plaintext", "txt"].includes(tag.toLowerCase())) {
+                child.properties ??= {};
+                child.properties.tabIndex ??= 0;
+              }
             }
           }
         } else if (child.type === "element" && child.tagName === "code") {
