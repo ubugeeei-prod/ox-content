@@ -290,3 +290,26 @@ export interface Params<
     assert_eq!(type_parameters[1].constraint.as_deref(), Some("Record<string, unknown>"));
     assert_eq!(type_parameters[1].default.as_deref(), Some("{}"));
 }
+
+#[test]
+fn string_literals_with_lone_surrogates_are_written_as_escapes() {
+    let source = r#"
+/** Values with a lone surrogate. */
+export type LoneSurrogate = "\uD800" | "plain";
+
+/** Markers. */
+export enum Marker {
+    "\uDC00" = 1,
+}
+"#;
+
+    let extractor = DocExtractor::new();
+    let items = extractor.extract_source(source, "surrogates.ts", SourceType::ts()).unwrap();
+    let item = |name: &str| items.iter().find(|item| item.name == name).unwrap();
+
+    assert_eq!(
+        item("LoneSurrogate").signature.as_deref(),
+        Some(r#"export type LoneSurrogate = "\ud800" | "plain""#)
+    );
+    assert_eq!(item("Marker").children[0].name, r"\udc00");
+}

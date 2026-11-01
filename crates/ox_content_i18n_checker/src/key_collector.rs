@@ -125,7 +125,8 @@ impl<'a> Visit<'a> for KeyVisitor<'a> {
                 let (line, col) = self.line_col(call.span.start);
                 let (_, end_col) = self.line_col(call.span.end);
                 self.usages.push(KeyUsage {
-                    key: lit.value.to_string(),
+                    // Lone surrogates, which Rust strings cannot hold, are written as `\uXXXX`.
+                    key: lit.value.display().to_string(),
                     file_path: self.file_path.to_string(),
                     line,
                     column: col,

@@ -16,6 +16,7 @@ use super::exports::{
 use super::model::{ExportKind, ExportSource, PublicExport, ResolvedModule};
 use super::resolver::{ModuleResolver, ResolvedModuleRef};
 use super::util::{absolutize, external_package_name, normalize_existing_path};
+use crate::js_string::string_literal_text;
 #[allow(unused_imports)]
 use crate::profile_span;
 use crate::{DocExtractor, DocItem};
@@ -119,7 +120,7 @@ impl GraphBuilder {
                 }
                 // `export { foo } from './bar.js';`
                 Statement::ExportFromDeclaration(export) => {
-                    let specifier = export.source.value.to_string();
+                    let specifier = string_literal_text(&export.source).into_owned();
                     let kind = export_kind(export.export_kind);
                     if let Some(resolved) = self.resolver.resolve_specifier(path, &specifier)? {
                         self.append_reexports_from_resolved_module(
@@ -139,7 +140,7 @@ impl GraphBuilder {
                     }
                 }
                 Statement::ExportAllDeclaration(export) => {
-                    let specifier = export.source.value.to_string();
+                    let specifier = string_literal_text(&export.source).into_owned();
                     let kind = export_kind(export.export_kind);
                     if let Some(resolved) = self.resolver.resolve_specifier(path, &specifier)? {
                         if let Some(exported) = &export.exported {

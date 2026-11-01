@@ -9,6 +9,7 @@ use super::builder::ImportBinding;
 use super::export_sources::{module_export_name, specifier_kind};
 use super::util::external_package_name;
 use super::{ExportKind, ExportSource, PublicExport};
+use crate::js_string::string_literal_text;
 
 pub(super) fn append_declaration_exports(
     exports: &mut Vec<PublicExport>,
@@ -97,9 +98,9 @@ pub(super) fn collect_import_bindings(
         };
 
         let statement_type_only = import.import_kind == ImportOrExportKind::Type;
+        let source = string_literal_text(&import.source);
         for specifier in specifiers {
-            let specifier =
-                import_binding(import.source.value.as_str(), statement_type_only, specifier);
+            let specifier = import_binding(&source, statement_type_only, specifier);
             imports.insert(specifier.0, specifier.1);
         }
     }
