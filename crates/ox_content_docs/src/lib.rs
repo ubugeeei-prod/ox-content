@@ -34,6 +34,7 @@ mod extractor;
 mod flow;
 mod generator;
 mod graph;
+mod js_string;
 mod markdown;
 mod model;
 mod module_routes;

@@ -3,6 +3,7 @@ use rustc_hash::FxHashSet;
 
 use super::resolver::{ExternalModuleRef, ResolvedModuleRef};
 use super::{ExportKind, ExportSource, GraphError, PublicExport};
+use crate::js_string::string_literal_text;
 use crate::string_builder::{StringBuilder, join4};
 
 pub(super) fn reexport_module_export(
@@ -91,7 +92,7 @@ pub(super) fn module_export_name(name: &ModuleExportName<'_>) -> String {
     match name {
         ModuleExportName::IdentifierName(identifier) => identifier.name.to_string(),
         ModuleExportName::IdentifierReference(identifier) => identifier.name.to_string(),
-        ModuleExportName::StringLiteral(literal) => literal.value.to_string(),
+        ModuleExportName::StringLiteral(literal) => string_literal_text(literal).into_owned(),
     }
 }
 

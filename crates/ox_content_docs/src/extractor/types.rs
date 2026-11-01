@@ -2,6 +2,7 @@ use oxc_ast::ast::{TSSignature, TSTupleElement, TSType, TSTypeLiteral, TSTypeNam
 use oxc_ast_visit::Visit;
 use oxc_span::GetSpan;
 
+use crate::js_string::string_literal_text;
 use crate::string_builder::{StringBuilder, join2, join3};
 
 use super::DocVisitor;
@@ -119,7 +120,9 @@ impl<'a> DocVisitor<'a> {
                 join3("[", &types.join(", "), "]")
             }
             TSType::TSLiteralType(lit) => match &lit.literal {
-                oxc_ast::ast::TSLiteral::StringLiteral(s) => join3("\"", s.value.as_str(), "\""),
+                oxc_ast::ast::TSLiteral::StringLiteral(s) => {
+                    join3("\"", &string_literal_text(s), "\"")
+                }
                 oxc_ast::ast::TSLiteral::NumericLiteral(n) => n
                     .raw
                     .as_ref()

@@ -4,6 +4,7 @@ use oxc_ast::ast::{
 use oxc_span::GetSpan;
 
 use super::{DocItem, DocItemKind, DocVisitor};
+use crate::js_string::string_literal_text;
 
 impl<'a> DocVisitor<'a> {
     pub(super) fn visit_type_alias_declaration(
@@ -156,8 +157,10 @@ impl<'a> DocVisitor<'a> {
     fn create_enum_member_item(&self, member: &TSEnumMember<'a>) -> Option<DocItem> {
         let member_name = match &member.id {
             oxc_ast::ast::TSEnumMemberName::Identifier(id) => id.name.to_string(),
-            oxc_ast::ast::TSEnumMemberName::String(s) => s.value.to_string(),
-            oxc_ast::ast::TSEnumMemberName::ComputedString(s) => s.value.to_string(),
+            oxc_ast::ast::TSEnumMemberName::String(s) => string_literal_text(s).into_owned(),
+            oxc_ast::ast::TSEnumMemberName::ComputedString(s) => {
+                string_literal_text(s).into_owned()
+            }
             oxc_ast::ast::TSEnumMemberName::ComputedTemplateString(template) => {
                 self.slice(template.span.start, template.span.end)
             }

@@ -153,8 +153,8 @@ impl DocExtractor {
         file_path: &str,
         program: &oxc_ast::ast::Program<'_>,
     ) -> Vec<DocItem> {
-        let comments: Vec<Comment> = program.comments.iter().copied().collect();
-        let jsdoc_cache = build_jsdoc_cache(source, &comments, self.capture_jsdoc_raw);
+        let comments: &[Comment] = &program.comments;
+        let jsdoc_cache = build_jsdoc_cache(source, comments, self.capture_jsdoc_raw);
 
         let mut visitor = DocVisitor::new(
             source,
@@ -167,7 +167,7 @@ impl DocExtractor {
         let first_stmt_start = program.body.first().map(|statement| statement.span().start);
         {
             profile_span!("docs::visit_ast");
-            if let Some(module_item) = visitor.extract_module_entry(&comments, first_stmt_start) {
+            if let Some(module_item) = visitor.extract_module_entry(comments, first_stmt_start) {
                 visitor.items.push(module_item);
             }
             visitor.visit_program(program);
