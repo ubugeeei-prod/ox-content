@@ -46,7 +46,11 @@ function escapeCode(value: string): string {
 
 /** Synchronous after the containing module's lazy WebAssembly initialization. */
 export function highlightWithHighlights(code: string, language: string): string | null {
-  if (!isSupportedLanguage(language)) return null;
+  if (
+    ["text", "plain", "plaintext", "txt"].includes(language.toLowerCase()) ||
+    !isSupportedLanguage(language)
+  )
+    return null;
   const result = codeToTokens(code, { lang: language, theme, cssVariablePrefix: prefix });
   const lines = result.tokens
     .map((line) => {

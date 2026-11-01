@@ -41,6 +41,18 @@ describe("Highlights backend", () => {
     expect(getTextContent(parseHtmlFragment(result))).toBe("const value = 1");
   });
 
+  it.each(["text", "plain", "plaintext", "txt"])(
+    "keeps %s fences as plain code",
+    async (language) => {
+      const result = await highlightCode(
+        `<pre><code class="language-${language}">const 雪 = 1;\n</code></pre>`,
+        options,
+      );
+      expect(result).not.toContain("ox-highlight");
+      expect(getTextContent(parseHtmlFragment(result))).toBe("const 雪 = 1;\n");
+    },
+  );
+
   it("leaves unsupported languages unhighlighted", async () => {
     const result = await highlightCode(
       '<pre><code class="language-brainfuck">+[&lt;]&gt;</code></pre>',
