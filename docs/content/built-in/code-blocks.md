@@ -6,7 +6,7 @@ description: Syntax highlighting, code annotations, and code imports for fenced 
 # Code Blocks
 
 Three opt-in features extend fenced code blocks: tree-sitter syntax
-highlighting, annotation syntax for highlighting and diff markers, and
+highlighting (or optional Highlights), annotation syntax for highlighting and diff markers, and
 importing snippets from real source files. This site enables all three, so
 every example below is rendered live.
 
@@ -16,7 +16,7 @@ On-demand **Run** / **Typecheck** for samples is a separate package,
 
 | Option            | Type                                 | Default |
 | ----------------- | ------------------------------------ | ------- |
-| `highlight`       | `boolean`                            | `false` |
+| `highlight`       | `boolean` / `HighlightOptions`       | `false` |
 | `codeAnnotations` | `boolean` / `CodeAnnotationsOptions` | `false` |
 | `codeImports`     | `boolean` / `CodeImportOptions`      | `false` |
 | `codeGroups`      | `boolean` / `CodeGroupOptions`       | `false` |
@@ -140,11 +140,29 @@ export default {
 ```
 
 Token colors are `--octc-syntax-*` CSS custom properties on
-`<pre class="ox-highlight css-variables">`. Highlighting is tree-sitter only,
-and `@ox-content/theme-color-*` packages resolve those variables. Without a
+`<pre class="ox-highlight css-variables">`, and `@ox-content/theme-color-*` packages resolve those variables. Without a
 color scheme the properties fall back to GitHub Dark. After highlighting, code
 block metadata (annotations, line numbers) is merged back into the native
 output.
+
+### Optional Highlights backend
+
+Select [Pierre Highlights](https://diffs.com/highlights) instead of the native
+Tree-sitter engine:
+
+```ts
+oxContent({
+  highlight: { engine: "highlights" },
+});
+```
+
+The JavaScript/Vite pipeline loads `@pierre/highlights` and its bundled WebAssembly
+lexers only when selected. Both engines use the existing theme-color variables,
+inline highlighting, line numbers, annotations and anchors. `highlight: true`
+continues to select Tree-sitter; `highlight: false` disables highlighting.
+Highlights supports its own set of bundled languages. Unsupported tags remain
+plain code. Token boundaries and syntax categories can differ between engines;
+this option does not promise identical colors or faster full-site builds.
 
 ## Code Annotations
 

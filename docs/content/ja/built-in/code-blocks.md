@@ -16,7 +16,7 @@ description: フェンス付きコードブロック向けのシンタックス�
 
 | オプション        | 型                                   | 既定    |
 | ----------------- | ------------------------------------ | ------- |
-| `highlight`       | `boolean`                            | `false` |
+| `highlight`       | `boolean` / `HighlightOptions`       | `false` |
 | `codeAnnotations` | `boolean` / `CodeAnnotationsOptions` | `false` |
 | `codeImports`     | `boolean` / `CodeImportOptions`      | `false` |
 | `codeGroups`      | `boolean` / `CodeGroupOptions`       | `false` |
@@ -131,10 +131,26 @@ export default {
 
 トークン色は `<pre class="ox-highlight css-variables">` 上の
 `--octc-syntax-*` CSS カスタムプロパティです。ハイライトは
-tree-sitter のみで、`@ox-content/theme-color-*` パッケージが
+両エンジンで`@ox-content/theme-color-*` パッケージが
 これらの変数を解決します。カラースキームがなければプロパティは GitHub
 Dark にフォールバックします。ハイライトのあと、コードブロックメタデータ（注釈、行番号）は
 ネイティブ出力へ戻しマージされます。
+
+### Highlightsエンジンの選択
+
+ネイティブのTree-sitterの代わりに、[Pierre Highlights](https://diffs.com/highlights)を選べます。
+
+```ts
+oxContent({
+  highlight: { engine: "highlights" },
+});
+```
+
+JavaScript/Viteの処理経路では、選択時だけ`@pierre/highlights`とWasm字句解析器を読み込みます。
+既存のテーマ用CSS変数、インラインコード、行番号、注釈、行アンカーに対応します。
+`highlight: true`は引き続きTree-sitterを選び、`highlight: false`は無効化します。
+対応言語は各エンジンで異なり、未対応のタグはプレーンコードとして残ります。
+字句の区切りと分類が異なるため、完全な配色一致やサイト全体の高速化を保証するものではありません。
 
 ## コード注釈
 

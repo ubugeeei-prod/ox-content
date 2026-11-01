@@ -1801,11 +1801,13 @@ export interface OxContentOptions {
    * When true, fenced and language-tagged inline code is highlighted with the
    * native tree-sitter engine. Token colors are `--octc-syntax-*` custom
    * properties so theme-color packages resolve highlighting. Languages with no
-   * native grammar stay unhighlighted.
+   * native grammar stay unhighlighted. Pass `{ engine: "highlights" }` to opt
+   * into Pierre Highlights, which loads its bundled Wasm lexers on demand and
+   * uses the same theme-color custom properties. Unknown languages remain plain.
    *
    * @default false
    */
-  highlight?: boolean;
+  highlight?: boolean | HighlightOptions;
 
   /**
    * Code block line annotations for fenced code blocks.
@@ -2371,6 +2373,7 @@ export interface ResolvedOptions {
   linkTargetBlank?: boolean;
   sourceSpans?: boolean;
   highlight: boolean;
+  highlightOptions?: HighlightOptions;
   codeAnnotations: ResolvedCodeAnnotationsOptions;
   wikiLinks: ResolvedWikiLinkOptions;
   emojiShortcodes: ResolvedEmojiShortcodeOptions;
@@ -3908,6 +3911,12 @@ export type CodeAnnotationSyntax = "attribute" | "vitepress" | "both";
 /**
  * Opt-in code annotation configuration.
  */
+/** Selects the JavaScript syntax-highlighting backend. */
+export interface HighlightOptions {
+  /** Native tree-sitter is the default. Highlights loads its WebAssembly on demand. */
+  engine?: "tree-sitter" | "highlights";
+}
+
 export interface CodeAnnotationsOptions {
   /**
    * Annotation syntax to enable.

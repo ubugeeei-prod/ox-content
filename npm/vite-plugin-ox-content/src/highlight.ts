@@ -9,6 +9,7 @@ import { unified } from "unified";
 import rehypeParsePlugin from "rehype-parse";
 import rehypeStringifyPlugin from "rehype-stringify";
 import type { Root, Element } from "hast";
+import type { HighlightOptions } from "./types";
 import { interopDefault } from "./interop";
 import {
   getTextContent,
@@ -25,7 +26,7 @@ const rehypeStringify = interopDefault(rehypeStringifyPlugin);
  * Per-block walk used when the native document pass cannot read the markup.
  * Unknown languages stay as the original `<pre><code>`.
  */
-function rehypeNativeHighlight() {
+function rehypeCodeHighlight(highlighter = highlightNatively) {
   return (tree: Root) => {
     const highlightBlockCode = (codeElement: Element): Element | null => {
       let lang = "text";
@@ -36,7 +37,7 @@ function rehypeNativeHighlight() {
         lang = langClass.replace("language-", "");
       }
 
-      const highlighted = highlightNatively(getTextContent(codeElement), lang);
+      const highlighted = highlighter(getTextContent(codeElement), lang);
       if (!highlighted) {
         return null;
       }
@@ -66,7 +67,7 @@ function rehypeNativeHighlight() {
       }
 
       const lang = langClass.replace("language-", "");
-      const highlighted = highlightNatively(getTextContent(codeElement), lang);
+      const highlighted = highlighter(getTextContent(codeElement), lang);
       if (!highlighted) {
         return null;
       }
@@ -136,21 +137,25 @@ function rehypeNativeHighlight() {
 }
 
 /**
- * Apply native tree-sitter highlighting to HTML.
+ * Apply the selected syntax-highlighting backend to HTML.
  *
  * Tries the document pass first. If that pass skips unreadable markup, falls
- * back to a native-only per-block walk. Languages with no native grammar stay
+ * back to a per-block walk. Languages without a supported grammar stay
  * as the original `<pre><code>`.
  */
-export async function highlightCode(html: string): Promise<string> {
-  const native = await highlightDocumentNatively(html);
+export async function highlightCode(html: string, options?: HighlightOptions): Promise<string> {
+  const highlights =
+    options?.engine === "highlights"
+      ? (await import("./highlight-highlights")).highlightWithHighlights
+      : undefined;
+  const native = highlights ? null : await highlightDocumentNatively(html);
   if (native && native.skipped.length === 0) {
     return native.html;
   }
 
   const result = await unified()
     .use(rehypeParse, { fragment: true })
-    .use(rehypeNativeHighlight)
+    .use(rehypeCodeHighlight, highlights)
     .use(rehypeStringify)
     .process(html);
 
@@ -164,11 +169,12 @@ export async function highlightCode(html: string): Promise<string> {
 export async function highlightPageHtml(
   html: string,
   mergeHighlightedCodeBlocks: (originalHtml: string, highlightedHtml: string) => string,
+  options?: HighlightOptions,
 ): Promise<string> {
-  const native = await highlightDocumentNatively(html);
+  const native = options?.engine === "highlights" ? null : await highlightDocumentNatively(html);
   if (native && native.skipped.length === 0) {
     return native.html;
   }
 
-  return mergeHighlightedCodeBlocks(html, await highlightCode(html));
+  return mergeHighlightedCodeBlocks(html, await highlightCode(html, options));
 }

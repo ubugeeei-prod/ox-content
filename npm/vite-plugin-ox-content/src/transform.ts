@@ -879,7 +879,7 @@ export async function transformMarkdown(
     // `<pre><code>`. Only markup the pass cannot read — where a text scan and
     // a real HTML parser would disagree — falls back to a native-only
     // per-block walk.
-    html = await highlightPageHtml(html, napi.mergeHighlightedCodeBlocks);
+    html = await highlightPageHtml(html, napi.mergeHighlightedCodeBlocks, options.highlightOptions);
   }
 
   const localNames = documentLocalComponentNames(result.imports ?? []);
@@ -906,7 +906,7 @@ export async function transformMarkdown(
   // and turns a rendered `"` back into `&quot;`. Matching a bare `<pre>` alone
   // misses GitHub cards, whose `<pre>` carries its own classes.
   if (options.highlight && UNHIGHLIGHTED_CODE_BLOCK.test(html)) {
-    html = await highlightPageHtml(html, napi.mergeHighlightedCodeBlocks);
+    html = await highlightPageHtml(html, napi.mergeHighlightedCodeBlocks, options.highlightOptions);
   }
 
   // Restore protected SVGs

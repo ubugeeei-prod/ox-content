@@ -1,3 +1,3 @@
 Option,Type,Default
-highlight,boolean,false
+highlight,boolean / HighlightOptions,false
 lineNumbers,boolean,true
