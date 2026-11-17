@@ -166,7 +166,7 @@ pub(super) struct PreviewDidChangeParams {
 /// a dedicated zero-sized type keeps the method name centralized in
 /// [`NOTIFICATION_PREVIEW_DID_CHANGE`] and makes it trivial to swap
 /// transport details (e.g. payload version) later.
-pub(super) enum PreviewDidChangeNotification {}
+pub(super) struct PreviewDidChangeNotification;
 
 impl tower_lsp::lsp_types::notification::Notification for PreviewDidChangeNotification {
     type Params = PreviewDidChangeParams;
