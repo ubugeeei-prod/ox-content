@@ -80,7 +80,7 @@ pub fn parse_search_query(query: &str) -> SearchQuery {
         if part.quoted {
             let phrase = normalize_search_value(&part.value);
             if !phrase.is_empty() {
-                push_unique(&mut phrases, phrase.clone());
+                push_unique(&mut phrases, phrase);
                 text_parts.push(part.value);
             }
             continue;

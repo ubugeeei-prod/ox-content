@@ -98,7 +98,7 @@ pub fn discover_with_ignore_file(
             }
             continue;
         }
-        let pattern = if path.is_dir() { path.join(MARKDOWN_GLOB) } else { path.clone() };
+        let pattern = if path.is_dir() { path.join(MARKDOWN_GLOB) } else { path };
         let matcher = glob(&[slash(&pattern)])?;
         let mut root = PathBuf::new();
         for component in pattern.components() {
