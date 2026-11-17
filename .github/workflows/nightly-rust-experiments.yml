@@ -6,9 +6,10 @@ name: Nightly Rust experiments
 # NIGHTLY_TOOLCHAIN is a dated pin so a red run is attributable to one
 # compiler. To bump it: change the env value below (keep the rust-toolchain
 # action comment in sync) and dispatch this workflow from the Actions tab.
-# Flag names are not hardcoded blindly — each lane probes `rustc -Z help`
-# and validates the preferred -Z value, then fails with rustc's
-# accepted-values list if the name moved.
+# Flag names are not hardcoded blindly — each lane probes rustc's help
+# output (`rustc -Z help` for -Z flags, `rustc -Zunstable-options --help -v`
+# for unstable CLI options) and validates the preferred value, then fails
+# with rustc's accepted-values list if the name moved.
 
 on:
   workflow_dispatch:
@@ -27,7 +28,7 @@ env:
   CARGO_TERM_COLOR: always
   # Dated pin so failures are diagnosable. Bump this (and the matching
   # rust-toolchain comment) when refreshing the experiment snapshot.
-  NIGHTLY_TOOLCHAIN: nightly-2026-08-25
+  NIGHTLY_TOOLCHAIN: nightly-2026-11-16
 
 jobs:
   experiment:
@@ -42,6 +43,7 @@ jobs:
           # and log rustc + flags even when it is already the default.
           - name: Polonius Alpha
             id: polonius
+            kind: z
             flag: polonius
             preferred: next
           # Next-gen trait solver is the nightly default as of ~2026-08-21.
@@ -49,15 +51,29 @@ jobs:
           # disable is `-Znext-solver=coherence`. Probe before using it.
           - name: Next-gen trait solver
             id: next-solver
+            kind: z
             flag: next-solver
             preferred: globally
+          # The parallel frontend is the nightly default as of
+          # nightly-2026-11-14, with 2 threads (so the other lanes run it too).
+          # It is tuned with the unstable CLI option `--jobs-frontend=N`
+          # (`-Zthreads` is deprecated in its favour). This lane pins 8, the
+          # point upstream says scaling flattens, to shake out ICEs, deadlocks
+          # and nondeterminism at a higher thread count than the default.
+          # https://blog.rust-lang.org/2026/11/16/enabling-parallel-frontend-on-nightly/
+          # Report crashes at https://github.com/rust-lang/rust/issues/113349
+          - name: Parallel frontend (8 threads)
+            id: parallel-frontend
+            kind: option
+            flag: jobs-frontend
+            preferred: "8"
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
 
       - name: Setup Rust
-        uses: dtolnay/rust-toolchain@29eef336d9b2848a0b548edc03f92a220660cdb8 # nightly-2026-08-25
+        uses: dtolnay/rust-toolchain@29eef336d9b2848a0b548edc03f92a220660cdb8 # nightly-2026-11-16
         with:
           toolchain: ${{ env.NIGHTLY_TOOLCHAIN }}
 
@@ -70,6 +86,7 @@ jobs:
 
       - name: Record rustc and resolve experiment flags
         env:
+          EXPERIMENT_KIND: ${{ matrix.lane.kind }}
           EXPERIMENT_FLAG: ${{ matrix.lane.flag }}
           PREFERRED_VALUE: ${{ matrix.lane.preferred }}
         run: |
@@ -83,37 +100,59 @@ jobs:
 
           echo "=== pinned toolchain ==="
           echo "NIGHTLY_TOOLCHAIN=${NIGHTLY_TOOLCHAIN}"
+          echo "EXPERIMENT_KIND=${EXPERIMENT_KIND}"
           echo "EXPERIMENT_FLAG=${EXPERIMENT_FLAG}"
           echo "PREFERRED_VALUE=${PREFERRED_VALUE}"
 
           echo "=== rustc -vV ==="
           rustc -vV
 
-          echo "=== rustc -Z help (experiment flags) ==="
-          help_out="$(rustc -Z help 2>&1)" || true
-          if ! printf '%s\n' "$help_out" | grep -E "[[:space:]]${EXPERIMENT_FLAG}(=|[[:space:]])"; then
-            echo "::error::rustc -Z help on ${NIGHTLY_TOOLCHAIN} does not list '${EXPERIMENT_FLAG}'."
-            echo "Bump NIGHTLY_TOOLCHAIN or update the experiment flag name. Full -Z help:"
+          case "${EXPERIMENT_KIND}" in
+            z)
+              help_cmd=(rustc -Z help)
+              help_pattern="[[:space:]]${EXPERIMENT_FLAG}(=|[[:space:]])"
+              experiment_flags="-Z${EXPERIMENT_FLAG}=${PREFERRED_VALUE}"
+              ;;
+            option)
+              help_cmd=(rustc -Zunstable-options --help -v)
+              help_pattern="[[:space:]]--${EXPERIMENT_FLAG}([=[:space:]]|$)"
+              experiment_flags="-Zunstable-options --${EXPERIMENT_FLAG}=${PREFERRED_VALUE}"
+              ;;
+            *)
+              echo "::error::Unknown experiment kind '${EXPERIMENT_KIND}' (expected z or option)."
+              exit 1
+              ;;
+          esac
+
+          echo "=== ${help_cmd[*]} (experiment flag) ==="
+          help_out="$("${help_cmd[@]}" 2>&1)" || true
+          if ! printf '%s\n' "$help_out" | grep -E "$help_pattern"; then
+            echo "::error::${help_cmd[*]} on ${NIGHTLY_TOOLCHAIN} does not list '${EXPERIMENT_FLAG}'."
+            echo "Bump NIGHTLY_TOOLCHAIN or update the experiment flag name. Full help:"
             printf '%s\n' "$help_out"
             exit 1
           fi
 
-          # rustc parses -Z even with -vV. An invalid value prints the accepted list.
-          echo "=== validating -Z${EXPERIMENT_FLAG}=${PREFERRED_VALUE} ==="
-          if ! rustc -Z "${EXPERIMENT_FLAG}=${PREFERRED_VALUE}" -vV \
+          # Compile an empty crate rather than running `rustc -vV`: some
+          # options (e.g. --jobs-frontend) only parse their value when a
+          # session starts. An invalid value prints the accepted list.
+          echo "=== validating ${experiment_flags} ==="
+          probe_dir="$(mktemp -d)"
+          echo 'fn main() {}' > "${probe_dir}/probe.rs"
+          # shellcheck disable=SC2086 # experiment_flags is a flag list
+          if ! rustc ${experiment_flags} --emit=metadata \
+            --out-dir "${probe_dir}" "${probe_dir}/probe.rs" \
             >/tmp/rustc-flag.out 2>/tmp/rustc-flag.err; then
-            echo "::error::-Z${EXPERIMENT_FLAG}=${PREFERRED_VALUE} is not accepted on ${NIGHTLY_TOOLCHAIN}."
+            echo "::error::${experiment_flags} is not accepted on ${NIGHTLY_TOOLCHAIN}."
             echo "Update the lane preferred value from rustc's accepted-values list:"
             cat /tmp/rustc-flag.err
             exit 1
           fi
 
-          {
-            echo "RUSTFLAGS=-Z${EXPERIMENT_FLAG}=${PREFERRED_VALUE}"
-          } >> "$GITHUB_ENV"
+          echo "RUSTFLAGS=${experiment_flags}" >> "$GITHUB_ENV"
 
           echo "=== experiment flags ==="
-          echo "RUSTFLAGS=-Z${EXPERIMENT_FLAG}=${PREFERRED_VALUE}"
+          echo "RUSTFLAGS=${experiment_flags}"
 
       - name: cargo check --workspace --all-targets
         run: cargo check --workspace --all-targets
