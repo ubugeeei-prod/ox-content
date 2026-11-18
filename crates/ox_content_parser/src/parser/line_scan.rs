@@ -23,6 +23,9 @@ const HIGH: u64 = 0x8080_8080_8080_8080;
 const NEWLINES: u64 = (b'\n' as u64) * ONES;
 const RETURNS: u64 = (b'\r' as u64) * ONES;
 
+#[cfg(target_arch = "x86_64")]
+mod x86;
+
 /// Sets `0x80` in every byte lane of `word` that is zero.
 ///
 /// A lane holding `0x01` can also light up when a lower lane borrowed into it,
@@ -47,7 +50,14 @@ pub(in crate::parser) fn line_end(bytes: &[u8], from: usize) -> usize {
             return line_end_neon(bytes, from);
         }
     }
-    line_end_swar(bytes, from)
+    #[cfg(target_arch = "x86_64")]
+    {
+        x86::line_end(bytes, from)
+    }
+    #[cfg(not(target_arch = "x86_64"))]
+    {
+        line_end_swar(bytes, from)
+    }
 }
 
 #[cfg(target_arch = "aarch64")]

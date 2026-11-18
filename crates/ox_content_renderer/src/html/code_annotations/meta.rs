@@ -166,6 +166,33 @@ pub(in crate::html) fn normalize_code_block_language(lang: Option<&str>) -> Opti
     if language.is_empty() { None } else { Some(language) }
 }
 
+static PLAIN_LANGUAGE_BYTE: [bool; 256] = {
+    let mut table = [false; 256];
+    let mut byte = b'!';
+    while byte <= b'~' {
+        table[byte as usize] = true;
+        byte += 1;
+    }
+    table[b'{' as usize] = false;
+    table[b'[' as usize] = false;
+    table[b':' as usize] = false;
+    table[b'&' as usize] = false;
+    table[b'<' as usize] = false;
+    table[b'>' as usize] = false;
+    table[b'"' as usize] = false;
+    table[b'\'' as usize] = false;
+    table
+};
+
+/// Returns a bare language token that needs neither metadata splitting nor
+/// HTML escaping. More complex info strings fall back to the general path.
+#[inline]
+pub(in crate::html) fn plain_code_block_language(lang: &str) -> Option<&str> {
+    let bytes = lang.as_bytes();
+    (!bytes.is_empty() && bytes.iter().all(|byte| PLAIN_LANGUAGE_BYTE[*byte as usize]))
+        .then_some(lang)
+}
+
 pub(in crate::html) fn apply_annotation_numbers(
     lines: &mut [CodeLineRenderState],
     line_numbers: &[usize],
