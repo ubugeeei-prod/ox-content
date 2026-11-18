@@ -40,6 +40,16 @@ static BACKTICK_RUN: LazyLock<memmem::Finder<'static>> =
     LazyLock::new(|| memmem::Finder::new("```"));
 static TILDE_RUN: LazyLock<memmem::Finder<'static>> = LazyLock::new(|| memmem::Finder::new("~~~"));
 
+/// Process-wide finder for the token every reference or footnote definition
+/// must contain.
+///
+/// Inline links make `[` common in ordinary Markdown, while `]:` remains
+/// rare. Searching for the rare token first keeps documents without
+/// definitions to one full-source scan and reuses the finder's prefilter
+/// across parses.
+static DEFINITION_CLOSER: LazyLock<memmem::Finder<'static>> =
+    LazyLock::new(|| memmem::Finder::new("]:"));
+
 /// Start of the first line at or after `from` holding a run of three
 /// `fence_byte`s, or `None` when the rest of the source holds none.
 fn next_fence_run_line(bytes: &[u8], from: usize, fence_byte: u8) -> Option<usize> {
@@ -63,12 +73,12 @@ fn next_fence_run_line(bytes: &[u8], from: usize, fence_byte: u8) -> Option<usiz
 /// responsible for validating syntax and block context.
 fn has_definition_candidate(source: &str, footnotes: bool) -> bool {
     let bytes = source.as_bytes();
+    if DEFINITION_CLOSER.find(bytes).is_none() {
+        return false;
+    }
     let Some(mut open) = memchr(b'[', bytes) else {
         return false;
     };
-    if memmem::find(bytes, b"]:").is_none() {
-        return false;
-    }
 
     let mut line_start = previous_line_start(bytes, open);
     loop {

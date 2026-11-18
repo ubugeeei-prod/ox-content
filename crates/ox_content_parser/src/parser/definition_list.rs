@@ -17,9 +17,7 @@ use self::lines::{DefinitionBodyLine, has_unclosed_inline_code, trim_line_span};
 impl<'a> Parser<'a> {
     pub(super) fn parse_definition_list(&mut self, start: usize) -> ParseResult<Option<Node<'a>>> {
         profile_span_detail!("parser::definition_list");
-        if !self.options.definition_lists {
-            return Ok(None);
-        }
+        debug_assert!(self.options.definition_lists);
 
         let Some((children, end)) = self.collect_definition_list(start)? else {
             return Ok(None);

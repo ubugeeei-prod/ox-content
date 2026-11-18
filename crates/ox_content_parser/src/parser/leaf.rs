@@ -124,7 +124,11 @@ impl<'a> Parser<'a> {
 
         let span = Span::new(start as u32, self.position as u32);
 
-        let (content, id, classes) = self.split_heading_attributes(content);
+        let (content, id, classes) = if self.options.heading_attributes {
+            self.split_heading_attributes(content)
+        } else {
+            (content, None, self.allocator.new_vec())
+        };
 
         // Parse inline content
         let children = if !content.is_empty() {
@@ -146,10 +150,8 @@ impl<'a> Parser<'a> {
         &self,
         content: &'a str,
     ) -> (&'a str, Option<&'a str>, ArenaVec<'a, &'a str>) {
+        debug_assert!(self.options.heading_attributes);
         let mut classes = self.allocator.new_vec();
-        if !self.options.heading_attributes {
-            return (content, None, classes);
-        }
 
         let trimmed = content.trim_end_matches(char::is_whitespace);
         if !trimmed.ends_with('}') {
