@@ -77,7 +77,8 @@ impl<'a> Parser<'a> {
     }
 
     pub(super) fn parse_task_list_prefix(&self, content: &'a str) -> Option<(bool, usize)> {
-        if !self.options.task_lists || content.len() < 3 {
+        debug_assert!(self.options.task_lists);
+        if content.len() < 3 {
             return None;
         }
 
@@ -189,7 +190,9 @@ impl<'a> Parser<'a> {
             marker_indent + marker_width + if is_blank(content) { 1 } else { content_skip.max(1) };
         let mut checked = None;
 
-        if let Some((done, consumed)) = self.parse_task_list_prefix(content) {
+        if self.options.task_lists
+            && let Some((done, consumed)) = self.parse_task_list_prefix(content)
+        {
             checked = Some(done);
             content = &content[consumed..];
             content_offset += consumed;

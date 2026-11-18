@@ -9,9 +9,12 @@ use ox_content_ast::{
     TableRow, ThematicBreak,
 };
 
-use super::super::code_annotations::normalize_code_block_language;
+use super::super::code_annotations::{normalize_code_block_language, plain_code_block_language};
 use super::super::toc::is_toc_marker_paragraph;
 use super::HtmlRenderer;
+
+const PLAIN_FENCE_MARKUP_LEN: usize =
+    "<pre><code class=\"language-".len() + "\">".len() + "</code></pre>\n".len();
 
 impl HtmlRenderer {
     pub(in crate::html::renderer) fn render_paragraph(&mut self, paragraph: &Paragraph<'_>) {
@@ -182,17 +185,7 @@ impl HtmlRenderer {
     pub(in crate::html::renderer) fn render_code_block(&mut self, code_block: &CodeBlock<'_>) {
         crate::profile_span!("renderer::visit_code_block");
         if !self.options.code_annotations {
-            self.write("<pre");
-            self.write_source_span_attr(code_block.span);
-            self.write("><code");
-            if let Some(lang) = normalize_code_block_language(code_block.lang) {
-                self.write(" class=\"language-");
-                self.write_escaped(lang);
-                self.write("\"");
-            }
-            self.write(">");
-            self.write_escaped(code_block.value);
-            self.write("</code></pre>\n");
+            self.write_plain_code_block(code_block);
             return;
         }
 
@@ -239,6 +232,37 @@ impl HtmlRenderer {
         } else {
             self.write_escaped(code_block.value);
         }
+        self.write("</code></pre>\n");
+    }
+
+    /// Writes the default fence form with one capacity check and combined
+    /// fixed markup. The source-span branch remains cold under default options.
+    fn write_plain_code_block(&mut self, code_block: &CodeBlock<'_>) {
+        let plain_language = code_block.lang.and_then(plain_code_block_language);
+        let language = plain_language.or_else(|| normalize_code_block_language(code_block.lang));
+        self.output.reserve(
+            PLAIN_FENCE_MARKUP_LEN + language.map_or(0, str::len) + code_block.value.len(),
+        );
+
+        if self.options.source_spans {
+            self.write("<pre");
+            self.write_source_span_attr(code_block.span);
+            self.write("><code");
+        } else {
+            self.write("<pre><code");
+        }
+        if let Some(language) = language {
+            self.write(" class=\"language-");
+            if plain_language.is_some() {
+                self.write(language);
+            } else {
+                self.write_escaped(language);
+            }
+            self.write("\">");
+        } else {
+            self.write(">");
+        }
+        self.write_escaped(code_block.value);
         self.write("</code></pre>\n");
     }
 

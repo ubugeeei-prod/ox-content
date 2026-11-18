@@ -18,10 +18,17 @@
 //! an eight-byte word test — converting those call sites measured 4-11% slower,
 //! so they deliberately keep using `memchr`.
 
+#[cfg(not(target_arch = "x86_64"))]
 const ONES: u64 = 0x0101_0101_0101_0101;
+#[cfg(not(target_arch = "x86_64"))]
 const HIGH: u64 = 0x8080_8080_8080_8080;
+#[cfg(not(target_arch = "x86_64"))]
 const NEWLINES: u64 = (b'\n' as u64) * ONES;
+#[cfg(not(target_arch = "x86_64"))]
 const RETURNS: u64 = (b'\r' as u64) * ONES;
+
+#[cfg(target_arch = "x86_64")]
+mod x86;
 
 /// Sets `0x80` in every byte lane of `word` that is zero.
 ///
@@ -30,6 +37,7 @@ const RETURNS: u64 = (b'\r' as u64) * ONES;
 /// sit above a genuine zero lane, which means the lowest set bit is always a
 /// true match.
 #[inline]
+#[cfg(not(target_arch = "x86_64"))]
 const fn has_zero(word: u64) -> u64 {
     word.wrapping_sub(ONES) & !word & HIGH
 }
@@ -47,7 +55,14 @@ pub(in crate::parser) fn line_end(bytes: &[u8], from: usize) -> usize {
             return line_end_neon(bytes, from);
         }
     }
-    line_end_swar(bytes, from)
+    #[cfg(target_arch = "x86_64")]
+    {
+        x86::line_end(bytes, from)
+    }
+    #[cfg(not(target_arch = "x86_64"))]
+    {
+        line_end_swar(bytes, from)
+    }
 }
 
 #[cfg(target_arch = "aarch64")]
@@ -102,6 +117,7 @@ fn line_end_neon(bytes: &[u8], from: usize) -> usize {
 
 /// Portable eight-byte word scan used for short remainders and non-aarch64.
 #[inline]
+#[cfg(not(target_arch = "x86_64"))]
 fn line_end_swar(bytes: &[u8], from: usize) -> usize {
     let end = bytes.len();
     let mut i = from;
@@ -147,6 +163,7 @@ pub(in crate::parser) fn is_line_ending_byte(byte: u8) -> bool {
 }
 
 #[inline]
+#[cfg(not(target_arch = "x86_64"))]
 fn copy_eight(bytes: &[u8], from: usize) -> [u8; 8] {
     let mut chunk = [0u8; 8];
     chunk.copy_from_slice(&bytes[from..from + 8]);

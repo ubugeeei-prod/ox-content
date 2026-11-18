@@ -104,10 +104,18 @@ impl<'a> Parser<'a> {
     /// inlines and flattened to plain text (links contribute their text,
     /// code its literal content). Plain text stays zero-copy.
     fn flatten_image_alt(&self, raw: &'a str, offset: usize) -> ParseResult<&'a str> {
-        if memchr3(b'[', b'*', b'_', raw.as_bytes()).is_none()
-            && memchr3(b'`', b'\\', b'&', raw.as_bytes()).is_none()
-            && memchr(b'<', raw.as_bytes()).is_none()
-        {
+        let bytes = raw.as_bytes();
+        // Alt text is usually tiny. A single scalar classifier avoids three
+        // separate search setup costs there; larger spans still use memchr's
+        // vectorized searches.
+        let needs_parse = if bytes.len() < 16 {
+            bytes.iter().any(|byte| matches!(byte, b'[' | b'*' | b'_' | b'`' | b'\\' | b'&' | b'<'))
+        } else {
+            memchr3(b'[', b'*', b'_', bytes).is_some()
+                || memchr3(b'`', b'\\', b'&', bytes).is_some()
+                || memchr(b'<', bytes).is_some()
+        };
+        if !needs_parse {
             return Ok(raw);
         }
         let nodes = self.parse_inline(raw, offset)?;

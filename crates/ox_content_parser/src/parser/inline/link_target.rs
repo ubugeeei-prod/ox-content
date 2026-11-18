@@ -29,7 +29,7 @@ impl<'a> Parser<'a> {
         let bytes = content.as_bytes();
         let mut i = skip_ws(bytes, open + 1);
 
-        let (raw_url, after_dest) = parse_destination(content, i)?;
+        let (raw_url, after_dest, url_needs_unescape) = parse_destination(content, i)?;
         i = skip_ws(bytes, after_dest);
 
         let mut title = None;
@@ -44,7 +44,8 @@ impl<'a> Parser<'a> {
         if bytes.get(i) != Some(&b')') {
             return None;
         }
-        Some(LinkTarget { url: self.unescape_link_component(raw_url), title, end: i + 1 })
+        let url = if url_needs_unescape { self.unescape_link_component(raw_url) } else { raw_url };
+        Some(LinkTarget { url, title, end: i + 1 })
     }
 
     /// Removes backslashes that escape ASCII punctuation and decodes
@@ -53,7 +54,12 @@ impl<'a> Parser<'a> {
     /// nothing decodes; otherwise the copy is allocated in the arena.
     pub(in crate::parser) fn unescape_link_component(&self, raw: &'a str) -> &'a str {
         let bytes = raw.as_bytes();
-        let mut i = 0;
+        // Plain URLs dominate. Probe for the only two bytes that can change
+        // the result so those inputs stay borrowed without a second scalar
+        // walk over every destination byte.
+        let Some(mut i) = memchr::memchr2(b'\\', b'&', bytes) else {
+            return raw;
+        };
         let mut start = 0;
         let mut out: Option<ox_content_allocator::String<'a>> = None;
         while i < bytes.len() {
@@ -95,15 +101,19 @@ impl<'a> Parser<'a> {
 
 /// Parses a destination at `i`: either `<...>` (may contain spaces, no
 /// newlines or unescaped angle brackets) or a bare run without whitespace
-/// or control characters and with balanced unescaped parentheses.
-pub(in crate::parser) fn parse_destination(content: &str, i: usize) -> Option<(&str, usize)> {
+/// or control characters and with balanced unescaped parentheses. The third
+/// return value reports whether the destination contains a byte that can
+/// require unescaping.
+pub(in crate::parser) fn parse_destination(content: &str, i: usize) -> Option<(&str, usize, bool)> {
     let bytes = content.as_bytes();
     if bytes.get(i) == Some(&b'<') {
         let mut j = i + 1;
         loop {
             match bytes.get(j)? {
                 b'\\' if is_escape(bytes, j) => j += 2,
-                b'>' => return Some((&content[i + 1..j], j + 1)),
+                // Keep the rare angle-bracket form on the conservative path;
+                // its contents may contain escaped punctuation or entities.
+                b'>' => return Some((&content[i + 1..j], j + 1, true)),
                 b'<' | b'\n' => return None,
                 _ => j += 1,
             }
@@ -111,10 +121,18 @@ pub(in crate::parser) fn parse_destination(content: &str, i: usize) -> Option<(&
     }
 
     let mut depth = 0usize;
+    let mut needs_unescape = false;
     let mut j = i;
     while j < bytes.len() {
         match bytes[j] {
-            b'\\' if is_escape(bytes, j) => j += 2,
+            b'\\' if is_escape(bytes, j) => {
+                needs_unescape = true;
+                j += 2;
+            }
+            b'\\' | b'&' => {
+                needs_unescape = true;
+                j += 1;
+            }
             b'(' => {
                 depth += 1;
                 j += 1;
@@ -131,7 +149,7 @@ pub(in crate::parser) fn parse_destination(content: &str, i: usize) -> Option<(&
     if depth > 0 {
         return None;
     }
-    Some((&content[i..j], j))
+    Some((&content[i..j], j, needs_unescape))
 }
 
 /// Parses a `"..."`, `'...'`, or `(...)` title starting at `i`.

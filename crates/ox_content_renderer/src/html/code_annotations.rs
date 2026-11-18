@@ -12,7 +12,7 @@ mod vitepress;
 pub(super) use attribute::{parse_code_annotations, parse_line_numbers};
 pub(super) use meta::{
     apply_annotation_numbers, apply_btree_annotations, normalize_code_block_info,
-    normalize_code_block_language, split_code_block_meta,
+    normalize_code_block_language, plain_code_block_language, split_code_block_meta,
 };
 pub(super) use state::{
     CodeAnnotationKind, CodeBlockRenderState, CodeLineRenderState, MetaTokenKind,

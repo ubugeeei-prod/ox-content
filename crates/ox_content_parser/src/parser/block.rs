@@ -38,7 +38,8 @@ impl<'a> Parser<'a> {
         // other block construct can begin on such a line. (This runs at
         // block level only — an indented line after an open paragraph is
         // lazy continuation, handled by `parse_paragraph`.)
-        let line_indent = self.line_indent_width(start, trimmed_start);
+        let line_indent =
+            if trimmed_start == start { 0 } else { self.line_indent_width(start, trimmed_start) };
         if line_indent >= 4 {
             return self.parse_indented_code(start);
         }
@@ -173,7 +174,9 @@ impl<'a> Parser<'a> {
             return Ok(Some(node));
         }
 
-        if let Some(node) = self.parse_definition_list(start)? {
+        if self.options.definition_lists
+            && let Some(node) = self.parse_definition_list(start)?
+        {
             return Ok(Some(node));
         }
 
@@ -229,7 +232,11 @@ impl<'a> Parser<'a> {
                 let heading_end = scan_next_line_start(bytes, line_start);
                 self.position = heading_end;
                 let content = trim_block_content(&self.source[start..content_end]);
-                let (content, id, classes) = self.split_heading_attributes(content);
+                let (content, id, classes) = if self.options.heading_attributes {
+                    self.split_heading_attributes(content)
+                } else {
+                    (content, None, self.allocator.new_vec())
+                };
                 let children = self.parse_inline_block(
                     content,
                     content.as_ptr().addr() - self.source.as_ptr().addr(),

@@ -118,7 +118,8 @@ impl<'a> Parser<'a> {
         }
 
         let dest_start = skip_ws_one_newline(bytes, j + 2)?;
-        let (raw_url, after_dest) = super::inline::parse_link_destination(text, dest_start)?;
+        let (raw_url, after_dest, url_needs_unescape) =
+            super::inline::parse_link_destination(text, dest_start)?;
         if raw_url.is_empty() && bytes.get(dest_start) != Some(&b'<') {
             return None;
         }
@@ -148,7 +149,11 @@ impl<'a> Parser<'a> {
         {
             return Some(ParsedDefinition {
                 label,
-                url: self.unescape_reference_component(raw_url),
+                url: if url_needs_unescape {
+                    self.unescape_reference_component(raw_url)
+                } else {
+                    raw_url
+                },
                 title: Some(self.unescape_reference_component(raw_title)),
                 consumed: end,
             });
@@ -159,7 +164,11 @@ impl<'a> Parser<'a> {
         let end = dest_line_end?;
         Some(ParsedDefinition {
             label,
-            url: self.unescape_reference_component(raw_url),
+            url: if url_needs_unescape {
+                self.unescape_reference_component(raw_url)
+            } else {
+                raw_url
+            },
             title: None,
             consumed: end,
         })
