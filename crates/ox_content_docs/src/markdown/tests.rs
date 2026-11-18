@@ -23,6 +23,7 @@ mod overloads;
 mod reexports;
 mod render_style;
 mod return_members;
+mod signature_members;
 mod stats_options;
 mod type_links;
 mod type_parameter_links;

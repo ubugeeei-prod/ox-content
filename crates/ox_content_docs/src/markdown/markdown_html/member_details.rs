@@ -9,6 +9,9 @@ use super::{
     render_member_type_parameters_html, render_return_members_html, render_throws_list_html,
     render_type_inner_html,
 };
+use crate::markdown::signature_members::{
+    is_signature_member, signature_member_code, signature_member_label,
+};
 use crate::model::{ApiDocEntry, ApiDocMember, ApiReturnDoc};
 use crate::string_builder::StringBuilder;
 
@@ -68,10 +71,15 @@ pub(super) fn render_callable_member_group_html(
 }
 
 pub(super) fn is_callable_member(member: &ApiDocMember) -> bool {
-    matches!(member.kind.as_str(), "constructor" | "method" | "getter" | "setter")
+    is_signature_member(member)
+        || matches!(member.kind.as_str(), "constructor" | "method" | "getter" | "setter")
 }
 
 fn push_callable_member_heading_html(out: &mut StringBuilder, member: &ApiDocMember, title: &str) {
+    if let Some(label) = signature_member_label(member) {
+        out.push_str(label);
+        return;
+    }
     if member.kind == "constructor" {
         out.push_str("Constructor");
         return;
@@ -83,6 +91,9 @@ fn push_callable_member_heading_html(out: &mut StringBuilder, member: &ApiDocMem
 }
 
 fn callable_member_signature(member: &ApiDocMember, entry_name: &str) -> Option<String> {
+    if is_signature_member(member) {
+        return signature_member_code(member, Some(entry_name));
+    }
     let signature = member.signature.as_deref()?.trim();
     if signature.is_empty() {
         return None;

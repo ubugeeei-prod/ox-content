@@ -1,4 +1,5 @@
 use super::*;
+use crate::markdown::signature_members::member_display_name;
 
 pub(super) fn render_member_table_html(
     entry_name: &str,
@@ -28,7 +29,7 @@ pub(super) fn render_member_table_html(
             context.map_or(MarkdownPathStrategy::Flat, |context| context.options.path_strategy),
         )));
         rows.push_str("\">\n  <td><code>");
-        rows.push_str(&escape_html(&member.name));
+        rows.push_str(&escape_html(member_display_name(member)));
         rows.push_str("</code>");
         rows.push_str(&render_member_flags(member));
         rows.push_str("</td>\n  ");
@@ -113,7 +114,7 @@ pub(super) fn render_member_list_html(
             context.map_or(MarkdownPathStrategy::Flat, |context| context.options.path_strategy),
         )));
         items.push_str("\" class=\"ox-api-entry__member\">\n  <div class=\"ox-api-entry__member-heading\">\n    <code class=\"ox-api-entry__member-name\">");
-        items.push_str(&escape_html(&member.name));
+        items.push_str(&escape_html(member_display_name(member)));
         items.push_str("</code>");
         items.push_str(&render_member_flags(member));
         items.push_str("\n    <span class=\"ox-api-entry__member-kind\">");

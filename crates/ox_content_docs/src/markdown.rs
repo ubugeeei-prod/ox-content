@@ -23,6 +23,7 @@ mod options;
 mod owners;
 mod paths;
 mod regex_cache;
+mod signature_members;
 mod sort;
 mod stats;
 mod summary;

@@ -20,7 +20,9 @@ pub use model::{
 };
 
 use item::normalize_member;
-use merge::{merge_extracted_params, merge_extracted_return};
+use merge::{
+    merge_extracted_params, merge_extracted_return, move_declaration_docs_to_call_signature,
+};
 use metadata::{build_type_parameters, normalize_doc_metadata};
 
 use crate::extractor::DocItem;
@@ -78,11 +80,16 @@ pub fn normalize_doc_item(item: DocItem, type_parameters: bool) -> Option<Normal
         item.return_members,
         type_parameters,
     );
-    let members = item
+    let mut members: Vec<NormalizedMember> = item
         .children
         .into_iter()
         .filter_map(|item| normalize_member(item, type_parameters))
         .collect();
+    move_declaration_docs_to_call_signature(
+        &mut members,
+        &mut metadata.params,
+        &mut metadata.returns,
+    );
     let type_parameters = if type_parameters {
         build_type_parameters(item.type_parameters, &metadata.type_param_descriptions)
     } else {

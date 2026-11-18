@@ -215,4 +215,10 @@ pub enum DocItemKind {
     /// TypeScript index signature.
     #[serde(rename = "indexSignature")]
     IndexSignature,
+    /// TypeScript call signature (`(a: string): string`).
+    #[serde(rename = "callSignature")]
+    CallSignature,
+    /// TypeScript construct signature (`new (a: string): object`).
+    #[serde(rename = "constructSignature")]
+    ConstructSignature,
 }

@@ -1,4 +1,5 @@
 use super::*;
+use crate::markdown::signature_members::{signature_member_label, signature_member_text};
 
 pub(super) fn render_property_members_html(
     members: &[ApiDocMember],
@@ -104,6 +105,9 @@ pub(super) fn render_nested_members_list_html(
 }
 
 fn render_nested_member_name_html(member: &ApiDocMember) -> String {
+    if let Some(label) = signature_member_label(member) {
+        return label.to_string();
+    }
     let mut out = StringBuilder::new();
     out.push_str("<code>");
     out.push_str(&escape_html(&member.name));
@@ -119,9 +123,10 @@ fn render_nested_member_type_html(
     let names = type_parameter_scope(link_context, &member.type_parameters);
     let scoped = link_context.map(|context| context.with_type_parameters(&names));
     let link_context = scoped.as_ref();
-    let Some(member_type) = member
-        .type_annotation
+    let signature = signature_member_text(member, None);
+    let Some(member_type) = signature
         .as_deref()
+        .or(member.type_annotation.as_deref())
         .or_else(|| member.returns.as_ref().map(|returns| returns.type_annotation.as_str()))
         .or(member.signature.as_deref())
         .filter(|value| !value.is_empty())

@@ -1,6 +1,6 @@
 use super::item::normalize_member;
 use super::model::{NormalizedParamDoc, NormalizedReturnDoc};
-use super::{PARAM_TAG_NAME, UNKNOWN_TYPE};
+use super::{NormalizedMember, NormalizedMemberKind, PARAM_TAG_NAME, UNKNOWN_TYPE};
 use crate::extractor::{DocItem, ParamDoc};
 
 pub(super) fn merge_extracted_params(
@@ -96,6 +96,40 @@ pub(super) fn merge_returns(returns: &mut Option<NormalizedReturnDoc>, next: Nor
     }
     if existing.members.is_empty() {
         existing.members = next.members;
+    }
+}
+
+/// Moves the declaration's `@param` and `@returns` docs to its only call
+/// signature when that signature has no docs of its own, as TypeDoc does. The
+/// parameters are then listed once, on the signature, with their types.
+pub(super) fn move_declaration_docs_to_call_signature(
+    members: &mut [NormalizedMember],
+    params: &mut Vec<NormalizedParamDoc>,
+    returns: &mut Option<NormalizedReturnDoc>,
+) {
+    if params.is_empty() && returns.is_none() {
+        return;
+    }
+    let mut call_signatures =
+        members.iter_mut().filter(|member| member.kind == NormalizedMemberKind::CallSignature);
+    let (Some(signature), None) = (call_signatures.next(), call_signatures.next()) else {
+        return;
+    };
+    let documented = !signature.description.is_empty()
+        || signature.params.iter().any(|param| !param.description.is_empty())
+        || signature.returns.as_ref().is_some_and(|returns| !returns.description.is_empty());
+    let every_param_matches = params
+        .iter()
+        .all(|param| signature.params.iter().any(|own| param_names_match(&own.name, &param.name)));
+    if documented || !every_param_matches {
+        return;
+    }
+
+    for param in params.drain(..) {
+        merge_param(&mut signature.params, param);
+    }
+    if let Some(declared) = returns.take() {
+        merge_returns(&mut signature.returns, declared);
     }
 }
 

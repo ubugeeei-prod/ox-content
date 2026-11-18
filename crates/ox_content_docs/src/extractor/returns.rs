@@ -1,7 +1,7 @@
 use oxc_ast::ast::{Function, TSType, TSTypeName};
 
 use super::DocVisitor;
-use super::model::{DocItem, DocTag, FunctionTypeMetadata};
+use super::model::{DocItem, DocItemKind, DocTag, FunctionTypeMetadata};
 
 impl<'a> DocVisitor<'a> {
     fn extract_return_type_from_annotation(
@@ -25,10 +25,18 @@ impl<'a> DocVisitor<'a> {
         if let Some(return_type) = return_type {
             if let TSType::TSTypeLiteral(type_literal) = &return_type.type_annotation {
                 let members = self.extract_ts_signature_members(&type_literal.members);
-                let type_annotation = if members.is_empty() {
-                    self.format_ts_type(&return_type.type_annotation)
-                } else {
+                // A literal with only call or construct signatures keeps its own
+                // text: `object` would hide that the value is callable.
+                let has_named_members = members.iter().any(|member| {
+                    !matches!(
+                        member.kind,
+                        DocItemKind::CallSignature | DocItemKind::ConstructSignature
+                    )
+                });
+                let type_annotation = if has_named_members {
                     "object".to_string()
+                } else {
+                    self.format_ts_type(&return_type.type_annotation)
                 };
                 return (Some(type_annotation), members);
             }

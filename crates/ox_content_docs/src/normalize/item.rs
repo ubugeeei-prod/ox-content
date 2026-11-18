@@ -23,6 +23,8 @@ pub(super) fn normalize_member(item: DocItem, type_parameters: bool) -> Option<N
             | NormalizedMemberKind::Constructor
             | NormalizedMemberKind::Getter
             | NormalizedMemberKind::Setter
+            | NormalizedMemberKind::CallSignature
+            | NormalizedMemberKind::ConstructSignature
     ) || has_extracted_params
         || has_extracted_return;
     merge_extracted_params(&mut metadata.params, item.params);
@@ -55,7 +57,9 @@ pub(super) fn normalize_member(item: DocItem, type_parameters: bool) -> Option<N
         NormalizedMemberKind::Method
         | NormalizedMemberKind::Constructor
         | NormalizedMemberKind::Getter
-        | NormalizedMemberKind::Setter => (item.signature, None),
+        | NormalizedMemberKind::Setter
+        | NormalizedMemberKind::CallSignature
+        | NormalizedMemberKind::ConstructSignature => (item.signature, None),
     };
 
     Some(NormalizedMember {

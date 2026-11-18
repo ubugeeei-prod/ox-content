@@ -1,4 +1,5 @@
 use super::*;
+use crate::markdown::signature_members::{CALL_SIGNATURE, CONSTRUCT_SIGNATURE};
 
 fn render_member_group_html(
     entry: &ApiDocEntry,
@@ -50,6 +51,17 @@ pub(super) fn render_members_html(
     };
     let index_signatures =
         || members.iter().filter(|member| member.kind == "indexSignature").collect::<Vec<_>>();
+    let signatures = || {
+        let (mut call, mut construct) = (Vec::new(), Vec::new());
+        for member in members {
+            match member.kind.as_str() {
+                CALL_SIGNATURE => call.push(member),
+                CONSTRUCT_SIGNATURE => construct.push(member),
+                _ => {}
+            }
+        }
+        (call, construct)
+    };
 
     let mut groups = Vec::new();
     match entry.kind.as_str() {
@@ -94,7 +106,22 @@ pub(super) fn render_members_html(
             ));
         }
         "interface" => {
+            let (call_signatures, construct_signatures) = signatures();
+            groups.push(render_member_group_html(
+                entry,
+                "Call Signatures",
+                &call_signatures,
+                options,
+                context,
+            ));
             groups.push(render_index_signature_group_html(&index_signatures(), context));
+            groups.push(render_member_group_html(
+                entry,
+                "Constructors",
+                &construct_signatures,
+                options,
+                context,
+            ));
             groups.push(render_member_group_html(
                 entry,
                 "Properties",
@@ -113,7 +140,22 @@ pub(super) fn render_members_html(
         "type" => {
             let enum_members =
                 members.iter().filter(|member| member.kind == "enumMember").collect::<Vec<_>>();
+            let (call_signatures, construct_signatures) = signatures();
+            groups.push(render_member_group_html(
+                entry,
+                "Call Signatures",
+                &call_signatures,
+                options,
+                context,
+            ));
             groups.push(render_index_signature_group_html(&index_signatures(), context));
+            groups.push(render_member_group_html(
+                entry,
+                "Constructors",
+                &construct_signatures,
+                options,
+                context,
+            ));
             groups.push(render_member_group_html(
                 entry,
                 "Properties",

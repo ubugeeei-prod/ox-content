@@ -2,6 +2,7 @@ use super::super::MarkdownLinkContext;
 use super::format::{inline, linked_type_span};
 use super::index_signatures::push_index_signature_detail_pure;
 use super::member_bits::{member_description, member_type};
+use crate::markdown::signature_members::member_display_name;
 use crate::model::{ApiDocMember, ApiReturnDoc};
 use crate::string_builder::{StringBuilder, join2};
 
@@ -48,7 +49,7 @@ pub(super) fn push_return_members(
         out.push_str(heading);
         out.push('#');
         out.push(' ');
-        out.push_str(&member.name);
+        out.push_str(member_display_name(member));
         out.push_str("\n\n```ts\n");
         out.push_str(&return_member_signature(member));
         out.push_str("\n```\n\n");

@@ -5,6 +5,7 @@ use rustc_hash::FxHashMap;
 use super::links::SymbolLocation;
 use super::options::{MarkdownDocsOptions, MarkdownPathStrategy};
 use super::paths::{entry_anchor, member_anchor};
+use super::signature_members::is_signature_member;
 use super::typedoc::{plural_kind_file_name, typedoc_entry_file_name};
 use super::{CanonicalOwners, member_symbol_name};
 use crate::model::ApiDocModule;
@@ -59,7 +60,7 @@ pub(super) fn build_symbol_map(
                     anchor,
                 },
             );
-            for member in &entry.members {
+            for member in entry.members.iter().filter(|member| !is_signature_member(member)) {
                 insert_symbol_location(
                     &mut map,
                     member_symbol_name(&entry.name, &member.name),

@@ -1,0 +1,85 @@
+---
+source: crates/ox_content_docs/src/markdown/tests/helpers/assertions.rs
+---
+# Interface: Translate
+
+<div id="translate" class="ox-api-entry ox-api-entry--page">
+<span class="ox-api-entry__meta"><span class="ox-api-badge">5 members</span></span>
+<div class="ox-api-entry__prose">
+<p>Translate messages.</p>
+</div>
+<div class="ox-api-entry__section ox-api-entry__section--signature">
+<h4>Signature</h4>
+<pre><code class="language-typescript">export interface Translate</code></pre>
+</div>
+<div class="ox-api-entry__section ox-api-entry__section--members">
+<h4>Members</h4>
+<div class="ox-api-entry__member-group ox-api-entry__member-group--details">
+<h5>Call Signatures</h5>
+<div class="ox-api-entry__member-details">
+<section id="call-signature" class="ox-api-entry__member-detail">
+<h5>Call Signature</h5>
+<pre><code class="language-typescript">Translate&lt;Key extends string&gt;(key: Key): string;</code></pre>
+<div class="ox-api-entry__member-description">Translate a key.</div><div class="ox-api-entry__member-detail-section ox-api-entry__member-detail-section--type-parameters">
+<h6>Type Parameters</h6>
+<ul class="ox-api-entry__type-parameters"><li class="ox-api-entry__type-parameter"><div class="ox-api-entry__type-parameter-heading"><code>Key</code> <em>extends</em> <code>string</code></div><p class="ox-api-entry__type-parameter-description">The key type.</p></li></ul>
+</div><div class="ox-api-entry__member-detail-section ox-api-entry__member-detail-section--params">
+<h6>Parameters</h6>
+<ul class="ox-api-entry__member-params"><li><code>key</code> A key.</li></ul>
+</div><div class="ox-api-entry__member-detail-section ox-api-entry__member-detail-section--returns">
+<h6>Returns</h6>
+<code class="ox-api-entry__return-type">string</code><p class="ox-api-entry__return-description">A message.</p>
+</div></section><section id="call-signature" class="ox-api-entry__member-detail">
+<h5>Call Signature</h5>
+<pre><code class="language-typescript">Translate(key: string, plural: number): string;</code></pre>
+<div class="ox-api-entry__member-description">Translate with a plural.</div><div class="ox-api-entry__member-detail-section ox-api-entry__member-detail-section--params">
+<h6>Parameters</h6>
+<ul class="ox-api-entry__member-params"><li><code>key</code> A key.</li><li><code>plural</code> A count.</li></ul>
+</div><div class="ox-api-entry__member-detail-section ox-api-entry__member-detail-section--returns">
+<h6>Returns</h6>
+<code class="ox-api-entry__return-type">string</code>
+</div></section>
+</div>
+</div>
+<div class="ox-api-entry__member-group ox-api-entry__member-group--details">
+<h5>Constructors</h5>
+<div class="ox-api-entry__member-details">
+<section id="constructor" class="ox-api-entry__member-detail">
+<h5>Constructor</h5>
+<pre><code class="language-typescript">new Translate(locale: string): Translate;</code></pre>
+<div class="ox-api-entry__member-description">Create it.</div><div class="ox-api-entry__member-detail-section ox-api-entry__member-detail-section--params">
+<h6>Parameters</h6>
+<ul class="ox-api-entry__member-params"><li><code>locale</code></li></ul>
+</div><div class="ox-api-entry__member-detail-section ox-api-entry__member-detail-section--returns">
+<h6>Returns</h6>
+<code class="ox-api-entry__return-type"><a href="./Translate.md">Translate</a></code>
+</div></section>
+</div>
+</div>
+<div class="ox-api-entry__member-group">
+<h5>Properties</h5>
+<table class="ox-api-entry__members-table">
+<thead><tr><th>Name</th><th>Type</th><th>Description</th></tr></thead>
+<tbody>
+<tr id="property-locale">
+  <td><code>locale</code></td>
+  <td><code class="ox-api-entry__member-type language-typescript">string</code></td>
+  <td><div class="ox-api-entry__member-description">The locale.</div></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="ox-api-entry__member-group ox-api-entry__member-group--details">
+<h5>Methods</h5>
+<div class="ox-api-entry__member-details">
+<section id="method-reset" class="ox-api-entry__member-detail">
+<h5>reset()</h5>
+<pre><code class="language-typescript">reset(): void;</code></pre>
+<div class="ox-api-entry__member-description">Reset it.</div><div class="ox-api-entry__member-detail-section ox-api-entry__member-detail-section--returns">
+<h6>Returns</h6>
+<code class="ox-api-entry__return-type">void</code>
+</div></section>
+</div>
+</div>
+</div>
+</div>

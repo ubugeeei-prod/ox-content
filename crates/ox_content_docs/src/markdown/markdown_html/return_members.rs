@@ -1,4 +1,5 @@
 use super::*;
+use crate::markdown::signature_members::member_display_name;
 
 pub(super) fn render_return_members_html(
     members: &[ApiDocMember],
@@ -29,7 +30,7 @@ pub(super) fn render_return_members_html(
             continue;
         }
         rendered.push_str("\n<div class=\"ox-api-entry__return-member\">\n<h5>");
-        rendered.push_str(&escape_html(&member.name));
+        rendered.push_str(&escape_html(member_display_name(member)));
         rendered.push_str(
             "</h5>\n<code class=\"ox-api-entry__return-member-type language-typescript\">",
         );

@@ -1,4 +1,8 @@
-use oxc_ast::ast::{TSIndexSignature, TSIndexSignatureName, TSSignature, TSType};
+use oxc_ast::ast::{
+    FormalParameters, TSIndexSignature, TSIndexSignatureName, TSSignature, TSType,
+    TSTypeAnnotation, TSTypeParameterDeclaration,
+};
+use oxc_span::Span;
 
 use crate::string_builder::{StringBuilder, join5};
 
@@ -81,65 +85,48 @@ impl<'a> DocVisitor<'a> {
                         _ => continue,
                     };
 
-                    let (method_jsdoc, method_doc, method_tags) = self
-                        .extract_jsdoc(method.span.start)
-                        .map_or((None, None, Vec::new()), |(jsdoc, doc, tags)| {
-                            (Some(jsdoc), (!doc.is_empty()).then_some(doc), tags)
-                        });
-                    if self.should_skip_by_visibility(&method_tags) {
-                        continue;
-                    }
-                    let (method_line, method_end_line) =
-                        self.span_lines(method.span.start, method.span.end);
-                    let (return_type, return_members) = self.extract_return_from_annotation(
-                        method.return_type.as_deref(),
-                        &method_tags,
-                    );
-
                     let kind = match method.kind {
                         oxc_ast::ast::TSMethodSignatureKind::Method => DocItemKind::Method,
                         oxc_ast::ast::TSMethodSignatureKind::Get => DocItemKind::Getter,
                         oxc_ast::ast::TSMethodSignatureKind::Set => DocItemKind::Setter,
                     };
-
-                    children.push(DocItem {
-                        name: method_name.clone(),
+                    if let Some(mut item) = self.create_callable_member_item(
+                        method_name,
                         kind,
-                        doc: method_doc,
-                        source_path: self.file_path.to_string(),
-                        line: method_line,
-                        end_line: method_end_line,
-                        column: self.column_number(method.span.start),
-                        jsdoc: method_jsdoc,
-                        exported: false,
-                        signature: Some(self.format_assigned_function_signature(
-                            &method_name,
-                            false,
-                            method.type_parameters.as_ref(),
-                            &method.params,
-                            method.return_type.as_ref(),
-                        )),
-                        extends: Vec::new(),
-                        implements: Vec::new(),
-                        has_body: false,
-                        optional: method.optional,
-                        readonly: false,
-                        r#static: false,
-                        params: self.extract_params_from_formals(&method.params, &method_tags),
-                        return_type,
-                        return_members,
-                        children: Vec::new(),
-                        tags: method_tags,
-                        type_parameters: self
-                            .extract_type_parameters(method.type_parameters.as_ref()),
-                    });
+                        method.span,
+                        method.type_parameters.as_ref(),
+                        &method.params,
+                        method.return_type.as_ref(),
+                    ) {
+                        item.optional = method.optional;
+                        children.push(item);
+                    }
                 }
                 TSSignature::TSIndexSignature(index_signature) => {
                     if let Some(item) = self.create_index_signature_item(index_signature) {
                         children.push(item);
                     }
                 }
-                _ => {}
+                TSSignature::TSCallSignatureDeclaration(call) => {
+                    children.extend(self.create_callable_member_item(
+                        String::new(),
+                        DocItemKind::CallSignature,
+                        call.span,
+                        call.type_parameters.as_ref(),
+                        &call.params,
+                        call.return_type.as_ref(),
+                    ));
+                }
+                TSSignature::TSConstructSignatureDeclaration(construct) => {
+                    children.extend(self.create_callable_member_item(
+                        String::new(),
+                        DocItemKind::ConstructSignature,
+                        construct.span,
+                        construct.type_parameters.as_ref(),
+                        &construct.params,
+                        construct.return_type.as_ref(),
+                    ));
+                }
             }
         }
 
@@ -216,6 +203,70 @@ impl<'a> DocVisitor<'a> {
             children: Vec::new(),
             tags,
             type_parameters: Vec::new(),
+        })
+    }
+
+    /// Builds a member for a method signature, a call signature
+    /// (`(a: string): string`) or a construct signature (`new (a: string): object`).
+    ///
+    /// Call and construct signatures have no name, so they get an empty `name`.
+    /// The renderers label them, and a stable sort keeps overloads in source order.
+    fn create_callable_member_item(
+        &self,
+        name: String,
+        kind: DocItemKind,
+        span: Span,
+        type_parameters: Option<&oxc_allocator::Box<'a, TSTypeParameterDeclaration<'a>>>,
+        params: &FormalParameters<'a>,
+        return_type: Option<&oxc_allocator::Box<'a, TSTypeAnnotation<'a>>>,
+    ) -> Option<DocItem> {
+        let (jsdoc, doc, tags) = self
+            .extract_jsdoc(span.start)
+            .map_or((None, None, Vec::new()), |(jsdoc, doc, tags)| {
+                (Some(jsdoc), (!doc.is_empty()).then_some(doc), tags)
+            });
+        if self.should_skip_by_visibility(&tags) {
+            return None;
+        }
+        let (line, end_line) = self.span_lines(span.start, span.end);
+        let (return_type_text, return_members) =
+            self.extract_return_from_annotation(return_type.map(|t| &**t), &tags);
+        let signature_name = match kind {
+            DocItemKind::CallSignature => "",
+            DocItemKind::ConstructSignature => "new ",
+            _ => &name,
+        };
+        let signature = self.format_assigned_function_signature(
+            signature_name,
+            false,
+            type_parameters,
+            params,
+            return_type,
+        );
+
+        Some(DocItem {
+            name,
+            kind,
+            doc,
+            source_path: self.file_path.to_string(),
+            line,
+            end_line,
+            column: self.column_number(span.start),
+            jsdoc,
+            exported: false,
+            signature: Some(signature),
+            extends: Vec::new(),
+            implements: Vec::new(),
+            has_body: false,
+            optional: false,
+            readonly: false,
+            r#static: false,
+            params: self.extract_params_from_formals(params, &tags),
+            return_type: return_type_text,
+            return_members,
+            children: Vec::new(),
+            tags,
+            type_parameters: self.extract_type_parameters(type_parameters),
         })
     }
 
