@@ -225,3 +225,57 @@ export interface Mismatched {
     assert_eq!(mismatched.params[0].name, "value");
     assert!(mismatched.members[0].params[0].description.is_empty());
 }
+
+#[test]
+fn declaration_docs_keep_signature_types_and_skip_documented_or_extracted_cases() {
+    let source = r"
+/**
+ * A typed tag does not change the signature's types
+ * @param {number} key - The key
+ * @returns {number} The message
+ */
+export type Typed = {
+    (key: string): unknown;
+};
+
+/**
+ * A signature with only a throws tag has docs of its own
+ * @param key - The key
+ */
+export interface Throwing {
+    /** @throws {Error} When the key is empty */
+    (key: string): string;
+}
+
+/**
+ * An intersection takes its params from the function type
+ * @param value - The value
+ * @returns The result
+ */
+export type Convert = ((value: number) => boolean) & {
+    (value: string): string;
+};
+";
+
+    let entries = normalize_source(source);
+
+    let typed = &entry(&entries, "Typed").members[0];
+    assert_eq!(typed.params[0].type_annotation, "string");
+    assert_eq!(typed.params[0].description, "The key");
+    let returns = typed.returns.as_ref().unwrap();
+    assert_eq!(returns.type_annotation, "unknown");
+    assert_eq!(returns.description, "The message");
+
+    let throwing = entry(&entries, "Throwing");
+    assert_eq!(throwing.params[0].description, "The key");
+    assert!(throwing.members[0].params[0].description.is_empty());
+
+    let convert = entry(&entries, "Convert");
+    assert_eq!(convert.params[0].type_annotation, "number");
+    let signature = &convert.members[0];
+    assert_eq!(signature.params[0].type_annotation, "string");
+    assert!(signature.params[0].description.is_empty());
+    let returns = signature.returns.as_ref().unwrap();
+    assert_eq!(returns.type_annotation, "string");
+    assert!(returns.description.is_empty());
+}

@@ -72,6 +72,9 @@ pub fn normalize_doc_items(items: Vec<DocItem>, type_parameters: bool) -> Vec<No
 pub fn normalize_doc_item(item: DocItem, type_parameters: bool) -> Option<NormalizedDocEntry> {
     let kind = NormalizedDocKind::from_doc_item_kind(item.kind)?;
 
+    // Params and a return extracted from a function type belong to that type,
+    // so only docs that come from the declaration's tags can move to a signature.
+    let docs_from_tags_only = item.params.is_empty() && item.return_type.is_none();
     let mut metadata = normalize_doc_metadata(&item.tags, type_parameters);
     merge_extracted_params(&mut metadata.params, item.params);
     merge_extracted_return(
@@ -85,11 +88,13 @@ pub fn normalize_doc_item(item: DocItem, type_parameters: bool) -> Option<Normal
         .into_iter()
         .filter_map(|item| normalize_member(item, type_parameters))
         .collect();
-    move_declaration_docs_to_call_signature(
-        &mut members,
-        &mut metadata.params,
-        &mut metadata.returns,
-    );
+    if docs_from_tags_only {
+        move_declaration_docs_to_call_signature(
+            &mut members,
+            &mut metadata.params,
+            &mut metadata.returns,
+        );
+    }
     let type_parameters = if type_parameters {
         build_type_parameters(item.type_parameters, &metadata.type_param_descriptions)
     } else {

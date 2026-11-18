@@ -101,7 +101,12 @@ pub(super) fn merge_returns(returns: &mut Option<NormalizedReturnDoc>, next: Nor
 
 /// Moves the declaration's `@param` and `@returns` docs to its only call
 /// signature when that signature has no docs of its own, as TypeDoc does. The
-/// parameters are then listed once, on the signature, with their types.
+/// parameters are then listed once, on the signature.
+///
+/// The caller passes only docs that come from the declaration's tags: params or
+/// a return extracted from a function type belong to that type, not to the
+/// signature. Only the descriptions (and a default value) move; the signature
+/// keeps its own types.
 pub(super) fn move_declaration_docs_to_call_signature(
     members: &mut [NormalizedMember],
     params: &mut Vec<NormalizedParamDoc>,
@@ -115,22 +120,40 @@ pub(super) fn move_declaration_docs_to_call_signature(
     let (Some(signature), None) = (call_signatures.next(), call_signatures.next()) else {
         return;
     };
-    let documented = !signature.description.is_empty()
-        || signature.params.iter().any(|param| !param.description.is_empty())
-        || signature.returns.as_ref().is_some_and(|returns| !returns.description.is_empty());
     let every_param_matches = params
         .iter()
         .all(|param| signature.params.iter().any(|own| param_names_match(&own.name, &param.name)));
-    if documented || !every_param_matches {
+    if has_own_docs(signature) || !every_param_matches {
         return;
     }
 
     for param in params.drain(..) {
-        merge_param(&mut signature.params, param);
+        if let Some(own) =
+            signature.params.iter_mut().find(|own| param_names_match(&own.name, &param.name))
+        {
+            own.description = param.description;
+            if own.default_value.is_none() {
+                own.default_value = param.default_value;
+            }
+        }
     }
     if let Some(declared) = returns.take() {
-        merge_returns(&mut signature.returns, declared);
+        match &mut signature.returns {
+            Some(own) => own.description = declared.description,
+            None => signature.returns = Some(declared),
+        }
     }
+}
+
+/// Whether the member has a doc comment of its own: a description, tags, throws
+/// or a described parameter, type parameter or return.
+fn has_own_docs(member: &NormalizedMember) -> bool {
+    !member.description.is_empty()
+        || !member.tags.is_empty()
+        || !member.throws.is_empty()
+        || member.params.iter().any(|param| !param.description.is_empty())
+        || member.type_parameters.iter().any(|param| !param.description.is_empty())
+        || member.returns.as_ref().is_some_and(|returns| !returns.description.is_empty())
 }
 
 fn is_placeholder_param(existing_params: &[NormalizedParamDoc], param: &ParamDoc) -> bool {
