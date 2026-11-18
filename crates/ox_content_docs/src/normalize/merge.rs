@@ -106,7 +106,8 @@ pub(super) fn merge_returns(returns: &mut Option<NormalizedReturnDoc>, next: Nor
 /// The caller passes only docs that come from the declaration's tags: params or
 /// a return extracted from a function type belong to that type, not to the
 /// signature. Only the descriptions (and a default value) move; the signature
-/// keeps its own types.
+/// keeps its own types. A signature without a return of its own takes the
+/// declared return whole, with the type from `@returns {T}` when it is written.
 pub(super) fn move_declaration_docs_to_call_signature(
     members: &mut [NormalizedMember],
     params: &mut Vec<NormalizedParamDoc>,

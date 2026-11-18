@@ -74,7 +74,8 @@ pub fn normalize_doc_item(item: DocItem, type_parameters: bool) -> Option<Normal
 
     // Params and a return extracted from a function type belong to that type,
     // so only docs that come from the declaration's tags can move to a signature.
-    let docs_from_tags_only = item.params.is_empty() && item.return_type.is_none();
+    let docs_from_tags_only =
+        item.params.is_empty() && item.return_type.is_none() && item.return_members.is_empty();
     let mut metadata = normalize_doc_metadata(&item.tags, type_parameters);
     merge_extracted_params(&mut metadata.params, item.params);
     merge_extracted_return(
