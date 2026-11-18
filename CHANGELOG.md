@@ -1,5 +1,16 @@
 # Changelog
 
+## [3.8.3] - 2026-11-18
+
+### Bug Fixes
+
+- mark oxct entrypoint executable (#1577) _(affects: npm: @ox-content/vite-plugin)_
+- extract call and construct signatures from interfaces and type literals (#1576) _(affects: crates: ox_content_docs, ox_content_napi; npm: @ox-content/napi, @ox-content/vite-plugin)_
+
+### Performance
+
+- reduce common-path parser overhead (#1575) _(affects: crates: ox_content_allocator, ox_content_parser, ox_content_renderer; tooling)_
+
 ## [3.8.2] - 2026-11-01
 
 ## [3.8.1] - 2026-11-01
