@@ -18,6 +18,8 @@ fn doc_item_kind_to_string(kind: DocItemKind) -> String {
         DocItemKind::Setter => "setter",
         DocItemKind::EnumMember => "enumMember",
         DocItemKind::IndexSignature => "indexSignature",
+        DocItemKind::CallSignature => "callSignature",
+        DocItemKind::ConstructSignature => "constructSignature",
     }
     .to_string()
 }

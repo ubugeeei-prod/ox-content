@@ -1,0 +1,85 @@
+---
+source: crates/ox_content_docs/src/markdown/tests/helpers/assertions.rs
+---
+# Interface: Translate
+
+Translate messages.
+
+## Signature
+
+```ts
+export interface Translate
+```
+
+## Call Signature
+
+```ts
+Translate<Key extends string>(key: Key): string;
+```
+
+Translate a key.
+
+### Type Parameters
+
+- `Key` *extends* `string` - The key type.
+
+### Parameters
+
+- `key` (`Key`) - A key.
+
+### Returns
+
+`string` — A message.
+
+## Call Signature
+
+```ts
+Translate(key: string, plural: number): string;
+```
+
+Translate with a plural.
+
+### Parameters
+
+- `key` (`string`) - A key.
+- `plural` (`number`) - A count.
+
+### Returns
+
+`string`
+
+## Constructors
+
+### Constructor
+
+```ts
+new Translate(locale: string): Translate;
+```
+
+Create it.
+
+#### Parameters
+
+- `locale` (`string`)
+
+#### Returns
+
+[`Translate`](./Translate.md)
+
+## Properties
+
+- `locale` `property` `string` - The locale.
+
+## Methods
+
+### reset()
+
+```ts
+reset(): void;
+```
+
+Reset it.
+
+#### Returns
+
+`void`

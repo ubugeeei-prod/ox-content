@@ -96,6 +96,8 @@ pub(super) fn entry_anchor(name: &str) -> String {
     name.to_lowercase()
 }
 
+use super::signature_members::signature_member_anchor;
+
 pub(super) fn member_anchor(
     entry_name: &str,
     member: &ApiDocMember,
@@ -103,9 +105,14 @@ pub(super) fn member_anchor(
 ) -> String {
     match path_strategy {
         MarkdownPathStrategy::Flat => {
-            join3(&entry_anchor(entry_name), "-", &entry_anchor(&member.name))
+            let name = signature_member_anchor(member)
+                .map_or_else(|| entry_anchor(&member.name), ToString::to_string);
+            join3(&entry_anchor(entry_name), "-", &name)
         }
         MarkdownPathStrategy::TypeDoc => {
+            if let Some(anchor) = signature_member_anchor(member) {
+                return anchor.to_string();
+            }
             let prefix = match member.kind.as_str() {
                 "constructor" => return "constructor".to_string(),
                 "method" => "method",

@@ -12,6 +12,7 @@ use super::parameters::param_description;
 use super::return_members::push_return_members;
 use super::sections::push_throws_items;
 use super::type_parameters::type_parameters_have_descriptions;
+use crate::markdown::signature_members::member_display_name;
 use crate::model::ApiDocMember;
 
 pub(super) fn render_member_parameter_sections_pure(
@@ -39,7 +40,7 @@ pub(super) fn render_member_parameter_sections_pure(
         if !member.type_parameters.is_empty() {
             out.push_str(&heading);
             out.push(' ');
-            out.push_str(&member.name);
+            out.push_str(member_display_name(member));
             out.push_str(" Type Parameters\n\n");
             let skip: FxHashSet<&str> =
                 member.type_parameters.iter().map(|param| param.name.as_str()).collect();
@@ -90,7 +91,7 @@ pub(super) fn render_member_parameter_sections_pure(
         if !member.params.is_empty() {
             out.push_str(&heading);
             out.push(' ');
-            out.push_str(&member.name);
+            out.push_str(member_display_name(member));
             out.push_str(" Parameters\n\n");
             match effective_parameters_format(options) {
                 MarkdownDisplayFormat::Table => {
@@ -129,7 +130,7 @@ pub(super) fn render_member_parameter_sections_pure(
         if let Some(returns) = &member.returns {
             out.push_str(&heading);
             out.push(' ');
-            out.push_str(&member.name);
+            out.push_str(member_display_name(member));
             out.push_str(" Returns\n\n");
             out.push_str(&linked_type_span(&returns.type_annotation, context));
             if !returns.description.is_empty() {
@@ -144,7 +145,7 @@ pub(super) fn render_member_parameter_sections_pure(
         if !throws.is_empty() {
             out.push_str(&heading);
             out.push(' ');
-            out.push_str(&member.name);
+            out.push_str(member_display_name(member));
             out.push_str(" Throws\n\n");
             push_throws_items(&mut out, throws.as_ref(), context);
         }

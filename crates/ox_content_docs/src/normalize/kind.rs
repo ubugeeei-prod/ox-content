@@ -41,7 +41,9 @@ impl NormalizedDocKind {
             | DocItemKind::Getter
             | DocItemKind::Setter
             | DocItemKind::EnumMember
-            | DocItemKind::IndexSignature => None,
+            | DocItemKind::IndexSignature
+            | DocItemKind::CallSignature
+            | DocItemKind::ConstructSignature => None,
         }
     }
 
@@ -81,6 +83,12 @@ pub enum NormalizedMemberKind {
     /// TypeScript index signature.
     #[serde(rename = "indexSignature")]
     IndexSignature,
+    /// TypeScript call signature.
+    #[serde(rename = "callSignature")]
+    CallSignature,
+    /// TypeScript construct signature.
+    #[serde(rename = "constructSignature")]
+    ConstructSignature,
 }
 
 impl NormalizedMemberKind {
@@ -95,6 +103,8 @@ impl NormalizedMemberKind {
             DocItemKind::Setter => Some(Self::Setter),
             DocItemKind::EnumMember => Some(Self::EnumMember),
             DocItemKind::IndexSignature => Some(Self::IndexSignature),
+            DocItemKind::CallSignature => Some(Self::CallSignature),
+            DocItemKind::ConstructSignature => Some(Self::ConstructSignature),
             DocItemKind::Module
             | DocItemKind::Function
             | DocItemKind::Class
@@ -116,6 +126,8 @@ impl NormalizedMemberKind {
             Self::Setter => "setter",
             Self::EnumMember => "enumMember",
             Self::IndexSignature => "indexSignature",
+            Self::CallSignature => "callSignature",
+            Self::ConstructSignature => "constructSignature",
         }
     }
 }

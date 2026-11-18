@@ -195,3 +195,47 @@ fn convert_markdown_entry_preserves_heritage_and_implementation_metadata() {
     assert_eq!(converted.members[0].throws[0].type_annotation.as_deref(), Some("ResourceError"));
     assert_eq!(converted.members[0].throws[0].description, "When resource loading fails.");
 }
+
+#[test]
+fn extracted_docs_name_call_and_construct_signature_kinds() {
+    let unique =
+        std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_nanos();
+    let root = std::env::temp_dir()
+        .join(format!("ox-content-napi-signature-kinds-{}-{unique}", std::process::id()));
+    let _ = fs::remove_dir_all(&root);
+    fs::create_dir_all(&root).unwrap();
+    let file = root.join("translate.ts");
+    fs::write(
+        &file,
+        r"
+/** Translate */
+export interface Translate {
+    /** Translate a key */
+    (key: string): string;
+    /** Create it */
+    new (locale: string): Translate;
+}
+",
+    )
+    .unwrap();
+    let path = file.to_string_lossy().into_owned();
+
+    let items = extract_file_docs(path.clone(), None, None).unwrap();
+    let members = items[0].members.as_ref().unwrap();
+    assert_eq!(
+        members.iter().map(|m| m.kind.as_str()).collect::<Vec<_>>(),
+        ["callSignature", "constructSignature"]
+    );
+    assert_eq!(members[0].name, "");
+    assert_eq!(members[1].signature.as_deref(), Some("new (locale: string): Translate"));
+
+    let entries = extract_file_doc_entries(path, None, None, None).unwrap();
+    let members = entries[0].members.as_ref().unwrap();
+    assert_eq!(
+        members.iter().map(|m| m.kind.as_str()).collect::<Vec<_>>(),
+        ["callSignature", "constructSignature"]
+    );
+    assert_eq!(members[0].returns.as_ref().unwrap().r#type, "string");
+
+    let _ = fs::remove_dir_all(root);
+}

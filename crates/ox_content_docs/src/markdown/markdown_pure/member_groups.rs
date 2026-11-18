@@ -1,6 +1,8 @@
 use super::super::{MarkdownDocsOptions, MarkdownLinkContext};
 use super::index_signatures::render_index_signature_group_pure;
+use super::member_details::render_call_signatures_pure;
 use super::member_tables::render_member_group_pure;
+use crate::markdown::signature_members::{CALL_SIGNATURE, CONSTRUCT_SIGNATURE};
 use crate::model::ApiDocEntry;
 
 /// Renders the member tables for an entry, grouped to match the HTML renderer.
@@ -78,28 +80,42 @@ pub(super) fn render_members_pure(
             render_member_group_pure(&mut out, &heading, "Properties", &properties, &group_context);
         }
         "interface" => {
+            let mut call_signatures = Vec::new();
+            let mut construct_signatures = Vec::new();
             let mut properties = Vec::new();
             let mut methods = Vec::new();
             let mut index_signatures = Vec::new();
 
             for member in &entry.members {
                 match member.kind.as_str() {
+                    CALL_SIGNATURE => call_signatures.push(member),
+                    CONSTRUCT_SIGNATURE => construct_signatures.push(member),
                     "indexSignature" => index_signatures.push(member),
                     "method" | "getter" | "setter" if !member.r#static => methods.push(member),
                     "property" if !member.r#static => properties.push(member),
                     _ => {}
                 }
             }
+            render_call_signatures_pure(&mut out, &call_signatures, &group_context, section_level);
             render_index_signature_group_pure(
                 &mut out,
                 &heading,
                 &index_signatures,
                 &group_context,
             );
+            render_member_group_pure(
+                &mut out,
+                &heading,
+                "Constructors",
+                &construct_signatures,
+                &group_context,
+            );
             render_member_group_pure(&mut out, &heading, "Properties", &properties, &group_context);
             render_member_group_pure(&mut out, &heading, "Methods", &methods, &group_context);
         }
         "type" => {
+            let mut call_signatures = Vec::new();
+            let mut construct_signatures = Vec::new();
             let mut properties = Vec::new();
             let mut methods = Vec::new();
             let mut index_signatures = Vec::new();
@@ -107,6 +123,8 @@ pub(super) fn render_members_pure(
 
             for member in &entry.members {
                 match member.kind.as_str() {
+                    CALL_SIGNATURE => call_signatures.push(member),
+                    CONSTRUCT_SIGNATURE => construct_signatures.push(member),
                     "indexSignature" => index_signatures.push(member),
                     "method" | "getter" | "setter" if !member.r#static => methods.push(member),
                     "property" if !member.r#static => properties.push(member),
@@ -114,10 +132,18 @@ pub(super) fn render_members_pure(
                     _ => {}
                 }
             }
+            render_call_signatures_pure(&mut out, &call_signatures, &group_context, section_level);
             render_index_signature_group_pure(
                 &mut out,
                 &heading,
                 &index_signatures,
+                &group_context,
+            );
+            render_member_group_pure(
+                &mut out,
+                &heading,
+                "Constructors",
+                &construct_signatures,
                 &group_context,
             );
             render_member_group_pure(&mut out, &heading, "Properties", &properties, &group_context);

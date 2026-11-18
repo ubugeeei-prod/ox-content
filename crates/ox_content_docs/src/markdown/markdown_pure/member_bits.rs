@@ -1,5 +1,6 @@
 use super::super::{MarkdownLinkContext, SINCE_TAGS};
 use super::format::{code_cell, code_span, inline};
+use crate::markdown::signature_members::member_display_name;
 use crate::model::ApiDocMember;
 use crate::string_builder::StringBuilder;
 
@@ -26,7 +27,7 @@ fn member_name(member: &ApiDocMember, code: fn(&str) -> String) -> String {
         flags.push("private");
     }
 
-    let name = code(&member.name);
+    let name = code(member_display_name(member));
     if flags.is_empty() {
         name
     } else {

@@ -4631,7 +4631,16 @@ export interface DocMember {
   name: string;
 
   /** Normalized member kind used for rendering and sorting. */
-  kind: "property" | "method" | "constructor" | "getter" | "setter" | "enumMember";
+  kind:
+    | "property"
+    | "method"
+    | "constructor"
+    | "getter"
+    | "setter"
+    | "enumMember"
+    | "indexSignature"
+    | "callSignature"
+    | "constructSignature";
 
   /** Main prose extracted from the member's documentation comment. */
   description: string;

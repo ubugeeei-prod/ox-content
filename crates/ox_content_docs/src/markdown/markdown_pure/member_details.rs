@@ -7,6 +7,9 @@ use super::{
     sections::{push_generic_tags, push_throws},
     type_parameters::push_type_parameters,
 };
+use crate::markdown::signature_members::{
+    CALL_SIGNATURE, is_signature_member, signature_member_code, signature_member_label,
+};
 use crate::model::{ApiDocMember, ApiReturnDoc};
 use crate::string_builder::StringBuilder;
 
@@ -23,7 +26,9 @@ pub(super) fn render_callable_member_details_pure(
         let names = type_parameter_scope(context.link_context, &member.type_parameters);
         let scoped = context.link_context.map(|context| context.with_type_parameters(&names));
         let link_context = scoped.as_ref();
-        if index > 0 {
+        // Each call signature is its own `Call Signature` section, like the
+        // overloads of a function, so no rule goes between them.
+        if index > 0 && member.kind != CALL_SIGNATURE {
             out.push_str("***\n\n");
         }
         out.push_str(&member_heading);
@@ -72,11 +77,31 @@ pub(super) fn render_callable_member_details_pure(
     }
 }
 
+/// Renders each call signature as a `Call Signature` section at the entry's
+/// section level, as TypeDoc does, with its parts one level below.
+pub(super) fn render_call_signatures_pure(
+    out: &mut String,
+    members: &[&ApiDocMember],
+    context: &MemberGroupRenderContext<'_, '_>,
+    section_level: usize,
+) {
+    if members.is_empty() {
+        return;
+    }
+    let context = MemberGroupRenderContext { parameter_section_level: section_level, ..*context };
+    render_callable_member_details_pure(out, "Call Signatures", members, &context);
+}
+
 pub(super) fn is_callable_member(member: &ApiDocMember) -> bool {
-    matches!(member.kind.as_str(), "constructor" | "method" | "getter" | "setter")
+    is_signature_member(member)
+        || matches!(member.kind.as_str(), "constructor" | "method" | "getter" | "setter")
 }
 
 fn push_callable_member_heading(out: &mut String, member: &ApiDocMember, title: &str) {
+    if let Some(label) = signature_member_label(member) {
+        out.push_str(label);
+        return;
+    }
     if member.kind == "constructor" {
         out.push_str("Constructor");
         return;
@@ -88,6 +113,9 @@ fn push_callable_member_heading(out: &mut String, member: &ApiDocMember, title: 
 }
 
 fn callable_member_signature(member: &ApiDocMember, entry_name: &str) -> Option<String> {
+    if is_signature_member(member) {
+        return signature_member_code(member, Some(entry_name));
+    }
     let signature = member.signature.as_deref()?.trim();
     if signature.is_empty() {
         return None;
