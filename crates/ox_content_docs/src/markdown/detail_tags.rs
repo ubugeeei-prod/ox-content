@@ -10,7 +10,7 @@ use ox_content_allocator::Allocator;
 use ox_content_parser::{Parser, ParserOptions};
 use ox_content_renderer::{HtmlRenderer, HtmlRendererOptions};
 
-use self::literals::{block_closer, literal_ranges, unclosed_fence};
+use self::literals::{block_closer, literal_ranges, scan_block_closer};
 use super::links::render_jsdoc_inline_link_at;
 use super::regex_cache::{RegexCache, cached_regex};
 use super::{MarkdownLinkContext, process_doc_text};
@@ -94,12 +94,12 @@ pub(super) fn open_block_closer(markdown: &str) -> Option<&str> {
         return None;
     }
     if nests_too_deep(markdown) {
-        return unclosed_fence(markdown);
+        return scan_block_closer(markdown);
     }
     let allocator = Allocator::new();
     match Parser::with_options(&allocator, markdown, parser_options()).parse() {
         Ok(document) => block_closer(markdown, &document),
-        Err(_) => unclosed_fence(markdown),
+        Err(_) => scan_block_closer(markdown),
     }
 }
 

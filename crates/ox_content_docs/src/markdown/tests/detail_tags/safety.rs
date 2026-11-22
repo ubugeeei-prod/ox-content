@@ -29,6 +29,19 @@ fn unclosed_blocks_stay_inside_their_section() {
 }
 
 #[test]
+fn detail_blocks_keep_their_boundary_when_inline_parsing_is_skipped() {
+    let body = "[Target]\n".repeat(70);
+    for (opener, closer) in [(" <!--", "-->"), ("<PRE>", "</pre>"), ("   ~~~ts", "~~~")] {
+        let value = join3(opener, "\n", body.trim_end());
+        let expected = join3(&value, "\n", closer);
+        for input in [&value, &expected] {
+            let page = rendered(input, &markdown_typedoc_options());
+            assert!(page.contains(&join2(&expected, "\n\n## Signature")), "{page}");
+        }
+    }
+}
+
+#[test]
 fn a_fence_line_indented_too_far_does_not_close_it() {
     let page = rendered("```\ncode\n    ```", &markdown_typedoc_options());
 
