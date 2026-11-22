@@ -1,6 +1,6 @@
 use serde_json::{Map, Value, json};
 
-use crate::model::ApiDocModule;
+use crate::model::{ApiDocMember, ApiDocModule};
 
 const DOC_KIND_ORDER: [&str; 7] =
     ["function", "class", "interface", "type", "enum", "variable", "module"];
@@ -29,7 +29,10 @@ pub(super) fn build_docs_summary(docs: &[ApiDocModule]) -> Value {
             stats.members += entry.members.len() as u32;
             stats.params += entry.params.len() as u32;
             stats.returns += u32::from(entry.returns.is_some());
-            stats.examples += entry.examples.len() as u32;
+            stats.examples += entry.examples.len() as u32 + member_examples(&entry.members);
+            if let Some(returns) = &entry.returns {
+                stats.examples += member_examples(&returns.members);
+            }
             stats.deprecated += u32::from(entry.tags.iter().any(|tag| tag.tag == "deprecated"));
         }
     }
@@ -52,6 +55,17 @@ pub(super) fn build_docs_summary(docs: &[ApiDocModule]) -> Value {
         "examples": stats.examples,
         "deprecated": stats.deprecated,
     })
+}
+
+fn member_examples(members: &[ApiDocMember]) -> u32 {
+    members
+        .iter()
+        .map(|member| {
+            member.examples.len() as u32
+                + member_examples(&member.members)
+                + member.returns.as_ref().map_or(0, |returns| member_examples(&returns.members))
+        })
+        .sum()
 }
 
 fn doc_kind_index(kind: &str) -> Option<usize> {

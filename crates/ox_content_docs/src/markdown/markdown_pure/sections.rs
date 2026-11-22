@@ -99,12 +99,17 @@ pub(super) fn push_throws_items(
     out.push('\n');
 }
 
+fn markdown_heading(heading: &str) -> &str {
+    let level = heading.bytes().take_while(|byte| *byte == b'#').count();
+    &heading[level.saturating_sub(6)..]
+}
+
 /// Appends a `{heading} Examples` section, or nothing when empty.
 pub(super) fn push_examples(out: &mut String, examples: &[String], heading: &str) {
     if examples.is_empty() {
         return;
     }
-    out.push_str(heading);
+    out.push_str(markdown_heading(heading));
     out.push_str(" Examples\n\n");
     for example in examples {
         match parse_example_block(example) {
@@ -132,8 +137,7 @@ pub(in crate::markdown) fn push_detail_sections(
     context: Option<&MarkdownLinkContext<'_>>,
     heading: &str,
 ) {
-    let level = heading.bytes().take_while(|byte| *byte == b'#').count();
-    let heading = if level > 6 { &heading[level - 6..] } else { heading };
+    let heading = markdown_heading(heading);
     for section in detail_sections(tags, context) {
         out.push_str(heading);
         out.push(' ');

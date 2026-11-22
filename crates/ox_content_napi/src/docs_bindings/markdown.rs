@@ -65,6 +65,7 @@ fn convert_markdown_member(member: JsDocMember) -> ApiDocMember {
             .into_iter()
             .map(convert_markdown_throws)
             .collect(),
+        examples: member.examples.unwrap_or_default(),
         members: member
             .members
             .unwrap_or_default()

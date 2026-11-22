@@ -73,6 +73,7 @@ pub(super) fn normalize_member(item: DocItem, type_parameters: bool) -> Option<N
         type_parameters,
         returns: metadata.returns,
         throws: metadata.throws,
+        examples: metadata.examples,
         members,
         optional: item.optional,
         readonly: item.readonly,

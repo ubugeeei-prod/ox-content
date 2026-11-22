@@ -36,6 +36,9 @@ pub struct NormalizedMember {
     /// Exceptions/errors documented with `@throws` / `@exception`.
     #[serde(default)]
     pub throws: Vec<NormalizedThrowsDoc>,
+    /// Examples from the member's `@example` tags in source order.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub examples: Vec<String>,
     /// Nested members owned by this member (for property-owned object literals).
     #[serde(default)]
     pub members: Vec<NormalizedMember>,
@@ -77,6 +80,7 @@ impl Default for NormalizedMember {
             type_parameters: Vec::new(),
             returns: None,
             throws: Vec::new(),
+            examples: Vec::new(),
             members: Vec::new(),
             optional: false,
             readonly: false,

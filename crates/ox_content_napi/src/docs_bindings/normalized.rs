@@ -44,6 +44,7 @@ fn map_normalized_member(member: NormalizedMember) -> JsDocMember {
         returns: member.returns.map(map_normalized_return_doc),
         throws: (!member.throws.is_empty())
             .then(|| member.throws.into_iter().map(map_normalized_throws_doc).collect()),
+        examples: (!member.examples.is_empty()).then_some(member.examples),
         members: (!member.members.is_empty())
             .then(|| member.members.into_iter().map(map_normalized_member).collect()),
         optional: member.optional.then_some(true),

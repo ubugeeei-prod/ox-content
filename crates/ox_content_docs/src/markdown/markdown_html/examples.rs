@@ -8,34 +8,6 @@ pub(in crate::markdown) fn render_module_examples_html(examples: &[String]) -> S
         return String::new();
     }
 
-    let mut examples_html = StringBuilder::new();
-    for (index, example) in examples.iter().enumerate() {
-        if !examples_html.is_empty() {
-            examples_html.push_char('\n');
-        }
-        // Mixed Markdown examples (prose + fenced code) render as HTML blocks; a
-        // pure-code example renders as a single highlighted code block. This avoids
-        // double-wrapping a Markdown example in another `<pre><code>`.
-        let rendered = match parse_example_block(example) {
-            ExampleBlock::Code { code, language } => render_code_block_html(code, language),
-            ExampleBlock::Markdown(markdown) => render_markdown_blocks_html(markdown),
-        };
-        examples_html.push_str(
-            "<div class=\"ox-api-entry__example\">
-<div class=\"ox-api-entry__example-heading\">Example ",
-        );
-        examples_html.push_usize(index + 1);
-        examples_html.push_str(
-            "</div>
-",
-        );
-        examples_html.push_str(&rendered);
-        examples_html.push_str(
-            "
-</div>",
-        );
-    }
-
     let heading = if examples.len() == 1 { "Example" } else { "Examples" };
     let mut section = StringBuilder::new();
     section.push_str(
@@ -47,7 +19,7 @@ pub(in crate::markdown) fn render_module_examples_html(examples: &[String]) -> S
         "</h2>
 ",
     );
-    section.push_str(&examples_html.into_string());
+    section.push_str(&render_example_blocks(examples));
     section.push_str(
         "
 </div>
@@ -62,6 +34,30 @@ pub(super) fn push_examples_html(body: &mut String, examples: &[String]) {
     if examples.is_empty() {
         return;
     }
+    body.push_str(
+        "<div class=\"ox-api-entry__section ox-api-entry__section--examples\">
+<h4>Examples</h4>
+",
+    );
+    body.push_str(&render_example_blocks(examples));
+    body.push_str(
+        "
+</div>\n",
+    );
+}
+
+pub(super) fn render_member_examples_html(examples: &[String]) -> String {
+    if examples.is_empty() {
+        return String::new();
+    }
+    crate::string_builder::join3(
+        "<div class=\"ox-api-entry__member-section ox-api-entry__member-section--examples\"><h6>Examples</h6>\n",
+        &render_example_blocks(examples),
+        "\n</div>",
+    )
+}
+
+fn render_example_blocks(examples: &[String]) -> String {
     let mut examples_html = StringBuilder::new();
     for (index, example) in examples.iter().enumerate() {
         if !examples_html.is_empty() {
@@ -90,14 +86,5 @@ pub(super) fn push_examples_html(body: &mut String, examples: &[String]) {
         );
     }
 
-    body.push_str(
-        "<div class=\"ox-api-entry__section ox-api-entry__section--examples\">
-<h4>Examples</h4>
-",
-    );
-    body.push_str(&examples_html.into_string());
-    body.push_str(
-        "
-</div>\n",
-    );
+    examples_html.into_string()
 }

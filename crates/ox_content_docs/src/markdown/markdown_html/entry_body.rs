@@ -49,6 +49,7 @@ fn render_entry_body_html(
     push_type_parameters_html(&mut body, &entry.type_parameters, options, link_context);
 
     if !entry.members.is_empty() {
+        push_examples_html(&mut body, &entry.examples);
         body.push_str(&render_members_html(entry, options, link_context));
         body.push('\n');
     }
@@ -61,7 +62,9 @@ fn render_entry_body_html(
 
     push_throws_html(&mut body, &entry.throws, &entry.tags, link_context);
 
-    push_examples_html(&mut body, &entry.examples);
+    if entry.members.is_empty() {
+        push_examples_html(&mut body, &entry.examples);
+    }
 
     push_tag_list_html(&mut body, &entry.tags, link_context);
 

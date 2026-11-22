@@ -694,6 +694,7 @@ export interface JsDocMember {
   typeParameters?: Array<JsTypeParam>
   returns?: JsDocReturn
   throws?: Array<JsDocThrows>
+  examples?: Array<string>
   members?: Array<JsDocMember>
   optional?: boolean
   readonly?: boolean

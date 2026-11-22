@@ -122,6 +122,9 @@ fn member_to_json(member: &ApiDocMember) -> Value {
             Value::Array(member.throws.iter().map(throws_to_json).collect()),
         );
     }
+    if !member.examples.is_empty() {
+        value.insert("examples".to_string(), json!(member.examples));
+    }
     if !member.members.is_empty() {
         value.insert(
             "members".to_string(),

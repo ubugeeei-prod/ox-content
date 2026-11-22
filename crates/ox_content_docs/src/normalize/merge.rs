@@ -152,6 +152,7 @@ fn has_own_docs(member: &NormalizedMember) -> bool {
     !member.description.is_empty()
         || !member.tags.is_empty()
         || !member.throws.is_empty()
+        || !member.examples.is_empty()
         || member.params.iter().any(|param| !param.description.is_empty())
         || member.type_parameters.iter().any(|param| !param.description.is_empty())
         || member.returns.as_ref().is_some_and(|returns| !returns.description.is_empty())

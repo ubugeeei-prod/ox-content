@@ -10,7 +10,7 @@ use super::format::{
 };
 use super::parameters::param_description;
 use super::return_members::push_return_members;
-use super::sections::{push_detail_sections, push_throws_items};
+use super::sections::{push_detail_sections, push_examples, push_throws_items};
 use super::type_parameters::type_parameters_have_descriptions;
 use crate::markdown::detail_tags::is_detail_tag;
 use crate::markdown::signature_members::member_display_name;
@@ -31,6 +31,7 @@ pub(super) fn render_member_parameter_sections_pure(
             && member.params.is_empty()
             && member.returns.is_none()
             && member.throws.is_empty()
+            && member.examples.is_empty()
             && !member.tags.iter().any(|tag| is_throws_tag(&tag.tag) || is_detail_tag(&tag.tag))
         {
             continue;
@@ -155,6 +156,10 @@ pub(super) fn render_member_parameter_sections_pure(
             out.push_str(member_display_name(member));
             out.push_str(" Throws\n\n");
             push_throws_items(&mut out, throws.as_ref(), context);
+        }
+        if !member.examples.is_empty() {
+            let detail_heading = join3(&heading, " ", member_display_name(member));
+            push_examples(&mut out, &member.examples, &detail_heading);
         }
     }
 
