@@ -48,27 +48,46 @@ pub(super) fn block_closer<'t>(text: &'t str, document: &Document<'_>) -> Option
     }
 }
 
-fn open_fence(block: &str) -> Option<&str> {
-    let line = block.trim_start_matches(' ');
-    if block.len() - line.len() > 3 {
-        return None;
+/// The marker of a fence still open at the end of `text`, found line by line for
+/// text the parser cannot take. Only a fence at column 0 is surely top-level.
+pub(super) fn unclosed_fence(text: &str) -> Option<&str> {
+    let mut open = None;
+    for line in text.lines() {
+        match open {
+            Some(marker) if closes_fence(line, marker) => open = None,
+            Some(_) => {}
+            None => open = fence_marker(line),
+        }
     }
+    open
+}
+
+fn fence_marker(line: &str) -> Option<&str> {
     let marker = *line.as_bytes().first()?;
     if !matches!(marker, b'`' | b'~') {
         return None;
     }
     let length = line.bytes().take_while(|byte| *byte == marker).count();
-    if length < 3 {
+    // A backtick in the info string makes the line an inline code span.
+    (length >= 3 && (marker == b'~' || !line[length..].contains('`'))).then(|| &line[..length])
+}
+
+fn closes_fence(line: &str, marker: &str) -> bool {
+    let closing = line.trim_start_matches(' ');
+    let run = closing.trim_end();
+    line.len() - closing.len() <= 3
+        && run.len() >= marker.len()
+        && run.bytes().all(|byte| marker.as_bytes().first() == Some(&byte))
+}
+
+fn open_fence(block: &str) -> Option<&str> {
+    let line = block.trim_start_matches(' ');
+    if block.len() - line.len() > 3 {
         return None;
     }
-    let closed = block.lines().skip(1).last().is_some_and(|last| {
-        let closing = last.trim_start_matches(' ');
-        let run = closing.trim_end();
-        last.len() - closing.len() <= 3
-            && run.len() >= length
-            && run.bytes().all(|byte| byte == marker)
-    });
-    (!closed).then(|| &line[..length])
+    let marker = fence_marker(line.lines().next()?)?;
+    let closed = block.lines().skip(1).last().is_some_and(|last| closes_fence(last, marker));
+    (!closed).then_some(marker)
 }
 
 fn open_html_block_closer(html: &str) -> Option<&'static str> {

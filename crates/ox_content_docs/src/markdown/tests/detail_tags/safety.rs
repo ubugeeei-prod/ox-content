@@ -147,9 +147,10 @@ fn code_at_the_start_of_a_continuation_line_stays_protected() {
 
 #[test]
 fn snake_case_does_not_trip_the_nesting_guard() {
-    let value = join2(&"a_b ".repeat(1_100), "\n\n```ts\nconst u = [Target]");
+    let value = join3("[Target] ", &"a_b ".repeat(1_100), "\n\n```ts\nconst u = [Target]");
     let page = rendered(&value, &markdown_typedoc_options());
 
+    assert!(page.contains("[Target](../interfaces/Target.md) a_b"), "{page}");
     assert!(page.contains("const u = [Target]\n```\n\n## Signature"), "{page}");
 }
 
@@ -173,17 +174,54 @@ fn an_indented_first_line_stays_code() {
 fn deep_inline_nesting_never_reaches_the_parser() {
     let brackets = join3(&"[".repeat(20_000), "a", &"]".repeat(20_000));
     let images = "![".repeat(20_000);
-    let emphasis = "*a ".repeat(40_000);
+    let emphasis = join3(&"*a ".repeat(20_000), "b", &" c*".repeat(20_000));
+    let underscores = join3(&"_a ".repeat(20_000), "b", &" c_".repeat(20_000));
     let escaped = join3(&"[\\]".repeat(20_000), "a", &"]".repeat(20_000));
     let in_code = join3(&"[`]`".repeat(20_000), "a", &"]".repeat(20_000));
+    let in_html = join3(&"[<a b=\"]\">".repeat(20_000), "a", &"]".repeat(20_000));
+    let in_a_title = "[x[a](b \"]\")".repeat(20_000);
+    let nested_images = join2(&"![a".repeat(40), &"]".repeat(40));
     let at_the_bracket_limit = join3(&"[".repeat(63), "a", &"]".repeat(63));
     let at_the_emphasis_limit = join3(&"*a ".repeat(512), "b", &" c*".repeat(512));
-    for value in
-        [brackets, images, emphasis, escaped, in_code, at_the_bracket_limit, at_the_emphasis_limit]
-    {
+    for value in [
+        brackets,
+        images,
+        emphasis,
+        underscores,
+        escaped,
+        in_code,
+        in_html,
+        in_a_title,
+        nested_images,
+        at_the_bracket_limit,
+        at_the_emphasis_limit,
+    ] {
         let value = join2(&value, " [Target]");
         assert!(rendered(&value, &markdown_typedoc_options()).contains("## Remarks"));
         assert!(rendered(&value, &html_typedoc_options()).contains("<h4>Remarks</h4>"));
+    }
+}
+
+#[test]
+fn a_long_code_sample_stays_code_past_the_nesting_guard() {
+    let value = join2("```ts\n", &"const a = [Target];\n".repeat(200));
+    let page = rendered(value.trim_end(), &markdown_typedoc_options());
+
+    assert!(!page.contains("../interfaces/"));
+    assert!(page.contains("const a = [Target];\n```\n\n## Signature"), "{page}");
+
+    let html = rendered(value.trim_end(), &html_typedoc_options());
+    assert!(html.contains("<code class=\"language-text\">```ts\nconst a = [Target];"), "{html}");
+}
+
+#[test]
+fn text_too_deep_to_parse_stays_as_written() {
+    for value in [
+        join2(&"[".repeat(100), " [Target] {@link Target}"),
+        join2(&">".repeat(120), " [Target] {@link Target}"),
+    ] {
+        let page = rendered(&value, &markdown_typedoc_options());
+        assert!(page.contains(&value), "{page}");
     }
 }
 

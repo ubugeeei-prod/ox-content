@@ -10,16 +10,17 @@ use ox_content_allocator::Allocator;
 use ox_content_parser::{Parser, ParserOptions};
 use ox_content_renderer::{HtmlRenderer, HtmlRendererOptions};
 
-use self::literals::{block_closer, literal_ranges};
+use self::literals::{block_closer, literal_ranges, unclosed_fence};
 use super::links::render_jsdoc_inline_link_at;
 use super::regex_cache::{RegexCache, cached_regex};
 use super::{MarkdownLinkContext, process_doc_text};
 use crate::model::ApiDocTag;
 
-/// The parser bounds block nesting but not inline nesting, and a stack overflow
-/// aborts the process. Any `[`, and any `*` or `_` that can open emphasis, may
-/// nest, so text with more of them than this is not parsed.
+/// The parser bounds block nesting but not inline nesting: a stack overflow aborts
+/// the process, and its time doubles with each nested image. Text that could nest
+/// deeper than this is not parsed.
 const MAX_BRACKETS: usize = 64;
+const MAX_IMAGES: usize = 16;
 const MAX_EMPHASIS_DELIMITERS: usize = 1024;
 
 struct DetailKind {
@@ -89,12 +90,17 @@ pub(super) fn render_detail_markdown(markdown: &str) -> Option<String> {
 pub(super) fn open_block_closer(markdown: &str) -> Option<&str> {
     let may_end_inside_a_block =
         markdown.contains("```") || markdown.contains("~~~") || markdown.contains('<');
-    if !may_end_inside_a_block || nests_too_deep(markdown) {
+    if !may_end_inside_a_block {
         return None;
     }
+    if nests_too_deep(markdown) {
+        return unclosed_fence(markdown);
+    }
     let allocator = Allocator::new();
-    let document = Parser::with_options(&allocator, markdown, parser_options()).parse().ok()?;
-    block_closer(markdown, &document)
+    match Parser::with_options(&allocator, markdown, parser_options()).parse() {
+        Ok(document) => block_closer(markdown, &document),
+        Err(_) => unclosed_fence(markdown),
+    }
 }
 
 /// Footnotes stay off: their ids would repeat across the sections of one page.
@@ -119,11 +125,17 @@ fn trim_blank_edges(text: &str) -> &str {
     &text[text[..content].rfind('\n').map_or(0, |newline| newline + 1)..]
 }
 
+/// Whether `text` holds enough openers to reach those limits. The parser alone
+/// decides which `]` closes what, so every `[` counts, even in code.
 fn nests_too_deep(text: &str) -> bool {
-    let (mut brackets, mut delimiters, mut previous) = (0_usize, 0_usize, b' ');
+    let (mut brackets, mut images, mut delimiters, mut previous) =
+        (0_usize, 0_usize, 0_usize, b' ');
     for &byte in text.as_bytes() {
         match byte {
-            b'[' => brackets += 1,
+            b'[' => {
+                brackets += 1;
+                images += usize::from(previous == b'!');
+            }
             b'*' => delimiters += 1,
             // An intraword `_` cannot open emphasis, so `snake_case` is free.
             b'_' if !previous.is_ascii_alphanumeric() => delimiters += 1,
@@ -131,7 +143,7 @@ fn nests_too_deep(text: &str) -> bool {
         }
         previous = byte;
     }
-    brackets > MAX_BRACKETS || delimiters > MAX_EMPHASIS_DELIMITERS
+    brackets > MAX_BRACKETS || images > MAX_IMAGES || delimiters > MAX_EMPHASIS_DELIMITERS
 }
 
 /// Resolves doc links in the prose, and leaves code and Markdown link syntax as
@@ -141,13 +153,13 @@ fn resolve_detail_markdown<'a>(
     context: Option<&MarkdownLinkContext<'_>>,
 ) -> Cow<'a, str> {
     // Most text has nothing to resolve, and then nothing needs parsing.
-    let resolved = process_doc_text(text, context);
-    if matches!(resolved, Cow::Borrowed(_)) || nests_too_deep(text) {
-        return resolved;
+    if matches!(process_doc_text(text, context), Cow::Borrowed(_)) || nests_too_deep(text) {
+        return Cow::Borrowed(text);
     }
     let allocator = Allocator::new();
+    // Without the parser the code cannot be told apart, so the text stays as written.
     let Ok(document) = Parser::with_options(&allocator, text, parser_options()).parse() else {
-        return resolved;
+        return Cow::Borrowed(text);
     };
     Cow::Owned(resolve_prose(text, &literal_ranges(text, &document), context))
 }
