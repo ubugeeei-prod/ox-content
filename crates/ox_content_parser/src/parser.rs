@@ -54,6 +54,9 @@ pub struct Parser<'a> {
     /// Current position in the source.
     position: usize,
 
+    /// Only classify top-level blocks and record their source spans.
+    top_level_only: bool,
+
     /// Current nesting depth.
     nesting_depth: usize,
 
@@ -136,6 +139,7 @@ impl<'a> Parser<'a> {
             options,
             position: 0,
             nesting_depth: 0,
+            top_level_only: false,
             definitions: None,
             footnote_labels: None,
             lazy_lines: None,
@@ -173,6 +177,7 @@ impl<'a> Parser<'a> {
             options: self.options.clone(),
             position: 0,
             nesting_depth: self.nesting_depth + 1,
+            top_level_only: self.top_level_only,
             definitions: self.definitions.clone(),
             footnote_labels: self.footnote_labels.clone(),
             // Most sub-sources are entered without any lazy continuation
@@ -184,9 +189,20 @@ impl<'a> Parser<'a> {
         }
     }
 
+    /// Parses top-level block boundaries without parsing inline content or the
+    /// contents of nested containers. Block spans refer to the original source.
+    pub fn parse_top_level_blocks(mut self) -> ParseResult<Document<'a>> {
+        self.top_level_only = true;
+        self.parse()
+    }
+
     /// Parses the source into a document AST.
     pub fn parse(mut self) -> ParseResult<Document<'a>> {
         profile_span!("parser::parse");
+        let span = Span::new(0, self.source.len() as u32);
+        if self.top_level_only && self.nesting_depth > 0 {
+            return Ok(Document { children: self.allocator.new_vec(), span });
+        }
         let mut children = self
             .allocator
             .new_vec_with_capacity(Self::document_children_capacity(self.source.len()));
@@ -197,7 +213,6 @@ impl<'a> Parser<'a> {
             }
         }
 
-        let span = Span::new(0, self.source.len() as u32);
         Ok(Document { children, span })
     }
 

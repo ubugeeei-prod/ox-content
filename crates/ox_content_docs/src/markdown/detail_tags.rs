@@ -10,7 +10,7 @@ use ox_content_allocator::Allocator;
 use ox_content_parser::{Parser, ParserOptions};
 use ox_content_renderer::{HtmlRenderer, HtmlRendererOptions};
 
-use self::literals::{block_closer, literal_ranges, scan_block_closer};
+use self::literals::{block_closer, literal_ranges};
 use super::links::render_jsdoc_inline_link_at;
 use super::regex_cache::{RegexCache, cached_regex};
 use super::{MarkdownLinkContext, process_doc_text};
@@ -93,14 +93,11 @@ pub(super) fn open_block_closer(markdown: &str) -> Option<&str> {
     if !may_end_inside_a_block {
         return None;
     }
-    if nests_too_deep(markdown) {
-        return scan_block_closer(markdown);
-    }
     let allocator = Allocator::new();
-    match Parser::with_options(&allocator, markdown, parser_options()).parse() {
-        Ok(document) => block_closer(markdown, &document),
-        Err(_) => scan_block_closer(markdown),
-    }
+    let document = Parser::with_options(&allocator, markdown, parser_options())
+        .parse_top_level_blocks()
+        .ok()?;
+    block_closer(markdown, &document)
 }
 
 /// Footnotes stay off: their ids would repeat across the sections of one page.

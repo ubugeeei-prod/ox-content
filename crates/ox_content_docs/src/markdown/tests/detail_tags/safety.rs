@@ -42,6 +42,17 @@ fn detail_blocks_keep_their_boundary_when_inline_parsing_is_skipped() {
 }
 
 #[test]
+fn fences_in_lists_and_html_do_not_terminate_the_remarks_section() {
+    let list = join3("- ~~~ts\n", &"  [Target]\n".repeat(70), "  ~~~");
+    let page = rendered(&list, &markdown_typedoc_options());
+    assert!(page.contains(&join2(&list, "\n\n## Signature")), "{page}");
+
+    let html = join2("<div>\n~~~\n</div>\n\n<!--\n", &"[Target]\n".repeat(70));
+    let page = rendered(html.trim_end(), &markdown_typedoc_options());
+    assert!(page.contains(&join2(html.trim_end(), "\n-->\n\n## Signature")), "{page}");
+}
+
+#[test]
 fn a_fence_line_indented_too_far_does_not_close_it() {
     let page = rendered("```\ncode\n    ```", &markdown_typedoc_options());
 

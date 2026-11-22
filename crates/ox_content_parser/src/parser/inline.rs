@@ -65,6 +65,9 @@ impl<'a> Parser<'a> {
         offset: usize,
     ) -> ParseResult<Vec<'a, Node<'a>>> {
         profile_span!("parser::parse_inline");
+        if self.top_level_only {
+            return Ok(self.allocator.new_vec());
+        }
         let bytes = content.as_bytes();
         let mut markers = InlineMarkerScan::new(
             self.allows_mdx_text_expression(),

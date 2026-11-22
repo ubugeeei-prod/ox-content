@@ -48,36 +48,6 @@ pub(super) fn block_closer<'t>(text: &'t str, document: &Document<'_>) -> Option
     }
 }
 
-/// Track top-level fences and delimited HTML without parsing inline Markdown.
-pub(super) fn scan_block_closer(text: &str) -> Option<&str> {
-    enum OpenBlock<'a> {
-        Fence(&'a str),
-        Html(&'static str),
-    }
-    let mut open = None;
-    for line in text.lines() {
-        match open {
-            Some(OpenBlock::Fence(marker)) if closes_fence(line, marker) => open = None,
-            Some(OpenBlock::Html(end)) if html_block_ended(&line.to_ascii_lowercase(), end) => {
-                open = None;
-            }
-            Some(_) => {}
-            None => {
-                let trimmed = line.trim_start_matches(' ');
-                if line.len() - trimmed.len() <= 3 {
-                    open = fence_marker(trimmed)
-                        .map(OpenBlock::Fence)
-                        .or_else(|| open_html_block_closer(trimmed).map(OpenBlock::Html));
-                }
-            }
-        }
-    }
-    open.map(|block| match block {
-        OpenBlock::Fence(marker) => marker,
-        OpenBlock::Html(end) => end,
-    })
-}
-
 fn fence_marker(line: &str) -> Option<&str> {
     let marker = *line.as_bytes().first()?;
     if !matches!(marker, b'`' | b'~') {
@@ -107,24 +77,13 @@ fn open_fence(block: &str) -> Option<&str> {
 }
 
 fn open_html_block_closer(html: &str) -> Option<&'static str> {
-    let html = html.trim_start();
-    if !html.starts_with('<') {
-        return None;
+    let html = html.trim_start().to_ascii_lowercase();
+    if let Some((_, end_tag)) = RAW_TEXT_ELEMENTS.iter().find(|(name, _)| opens(&html, name)) {
+        let closed = RAW_TEXT_ELEMENTS.iter().any(|(_, any_end_tag)| html.contains(any_end_tag));
+        return (!closed).then_some(*end_tag);
     }
-    let html = html.to_ascii_lowercase();
-    let (_, closer) = RAW_TEXT_ELEMENTS
-        .iter()
-        .find(|(name, _)| opens(&html, name))
-        .or_else(|| DELIMITED_HTML_BLOCKS.iter().find(|(opener, _)| html.starts_with(opener)))?;
-    (!html_block_ended(&html, closer)).then_some(*closer)
-}
-
-fn html_block_ended(html: &str, closer: &str) -> bool {
-    if closer.starts_with("</") {
-        RAW_TEXT_ELEMENTS.iter().any(|(_, end_tag)| html.contains(end_tag))
-    } else {
-        html.contains(closer)
-    }
+    let (_, closer) = DELIMITED_HTML_BLOCKS.iter().find(|(opener, _)| html.starts_with(opener))?;
+    (!html.contains(closer)).then_some(*closer)
 }
 
 /// Whether `html` starts with the tag `name`, and not a longer name like `<preview>`.
