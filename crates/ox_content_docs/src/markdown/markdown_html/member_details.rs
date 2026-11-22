@@ -56,6 +56,7 @@ pub(super) fn render_callable_member_group_html(
             details.push_str(&render_member_detail_returns_html(&returns, options, context));
         }
         details.push_str(&render_member_detail_throws_html(member, context));
+        details.push_str(&super::examples::render_member_examples_html(&member.examples));
         details.push_str(&render_implementation_of_html(&member.implementation_of));
         details.push_str("</section>");
     }

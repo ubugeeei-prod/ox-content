@@ -4663,6 +4663,9 @@ export interface DocMember {
   /** Exceptions/errors documented with `@throws` / `@exception`. */
   throws?: ThrowsDoc[];
 
+  /** Code examples from the member's `@example` tags, in source order. */
+  examples?: string[];
+
   /** True when the member is optional in the source declaration. */
   optional?: boolean;
 

@@ -2,7 +2,7 @@ use super::super::{MarkdownLinkContext, process_doc_text, rendered_throws};
 use super::{
     lifecycle::{push_lifecycle_alerts, render_since_section},
     member_groups::MemberGroupRenderContext,
-    sections::{push_detail_sections, push_generic_tags, push_throws},
+    sections::{push_detail_sections, push_examples, push_generic_tags, push_throws},
 };
 use crate::model::ApiDocMember;
 
@@ -27,6 +27,7 @@ pub(super) fn push_index_signature_detail_pure(
     out.push_str(&render_since_section(&member.tags, context, detail_heading));
     let throws = rendered_throws(&member.throws, &member.tags);
     push_throws(out, throws.as_ref(), context, detail_heading);
+    push_examples(out, &member.examples, detail_heading);
     push_generic_tags(out, &member.tags, context, detail_heading);
 }
 

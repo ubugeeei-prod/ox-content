@@ -24,6 +24,7 @@ pub(super) fn render_index_signature_group_html(
         details.push_str(&render_member_detail_description_html(member, context));
         details.push_str(&render_member_detail_sections_html(member, context));
         details.push_str(&render_member_detail_throws_html(member, context));
+        details.push_str(&super::examples::render_member_examples_html(&member.examples));
         details.push_str("</section>");
     }
 

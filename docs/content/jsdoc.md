@@ -94,11 +94,13 @@ signature, and members. The following JSDoc tags are recognised:
 | `@desc`                | Same as `@description`.                                 |
 | `@remarks`             | Markdown **Remarks** section after the summary.         |
 | `@returns desc`        | Documents the return value.                             |
-| `@example`             | Rendered as a fenced code block.                        |
+| `@example`             | Renders examples for declarations and their members.    |
 | `@default value`       | Shown alongside the parameter/property.                 |
 | `@deprecated [reason]` | Flags the entry as deprecated.                          |
 | `@private`             | Hidden unless `private: true`.                          |
 | `@internal`            | Hidden unless `internal: true`.                         |
+
+Declaration examples appear before the member sections.
 
 Types are read from the TypeScript annotations themselves, so `@param {Type}`
 JSDoc type syntax is not required.

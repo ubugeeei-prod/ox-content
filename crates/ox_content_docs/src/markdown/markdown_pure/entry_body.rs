@@ -72,6 +72,7 @@ pub(in crate::markdown) fn render_entry_body_pure(
     push_type_parameters(&mut out, &entry.type_parameters, options, context, &heading);
 
     if !entry.members.is_empty() {
+        push_examples(&mut out, &entry.examples, &heading);
         out.push_str(&render_members_pure(entry, options, context, section_level));
     }
 
@@ -84,7 +85,9 @@ pub(in crate::markdown) fn render_entry_body_pure(
     let throws = rendered_throws(&entry.throws, &entry.tags);
     push_throws(&mut out, throws.as_ref(), context, &heading);
 
-    push_examples(&mut out, &entry.examples, &heading);
+    if entry.members.is_empty() {
+        push_examples(&mut out, &entry.examples, &heading);
+    }
 
     // Structured tags (lifecycle alerts, `## Since`) are rendered above, so
     // exclude them from the generic list here.

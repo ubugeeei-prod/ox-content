@@ -140,6 +140,7 @@ fn member(module: usize, entry: usize, index: usize) -> ApiDocMember {
             members: Vec::new(),
         }),
         throws: Vec::new(),
+        examples: Vec::new(),
         members: Vec::new(),
         optional: index.is_multiple_of(2),
         readonly: index.is_multiple_of(3),

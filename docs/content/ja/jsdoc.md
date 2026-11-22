@@ -91,11 +91,13 @@ export default defineConfig({
 | `@desc`                | `@description` と同じです。                            |
 | `@remarks`             | 説明の直後に **Remarks** 節として描画します。          |
 | `@returns desc`        | 戻り値を文書化します。                                 |
-| `@example`             | フェンス付きコードブロックとして描画します。           |
+| `@example`             | 宣言やメンバーの使用例を表示します。                   |
 | `@default value`       | パラメーター / プロパティの横に表示します。            |
 | `@deprecated [reason]` | エントリを非推奨として印付けします。                   |
 | `@private`             | `private: true` でない限り隠します。                   |
 | `@internal`            | `internal: true` でない限り隠します。                  |
+
+宣言の使用例はメンバー一覧の前に表示されます。
 
 型は TypeScript の注釈そのものから読むので、`@param {Type}` の JSDoc 型構文は不要です。
 

@@ -56,6 +56,7 @@ fn to_api_member(member: NormalizedMember) -> ApiDocMember {
         type_parameters: member.type_parameters.into_iter().map(to_api_type_param).collect(),
         returns: member.returns.map(to_api_return),
         throws: member.throws.into_iter().map(to_api_throws).collect(),
+        examples: member.examples,
         members: member.members.into_iter().map(to_api_member).collect(),
         optional: member.optional,
         readonly: member.readonly,

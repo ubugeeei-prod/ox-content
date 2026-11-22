@@ -139,6 +139,9 @@ pub(super) fn render_member_description_html(
         blocks.push(join3("<div class=\"ox-api-entry__member-meta\">", &badge, "</div>"));
     }
 
+    if !member.examples.is_empty() {
+        blocks.push(super::examples::render_member_examples_html(&member.examples));
+    }
     blocks.join("")
 }
 
