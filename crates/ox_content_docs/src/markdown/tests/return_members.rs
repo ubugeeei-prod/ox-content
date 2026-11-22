@@ -90,3 +90,29 @@ fn typedoc_links_type_parameter_constraint_and_default() {
 
     // The type parameter's own name is never linked.
 }
+
+#[test]
+fn flat_markdown_keeps_nested_return_examples_at_heading_level_six() {
+    let mut value = return_property("value", "string");
+    value.examples = vec!["useValue()".to_string()];
+    let method = ApiDocMember {
+        name: "read".to_string(),
+        kind: "method".to_string(),
+        returns: Some(ApiReturnDoc {
+            type_annotation: "object".to_string(),
+            description: String::new(),
+            members: vec![value],
+        }),
+        ..ApiDocMember::default()
+    };
+    let mut entry = test_entry("Client", "class", "/repo/src/client.ts", "Client.");
+    entry.members = vec![method];
+    let options = MarkdownDocsOptions {
+        path_strategy: MarkdownPathStrategy::Flat,
+        render_style: MarkdownRenderStyle::Markdown,
+        ..MarkdownDocsOptions::default()
+    };
+    let pages = generate_markdown(&type_link_module(entry), &options);
+    let page = pages.values().find(|page| page.contains("useValue()")).unwrap();
+    assert!(page.lines().any(|line| line == "###### Examples"), "{page}");
+}
