@@ -1,5 +1,13 @@
 # Changelog
 
+## [3.9.0] - 2026-11-22
+
+### Bug Fixes
+
+- preserve language coverage and theme Highlights tokens (#1584) _(affects: npm: @ox-content/vite-plugin; docs, tooling)_
+- preserve member examples and show declaration examples first (#1585) _(affects: crates: ox_content_docs, ox_content_napi, ox_content_profile_cli; npm: @ox-content/napi, @ox-content/vite-plugin; docs)_
+- render descriptions and remarks as block sections (#1583) _(affects: crates: ox_content_docs, ox_content_parser; docs, workspace metadata)_
+
 ## [3.8.3] - 2026-11-18
 
 ### Bug Fixes
