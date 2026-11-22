@@ -10,6 +10,7 @@ use crate::profile_span;
 use crate::string_builder::{join2, join3};
 
 mod category_pages;
+mod detail_tags;
 mod entries;
 mod examples;
 mod file_pages;

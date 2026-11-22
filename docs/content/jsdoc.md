@@ -90,6 +90,9 @@ signature, and members. The following JSDoc tags are recognised:
 | Tag                    | Effect                                                  |
 | ---------------------- | ------------------------------------------------------- |
 | `@param name desc`     | Adds a row to the parameter table (type comes from TS). |
+| `@description`         | Markdown **Description** section after the summary.     |
+| `@desc`                | Same as `@description`.                                 |
+| `@remarks`             | Markdown **Remarks** section after the summary.         |
 | `@returns desc`        | Documents the return value.                             |
 | `@example`             | Rendered as a fenced code block.                        |
 | `@default value`       | Shown alongside the parameter/property.                 |

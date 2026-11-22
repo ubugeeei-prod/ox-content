@@ -4,7 +4,7 @@ use super::{
     member_groups::MemberGroupRenderContext,
     parameters::push_parameters,
     return_members::push_returns,
-    sections::{push_generic_tags, push_throws},
+    sections::{push_detail_sections, push_generic_tags, push_throws},
     type_parameters::push_type_parameters,
 };
 use crate::markdown::signature_members::{
@@ -51,6 +51,7 @@ pub(super) fn render_callable_member_details_pure(
             out.push_str("\n\n");
         }
 
+        push_detail_sections(out, &member.tags, link_context, &detail_heading);
         out.push_str(&render_since_section(&member.tags, link_context, &detail_heading));
         push_type_parameters(
             out,

@@ -1,5 +1,6 @@
 use super::super::{ExampleBlock, MarkdownLinkContext, is_structured_tag, parse_example_block};
 use super::format::{inline, linked_type_span};
+use crate::markdown::detail_tags::{detail_sections, open_block_closer};
 use crate::model::{ApiDocEntry, ApiDocTag, ApiThrowsDoc};
 
 pub(super) fn push_heritage_sections(
@@ -119,6 +120,31 @@ pub(super) fn push_examples(out: &mut String, examples: &[String], heading: &str
                 out.push_str("\n\n");
             }
         }
+    }
+}
+
+/// Appends a `{heading} Description` / `{heading} Remarks` section for each
+/// detail tag, keeping its Markdown blocks. The heading stops at level 6, the
+/// deepest Markdown has.
+pub(in crate::markdown) fn push_detail_sections(
+    out: &mut String,
+    tags: &[ApiDocTag],
+    context: Option<&MarkdownLinkContext<'_>>,
+    heading: &str,
+) {
+    let level = heading.bytes().take_while(|byte| *byte == b'#').count();
+    let heading = if level > 6 { &heading[level - 6..] } else { heading };
+    for section in detail_sections(tags, context) {
+        out.push_str(heading);
+        out.push(' ');
+        out.push_str(section.title);
+        out.push_str("\n\n");
+        out.push_str(&section.markdown);
+        if let Some(closer) = open_block_closer(&section.markdown) {
+            out.push('\n');
+            out.push_str(closer);
+        }
+        out.push_str("\n\n");
     }
 }
 

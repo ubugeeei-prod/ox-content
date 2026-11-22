@@ -64,6 +64,12 @@ source: crates/ox_content_docs/src/markdown/tests/helpers/assertions.rs
 <div class="ox-api-entry__prose">
 <p>Builds <a href="./command.md#command"><code>command</code></a> metadata.</p>
 </div>
+<div class="ox-api-entry__section ox-api-entry__section--remarks">
+<h4>Remarks</h4>
+<div class="ox-api-entry__prose">
+<p>Falls back to missing.</p>
+</div>
+</div>
 <div class="ox-api-entry__section ox-api-entry__section--signature">
 <h4>Signature</h4>
 <pre><code class="language-typescript">export function buildCommand(entry: Command): AgentProfile</code></pre>
@@ -89,7 +95,7 @@ source: crates/ox_content_docs/src/markdown/tests/helpers/assertions.rs
 </div>
 <div class="ox-api-entry__section ox-api-entry__section--tags">
 <h4>Tags</h4>
-<ul class="ox-api-entry__tags"><li><span class="ox-api-entry__tag-name">@see</span><span class="ox-api-entry__tag-value">delegated to <a href="https://github.com/unjs/std-env">std-env</a></span></li><li><span class="ox-api-entry__tag-name">@remarks</span><span class="ox-api-entry__tag-value">Falls back to missing.</span></li></ul>
+<ul class="ox-api-entry__tags"><li><span class="ox-api-entry__tag-name">@see</span><span class="ox-api-entry__tag-value">delegated to <a href="https://github.com/unjs/std-env">std-env</a></span></li></ul>
 </div>
   </div>
 </details>

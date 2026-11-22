@@ -6,7 +6,9 @@ use super::lifecycle::{push_lifecycle_alerts, render_since_section};
 use super::member_groups::render_members_pure;
 use super::parameters::push_parameters;
 use super::return_members::push_returns;
-use super::sections::{push_examples, push_generic_tags, push_heritage_sections, push_throws};
+use super::sections::{
+    push_detail_sections, push_examples, push_generic_tags, push_heritage_sections, push_throws,
+};
 use super::type_parameters::push_type_parameters;
 use crate::model::ApiDocEntry;
 
@@ -40,6 +42,8 @@ pub(in crate::markdown) fn render_entry_body_pure(
         out.push_str(description);
         out.push_str("\n\n");
     }
+
+    push_detail_sections(&mut out, &entry.tags, context, &heading);
 
     // `@since` / `@version` render as a dedicated `## Since` section near the
     // summary instead of a generic `## Tags` entry.
@@ -116,6 +120,7 @@ pub(in crate::markdown) fn render_overload_body_pure(
             out.push_str(description);
             out.push_str("\n\n");
         }
+        push_detail_sections(&mut out, &entry.tags, context, &heading);
         out.push_str(&render_since_section(&entry.tags, context, &heading));
     }
 
@@ -139,6 +144,7 @@ pub(in crate::markdown) fn render_overload_body_pure(
             out.push_str(description);
             out.push_str("\n\n");
         }
+        push_detail_sections(&mut out, &entry.tags, context, &sub);
         out.push_str(&render_since_section(&entry.tags, context, &sub));
         if let Some(github_url) = &options.github_url
             && !entry.file.is_empty()

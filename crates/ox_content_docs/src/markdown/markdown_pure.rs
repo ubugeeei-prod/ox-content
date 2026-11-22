@@ -23,4 +23,5 @@ mod type_parameters;
 
 pub(super) use entry_body::{render_entry_body_pure, render_overload_body_pure};
 pub(super) use lifecycle::push_lifecycle_alerts;
+pub(super) use sections::push_detail_sections;
 pub(super) use stats::render_stats_markdown;

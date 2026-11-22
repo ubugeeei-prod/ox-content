@@ -1,4 +1,5 @@
 use super::*;
+use crate::markdown::detail_tags::detail_sections;
 
 pub(super) fn render_member_flags(member: &ApiDocMember) -> String {
     let mut flags = Vec::new();
@@ -73,6 +74,18 @@ pub(super) fn render_member_description_html(
             &render_doc_inline_html(&member.description, context),
             "</div>",
         ));
+    }
+
+    for section in detail_sections(&member.tags, context) {
+        let mut block = StringBuilder::new();
+        block.push_str("<div class=\"ox-api-entry__member-section ox-api-entry__member-section--");
+        block.push_str(section.modifier);
+        block.push_str("\"><span>");
+        block.push_str(section.title);
+        block.push_str("</span>");
+        block.push_str(&render_detail_blocks_html(&section.markdown));
+        block.push_str("</div>");
+        blocks.push(block.into_string());
     }
 
     if let Some(default_value) =

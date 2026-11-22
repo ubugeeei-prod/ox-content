@@ -5,10 +5,11 @@ use super::{
     type_parameter_scope,
 };
 use super::{
-    escape_html, render_code_block_html, render_doc_inline_html, render_member_params_html,
-    render_member_type_parameters_html, render_return_members_html, render_throws_list_html,
-    render_type_inner_html,
+    escape_html, render_code_block_html, render_detail_blocks_html, render_doc_inline_html,
+    render_member_params_html, render_member_type_parameters_html, render_return_members_html,
+    render_throws_list_html, render_type_inner_html,
 };
+use crate::markdown::detail_tags::detail_sections;
 use crate::markdown::signature_members::{
     is_signature_member, signature_member_code, signature_member_label,
 };
@@ -41,6 +42,7 @@ pub(super) fn render_callable_member_group_html(
             details.push_char('\n');
         }
         details.push_str(&render_member_detail_description_html(member, context));
+        details.push_str(&render_member_detail_sections_html(member, context));
         details.push_str(&render_member_detail_type_parameters_html(member, options, context));
         details.push_str(&render_member_detail_params_html(member, options, context));
         if let Some(returns) = &member.returns {
@@ -195,6 +197,23 @@ fn render_member_detail_returns_html(
     }
     out.push_str(&render_return_members_html(&returns.members, options, context));
     out.push_str("\n</div>");
+    out.into_string()
+}
+
+pub(super) fn render_member_detail_sections_html(
+    member: &ApiDocMember,
+    context: Option<&MarkdownLinkContext<'_>>,
+) -> String {
+    let mut out = StringBuilder::new();
+    for section in detail_sections(&member.tags, context) {
+        out.push_str("<div class=\"ox-api-entry__member-detail-section ox-api-entry__member-detail-section--");
+        out.push_str(section.modifier);
+        out.push_str("\">\n<h6>");
+        out.push_str(section.title);
+        out.push_str("</h6>\n");
+        out.push_str(&render_detail_blocks_html(&section.markdown));
+        out.push_str("\n</div>");
+    }
     out.into_string()
 }
 

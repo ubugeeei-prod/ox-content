@@ -189,6 +189,16 @@ fn render_jsdoc_inline_link(
     }
 }
 
+/// Renders the `{@link …}` tag at `start`, with the offset just past it.
+pub(super) fn render_jsdoc_inline_link_at(
+    text: &str,
+    start: usize,
+    context: Option<&MarkdownLinkContext<'_>>,
+) -> Option<(String, usize)> {
+    let (link, end) = parse_jsdoc_inline_link_at(text, start)?;
+    Some((render_jsdoc_inline_link(&link, context), end))
+}
+
 fn convert_jsdoc_inline_links<'a>(
     text: &'a str,
     context: Option<&MarkdownLinkContext<'_>>,

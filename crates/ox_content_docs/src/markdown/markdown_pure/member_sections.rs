@@ -10,10 +10,12 @@ use super::format::{
 };
 use super::parameters::param_description;
 use super::return_members::push_return_members;
-use super::sections::push_throws_items;
+use super::sections::{push_detail_sections, push_throws_items};
 use super::type_parameters::type_parameters_have_descriptions;
+use crate::markdown::detail_tags::is_detail_tag;
 use crate::markdown::signature_members::member_display_name;
 use crate::model::ApiDocMember;
+use crate::string_builder::join3;
 
 pub(super) fn render_member_parameter_sections_pure(
     members: &[&ApiDocMember],
@@ -29,13 +31,18 @@ pub(super) fn render_member_parameter_sections_pure(
             && member.params.is_empty()
             && member.returns.is_none()
             && member.throws.is_empty()
-            && !member.tags.iter().any(|tag| is_throws_tag(&tag.tag))
+            && !member.tags.iter().any(|tag| is_throws_tag(&tag.tag) || is_detail_tag(&tag.tag))
         {
             continue;
         }
         let names = type_parameter_scope(context, &member.type_parameters);
         let scoped = context.map(|context| context.with_type_parameters(&names));
         let context = scoped.as_ref();
+
+        if member.tags.iter().any(|tag| is_detail_tag(&tag.tag)) {
+            let detail_heading = join3(&heading, " ", member_display_name(member));
+            push_detail_sections(&mut out, &member.tags, context, &detail_heading);
+        }
 
         if !member.type_parameters.is_empty() {
             out.push_str(&heading);

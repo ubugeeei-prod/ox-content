@@ -1,8 +1,9 @@
 use regex::Regex;
 use std::sync::OnceLock;
 
+use super::super::detail_tags::render_detail_markdown;
 use super::super::{RegexCache, cached_regex};
-use super::inline::{render_code_block_html, render_inline_html};
+use super::inline::{push_code_without_blank_lines, render_code_block_html, render_inline_html};
 use crate::string_builder::{StringBuilder, join3};
 
 // The four block-start regexes are cached once and shared between the
@@ -220,4 +221,20 @@ pub(super) fn render_markdown_blocks_html(text: &str) -> String {
     }
 
     join3("<div class=\"ox-api-entry__prose\">\n", &blocks.join("\n"), "\n</div>")
+}
+
+/// Renders `@description` / `@remarks` Markdown, keeping it one CommonMark HTML
+/// block: a blank line in a code sample would otherwise end the block around it.
+pub(super) fn render_detail_blocks_html(markdown: &str) -> String {
+    // Text the parser cannot take stays escaped: the simple block renderer above
+    // would let `javascript:` links through.
+    let Some(html) = render_detail_markdown(markdown) else {
+        return render_code_block_html(markdown, "text");
+    };
+    let html = html.trim_end();
+    let mut out = StringBuilder::with_capacity(html.len() + 40);
+    out.push_str("<div class=\"ox-api-entry__prose\">\n");
+    push_code_without_blank_lines(&mut out, html);
+    out.push_str("\n</div>");
+    out.into_string()
 }

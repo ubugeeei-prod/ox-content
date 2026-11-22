@@ -22,6 +22,7 @@ fn render_entry_body_html(
         body.push_str(&render_markdown_blocks_html(&processed_description));
         body.push('\n');
     }
+    push_detail_sections_html(&mut body, &entry.tags, link_context);
     push_heritage_sections_html(&mut body, entry, link_context);
 
     if let Some(signature) = &entry.signature {
@@ -200,6 +201,7 @@ pub fn render_overload_body_html(
             out.push_str(&render_markdown_blocks_html(&description));
             out.push('\n');
         }
+        push_detail_sections_html(&mut out, &implementation.tags, link_context);
     }
 
     for signature in public {
@@ -220,6 +222,7 @@ pub fn render_overload_body_html(
             out.push_str(&render_markdown_blocks_html(&description));
             out.push('\n');
         }
+        push_detail_sections_html(&mut out, &signature.tags, link_context);
         push_type_parameters_html(&mut out, &signature.type_parameters, options, link_context);
         push_params_html(&mut out, &signature.params, options, link_context);
         if let Some(returns) = &signature.returns {
