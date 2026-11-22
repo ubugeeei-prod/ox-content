@@ -15,5 +15,6 @@ await bundle.write({
     new URL("../../npm/vite-plugin-ox-content/.pipeline-extensions.mjs", import.meta.url),
   ),
   format: "esm",
+  codeSplitting: false,
 });
 await bundle.close();

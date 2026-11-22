@@ -1,6 +1,6 @@
 # Downstream extension benchmarks
 
-The native Markdown matrix lives in `native-extensions.md`. This companion covers the post-render pipeline: every native media provider, tabs, package-manager tabs, YouTube, syntax highlighting, cross references, citations (including local bibliography reads), code lint, and docs-test extraction. It tests 1, 32 and 256 occurrences plus enabled-but-absent controls: 144 rows. A registry assertion prevents silently omitting new providers. Each fixture must exercise its transform and retain stable output.
+The native Markdown matrix lives in `native-extensions.md`. This companion covers the post-render pipeline: every native media provider, tabs, package-manager tabs, YouTube, syntax highlighting with Tree-sitter and Highlights, cross references, citations (including local bibliography reads), code lint, and docs-test extraction. It tests 1, 32 and 256 occurrences plus enabled-but-absent controls. A registry assertion prevents silently omitting new providers. Each fixture must exercise its transform and retain stable output.
 
 From the repository root, with workspace dependencies and the matching NAPI binding built:
 
