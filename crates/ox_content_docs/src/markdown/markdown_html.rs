@@ -39,7 +39,7 @@ mod tags;
 mod throws;
 mod type_parameters;
 
-use blocks::render_markdown_blocks_html;
+use blocks::{render_detail_blocks_html, render_markdown_blocks_html};
 pub(super) use entry_body::{render_entry_html, render_entry_page_html, render_overload_body_html};
 use examples::push_examples_html;
 pub(super) use examples::render_module_examples_html;
@@ -61,9 +61,10 @@ use nested_members::{
 use overview::render_entry_badges_html;
 use parameters::{render_member_params_html, render_params_list_html, render_params_table_html};
 use return_members::render_return_members_html;
+pub(super) use sections::render_module_detail_sections_html;
 use sections::{
-    push_heritage_sections_html, push_params_html, push_returns_html, push_tag_list_html,
-    push_throws_html, push_type_parameters_html,
+    push_detail_sections_html, push_heritage_sections_html, push_params_html, push_returns_html,
+    push_tag_list_html, push_throws_html, push_type_parameters_html,
 };
 pub(super) use stats::{render_details_controls_html, render_stats_html};
 use tags::render_tag_list_html;

@@ -1,0 +1,49 @@
+---
+source: crates/ox_content_docs/src/markdown/tests/helpers/assertions.rs
+---
+# Function: greet()
+
+Greets a user.
+
+## Description
+
+A longer description.
+
+- first point
+- second point
+
+## Remarks
+
+The first paragraph.
+
+The second paragraph.
+
+See also:
+- [Guide](https://example.com/guide)
+- [API](https://example.com/api)
+
+```ts
+greet('Vue')
+```
+
+## Since
+
+1.0.0
+
+## Signature
+
+```ts
+export function greet(name: string): string
+```
+
+## Parameters
+
+- `name` (`string`)
+
+## Returns
+
+`string`
+
+## Tags
+
+- `@see` — https://example.com

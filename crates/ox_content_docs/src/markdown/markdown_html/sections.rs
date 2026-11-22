@@ -1,4 +1,5 @@
 use super::*;
+use crate::markdown::detail_tags::detail_sections;
 
 pub(super) fn push_heritage_sections_html(
     body: &mut String,
@@ -126,6 +127,49 @@ pub(super) fn push_throws_html(
         "
 </div>\n",
     );
+}
+
+pub(super) fn push_detail_sections_html(
+    body: &mut String,
+    tags: &[ApiDocTag],
+    link_context: Option<&MarkdownLinkContext<'_>>,
+) {
+    push_detail_section_blocks(body, tags, link_context, "h4");
+}
+
+/// The detail sections of a module page: `h2`, like its examples, and ended by a
+/// blank line because Markdown follows them.
+pub(in crate::markdown) fn render_module_detail_sections_html(
+    tags: &[ApiDocTag],
+    link_context: Option<&MarkdownLinkContext<'_>>,
+) -> String {
+    let mut out = String::new();
+    push_detail_section_blocks(&mut out, tags, link_context, "h2");
+    if !out.is_empty() {
+        out.push('\n');
+    }
+    out
+}
+
+fn push_detail_section_blocks(
+    body: &mut String,
+    tags: &[ApiDocTag],
+    link_context: Option<&MarkdownLinkContext<'_>>,
+    heading: &str,
+) {
+    for section in detail_sections(tags, link_context) {
+        body.push_str("<div class=\"ox-api-entry__section ox-api-entry__section--");
+        body.push_str(section.modifier);
+        body.push_str("\">\n<");
+        body.push_str(heading);
+        body.push('>');
+        body.push_str(section.title);
+        body.push_str("</");
+        body.push_str(heading);
+        body.push_str(">\n");
+        body.push_str(&render_detail_blocks_html(&section.markdown));
+        body.push_str("\n</div>\n");
+    }
 }
 
 pub(super) fn push_tag_list_html(

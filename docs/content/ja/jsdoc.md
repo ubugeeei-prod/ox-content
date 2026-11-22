@@ -87,6 +87,9 @@ export default defineConfig({
 | タグ                   | 効果                                                   |
 | ---------------------- | ------------------------------------------------------ |
 | `@param name desc`     | パラメーター表に行を追加します（型は TS から来ます）。 |
+| `@description`         | 説明の直後に **Description** 節として描画します。      |
+| `@desc`                | `@description` と同じです。                            |
+| `@remarks`             | 説明の直後に **Remarks** 節として描画します。          |
 | `@returns desc`        | 戻り値を文書化します。                                 |
 | `@example`             | フェンス付きコードブロックとして描画します。           |
 | `@default value`       | パラメーター / プロパティの横に表示します。            |

@@ -1,0 +1,60 @@
+---
+source: crates/ox_content_docs/src/markdown/tests/helpers/assertions.rs
+---
+# Function: greet()
+
+<div id="greet" class="ox-api-entry ox-api-entry--page">
+<span class="ox-api-entry__meta"><span class="ox-api-badge">1 param</span><span class="ox-api-badge">returns string</span><span class="ox-api-badge">since 1.0.0</span></span>
+<div class="ox-api-entry__prose">
+<p>Greets a user.</p>
+</div>
+<div class="ox-api-entry__section ox-api-entry__section--description">
+<h4>Description</h4>
+<div class="ox-api-entry__prose">
+<p>A longer description.</p>
+<ul>
+<li>first point</li>
+<li>second point</li>
+</ul>
+</div>
+</div>
+<div class="ox-api-entry__section ox-api-entry__section--remarks">
+<h4>Remarks</h4>
+<div class="ox-api-entry__prose">
+<p>The first paragraph.</p>
+<p>The second paragraph.</p>
+<p>See also:</p>
+<ul>
+<li><a href="https://example.com/guide" target="_blank" rel="noopener noreferrer">Guide</a></li>
+<li><a href="https://example.com/api" target="_blank" rel="noopener noreferrer">API</a></li>
+</ul>
+<pre><code class="language-ts">greet(&#39;Vue&#39;)
+</code></pre>
+</div>
+</div>
+<div class="ox-api-entry__section ox-api-entry__section--signature">
+<h4>Signature</h4>
+<pre><code class="language-typescript">export function greet(name: string): string</code></pre>
+</div>
+<div class="ox-api-entry__section ox-api-entry__section--params">
+<h4>Parameters</h4>
+<ul class="ox-api-entry__params">
+<li class="ox-api-entry__param">
+  <div class="ox-api-entry__param-heading">
+    <code class="ox-api-entry__param-name">name</code>
+    <code class="ox-api-entry__param-type">string</code>
+  </div>
+</li>
+</ul>
+</div>
+<div class="ox-api-entry__section ox-api-entry__section--returns">
+<h4>Returns</h4>
+<div class="ox-api-entry__return">
+  <code class="ox-api-entry__return-type">string</code>
+</div>
+</div>
+<div class="ox-api-entry__section ox-api-entry__section--tags">
+<h4>Tags</h4>
+<ul class="ox-api-entry__tags"><li><span class="ox-api-entry__tag-name">@see</span><span class="ox-api-entry__tag-value">https://example.com</span></li></ul>
+</div>
+</div>

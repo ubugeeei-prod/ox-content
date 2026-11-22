@@ -110,21 +110,19 @@ pub(super) fn render_code_block_html(code: &str, language: &str) -> String {
 /// that line is then parsed as Markdown — inside what is meant to be a code
 /// example — which silently drops the blank lines from every example that has
 /// one, and puts the rest of the block at the mercy of Markdown's own rules.
-/// Writing all but the last newline of a run as a character reference renders
+/// Writing the newline before a blank line as a character reference renders
 /// exactly the same line breaks while leaving the parser no blank line to end
-/// the block on.
-fn push_code_without_blank_lines(out: &mut StringBuilder, code: &str) {
+/// the block on. A line of only spaces or tabs counts as blank too.
+pub(super) fn push_code_without_blank_lines(out: &mut StringBuilder, code: &str) {
     let mut rest = code;
 
-    while let Some(at) = rest.find("\n\n") {
+    while let Some(at) = rest.find('\n') {
         out.push_str(&rest[..at]);
-        let tail = &rest[at..];
-        let newlines = tail.len() - tail.trim_start_matches('\n').len();
-        for _ in 1..newlines {
-            out.push_str("&#10;");
-        }
-        out.push_char('\n');
-        rest = &tail[newlines..];
+        rest = &rest[at + 1..];
+        let next_line_is_blank = rest
+            .split_once('\n')
+            .is_some_and(|(line, _)| line.trim_matches([' ', '\t', '\r']).is_empty());
+        out.push_str(if next_line_is_blank { "&#10;" } else { "\n" });
     }
 
     out.push_str(rest);

@@ -7,6 +7,7 @@ mod helpers;
 use helpers::*;
 
 mod category_enum;
+mod detail_tags;
 mod examples_and_sources;
 mod generic_links;
 mod group_order;

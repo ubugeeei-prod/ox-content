@@ -154,6 +154,14 @@ pub(super) fn generate_typedoc_module_index_for_file(
         markdown.push_str(description);
         markdown.push_str("\n\n");
     }
+    if options.render_style == MarkdownRenderStyle::Markdown {
+        markdown_pure::push_detail_sections(&mut markdown, &doc.tags, Some(&link_context), "##");
+    } else {
+        markdown.push_str(&markdown_html::render_module_detail_sections_html(
+            &doc.tags,
+            Some(&link_context),
+        ));
+    }
 
     if !doc.examples.is_empty() {
         if options.render_style == MarkdownRenderStyle::Markdown {

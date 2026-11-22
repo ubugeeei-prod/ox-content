@@ -1,3 +1,4 @@
+use super::member_details::render_member_detail_sections_html;
 use super::*;
 use crate::markdown::signature_members::member_display_name;
 
@@ -26,6 +27,7 @@ pub(super) fn render_return_members_html(
         if member.kind == "indexSignature" {
             rendered.push_str("\n<div class=\"ox-api-entry__return-member ox-api-entry__return-member--indexable\">\n<h5>Indexable</h5>\n");
             rendered.push_str(&render_index_signature_code_block_html(member, link_context));
+            rendered.push_str(&render_member_detail_sections_html(member, link_context));
             rendered.push_str("\n</div>");
             continue;
         }

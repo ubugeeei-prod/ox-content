@@ -2,7 +2,8 @@ use rustc_hash::FxHashSet;
 
 use super::MarkdownLinkContext;
 use super::member_details::{
-    render_member_detail_description_html, render_member_detail_throws_html,
+    render_member_detail_description_html, render_member_detail_sections_html,
+    render_member_detail_throws_html,
 };
 use super::{escape_html, render_type_inner_html};
 use crate::model::ApiDocMember;
@@ -21,6 +22,7 @@ pub(super) fn render_index_signature_group_html(
         details.push_str("<section class=\"ox-api-entry__member-detail ox-api-entry__member-detail--indexable\">\n");
         details.push_str(&render_index_signature_code_block_html(member, context));
         details.push_str(&render_member_detail_description_html(member, context));
+        details.push_str(&render_member_detail_sections_html(member, context));
         details.push_str(&render_member_detail_throws_html(member, context));
         details.push_str("</section>");
     }

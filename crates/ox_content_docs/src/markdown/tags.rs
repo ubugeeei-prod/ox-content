@@ -1,5 +1,6 @@
 use std::borrow::Cow;
 
+use super::detail_tags::is_detail_tag;
 use super::format_count_label;
 use crate::model::{ApiDocEntry, ApiDocTag, ApiThrowsDoc};
 use crate::string_builder::StringBuilder;
@@ -69,7 +70,10 @@ fn parse_throws_tag_value(value: &str) -> Option<(String, String)> {
 /// / Throws) and therefore must not also appear in the generic tag list. Shared
 /// by both renderers so the generic-tag exclusion stays consistent.
 pub(super) fn is_structured_tag(name: &str) -> bool {
-    is_lifecycle_tag(name) || SINCE_TAGS.contains(&name) || is_throws_tag(name)
+    is_lifecycle_tag(name)
+        || SINCE_TAGS.contains(&name)
+        || is_throws_tag(name)
+        || is_detail_tag(name)
 }
 
 pub(super) fn get_entry_badges(entry: &ApiDocEntry) -> Vec<EntryBadge> {
