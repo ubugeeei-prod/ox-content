@@ -76,17 +76,26 @@ for (const count of [1, 32, 256]) {
       },
     ],
     ["youtube", '<YouTube id="dQw4w9WgXcQ"></YouTube>', transformYouTube],
-    [
-      "highlight",
-      '<pre><code class="language-ts">export const answer: number = 42;</code></pre>',
-      highlightCode,
-    ],
   ] as const) {
     cases.push({
       name: `${name}/${count}`,
       input: input.repeat(count),
       run,
       validate: (output) => output !== input.repeat(count),
+    });
+    if (count === 1) cases.push({ name: `${name}/absent`, input: prose.repeat(256), run });
+  }
+  const code = '<pre><code class="language-ts">export const answer: number = 42;</code></pre>';
+  for (const engine of ["tree-sitter", "highlights"] as const) {
+    const name = engine === "tree-sitter" ? "highlight" : "highlight/highlights";
+    const run = (input: string) => highlightCode(input, { engine });
+    cases.push({
+      name: `${name}/${count}`,
+      input: code.repeat(count),
+      run,
+      validate: (output: string) =>
+        output.includes("ox-highlight") &&
+        output.includes('data-highlighter="highlights"') === (engine === "highlights"),
     });
     if (count === 1) cases.push({ name: `${name}/absent`, input: prose.repeat(256), run });
   }

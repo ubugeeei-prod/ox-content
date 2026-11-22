@@ -22,6 +22,9 @@ containers, footnotes. A corpus of lorem ipsum would measure the wrong thing:
 a build spends its time on highlighting, SSG rendering and asset work, not on
 parsing paragraphs.
 
+The features suite runs Tree-sitter (`HIGHLIGHT`) and Highlights
+(`HIGHLIGHT_HIGHLIGHTS`) against the same code fences.
+
 ## Suites
 
 ### `build` — does the build stay linear?

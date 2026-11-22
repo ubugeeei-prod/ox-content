@@ -33,7 +33,7 @@ export default defineConfig({
         render: hostTheme,
         externalizeAssets: env?.OX_SCALE_EXTERNALIZE_ASSETS !== "0",
       },
-      highlight: on("HIGHLIGHT"),
+      highlight: on("HIGHLIGHT_HIGHLIGHTS") ? { engine: "highlights" } : on("HIGHLIGHT"),
       gfm: true,
       tables: true,
       footnotes: true,

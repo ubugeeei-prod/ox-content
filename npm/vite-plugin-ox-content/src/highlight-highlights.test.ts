@@ -1,4 +1,6 @@
 import { describe, expect, it } from "vite-plus/test";
+import { tokenNames } from "@pierre/highlights";
+import { highlightsTheme } from "./highlight-highlights";
 import { highlightCode } from "./highlight";
 import { getTextContent } from "./highlight-native";
 import { parseHtmlFragment } from "./html-fragment";
@@ -42,13 +44,15 @@ describe("Highlights backend", () => {
   });
 
   it.each(["text", "plain", "plaintext", "txt"])(
-    "keeps %s fences as plain code",
+    "wraps %s fences with the native plain-text theme",
     async (language) => {
       const result = await highlightCode(
         `<pre><code class="language-${language}">const 雪 = 1;\n</code></pre>`,
         options,
       );
-      expect(result).not.toContain("ox-highlight");
+      expect(result).toContain("ox-highlight css-variables");
+      expect(result).toContain("--octc-syntax-background");
+      expect(result).not.toContain("--octc-syntax-token-");
       expect(result).toContain('tabindex="0"');
       expect(getTextContent(parseHtmlFragment(result))).toBe("const 雪 = 1;\n");
     },
@@ -60,9 +64,47 @@ describe("Highlights backend", () => {
       options,
     );
     expect(result).toContain('tabindex="-1"');
-    expect(result).toContain('class="example"');
+    expect(result).toContain('class="ox-highlight css-variables example"');
     expect(result).toContain('data-note="keep"');
-    expect(result).not.toContain("ox-highlight");
+    expect(result).toContain("--octc-syntax-background");
+  });
+
+  it("falls back to Tree-sitter for fish blocks and inline code", async () => {
+    const source = "function greet; echo hello; end";
+    const result = await highlightCode(
+      `<pre><code class="language-fish">${source}</code></pre><p><code class="language-fish">${source}</code></p>`,
+      options,
+    );
+    expect(result).toContain("ox-highlight css-variables");
+    expect(result).toContain("ox-highlight-inline");
+    expect(result).toContain("--octc-syntax-token-keyword");
+    expect(result).not.toContain('data-highlighter="highlights"');
+    expect(getTextContent(parseHtmlFragment(result))).toBe(source + source);
+  });
+
+  it("colors the body of diff lines and specialized variable and selector tokens", async () => {
+    for (const [language, code, color, text] of [
+      ["diff", "-old\n+new", "keyword", "old"],
+      ["diff", "-old\n+new", "string", "new"],
+      ["zig", "pub fn a(self: *@This()) void { _ = self; }", "constant", "_"],
+      ["html", "&lt;style>a:hover {color:red}&lt;/style>", "constant", ":hover"],
+    ]) {
+      const result = await highlightCode(
+        `<pre><code class="language-${language}">${code}</code></pre>`,
+        options,
+      );
+      expect(result).toMatch(new RegExp(`--octc-syntax-token-${color}, [^)]*\\)">${text}`));
+    }
+  });
+
+  it("assigns each upstream token an explicit scope or a themed parent", () => {
+    for (const token of tokenNames) {
+      if (["none", "background", "foreground"].includes(token)) continue;
+      const parts = token.split(".");
+      while (parts.length && !Object.hasOwn(highlightsTheme.style.syntax, parts.join(".")))
+        parts.pop();
+      expect(parts.length, token).toBeGreaterThan(0);
+    }
   });
 
   it("leaves unsupported languages unhighlighted", async () => {

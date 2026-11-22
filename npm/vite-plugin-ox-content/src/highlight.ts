@@ -6,7 +6,7 @@
  */
 
 import { unified } from "unified";
-import rehypeParsePlugin from "rehype-parse";
+import { parseHtmlFragment, rehypeParseFragment } from "./html-fragment";
 import rehypeStringifyPlugin from "rehype-stringify";
 import type { Root, Element } from "hast";
 import type { HighlightOptions } from "./types";
@@ -19,16 +19,25 @@ import {
 } from "./highlight-native";
 
 // ESM-only plugins are double-wrapped by the CommonJS interop; unwrap. See #452.
-const rehypeParse = interopDefault(rehypeParsePlugin);
 const rehypeStringify = interopDefault(rehypeStringifyPlugin);
+
+function highlightNativeElement(code: string, language: string): Element | null {
+  const html = highlightNatively(code, language);
+  const pre = html && parseHtmlFragment(html).children[0];
+  return pre && pre.type === "element" ? pre : null;
+}
 
 /**
  * Per-block walk used when the native document pass cannot read the markup.
  * Unknown languages stay as the original `<pre><code>`.
  */
-function rehypeCodeHighlight(highlighter = highlightNatively) {
+function rehypeCodeHighlight(highlighter?: (code: string, language: string) => Element | null) {
+  function highlight(code: Element, language: string) {
+    const source = getTextContent(code);
+    return highlighter?.(source, language) ?? highlightNativeElement(source, language);
+  }
   return (tree: Root) => {
-    const highlightBlockCode = (codeElement: Element): Element | null => {
+    const highlightBlockCode = (pre: Element, codeElement: Element): Element | null => {
       let lang = "text";
       const originalCodeClasses = normalizeClassName(codeElement.properties?.className);
 
@@ -37,25 +46,23 @@ function rehypeCodeHighlight(highlighter = highlightNatively) {
         lang = langClass.replace("language-", "");
       }
 
-      const highlighted = highlighter(getTextContent(codeElement), lang);
-      if (!highlighted) {
-        return null;
-      }
-
-      try {
-        const parsed = unified().use(rehypeParse, { fragment: true }).parse(highlighted);
-
-        if (parsed.children[0]?.type === "element") {
-          const highlightedPre = parsed.children[0];
-          highlightedPre.properties ??= {};
-          highlightedPre.properties["data-language"] = lang;
-          return highlightedPre;
-        }
-      } catch {
-        // If highlighting fails, keep the original
-      }
-
-      return null;
+      const highlighted = highlight(codeElement, lang);
+      if (!highlighted) return null;
+      const generated = highlighted.properties;
+      highlighted.properties = {
+        ...pre.properties,
+        ...generated,
+        className: [
+          ...new Set([
+            ...normalizeClassName(generated.className),
+            ...normalizeClassName(pre.properties.className),
+          ]),
+        ],
+        style: [generated.style, pre.properties.style].filter(Boolean).join(";"),
+        tabIndex: pre.properties.tabIndex ?? generated.tabIndex,
+        dataLanguage: lang,
+      };
+      return highlighted;
     };
 
     const highlightInlineCode = (codeElement: Element): Element | null => {
@@ -67,35 +74,21 @@ function rehypeCodeHighlight(highlighter = highlightNatively) {
       }
 
       const lang = langClass.replace("language-", "");
-      const highlighted = highlighter(getTextContent(codeElement), lang);
-      if (!highlighted) {
-        return null;
-      }
-
-      try {
-        const parsed = unified().use(rehypeParse, { fragment: true }).parse(highlighted);
-
-        if (parsed.children[0]?.type === "element") {
-          const highlightedPre = parsed.children[0];
-          const highlightedCode = highlightedPre.children.find(
-            (child): child is Element => child.type === "element" && child.tagName === "code",
-          );
-
-          if (highlightedCode) {
-            highlightedCode.properties ??= {};
-            const highlightedClasses = normalizeClassName(highlightedCode.properties.className);
-            highlightedCode.properties.className = [
-              ...new Set([...originalCodeClasses, ...highlightedClasses, "ox-highlight-inline"]),
-            ];
-            highlightedCode.properties["data-language"] = lang;
-            return highlightedCode;
-          }
-        }
-      } catch {
-        // If highlighting fails, keep the original
-      }
-
-      return null;
+      const highlighted = highlight(codeElement, lang);
+      const highlightedCode = highlighted?.children.find(
+        (child): child is Element => child.type === "element" && child.tagName === "code",
+      );
+      if (!highlightedCode) return null;
+      const highlightedClasses = normalizeClassName(highlightedCode.properties.className);
+      highlightedCode.properties = {
+        ...codeElement.properties,
+        ...highlightedCode.properties,
+        className: [
+          ...new Set([...originalCodeClasses, ...highlightedClasses, "ox-highlight-inline"]),
+        ],
+        dataLanguage: lang,
+      };
+      return highlightedCode;
     };
 
     const visit = (node: Root | Element) => {
@@ -116,7 +109,7 @@ function rehypeCodeHighlight(highlighter = highlightNatively) {
           );
 
           if (codeElement && !alreadyHighlighted) {
-            const highlightedPre = highlightBlockCode(codeElement);
+            const highlightedPre = highlightBlockCode(child, codeElement);
             if (highlightedPre) {
               node.children[i] = highlightedPre;
             } else {
@@ -163,7 +156,7 @@ export async function highlightCode(html: string, options?: HighlightOptions): P
   }
 
   const result = await unified()
-    .use(rehypeParse, { fragment: true })
+    .use(rehypeParseFragment)
     .use(rehypeCodeHighlight, highlights)
     .use(rehypeStringify)
     .process(html);
