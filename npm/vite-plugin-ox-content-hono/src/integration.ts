@@ -25,7 +25,7 @@ import type { Frontmatter } from "./context.js";
 
 export const HONO_CLIENT_ID = "virtual:ox-content-hono/client";
 const resolvedClientId = "\0" + HONO_CLIENT_ID;
-const codeExtensions = new Set([".ts", ".tsx", ".js", ".jsx", ".mjs"]);
+const codeExtensions = new Set([".ts", ".tsx", ".mts", ".cts", ".js", ".jsx", ".mjs"]);
 
 export interface OxContentHonoOptions {
   oxContent?: OxContentOptions;

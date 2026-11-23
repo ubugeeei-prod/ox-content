@@ -32,7 +32,7 @@ test("finds layout imports through Vite and applies publish state only to builds
     "Layout.tsx": `
       import Promo from "site-promo";
       import Alias from "@snippets/Alias.note";
-      import Relative from "./snippets/Relative.note";
+      import Relative from "./snippets/Relative.mts";
       export default ({ head, children }) => (
         <html><head>{head}</head><body>{children}<Promo /><Alias /><Relative /></body></html>
       );
@@ -45,9 +45,12 @@ test("finds layout imports through Vite and applies publish state only to builds
     "content/Draft.js": 'export default () => "Draft-only island";',
     "content/Promo.js": 'export default () => "Plugin-resolved island";',
     "content/Alias.js": 'export default () => "Aliased island";',
+    "content/Relative.js": 'export default () => "Relative layout island";',
     "snippets/Promo.NOTE": 'import Promo from "../content/Promo.js";\n\n<Promo />',
     "snippets/Alias.note": 'import Alias from "../content/Alias.js";\n\n<Alias />',
-    "snippets/Relative.note": "# Relative layout import",
+    "snippets/Relative.mts": 'export { default } from "./Relative.cts";',
+    "snippets/Relative.cts": 'export { default } from "./Relative.note";',
+    "snippets/Relative.note": 'import Relative from "../content/Relative.js";\n\n<Relative />',
   };
   try {
     await mkdir(join(root, "content"));
@@ -60,10 +63,12 @@ test("finds layout imports through Vite and applies publish state only to builds
     expect(html).toContain("Published content");
     expect(html).toContain("Plugin-resolved island");
     expect(html).toContain("Aliased island");
-    expect(html).toContain("Relative layout import");
+    expect(html).toContain("Relative layout island");
+    expect(html).toContain('data-ox-module="/content/Relative.js"');
     const manifest = await readFile(join(root, "dist/.vite/manifest.json"), "utf8");
     expect(manifest).toContain("content/Promo.js");
     expect(manifest).toContain("content/Alias.js");
+    expect(manifest).toContain("content/Relative.js");
     expect(manifest).not.toContain("content/Draft.js");
     await expect(readFile(join(root, "dist/unlisted/index.html"), "utf8")).resolves.toContain(
       "Unlisted content",
@@ -95,7 +100,12 @@ test("finds layout imports through Vite and applies publish state only to builds
       expect(await response.text()).toContain("Draft preview");
       const registry = await server.ssrLoadModule("virtual:ox-content-hono/modules");
       expect(Object.keys(registry.default)).toEqual(
-        expect.arrayContaining(["/content/Draft.js", "/content/Promo.js", "/content/Alias.js"]),
+        expect.arrayContaining([
+          "/content/Draft.js",
+          "/content/Promo.js",
+          "/content/Alias.js",
+          "/content/Relative.js",
+        ]),
       );
     } finally {
       await server.close();
