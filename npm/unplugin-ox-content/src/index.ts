@@ -9,7 +9,7 @@ import { createUnplugin, type UnpluginFactory } from "unplugin";
 import { createFilter } from "@rollup/pluginutils";
 import { transformMarkdown } from "./transform";
 import type { OxContentOptions, ResolvedOptions, ResolvedDocsConfig, DocsConfig } from "./types";
-import { isConfiguredSourceFile } from "./source-path";
+import { isConfiguredSourceModule } from "./source-path";
 
 export type {
   MdastNode,
@@ -162,7 +162,7 @@ function resolveCodeAnnotationsOptions(
  * Check if the file should be processed.
  */
 function isMarkdownFile(id: string, options: ResolvedOptions): boolean {
-  return isConfiguredSourceFile(id, options.extensions);
+  return isConfiguredSourceModule(id, options.extensions);
 }
 
 /**

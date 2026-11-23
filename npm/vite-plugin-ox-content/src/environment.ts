@@ -7,7 +7,7 @@
 
 import type { EnvironmentOptions } from "vite";
 import type { ResolvedOptions } from "./types";
-import { isMarkdownFilePath } from "./markdown";
+import { isMarkdownModuleId } from "./markdown";
 
 export type OxContentJavaScriptRuntime = "node" | "deno" | "bun" | "unknown";
 
@@ -199,7 +199,7 @@ export function createEnvironmentPlugins(options: ResolvedOptions) {
 
       // Transform within the environment
       transform(code: string, id: string) {
-        if (!isMarkdownFilePath(id, options.extensions)) {
+        if (!isMarkdownModuleId(id, options.extensions)) {
           return null;
         }
 
