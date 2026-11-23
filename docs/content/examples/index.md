@@ -8,6 +8,10 @@ Small built-in feature snippets live in the repository under
 
 ## Integration Examples
 
+### [Hono JSX Integration](./integ-hono.md)
+
+Render Hono JSX components in Markdown and mount client islands in a content site or custom HTML host.
+
 ### [Vue Integration](./integ-vue.md)
 
 Embed Vue 3 components in Markdown using `@ox-content/vite-plugin-vue`.

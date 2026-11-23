@@ -247,6 +247,10 @@ export default defineConfig(() => {
                     text: "Solid Integration",
                     link: "/packages/vite-plugin-ox-content-solid.md",
                   },
+                  {
+                    text: "Hono JSX Integration",
+                    link: "/packages/vite-plugin-ox-content-hono.md",
+                  },
                   { text: "i18n Package", link: "/packages/i18n.md" },
                   { text: "Checker and Language Server", link: "/packages/lsp.md" },
                   { text: "Code Play", link: "/packages/code-play.md" },

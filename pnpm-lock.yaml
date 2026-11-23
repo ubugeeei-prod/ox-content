@@ -137,6 +137,9 @@ catalogs:
     esbuild:
       specifier: ^0.28.1
       version: 0.28.2
+    hono:
+      specifier: ^4.13.16
+      version: 4.13.20
     react:
       specifier: ^19.3.0
       version: 19.3.0
@@ -275,6 +278,56 @@ importers:
       '@ox-content/napi':
         specifier: workspace:*
         version: link:../../crates/ox_content_napi
+
+  examples/integ-hono:
+    dependencies:
+      '@ox-content/vite-plugin-hono':
+        specifier: workspace:*
+        version: link:../../npm/vite-plugin-ox-content-hono
+      hono:
+        specifier: 'catalog:'
+        version: 4.13.20
+    devDependencies:
+      '@ox-content/vite-plugin':
+        specifier: workspace:*
+        version: link:../../npm/vite-plugin-ox-content
+      '@types/node':
+        specifier: 'catalog:'
+        version: 26.6.2
+      typescript:
+        specifier: 'catalog:'
+        version: 7.0.2
+      vite:
+        specifier: npm:@voidzero-dev/vite-plus-core@0.3.2
+        version: '@voidzero-dev/vite-plus-core@0.3.2(@types/node@26.6.2)(esbuild@0.28.2)(jiti@1.21.7)(terser@5.51.2)(typescript@7.0.2)(yaml@2.9.0)'
+      vite-plus:
+        specifier: 'catalog:'
+        version: 0.3.2(@types/node@26.6.2)(esbuild@0.28.2)(jiti@1.21.7)(svelte@5.57.1)(terser@5.51.2)(typescript@7.0.2)(yaml@2.9.0)
+
+  examples/integ-hono-custom-host:
+    dependencies:
+      '@ox-content/vite-plugin-hono':
+        specifier: workspace:*
+        version: link:../../npm/vite-plugin-ox-content-hono
+      hono:
+        specifier: 'catalog:'
+        version: 4.13.20
+    devDependencies:
+      '@ox-content/vite-plugin':
+        specifier: workspace:*
+        version: link:../../npm/vite-plugin-ox-content
+      '@types/node':
+        specifier: 'catalog:'
+        version: 26.6.2
+      typescript:
+        specifier: 'catalog:'
+        version: 7.0.2
+      vite:
+        specifier: npm:@voidzero-dev/vite-plus-core@0.3.2
+        version: '@voidzero-dev/vite-plus-core@0.3.2(@types/node@26.6.2)(esbuild@0.28.2)(jiti@1.21.7)(terser@5.51.2)(typescript@7.0.2)(yaml@2.9.0)'
+      vite-plus:
+        specifier: 'catalog:'
+        version: 0.3.2(@types/node@26.6.2)(esbuild@0.28.2)(jiti@1.21.7)(svelte@5.57.1)(terser@5.51.2)(typescript@7.0.2)(yaml@2.9.0)
 
   examples/integ-react:
     dependencies:
@@ -2198,6 +2251,37 @@ importers:
       zod:
         specifier: 4.6.6
         version: 4.6.6
+
+  npm/vite-plugin-ox-content-hono:
+    dependencies:
+      '@ox-content/islands':
+        specifier: workspace:*
+        version: link:../ox-content-islands
+    devDependencies:
+      '@ox-content/napi':
+        specifier: workspace:*
+        version: link:../../crates/ox_content_napi
+      '@ox-content/vite-plugin':
+        specifier: workspace:*
+        version: link:../vite-plugin-ox-content
+      '@types/node':
+        specifier: 'catalog:'
+        version: 26.6.2
+      '@typescript/native-preview':
+        specifier: 'catalog:'
+        version: 7.0.0-dev.20260707.2
+      hono:
+        specifier: 'catalog:'
+        version: 4.13.20
+      typescript:
+        specifier: 'catalog:'
+        version: 7.0.2
+      vite:
+        specifier: npm:@voidzero-dev/vite-plus-core@0.3.2
+        version: '@voidzero-dev/vite-plus-core@0.3.2(@types/node@26.6.2)(esbuild@0.28.2)(jiti@1.21.7)(terser@5.51.2)(typescript@7.0.2)(yaml@2.9.0)'
+      vite-plus:
+        specifier: 'catalog:'
+        version: 0.3.2(@types/node@26.6.2)(esbuild@0.28.2)(jiti@1.21.7)(svelte@5.57.1)(terser@5.51.2)(typescript@7.0.2)(yaml@2.9.0)
 
   npm/vite-plugin-ox-content-react:
     dependencies:
@@ -7401,6 +7485,10 @@ packages:
   hex-rgb@4.3.0:
     resolution: {integrity: sha512-Ox1pJVrDCyGHMG9CFg1tmrRUMRPRsAWYc/PinY0XzJU4K7y7vjNoLKIQ7BR5UJMCxNN8EM1MNDmHWA/B3aZUuw==}
     engines: {node: '>=6'}
+
+  hono@4.13.20:
+    resolution: {integrity: sha512-xo6gecEJQ+CjTtOUUbcLHE8CdRKMeF4qITe+DT+OhFnSUmZR/ZBa9XavAfiGh4HlukmlaHFdaK4dz5tkTYFNmA==}
+    engines: {node: '>=16.9.0'}
 
   hookable@5.5.3:
     resolution: {integrity: sha512-Yc+BQe8SvoXH1643Qez1zqLRmbA5rCL+sSmk6TVos0LWVfNIB7PGncdlId77WzLGSIB5KaWgTaNTs2lNVEI6VQ==}
@@ -14274,6 +14362,8 @@ snapshots:
   he@1.2.0: {}
 
   hex-rgb@4.3.0: {}
+
+  hono@4.13.20: {}
 
   hookable@5.5.3: {}
 

@@ -1,0 +1,83 @@
+{
+  "name": "@ox-content/vite-plugin-hono",
+  "version": "3.9.0",
+  "description": "Hono JSX integration for Ox Content: Markdown components, SSR and islands",
+  "keywords": [
+    "hono",
+    "islands",
+    "jsx",
+    "markdown",
+    "mdx",
+    "ox-content",
+    "vite"
+  ],
+  "license": "MIT",
+  "author": "ts-76",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ubugeeei-prod/ox-content.git",
+    "directory": "npm/vite-plugin-ox-content-hono"
+  },
+  "files": [
+    "dist",
+    "LICENSE"
+  ],
+  "type": "module",
+  "sideEffects": false,
+  "exports": {
+    ".": {
+      "types": "./dist/context.d.ts",
+      "default": "./dist/context.js"
+    },
+    "./server": {
+      "types": "./dist/server.d.ts",
+      "default": "./dist/server.js"
+    },
+    "./client": {
+      "types": "./dist/client.d.ts",
+      "default": "./dist/client.js"
+    },
+    "./vite": {
+      "types": "./dist/vite.d.ts",
+      "default": "./dist/vite.js"
+    },
+    "./virtual": "./dist/virtual.d.ts"
+  },
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json && node scripts/copy-types.mjs",
+    "typecheck": "tsgo --noEmit"
+  },
+  "dependencies": {
+    "@ox-content/islands": "workspace:*"
+  },
+  "devDependencies": {
+    "@ox-content/napi": "workspace:*",
+    "@ox-content/vite-plugin": "workspace:*",
+    "@types/node": "catalog:",
+    "@typescript/native-preview": "catalog:",
+    "hono": "catalog:",
+    "typescript": "catalog:",
+    "vite": "catalog:",
+    "vite-plus": "catalog:"
+  },
+  "peerDependencies": {
+    "@ox-content/vite-plugin": "workspace:^",
+    "hono": ">=4.13.16 <5",
+    "vite": "^0.2.8 || ^8.0.0"
+  },
+  "peerDependenciesMeta": {
+    "@ox-content/vite-plugin": {
+      "optional": true
+    },
+    "vite": {
+      "optional": true
+    }
+  },
+  "engines": {
+    "node": ">=22.22.2"
+  }
+}

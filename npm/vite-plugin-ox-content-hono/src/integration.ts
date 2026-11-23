@@ -1,0 +1,261 @@
+import { resolve, extname, dirname } from "node:path";
+import { readFile } from "node:fs/promises";
+import { parseAst, transformWithOxc } from "vite";
+import { createOxContentCustomHostPlugin, type OxContentOptions } from "@ox-content/vite-plugin";
+import {
+  createHtmlHostCollectionDocuments,
+  resolveHtmlHostComponentsGlob,
+  type HtmlHostComponentsOption,
+  type HtmlHostComponentsMap,
+  type HtmlHostMarkdownMetadata,
+} from "@ox-content/vite-plugin/html-host";
+import type { OxContentCustomHostModule } from "@ox-content/vite-plugin/custom-host";
+import type { Plugin, ResolvedConfig } from "vite";
+import { compileHonoDocument } from "./document.js";
+import { honoJsx } from "./html-host.js";
+import type { Frontmatter } from "./context.js";
+
+export const HONO_CLIENT_ID = "virtual:ox-content-hono/client";
+const resolvedClientId = "\0" + HONO_CLIENT_ID;
+
+export interface OxContentHonoOptions {
+  oxContent?: OxContentOptions;
+  components?: HtmlHostComponentsOption;
+  /** Values intentionally exposed to browser islands. Defaults to {}. */
+  frontmatter?: (frontmatter: Frontmatter) => Frontmatter;
+  /** Disable content routes and automatic build input when an existing app owns routing. */
+  routes?: false;
+  /** Module exporting a Hono document layout. Receives children, head, frontmatter and path. */
+  layout?: string;
+}
+
+/** Full content-site integration. The low-level HTML host adapters remain available. */
+export function oxContentHono(options: OxContentHonoOptions = {}): Plugin[] {
+  const oxContent: OxContentOptions = {
+    highlight: false,
+    resources: false,
+    docs: false,
+    search: false,
+    feeds: false,
+    siteMaps: false,
+    ...options.oxContent,
+  };
+  const documents = createHtmlHostCollectionDocuments({ oxContent });
+  let config: ResolvedConfig;
+  let components: HtmlHostComponentsMap = {};
+  const layoutDependencies = new Set<string>();
+  const importedDocuments = new Map<string, { documentPath: string; source: string }>();
+  const integration: Plugin = {
+    name: "ox-content:hono",
+    enforce: "pre",
+    config(user) {
+      if (options.routes === false) return;
+      // Preserve every existing entry; the virtual client is an additional entry.
+      const input = user.build?.rollupOptions?.input;
+      const entries =
+        typeof input === "string" ? [input] : Array.isArray(input) ? input : undefined;
+      const named = entries ? undefined : { ...(input as Record<string, string> | undefined) };
+      let key = "ox-content-hono";
+      while (named && key in named) key += "_";
+      return {
+        appType: user.appType ?? "mpa",
+        build: {
+          manifest: true,
+          rollupOptions: {
+            input: entries ? [...entries, HONO_CLIENT_ID] : { ...named, [key]: HONO_CLIENT_ID },
+          },
+        },
+      };
+    },
+    async configResolved(value) {
+      config = value;
+      components = options.components
+        ? await resolveHtmlHostComponentsGlob(options.components, value.root)
+        : {};
+    },
+    resolveId(id) {
+      return id === HONO_CLIENT_ID ? resolvedClientId : null;
+    },
+    load(id) {
+      if (id !== resolvedClientId) return;
+      return `import modules from 'virtual:ox-content-hono/modules';
+import {initHonoIslands} from '@ox-content/vite-plugin-hono/client';
+const controller = initHonoIslands({modules});
+if (import.meta.hot) import.meta.hot.dispose(() => controller.destroy());`;
+    },
+    async transform(source, id, environment) {
+      if (id.includes("?")) return;
+      const extensions = oxContent.extensions ?? [".md", ".markdown", ".mdx"];
+      if (!extensions.some((ext) => id.endsWith(ext.startsWith(".") ? ext : "." + ext))) return;
+      if (!environment?.ssr)
+        throw new Error(
+          "Hono Markdown components are server components. Import them from your server entry, not a browser entry.",
+        );
+      importedDocuments.set(id, { documentPath: id, source });
+      const result = await compileHonoDocument({
+        source,
+        documentPath: id,
+        root: config.root,
+        oxContent,
+        components,
+        selectFrontmatter: options.frontmatter,
+      });
+      return { code: result.code, map: null };
+    },
+  };
+  const host: OxContentCustomHostModule = {
+    async routes(context) {
+      const pages = await documents({
+        root: context.root,
+        command: context.mode,
+        mode: context.mode === "build" ? "production" : "development",
+      });
+      return pages.map((document) => ({
+        path: document.path === "/" ? "/" : document.path.replace(/\/?$/, "/"),
+        inputPath: document.documentPath,
+        dependencies: [
+          document.documentPath,
+          ...layoutDependencies,
+          ...(options.layout ? [resolve(context.root, options.layout)] : []),
+        ],
+        async render(ctx) {
+          // Vite can prefix virtual manifest keys with the path from root to cwd.
+          const clientEntry =
+            ctx.mode === "serve"
+              ? "/@id/__x00__" + HONO_CLIENT_ID
+              : (Object.keys(ctx.assets.clientManifest ?? {}).find(
+                  (key) => key === HONO_CLIENT_ID || key.endsWith("/" + HONO_CLIENT_ID),
+                ) ?? HONO_CLIENT_ID);
+          // Use the same Vite SSR module graph as the islands, preserving Hono
+          // Context identity instead of mixing it with bundled vite.config code.
+          const { renderHonoMarkdown } = (await ctx.loadModule(
+            "@ox-content/vite-plugin-hono/vite",
+          )) as typeof import("./vite.js");
+          const page = await ctx.markdown.render<HtmlHostMarkdownMetadata>({
+            source: document.source,
+            documentPath: document.documentPath,
+            renderHtml(markdown) {
+              return renderHonoMarkdown({
+                context: markdown,
+                components,
+                frontmatter: options.frontmatter?.(markdown.transform.frontmatter),
+                documentAssets: {
+                  pageStyles: options.layout
+                    ? ctx.assets.ssrStylesheets({
+                        modules: [resolve(ctx.root, options.layout)],
+                      }).stylesheets
+                    : [],
+                  clientEntries:
+                    options.layout ||
+                    markdown.transform.components?.length ||
+                    Object.keys(components).length
+                      ? [clientEntry]
+                      : [],
+                },
+              });
+            },
+          });
+          const head = page.metadata?.documentAssets?.headHtml ?? "";
+          if (options.layout) {
+            const layout = (await ctx.loadModule(resolve(ctx.root, options.layout))) as {
+              default: (props: Record<string, unknown>) => unknown;
+            };
+            const { jsx } = (await ctx.loadModule("hono/jsx")) as typeof import("hono/jsx");
+            const { raw } = (await ctx.loadModule("hono/html")) as typeof import("hono/html");
+            return {
+              html:
+                "<!doctype html>" +
+                String(
+                  await jsx(layout.default, {
+                    children: raw(page.html),
+                    head: raw(head),
+                    frontmatter: document.frontmatter,
+                    path: document.path,
+                  }).toString(),
+                ),
+              dependencies: page.dependencies,
+            };
+          }
+          return {
+            html: `<!doctype html><html><head><meta charset="utf-8">${head}</head><body><main>${page.html}</main></body></html>`,
+            dependencies: page.dependencies,
+          };
+        },
+      }));
+    },
+  };
+  return [
+    integration,
+    ...honoJsx({
+      oxContent,
+      components: options.components,
+      documents: async () => {
+        // Discover the layout's static import graph before the browser build.
+        // Component imports outside content/ must also reach the lazy registry.
+        const found = options.layout
+          ? new Map<string, { documentPath: string; source: string }>()
+          : new Map(importedDocuments);
+        const visited = new Set<string>();
+        const resolver = config.createResolver();
+        async function visit(file: string): Promise<void> {
+          if (visited.has(file) || file.includes("/node_modules/")) return;
+          visited.add(file);
+          if (
+            ![".md", ".markdown", ".mdx", ".ts", ".tsx", ".js", ".jsx", ".mjs"].includes(
+              extname(file),
+            )
+          )
+            return;
+          const source = await readFile(file, "utf8");
+          if ([".md", ".markdown", ".mdx"].includes(extname(file))) {
+            found.set(file, { documentPath: file, source });
+            return;
+          }
+          if (![".ts", ".tsx", ".js", ".jsx", ".mjs"].includes(extname(file))) return;
+          const compiled = await transformWithOxc(source, file, {
+            jsx: { runtime: "automatic", importSource: "hono/jsx" },
+          });
+          const ast = parseAst(compiled.code);
+          for (const node of ast.body) {
+            if (
+              !("source" in node) ||
+              !node.source ||
+              !("value" in node.source) ||
+              typeof node.source.value !== "string"
+            )
+              continue;
+            const target =
+              (await resolver(node.source.value, file)) ??
+              (node.source.value.startsWith(".")
+                ? resolve(dirname(file), node.source.value)
+                : undefined);
+            if (target && !target.includes("?") && !target.startsWith("\0")) await visit(target);
+          }
+        }
+        if (options.layout) await visit(resolve(config.root, options.layout));
+        layoutDependencies.clear();
+        for (const file of visited) layoutDependencies.add(file);
+        return [...found.values()].map((document) => ({
+          ...document,
+          dependencies: [...visited],
+        }));
+      },
+    }),
+    ...(options.routes === false
+      ? []
+      : [
+          createOxContentCustomHostPlugin({
+            host,
+            oxContent,
+            ssrStylesheets: options.layout ? { modules: [options.layout] } : false,
+            build: { transformHtml: false },
+            dev: {
+              routeDependencies: [
+                { path: oxContent.srcDir ?? "content", kind: "directory" },
+                ...(options.layout ? [{ path: options.layout, kind: "file" as const }] : []),
+              ],
+            },
+          }),
+        ]),
+  ];
+}

@@ -16,6 +16,7 @@ const packages = [
   "npm/oxct",
   "npm/vite-plugin-ox-content",
   "npm/unplugin-ox-content",
+  "npm/vite-plugin-ox-content-hono",
   "npm/vite-plugin-ox-content-vue",
   "npm/vite-plugin-ox-content-react",
   "npm/vite-plugin-ox-content-solid",
@@ -78,6 +79,15 @@ function checkPackage(packageDir) {
 
   if (pkg.name === "@ox-content/napi") {
     checkNapiPackage(packageDir, pkg, files);
+  }
+  if (pkg.name === "@ox-content/vite-plugin-hono") {
+    requirePackedFile(files, "LICENSE", pkg.name);
+    if (
+      files.has("LICENSE") &&
+      !readPackedFile(packed.filename, "LICENSE").includes("Copyright (c) 2026 ts-76")
+    ) {
+      failures.push(`${pkg.name} is missing the original copyright notice`);
+    }
   }
   if (pkg.name === "@ox-content/vite-plugin") {
     checkVitePluginDeclarations({
