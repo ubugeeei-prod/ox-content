@@ -1,4 +1,4 @@
-import { resolve, extname, dirname } from "node:path";
+import { resolve, extname, dirname, isAbsolute } from "node:path";
 import { readFile } from "node:fs/promises";
 import { parseAst, transformWithOxc } from "vite";
 import {
@@ -66,7 +66,7 @@ export function oxContentHono(options: OxContentHonoOptions = {}): Plugin[] {
     | undefined;
   let components: HtmlHostComponentsMap = {};
   const layoutDependencies = new Set<string>();
-  const importedDocuments = new Map<string, { documentPath: string; source: string }>();
+  const importedDocuments = new Map<string, string | undefined>();
   const integration: Plugin = {
     name: "ox-content:hono",
     enforce: "pre",
@@ -124,7 +124,8 @@ if (import.meta.hot) import.meta.hot.dispose(() => controller.destroy());`;
         throw new Error(
           "Hono Markdown components are server components. Import them from your server entry, not a browser entry.",
         );
-      importedDocuments.set(id, { documentPath: id, source });
+      // Vite supplies source for virtual IDs. File-backed documents are read on registry rebuild.
+      if (!options.layout) importedDocuments.set(id, isAbsolute(id) ? undefined : source);
       const result = await compileHonoDocument({
         source,
         documentPath: id,
@@ -226,9 +227,19 @@ if (import.meta.hot) import.meta.hot.dispose(() => controller.destroy());`;
       documents: async () => {
         // Discover the layout's static import graph before the browser build.
         // Component imports outside content/ must also reach the lazy registry.
-        const found = options.layout
-          ? new Map<string, { documentPath: string; source: string }>()
-          : new Map(importedDocuments);
+        const found = new Map<string, { documentPath: string; source: string }>();
+        if (!options.layout) {
+          for (const [documentPath, virtualSource] of importedDocuments) {
+            try {
+              const source = virtualSource ?? (await readFile(documentPath, "utf8"));
+              found.set(documentPath, { documentPath, source });
+            } catch (error) {
+              const { code } = error as NodeJS.ErrnoException;
+              if (code !== "ENOENT" && code !== "ENOTDIR") throw error;
+              importedDocuments.delete(documentPath);
+            }
+          }
+        }
         const visited = new Set<string>();
         async function visit(file: string): Promise<void> {
           if (visited.has(file) || file.includes("/node_modules/")) return;
