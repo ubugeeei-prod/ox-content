@@ -52,7 +52,8 @@
     "typecheck": "tsgo --noEmit"
   },
   "dependencies": {
-    "@ox-content/islands": "workspace:*"
+    "@ox-content/islands": "workspace:*",
+    "parse5": "^7.3.0"
   },
   "devDependencies": {
     "@ox-content/napi": "workspace:*",
@@ -60,6 +61,7 @@
     "@types/node": "catalog:",
     "@typescript/native-preview": "catalog:",
     "hono": "catalog:",
+    "linkedom": "^0.18.13",
     "typescript": "catalog:",
     "vite": "catalog:",
     "vite-plus": "catalog:"

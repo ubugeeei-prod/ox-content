@@ -29,6 +29,8 @@ export default defineConfig({
 
 For example, `content/index.mdx` renders at `/` and `content/guide.md` renders at `/guide/`. Use the usual Vite dev, build, and preview commands.
 
+When `oxContent.publishState` is enabled, production routes and their island registry follow Ox Content's publish-state rules. Drafts stay visible on the dev server. To include drafts in a static preview, build with `publishState.includeDrafts: true` before running Vite preview.
+
 | Option          | Behavior                                                                                                                                                                                   |
 | --------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | `oxContent`     | Ox Content options for document discovery and rendering. Highlighting, resources, docs, search, feeds, and sitemaps default to off.                                                        |
@@ -70,6 +72,8 @@ export function Article() {
 ```
 
 Static Markdown imports in the layout are included when building the browser island registry. With a custom multi-stage build, use `honoJsx({ documents })` to supply documents outside the content collection and layout import graph.
+
+Markdown document components can render nested islands in their slots. A nested island begins its own loading strategy once the parent has mounted.
 
 ## Custom HTML hosts
 

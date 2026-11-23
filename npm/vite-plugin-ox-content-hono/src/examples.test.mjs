@@ -41,7 +41,7 @@ test.each(["integ-hono", "integ-hono-custom-host"])(
       }
       expect([...moduleIds].some((id) => id.includes("Counter.tsx"))).toBe(true);
       expect([...moduleIds].join("\n")).not.toMatch(
-        /\/node_modules\/(?:@ox-content\/(?:vite-plugin|napi)\/|vite\/)|\/npm\/vite-plugin-ox-content\/|\/crates\/ox_content_napi\//,
+        /\/node_modules\/(?:@ox-content\/(?:vite-plugin|napi)\/|vite\/|parse5\/)|\/npm\/vite-plugin-ox-content\/|\/crates\/ox_content_napi\//,
       );
     } finally {
       await rm(outDir, { recursive: true, force: true });

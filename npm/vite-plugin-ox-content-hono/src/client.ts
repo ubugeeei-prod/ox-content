@@ -11,18 +11,25 @@ import { componentProps, type IslandContext } from "./shared.js";
 type InitIslandsOptions = NonNullable<Parameters<typeof initIslands>[1]>;
 type IslandController = ReturnType<typeof initIslands>;
 
-function readContext(element: HTMLElement): IslandContext | undefined {
+// Keep the context on the wrapper even if HMR replaces this module.
+const contextKey = Symbol.for("@ox-content/vite-plugin-hono/island-context");
+const batchAttribute = "data-ox-hono-batch";
+let nextBatch = 0;
+
+function readContext(
+  element: HTMLElement & { [contextKey]?: IslandContext },
+): IslandContext | undefined {
   const marker = Array.from(element.children).find((node) =>
     node.matches("script[data-ox-hono-context]"),
   );
-  return marker ? JSON.parse(marker.textContent ?? "{}") : undefined;
+  if (marker) element[contextKey] = JSON.parse(marker.textContent ?? "{}");
+  return element[contextKey];
 }
 
 export type HonoClientOptions = Pick<CreateHtmlHostLazyHydrateInput, "modules" | "onError">;
 
 /** Convert only top-level static slot nodes; their inner markup stays host-owned. */
-function slotChildren(html: string | undefined) {
-  if (html === undefined) return undefined;
+function slotChildren(html: string) {
   const template = document.createElement("template");
   template.innerHTML = html;
   return Array.from(template.content.childNodes).flatMap<Child>((node) => {
@@ -62,7 +69,7 @@ export function createHonoHydrate(options: HonoClientOptions) {
       if (!frontmatter || Array.isArray(frontmatter) || typeof frontmatter !== "object") {
         throw new TypeError("Invalid Hono island frontmatter");
       }
-      const children = slotChildren(slotHtml);
+      const children = slotHtml === undefined ? props.children : slotChildren(slotHtml);
       // Updating the same root runs Hono's effect/ref cleanup. Calling render()
       // again would create a separate root and only replace the DOM children.
       let unmount = () => {};
@@ -89,15 +96,62 @@ export function createHonoHydrate(options: HonoClientOptions) {
 export function initHonoIslands(
   options: HonoClientOptions & { options?: InitIslandsOptions },
 ): IslandController {
-  for (const element of document.querySelectorAll<HTMLElement>("[data-ox-island]")) {
-    const context = readContext(element);
-    if (!context) continue;
-    element.dataset.oxHono = "";
-    element.dataset.oxLoad = context.load;
-    if (context.media) element.dataset.oxMedia = context.media;
+  const hydrate = createHonoHydrate(options);
+  const selector = options.options?.selector ?? "[data-ox-hono]";
+  const controllers: IslandController[] = [];
+  let destroyed = false;
+
+  function initialize(root: Document | HTMLElement) {
+    for (const element of root.querySelectorAll<HTMLElement>("[data-ox-island]")) {
+      const context = readContext(element);
+      if (!context) continue;
+      element.dataset.oxHono = "";
+      element.dataset.oxLoad = context.load;
+      if (context.media) element.dataset.oxMedia = context.media;
+    }
+    // A parent replaces its SSR children. Schedule only the outermost wrappers
+    // in this subtree and discover the live children once their parent mounts.
+    const elements = Array.from(root.querySelectorAll<HTMLElement>(selector)).filter((element) => {
+      const ancestor = element.parentElement?.closest(selector);
+      return !ancestor || ancestor === root || !root.contains(ancestor);
+    });
+    if (elements.length === 0 && root !== document) return;
+
+    // The islands runtime queries the document once per controller.
+    const batch = String(++nextBatch);
+    for (const element of elements) element.setAttribute(batchAttribute, batch);
+    try {
+      const controller = initIslands(hydrate, {
+        ...options.options,
+        selector: `[${batchAttribute}="${batch}"]`,
+        onHydrateEnd(element, config) {
+          options.options?.onHydrateEnd?.(element, config);
+          if (!destroyed) initialize(element);
+        },
+      });
+      if (destroyed) controller.destroy();
+      else controllers.push(controller);
+    } finally {
+      for (const element of elements) element.removeAttribute(batchAttribute);
+    }
   }
-  return initIslands(createHonoHydrate(options), {
-    selector: "[data-ox-hono]",
-    ...options.options,
-  });
+
+  initialize(document);
+  return {
+    get instances() {
+      return controllers.flatMap((controller) => controller.instances);
+    },
+    hydrate(element) {
+      if (destroyed) return;
+      const controller = controllers.find((item) =>
+        item.instances.some((instance) => instance.element === element),
+      );
+      (controller ?? controllers[0]).hydrate(element);
+    },
+    destroy() {
+      destroyed = true;
+      for (const controller of controllers.reverse()) controller.destroy();
+      controllers.length = 0;
+    },
+  };
 }

@@ -2257,6 +2257,9 @@ importers:
       '@ox-content/islands':
         specifier: workspace:*
         version: link:../ox-content-islands
+      parse5:
+        specifier: ^7.3.0
+        version: 7.3.0
     devDependencies:
       '@ox-content/napi':
         specifier: workspace:*
@@ -2273,6 +2276,9 @@ importers:
       hono:
         specifier: 'catalog:'
         version: 4.13.20
+      linkedom:
+        specifier: ^0.18.13
+        version: 0.18.13
       typescript:
         specifier: 'catalog:'
         version: 7.0.2
