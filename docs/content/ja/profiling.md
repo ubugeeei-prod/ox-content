@@ -109,9 +109,9 @@ cargo run --release -p ox_content_profile_cli -- docs-pipeline path/to/src --jso
 
 ```toml
 [dependencies]
-ox_content_parser    = { workspace = true, features = ["profile"] }
-ox_content_renderer  = { workspace = true, features = ["profile"] }
-ox_content_profiler  = { workspace = true }
+ox_content_parser = { workspace = true, features = ["profile"] }
+ox_content_renderer = { workspace = true, features = ["profile"] }
+ox_content_profiler = { workspace = true }
 ```
 
 バイナリ内で、負荷の前にグローバルアロケータと両層を入れ、それから報告を排出します。

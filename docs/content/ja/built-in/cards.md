@@ -71,9 +71,11 @@ Short description
 
 Copy the package and run the CLI.
 :::
+
 ::: link-card[Guide]{/getting-started}
 Short description
 :::
+
 :::
 ```
 
@@ -84,9 +86,11 @@ Short description
 
 Copy the package and run the CLI.
 :::
+
 ::: link-card[Guide]{/getting-started}
 Short description
 :::
+
 :::
 
 閉じていないブロックはリテラルのままで、ファイルの残りを飲み込みません。フェンス、インライン、インデントコードの中のマーカーはそのままです。

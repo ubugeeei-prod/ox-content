@@ -77,9 +77,11 @@ and link cards also work outside a grid.
 
 Copy the package and run the CLI.
 :::
+
 ::: link-card[Guide]{/getting-started}
 Short description
 :::
+
 :::
 ```
 
@@ -90,9 +92,11 @@ Short description
 
 Copy the package and run the CLI.
 :::
+
 ::: link-card[Guide]{/getting-started}
 Short description
 :::
+
 :::
 
 Unclosed blocks stay literal and do not swallow the rest of the file. Markers

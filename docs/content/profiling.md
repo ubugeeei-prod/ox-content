@@ -156,9 +156,9 @@ profile a different consumer of the parser/renderer:
 
 ```toml
 [dependencies]
-ox_content_parser    = { workspace = true, features = ["profile"] }
-ox_content_renderer  = { workspace = true, features = ["profile"] }
-ox_content_profiler  = { workspace = true }
+ox_content_parser = { workspace = true, features = ["profile"] }
+ox_content_renderer = { workspace = true, features = ["profile"] }
+ox_content_profiler = { workspace = true }
 ```
 
 Inside your binary, install the global allocator and enable both layers
