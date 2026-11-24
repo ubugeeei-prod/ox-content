@@ -111,6 +111,7 @@ Read more:
 - [React integration](./packages/vite-plugin-ox-content-react.md)
 - [Svelte integration](./packages/vite-plugin-ox-content-svelte.md)
 - [Solid integration](./packages/vite-plugin-ox-content-solid.md)
+- [Hono JSX integration](./packages/vite-plugin-ox-content-hono.md)
 - [Theming](./theming.md)
 - [Source docs example](./examples/gen-source-docs.md)
 

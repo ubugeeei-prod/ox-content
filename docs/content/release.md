@@ -87,7 +87,7 @@ breaks publishing until every entry is updated to match.
 Entries are needed for the workspace packages (`@ox-content/cli`, `@ox-content/napi`,
 `@ox-content/islands`, `@ox-content/code-play`, `@ox-content/vite-plugin`,
 `@ox-content/unplugin`, the four
-`@ox-content/vite-plugin-{vue,react,svelte,solid}` integrations, and
+`@ox-content/vite-plugin-{vue,react,svelte,solid,hono}` integrations, and
 `@ox-content/wasm`) and for each `@ox-content/napi-*` platform binding package
 the N-API build publishes.
 

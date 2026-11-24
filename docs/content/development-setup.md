@@ -80,6 +80,8 @@ vp run playground
 vp run integ-vue
 vp run integ-react
 vp run integ-svelte
+vp run integ-hono
+vp run integ-hono-custom-host
 vp run ssg-vite
 
 # Benchmarks

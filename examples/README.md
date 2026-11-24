@@ -10,12 +10,14 @@ This directory contains runnable projects and small source examples.
 
 ## Framework Integrations
 
-| Example                        | Description     | Shows                                |
-| ------------------------------ | --------------- | ------------------------------------ |
-| [integ-vue](./integ-vue)       | Vue 3 + Vite    | Vue component islands in Markdown    |
-| [integ-react](./integ-react)   | React + Vite    | React component islands in Markdown  |
-| [integ-svelte](./integ-svelte) | Svelte 5 + Vite | Svelte component islands in Markdown |
-| [integ-solid](./integ-solid)   | Solid + Vite    | Solid component islands in Markdown  |
+| Example                                            | Description     | Shows                                  |
+| -------------------------------------------------- | --------------- | -------------------------------------- |
+| [integ-vue](./integ-vue)                           | Vue 3 + Vite    | Vue component islands in Markdown      |
+| [integ-react](./integ-react)                       | React + Vite    | React component islands in Markdown    |
+| [integ-svelte](./integ-svelte)                     | Svelte 5 + Vite | Svelte component islands in Markdown   |
+| [integ-solid](./integ-solid)                       | Solid + Vite    | Solid component islands in Markdown    |
+| [integ-hono](./integ-hono)                         | Hono JSX + Vite | Content site with Hono JSX islands     |
+| [integ-hono-custom-host](./integ-hono-custom-host) | Hono JSX + Vite | Hono JSX islands in a custom HTML host |
 
 ## Site and Tooling
 

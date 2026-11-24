@@ -1,6 +1,7 @@
 import { spawnSync } from "node:child_process";
 import { defineConfig } from "vite-plus";
 import { packageBuildConcurrencyFlag } from "./tools/scripts/package-build-concurrency";
+import { frameworkTestTasks } from "./tools/scripts/vite-framework-tasks";
 
 const lifecycleEnvName = "OX_CONTENT_VP_LIFECYCLE";
 
@@ -190,33 +191,7 @@ export default defineConfig({
       "build:vite-plugin": task("vp run --filter @ox-content/vite-plugin build", {
         dependsOn: ["build:napi"],
       }),
-      "test:framework-integrations": noopTask([
-        "test:framework-react",
-        "test:framework-solid",
-        "test:framework-svelte",
-        "test:framework-vue",
-      ]),
-      "test:framework-react": task(
-        "vp exec --filter @ox-content/vite-plugin-react -- vp test src",
-        {
-          dependsOn: ["build:vite-plugin"],
-        },
-      ),
-      "test:framework-solid": task(
-        "vp exec --filter @ox-content/vite-plugin-solid -- vp test src",
-        {
-          dependsOn: ["build:vite-plugin"],
-        },
-      ),
-      "test:framework-svelte": task(
-        "vp exec --filter @ox-content/vite-plugin-svelte -- vp test src",
-        {
-          dependsOn: ["build:vite-plugin"],
-        },
-      ),
-      "test:framework-vue": task("vp exec --filter @ox-content/vite-plugin-vue -- vp test src", {
-        dependsOn: ["build:vite-plugin"],
-      }),
+      ...frameworkTestTasks,
       "test:playground": task("vp run --filter ox-content-playground test"),
       "test:vscode-unit": task("vp exec --filter vscode-ox-content -- vp test src/test/unit"),
       "test:vscode": uncachedTask(nodeScript("run-vscode-tests.mjs"), {
@@ -315,6 +290,10 @@ export default defineConfig({
       "integ-react": uncachedTask("vp run --filter ./examples/integ-react dev"),
       "integ-solid": uncachedTask("vp run --filter ./examples/integ-solid dev"),
       "integ-svelte": uncachedTask("vp run --filter ./examples/integ-svelte dev"),
+      "integ-hono": uncachedTask("vp run --filter ./examples/integ-hono dev"),
+      "integ-hono-custom-host": uncachedTask(
+        "vp run --filter ./examples/integ-hono-custom-host dev",
+      ),
       "ssg-vite": uncachedTask("vp run --filter ./examples/ssg-vite dev"),
       mdx: uncachedTask("vp run --filter ./examples/mdx dev"),
       "plugin-markdown-it": uncachedTask("vp run --filter ./examples/plugin-markdown-it start"),

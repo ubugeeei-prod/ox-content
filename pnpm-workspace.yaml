@@ -21,6 +21,7 @@ catalog:
   "@vitejs/plugin-vue": ^6.0.9
   "@typescript/native-preview": ^7.0.0-dev.20260707.2
   esbuild: ^0.28.1
+  hono: ^4.13.16
   react: ^19.3.1
   react-dom: ^19.3.1
   solid-js: ^2.0.3
