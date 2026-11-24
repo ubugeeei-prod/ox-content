@@ -42,7 +42,8 @@ describe("frontmatter typecheck CLI", () => {
     });
     expect(empty.status).toBe(1);
     expect(empty.stderr).toContain("No documents matched");
-  });
+    // Three CLI processes each load the project configuration; 5s is too tight on CI.
+  }, 20_000);
 
   it("prints help without loading project configuration", () => {
     const result = spawnSync(process.execPath, [bin, "typecheck", "--help"], { encoding: "utf8" });
