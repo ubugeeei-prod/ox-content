@@ -33,7 +33,7 @@ vp run deploy#docs
 The task builds Rust, local npm packages (including Code Play), docs, the
 playground, and Rust API documentation with `vp run build`. It assembles their
 output into `dist/`, then uses Cloudflare's `@cloudflare/build-output-utils`
-to write native Build Output under `tools/deploy/.cloudflare/output/v0/`.
+to write native Build Output under `tools/deploy/.cloudflare/output/v1/`.
 It runs `cf deploy --prebuilt --mode production` against that output.
 The `cf` package is pinned to `1.0.0-beta.9` in the deployment workspace.
 Deployment scripts are TypeScript executed directly by Node 26's stable type

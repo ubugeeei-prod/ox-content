@@ -3,7 +3,7 @@ import { mkdtempSync, mkdirSync, readFileSync, rmSync, writeFileSync, existsSync
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { test, type TestContext } from "node:test";
-import { prepareCloudflareBuildOutput } from "../deploy/build-output.ts";
+import { cloudflareAssetsDir, prepareCloudflareBuildOutput } from "../deploy/build-output.ts";
 import { prepareDocsDeployment } from "./prepare-docs-deployment.ts";
 
 function fixture(t: TestContext): string {
@@ -40,13 +40,7 @@ test("stages docs, custom 404, assets, Rust API, and playground for cf deploymen
     ["playground/index.html", "playground"],
   ]) {
     assert.equal(readFileSync(join(root, "dist", file), "utf8"), content);
-    assert.equal(
-      readFileSync(
-        join(root, "tools/deploy/.cloudflare/output/v0/workers/default/assets", file),
-        "utf8",
-      ),
-      content,
-    );
+    assert.equal(readFileSync(join(cloudflareAssetsDir(root), file), "utf8"), content);
   }
 });
 
