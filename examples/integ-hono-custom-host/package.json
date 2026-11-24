@@ -1,0 +1,22 @@
+{
+  "name": "ox-content-integ-hono-custom-host-example",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vp dev",
+    "build": "vp build",
+    "preview": "vp preview"
+  },
+  "dependencies": {
+    "@ox-content/vite-plugin-hono": "workspace:*",
+    "hono": "catalog:"
+  },
+  "devDependencies": {
+    "@ox-content/vite-plugin": "workspace:*",
+    "@types/node": "catalog:",
+    "typescript": "catalog:",
+    "vite": "catalog:",
+    "vite-plus": "catalog:"
+  }
+}

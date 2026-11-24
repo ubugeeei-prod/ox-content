@@ -14,7 +14,7 @@ import {
 } from "./html-host-components";
 import type { HtmlHostClientModule, HtmlHostModule } from "./html-host";
 import {
-  isBareHtmlHostSpecifier,
+  resolveHtmlHostComponentPath,
   resolveHtmlHostDocumentPath,
   resolveHtmlHostWatchFile,
   shouldInvalidateHtmlHostRegistry,
@@ -78,6 +78,8 @@ export interface HtmlHostIslandRegistry {
   plugin: Plugin;
   virtualModuleId: string;
   resolve(): Promise<ResolvedHtmlHostIslandRegistry>;
+  /** Refresh discovery and the dev virtual module after a programmatic input change. */
+  invalidate(): void;
   resolveClientModule(module: Pick<HtmlHostModule, "serverModuleId">): string;
 }
 
@@ -87,6 +89,7 @@ export function createHtmlHostIslandRegistry(
   const virtualModuleId = input.virtualModuleId ?? HTML_HOST_MODULES_VIRTUAL_ID;
   const resolvedVirtualModuleId = `\0${virtualModuleId}`;
   let config: ResolvedConfig | undefined;
+  let server: ViteDevServer | undefined;
   let command: "build" | "serve" = "build";
   let components: HtmlHostComponentsMap | undefined;
   let cache: Promise<ResolvedHtmlHostIslandRegistry> | undefined;
@@ -99,15 +102,24 @@ export function createHtmlHostIslandRegistry(
   });
 
   const resolve = async () => {
-    cache ??= resolveHtmlHostIslandRegistry(input, context(), components).then((next) => {
-      resolved = next;
-      return next;
-    });
-    return cache;
+    while (true) {
+      const pending = (cache ??= resolveHtmlHostIslandRegistry(input, context(), components));
+      try {
+        const next = await pending;
+        // Inputs can change during discovery, including from a transform that discovery requested.
+        if (pending === cache) {
+          resolved = next;
+          return next;
+        }
+      } catch (error) {
+        if (pending === cache) throw error;
+      }
+    }
   };
 
-  const invalidate = () => {
+  const invalidate = (devServer = server) => {
     cache = undefined;
+    if (devServer) invalidateVirtualModule(devServer, resolvedVirtualModuleId);
   };
 
   const plugin: Plugin = {
@@ -115,6 +127,10 @@ export function createHtmlHostIslandRegistry(
 
     config(_config, env) {
       command = env.command;
+    },
+
+    configureServer(devServer) {
+      server = devServer;
     },
 
     async configResolved(resolvedConfig) {
@@ -150,8 +166,7 @@ export function createHtmlHostIslandRegistry(
       ) {
         return undefined;
       }
-      invalidate();
-      invalidateVirtualModule(ctx.server, resolvedVirtualModuleId);
+      invalidate(ctx.server);
       ctx.server.ws.send({ type: "full-reload" });
       return [];
     },
@@ -161,6 +176,7 @@ export function createHtmlHostIslandRegistry(
     plugin,
     virtualModuleId,
     resolve,
+    invalidate,
     resolveClientModule(module) {
       return toHtmlHostClientModuleId(module.serverModuleId, context().root);
     },
@@ -237,7 +253,7 @@ export async function resolveHtmlHostIslandRegistry(
       const local = discovered.localBindings.get(name);
       const serverModuleId = local
         ? local.resolvedPath
-        : resolveComponentPath(documentComponents, name, context.root);
+        : resolveHtmlHostComponentPath(documentComponents, name, context.root);
       if (!serverModuleId) continue;
       addModule(modules, {
         name,
@@ -324,18 +340,6 @@ function resolveMaybe<T>(
   context: HtmlHostIslandRegistryContext,
 ): MaybePromise<readonly T[] | undefined> {
   return typeof value === "function" ? value(context) : value;
-}
-
-function resolveComponentPath(
-  components: HtmlHostComponentsMap,
-  name: string,
-  root: string,
-): string | undefined {
-  const specifier = components[name];
-  if (!specifier) return undefined;
-  if (isBareHtmlHostSpecifier(specifier) || specifier.startsWith("/@fs/")) return specifier;
-  if (specifier.startsWith("/") && !path.isAbsolute(specifier)) return specifier;
-  return path.isAbsolute(specifier) ? specifier : path.resolve(root, specifier);
 }
 
 function invalidateVirtualModule(server: ViteDevServer, resolvedVirtualModuleId: string): void {

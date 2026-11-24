@@ -1,6 +1,7 @@
 import fsSync from "node:fs";
 import path from "node:path";
 import { stripViteQuery } from "./document-imports";
+import type { HtmlHostComponentsMap } from "./html-host-components";
 
 export function toHtmlHostClientModuleId(moduleId: string, root = process.cwd()): string {
   const [pathname, suffix = ""] = splitModuleSuffix(moduleId);
@@ -79,4 +80,16 @@ function existingRealpath(file: string): string | undefined {
 
 function toPosixPath(file: string): string {
   return file.replace(/\\/g, "/");
+}
+
+export function resolveHtmlHostComponentPath(
+  components: HtmlHostComponentsMap,
+  name: string,
+  root: string,
+): string | undefined {
+  const specifier = components[name];
+  if (!specifier) return undefined;
+  if (isBareHtmlHostSpecifier(specifier) || specifier.startsWith("/@fs/")) return specifier;
+  if (specifier.startsWith("/") && !path.isAbsolute(specifier)) return specifier;
+  return path.isAbsolute(specifier) ? specifier : path.resolve(root, specifier);
 }

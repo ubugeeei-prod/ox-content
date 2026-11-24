@@ -135,6 +135,9 @@ npm install @ox-content/vite-plugin-svelte
 
 # Solid (@solidjs/vite-plugin compiles generated Markdown JSX)
 npm install @ox-content/vite-plugin-solid solid-js@next @solidjs/web@next @solidjs/vite-plugin
+
+# Hono JSX
+npm install @ox-content/vite-plugin-hono hono
 ```
 
 ### i18n Static Checker (CLI)
