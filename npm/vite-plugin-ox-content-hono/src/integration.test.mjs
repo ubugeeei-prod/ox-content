@@ -245,6 +245,52 @@ test("keeps the latest SSR snapshot when an older Markdown compile finishes last
   );
 });
 
+test("keeps the last successful SSR snapshot when the latest Markdown compile fails", async () => {
+  const resume = Promise.withResolvers();
+  let renders = 0;
+  await withImportedMarkdownSite(
+    async (server, root) => {
+      const url = "/snippets/a.mdx";
+      const documentPath = normalizePath(join(root, url.slice(1)));
+      const { pluginContainer } = server.environments.ssr;
+      await server.ssrLoadModule(url);
+
+      // Compile candidates through the SSR hooks while Vite retains the last loaded module.
+      const second = importedMarkdown("Second");
+      const older = pluginContainer.transform(second, documentPath);
+      try {
+        await vi.waitFor(() => expect(renders).toBe(2));
+        await expect(
+          pluginContainer.transform(`${second}\n\n<Missing />`, documentPath),
+        ).rejects.toThrow('island "Missing" is not registered');
+
+        resume.resolve();
+        expect((await older).code).toContain("/content/Second.js");
+        const { default: Markdown } = await server.ssrLoadModule(url);
+        expect(String(await Markdown())).toContain('data-ox-module="/content/First.js"');
+
+        const registry = await server.environments.client.transformRequest(HONO_MODULES_ID);
+        expect(registry.code).toContain('"/content/First.js": () => import(');
+        expect(registry.code).not.toContain('"/content/Second.js": () => import(');
+      } finally {
+        resume.resolve();
+        await older.catch(() => {});
+      }
+    },
+    {
+      transformers: [
+        {
+          name: "pause-older-markdown-compile",
+          async transform(ast) {
+            if (++renders === 2) await resume.promise;
+            return ast;
+          },
+        },
+      ],
+    },
+  );
+});
+
 test.each([
   { change: "delete", expectedModules: [] },
   { change: "edit", expectedModules: ["/content/After.js"] },
