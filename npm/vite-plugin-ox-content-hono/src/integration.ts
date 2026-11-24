@@ -20,7 +20,7 @@ import {
 import type { OxContentCustomHostModule } from "@ox-content/vite-plugin/custom-host";
 import type { DevEnvironment, Plugin, ResolvedConfig } from "vite";
 import { compileHonoDocument } from "./document.js";
-import { honoJsx } from "./html-host.js";
+import { createHonoJsxPlugins } from "./html-host.js";
 import type { Frontmatter } from "./context.js";
 
 export const HONO_CLIENT_ID = "virtual:ox-content-hono/client";
@@ -67,6 +67,7 @@ export function oxContentHono(options: OxContentHonoOptions = {}): Plugin[] {
   let components: HtmlHostComponentsMap = {};
   const layoutDependencies = new Set<string>();
   const importedDocuments = new Map<string, { source: string; environment?: DevEnvironment }>();
+  const latestTransforms = new Map<string, symbol>();
   const integration: Plugin = {
     name: "ox-content:hono",
     enforce: "pre",
@@ -124,19 +125,27 @@ if (import.meta.hot) import.meta.hot.dispose(() => controller.destroy());`;
         throw new Error(
           "Hono Markdown components are server components. Import them from your server entry, not a browser entry.",
         );
-      const result = await compileHonoDocument({
-        source,
-        documentPath: id,
-        root: config.root,
-        oxContent,
-        components,
-        selectFrontmatter: options.frontmatter,
-      });
-      if (!options.layout) {
-        const environment = this.environment.mode === "dev" ? this.environment : undefined;
-        importedDocuments.set(id, { source, environment });
+      const token = options.layout ? undefined : Symbol();
+      if (token) latestTransforms.set(id, token);
+      try {
+        const result = await compileHonoDocument({
+          source,
+          documentPath: id,
+          root: config.root,
+          oxContent,
+          components,
+          selectFrontmatter: options.frontmatter,
+        });
+        if (token && latestTransforms.get(id) === token) {
+          const environment = this.environment.mode === "dev" ? this.environment : undefined;
+          const changed = importedDocuments.get(id)?.source !== source;
+          importedDocuments.set(id, { source, environment });
+          if (changed) invalidateRegistry();
+        }
+        return { code: result.code, map: null };
+      } finally {
+        if (token && latestTransforms.get(id) === token) latestTransforms.delete(id);
       }
-      return { code: result.code, map: null };
     },
   };
   const host: OxContentCustomHostModule = {
@@ -220,78 +229,79 @@ if (import.meta.hot) import.meta.hot.dispose(() => controller.destroy());`;
       }));
     },
   };
+  const { plugins: jsxPlugins, invalidateRegistry } = createHonoJsxPlugins({
+    oxContent,
+    components: options.components,
+    collectionDocuments,
+    documents: async ({ command }) => {
+      // Discover the layout's static import graph before the browser build.
+      // Component imports outside content/ must also reach the lazy registry.
+      const found = new Map<string, { documentPath: string; source: string }>();
+      if (!options.layout) {
+        for (const [documentPath, snapshot] of importedDocuments) {
+          if (isAbsolute(documentPath)) {
+            const file = await stat(documentPath).catch((error: NodeJS.ErrnoException) => {
+              if (error.code === "ENOENT" || error.code === "ENOTDIR") return undefined;
+              throw error;
+            });
+            if (!file?.isFile()) {
+              importedDocuments.delete(documentPath);
+              continue;
+            }
+            const environment = snapshot.environment;
+            if (command === "serve" && environment) {
+              const module = environment.moduleGraph.getModuleById(documentPath);
+              // Vite can reuse the cached transform or run the SSR hooks again after invalidation.
+              if (module) await environment.transformRequest(module.url);
+            }
+          }
+          const current = importedDocuments.get(documentPath);
+          if (current) found.set(documentPath, { documentPath, source: current.source });
+        }
+      }
+      const visited = new Set<string>();
+      async function visit(file: string): Promise<void> {
+        if (visited.has(file) || file.includes("/node_modules/")) return;
+        const markdown = isMarkdownFilePath(file, markdownExtensions);
+        if (!markdown && !codeExtensions.has(extname(file).toLowerCase())) return;
+        visited.add(file);
+        const source = await readFile(file, "utf8");
+        if (markdown) {
+          found.set(file, { documentPath: file, source });
+          return;
+        }
+        const compiled = await transformWithOxc(source, file, {
+          jsx: { runtime: "automatic", importSource: "hono/jsx" },
+        });
+        const ast = parseAst(compiled.code);
+        for (const node of ast.body) {
+          if (
+            !("source" in node) ||
+            !node.source ||
+            !("value" in node.source) ||
+            typeof node.source.value !== "string"
+          )
+            continue;
+          const target =
+            (await resolveLayoutImport?.(node.source.value, file)) ??
+            (node.source.value.startsWith(".")
+              ? resolve(dirname(file), node.source.value)
+              : undefined);
+          if (target && !target.includes("?") && !target.startsWith("\0")) await visit(target);
+        }
+      }
+      if (options.layout) await visit(resolve(config.root, options.layout));
+      layoutDependencies.clear();
+      for (const file of visited) layoutDependencies.add(file);
+      return [...found.values()].map((document) => ({
+        ...document,
+        dependencies: [...visited],
+      }));
+    },
+  });
   return [
     integration,
-    ...honoJsx({
-      oxContent,
-      components: options.components,
-      collectionDocuments,
-      documents: async ({ command }) => {
-        // Discover the layout's static import graph before the browser build.
-        // Component imports outside content/ must also reach the lazy registry.
-        const found = new Map<string, { documentPath: string; source: string }>();
-        if (!options.layout) {
-          for (const [documentPath, snapshot] of importedDocuments) {
-            if (isAbsolute(documentPath)) {
-              const file = await stat(documentPath).catch((error: NodeJS.ErrnoException) => {
-                if (error.code === "ENOENT" || error.code === "ENOTDIR") return undefined;
-                throw error;
-              });
-              if (!file?.isFile()) {
-                importedDocuments.delete(documentPath);
-                continue;
-              }
-              const environment = snapshot.environment;
-              if (command === "serve" && environment) {
-                const module = environment.moduleGraph.getModuleById(documentPath);
-                // Vite can reuse the cached transform or run the SSR hooks again after invalidation.
-                if (module) await environment.transformRequest(module.url);
-              }
-            }
-            const current = importedDocuments.get(documentPath);
-            if (current) found.set(documentPath, { documentPath, source: current.source });
-          }
-        }
-        const visited = new Set<string>();
-        async function visit(file: string): Promise<void> {
-          if (visited.has(file) || file.includes("/node_modules/")) return;
-          const markdown = isMarkdownFilePath(file, markdownExtensions);
-          if (!markdown && !codeExtensions.has(extname(file).toLowerCase())) return;
-          visited.add(file);
-          const source = await readFile(file, "utf8");
-          if (markdown) {
-            found.set(file, { documentPath: file, source });
-            return;
-          }
-          const compiled = await transformWithOxc(source, file, {
-            jsx: { runtime: "automatic", importSource: "hono/jsx" },
-          });
-          const ast = parseAst(compiled.code);
-          for (const node of ast.body) {
-            if (
-              !("source" in node) ||
-              !node.source ||
-              !("value" in node.source) ||
-              typeof node.source.value !== "string"
-            )
-              continue;
-            const target =
-              (await resolveLayoutImport?.(node.source.value, file)) ??
-              (node.source.value.startsWith(".")
-                ? resolve(dirname(file), node.source.value)
-                : undefined);
-            if (target && !target.includes("?") && !target.startsWith("\0")) await visit(target);
-          }
-        }
-        if (options.layout) await visit(resolve(config.root, options.layout));
-        layoutDependencies.clear();
-        for (const file of visited) layoutDependencies.add(file);
-        return [...found.values()].map((document) => ({
-          ...document,
-          dependencies: [...visited],
-        }));
-      },
-    }),
+    ...jsxPlugins,
     ...(options.routes === false
       ? []
       : [

@@ -116,6 +116,135 @@ test("finds layout imports through Vite and applies publish state only to builds
   }
 }, 30_000);
 
+const importedMarkdown = (island) => `import Island from "../content/${island}.js";\n\n<Island />`;
+
+async function withImportedMarkdownSite(run, oxContent) {
+  const root = await mkdtemp(join(import.meta.dirname, ".hono-imported-"));
+  try {
+    await mkdir(join(root, "content"));
+    await mkdir(join(root, "snippets"));
+    await Promise.all([
+      writeFile(join(root, "snippets/a.mdx"), importedMarkdown("First")),
+      writeFile(join(root, "snippets/b.mdx"), importedMarkdown("Second")),
+      writeFile(join(root, "content/First.js"), 'export default () => "First";'),
+      writeFile(join(root, "content/Second.js"), 'export default () => "Second";'),
+    ]);
+    const server = await createServer({
+      root,
+      configFile: false,
+      logLevel: "error",
+      server: { watch: null, ws: false },
+      plugins: oxContentHono({ routes: false, oxContent }),
+    });
+    try {
+      await run(server, root);
+    } finally {
+      await server.close();
+    }
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+}
+
+test("updates the cached client registry after SSR imports another document", async () => {
+  await withImportedMarkdownSite(async (server, root) => {
+    const client = server.environments.client;
+    const registry = () => client.transformRequest(HONO_MODULES_ID);
+
+    await server.ssrLoadModule("/snippets/a.mdx");
+    expect((await registry()).code).toContain('"/content/First.js": () => import(');
+
+    const { default: Markdown } = await server.ssrLoadModule("/snippets/b.mdx");
+    expect(String(await Markdown())).toContain('data-ox-module="/content/Second.js"');
+    const updated = await registry();
+    expect(updated.code).toContain('"/content/First.js": () => import(');
+    expect(updated.code).toContain('"/content/Second.js": () => import(');
+
+    server.environments.ssr.moduleGraph.onFileChange(normalizePath(join(root, "snippets/b.mdx")));
+    await server.ssrLoadModule("/snippets/b.mdx");
+    expect(await registry()).toBe(updated);
+  });
+});
+
+test("retries discovery when another SSR document arrives during a registry load", async () => {
+  const resume = Promise.withResolvers();
+  let firstDocumentRenders = 0;
+  await withImportedMarkdownSite(
+    async (server) => {
+      await server.ssrLoadModule("/snippets/a.mdx");
+      const pending = server.environments.client.transformRequest(HONO_MODULES_ID);
+      try {
+        await vi.waitFor(() => expect(firstDocumentRenders).toBe(2));
+        await server.ssrLoadModule("/snippets/b.mdx");
+        resume.resolve();
+        expect((await pending).code).toContain('"/content/Second.js": () => import(');
+      } finally {
+        resume.resolve();
+        await pending.catch(() => {});
+      }
+    },
+    {
+      transformers: [
+        {
+          name: "pause-registry-discovery",
+          async transform(ast, { filePath }) {
+            if (
+              normalizePath(filePath).endsWith("/snippets/a.mdx") &&
+              ++firstDocumentRenders === 2
+            ) {
+              await resume.promise;
+            }
+            return ast;
+          },
+        },
+      ],
+    },
+  );
+});
+
+test("keeps the latest SSR snapshot when an older Markdown compile finishes last", async () => {
+  const resume = Promise.withResolvers();
+  let renders = 0;
+  await withImportedMarkdownSite(
+    async (server, root) => {
+      const url = "/snippets/a.mdx";
+      const documentPath = join(root, url.slice(1));
+      const ssr = server.environments.ssr;
+      const older = ssr.transformRequest(url);
+      try {
+        await vi.waitFor(() => expect(renders).toBe(1));
+        await writeFile(documentPath, importedMarkdown("Second"));
+        ssr.moduleGraph.onFileChange(normalizePath(documentPath));
+        const newer = await ssr.transformRequest(url);
+
+        resume.resolve();
+        expect((await older).code).toContain("/content/First.js");
+        expect(await ssr.transformRequest(url)).toBe(newer);
+        const { default: Markdown } = await server.ssrLoadModule(url);
+        expect(String(await Markdown())).toContain('data-ox-module="/content/Second.js"');
+
+        const registry = await server.environments.client.transformRequest(HONO_MODULES_ID);
+        expect(registry.code).toContain('"/content/Second.js": () => import(');
+        expect(registry.code).not.toContain('"/content/First.js": () => import(');
+      } finally {
+        resume.resolve();
+        await older.catch(() => {});
+      }
+    },
+    {
+      transformers: [
+        {
+          name: "pause-older-markdown-compile",
+          async transform(ast) {
+            if (++renders === 1) await resume.promise;
+            return ast;
+          },
+        },
+      ],
+    },
+  );
+});
+
 test.each([
   { change: "delete", expectedModules: [] },
   { change: "edit", expectedModules: ["/content/After.js"] },

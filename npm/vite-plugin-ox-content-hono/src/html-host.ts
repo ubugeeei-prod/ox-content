@@ -10,11 +10,14 @@ import type { Plugin } from "vite";
 import { createHonoServerAdapter, type HonoServerOptions } from "./server.js";
 
 export const HONO_MODULES_ID = "virtual:ox-content-hono/modules";
+type HonoJsxOptions = Omit<CreateHtmlHostIslandRegistryInput, "virtualModuleId" | "pluginName">;
 
 /** Uses Ox Content's discovery, virtual modules and invalidation unchanged. */
-export function honoJsx(
-  options: Omit<CreateHtmlHostIslandRegistryInput, "virtualModuleId" | "pluginName"> = {},
-): Plugin[] {
+export function honoJsx(options: HonoJsxOptions = {}): Plugin[] {
+  return createHonoJsxPlugins(options).plugins;
+}
+
+export function createHonoJsxPlugins(options: HonoJsxOptions) {
   const registry = createHtmlHostIslandRegistry({
     ...options,
     virtualModuleId: HONO_MODULES_ID,
@@ -23,7 +26,7 @@ export function honoJsx(
       oxContent: options.oxContent,
     },
   });
-  return [
+  const plugins: Plugin[] = [
     {
       name: "ox-content:hono-jsx",
       config() {
@@ -36,6 +39,7 @@ export function honoJsx(
     },
     registry.plugin,
   ];
+  return { plugins, invalidateRegistry: () => registry.invalidate() };
 }
 
 export function createHonoRenderer(
