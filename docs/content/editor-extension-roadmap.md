@@ -100,7 +100,7 @@ Replace the polling refresh path with an explicit push channel.
   by design; ships with 11 unit tests covering every link form documented
   in the crate README.
 - ✅ CLI `vpx @ox-content/cli link-check [paths…] [--src-dir DIR] [--ignore PATTERN]
-[--format text|json]` with exit-code-1-on-error semantics for CI.
+  [--format text|json]` with exit-code-1-on-error semantics for CI.
 - ✅ LSP diagnostics under `source: "ox-content-link"`, wired into the
   per-document diagnostic publish path so they appear alongside parse,
   frontmatter, and MDC errors without an extra round trip.

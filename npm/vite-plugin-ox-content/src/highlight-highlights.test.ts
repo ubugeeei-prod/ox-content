@@ -69,10 +69,10 @@ describe("Highlights backend", () => {
     expect(result).toContain("--octc-syntax-background");
   });
 
-  it("falls back to Tree-sitter for fish blocks and inline code", async () => {
-    const source = "function greet; echo hello; end";
+  it("falls back to Tree-sitter for Nushell blocks and inline code", async () => {
+    const source = "let x = true";
     const result = await highlightCode(
-      `<pre><code class="language-fish">${source}</code></pre><p><code class="language-fish">${source}</code></p>`,
+      `<pre><code class="language-nu">${source}</code></pre><p><code class="language-nu">${source}</code></p>`,
       options,
     );
     expect(result).toContain("ox-highlight css-variables");

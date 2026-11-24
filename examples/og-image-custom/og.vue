@@ -53,10 +53,7 @@ const color = props.coverColor ?? "#6366f1";
   display: flex;
   flex-direction: column;
   background: #ffffff;
-  font-family:
-    system-ui,
-    -apple-system,
-    sans-serif;
+  font-family: system-ui, -apple-system, sans-serif;
 }
 
 .accent-bar {

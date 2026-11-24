@@ -246,6 +246,11 @@
         "reason": "Development-only spellcheck dictionary data."
       },
       {
+        "name": "@cspell/dict-django",
+        "license": "WTFPL",
+        "reason": "Development-only spellcheck dictionary data bundled by cspell-lib."
+      },
+      {
         "name": "caniuse-lite",
         "license": "CC-BY-4.0",
         "reason": "Browser compatibility dataset used by build tooling."
@@ -262,8 +267,8 @@
       },
       {
         "name": "elkjs",
-        "license": "EPL-2.0",
-        "reason": "Transitive diagram layout engine used by Mermaid rendering tooling."
+        "license": "EPL-2.0 OR GPL-3.0-or-later",
+        "reason": "Transitive diagram layout engine used by Mermaid 12 rendering tooling; the EPL-2.0 branch of the dual license is selected."
       },
       {
         "name": "khroma",
