@@ -22,6 +22,9 @@ for (const extension of ["mts", "cts"]) {
   declaration = declaration
     .replace(new RegExp(`\\n//# sourceMappingURL=index\\.d\\.${extension}\\.map\\s*$`, "u"), "")
     .replace(/\n?\/\/#region src\/virtual\.d\.ts\n[\s\S]*?\n\/\/#endregion\n?/u, "\n")
+    // Newer tsdown releases inline `src/virtual.ts` without region markers.
+    // Those ambient modules live in `virtual.d.ts`, so drop the inlined copies.
+    .replace(/^declare module "virtual:ox-content\/[^"]+" \{\n[\s\S]*?^\}\n/gmu, "")
     .trimStart();
   if (!declaration.startsWith(reference)) {
     declaration = `${reference}\n${declaration}`;
