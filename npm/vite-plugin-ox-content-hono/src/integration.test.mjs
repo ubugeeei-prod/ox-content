@@ -119,6 +119,7 @@ test("finds layout imports through Vite and applies publish state only to builds
 test.each([
   { change: "delete", expectedModules: [] },
   { change: "edit", expectedModules: ["/content/After.js"] },
+  { change: "rewrite", expectedModules: ["/content/After.js"] },
 ])(
   "refreshes the dev registry after a Markdown $change without a layout",
   async ({ change, expectedModules }) => {
@@ -145,6 +146,15 @@ test.each([
         logLevel: "error",
         server: { host: "127.0.0.1", port: 0, ws: false },
         plugins: [
+          {
+            name: "fixture:rewrite-ssr-markdown-import",
+            enforce: "pre",
+            transform(markdown, id, options) {
+              if (change === "rewrite" && options?.ssr && id === normalizePath(documentPath)) {
+                return markdown.replace("Before.js", "After.js");
+              }
+            },
+          },
           ...oxContentHono({ routes: false }),
           {
             name: "fixture:observe-registry-refresh",
@@ -165,14 +175,22 @@ test.each([
         const waitForUpdate = (type, file) =>
           vi.waitFor(() => expect(hotUpdates).toContain(`${type} ${normalizePath(file)}`));
 
-        await server.ssrLoadModule(documentUrl);
-        expect(await registryKeys()).toEqual(["/content/Before.js"]);
+        const { default: Markdown } = await server.ssrLoadModule(documentUrl);
+        const initialKeys = await registryKeys();
+        if (change === "rewrite") {
+          expect(String(await Markdown())).toContain('data-ox-module="/content/After.js"');
+          expect(await readFile(documentPath, "utf8")).toBe(source);
+        } else {
+          expect(initialKeys).toEqual(["/content/Before.js"]);
+        }
         const transformsBeforeChange = registryTransforms;
 
         if (change === "delete") {
           await rm(documentPath);
           await waitForUpdate("delete", documentPath);
-          // A separate content edit rebuilds the registry independently of unlink invalidation.
+        }
+        if (change !== "edit") {
+          // Rebuild independently of unlink invalidation or another SSR transform.
           await writeFile(refreshPath, "# Registry refresh");
           await waitForUpdate("update", refreshPath);
         } else {

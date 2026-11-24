@@ -1,5 +1,5 @@
 import { resolve, extname, dirname, isAbsolute } from "node:path";
-import { readFile } from "node:fs/promises";
+import { readFile, stat } from "node:fs/promises";
 import { parseAst, transformWithOxc } from "vite";
 import {
   classifyPublishState,
@@ -18,7 +18,7 @@ import {
   type HtmlHostMarkdownMetadata,
 } from "@ox-content/vite-plugin/html-host";
 import type { OxContentCustomHostModule } from "@ox-content/vite-plugin/custom-host";
-import type { Plugin, ResolvedConfig } from "vite";
+import type { DevEnvironment, Plugin, ResolvedConfig } from "vite";
 import { compileHonoDocument } from "./document.js";
 import { honoJsx } from "./html-host.js";
 import type { Frontmatter } from "./context.js";
@@ -66,7 +66,7 @@ export function oxContentHono(options: OxContentHonoOptions = {}): Plugin[] {
     | undefined;
   let components: HtmlHostComponentsMap = {};
   const layoutDependencies = new Set<string>();
-  const importedDocuments = new Map<string, string | undefined>();
+  const importedDocuments = new Map<string, { source: string; environment?: DevEnvironment }>();
   const integration: Plugin = {
     name: "ox-content:hono",
     enforce: "pre",
@@ -118,14 +118,12 @@ import {initHonoIslands} from '@ox-content/vite-plugin-hono/client';
 const controller = initHonoIslands({modules});
 if (import.meta.hot) import.meta.hot.dispose(() => controller.destroy());`;
     },
-    async transform(source, id, environment) {
+    async transform(source, id, transformOptions) {
       if (id.includes("?") || !isMarkdownFilePath(id, markdownExtensions)) return;
-      if (!environment?.ssr)
+      if (!transformOptions?.ssr)
         throw new Error(
           "Hono Markdown components are server components. Import them from your server entry, not a browser entry.",
         );
-      // Vite supplies source for virtual IDs. File-backed documents are read on registry rebuild.
-      if (!options.layout) importedDocuments.set(id, isAbsolute(id) ? undefined : source);
       const result = await compileHonoDocument({
         source,
         documentPath: id,
@@ -134,6 +132,10 @@ if (import.meta.hot) import.meta.hot.dispose(() => controller.destroy());`;
         components,
         selectFrontmatter: options.frontmatter,
       });
+      if (!options.layout) {
+        const environment = this.environment.mode === "dev" ? this.environment : undefined;
+        importedDocuments.set(id, { source, environment });
+      }
       return { code: result.code, map: null };
     },
   };
@@ -224,20 +226,30 @@ if (import.meta.hot) import.meta.hot.dispose(() => controller.destroy());`;
       oxContent,
       components: options.components,
       collectionDocuments,
-      documents: async () => {
+      documents: async ({ command }) => {
         // Discover the layout's static import graph before the browser build.
         // Component imports outside content/ must also reach the lazy registry.
         const found = new Map<string, { documentPath: string; source: string }>();
         if (!options.layout) {
-          for (const [documentPath, virtualSource] of importedDocuments) {
-            try {
-              const source = virtualSource ?? (await readFile(documentPath, "utf8"));
-              found.set(documentPath, { documentPath, source });
-            } catch (error) {
-              const { code } = error as NodeJS.ErrnoException;
-              if (code !== "ENOENT" && code !== "ENOTDIR") throw error;
-              importedDocuments.delete(documentPath);
+          for (const [documentPath, snapshot] of importedDocuments) {
+            if (isAbsolute(documentPath)) {
+              const file = await stat(documentPath).catch((error: NodeJS.ErrnoException) => {
+                if (error.code === "ENOENT" || error.code === "ENOTDIR") return undefined;
+                throw error;
+              });
+              if (!file?.isFile()) {
+                importedDocuments.delete(documentPath);
+                continue;
+              }
+              const environment = snapshot.environment;
+              if (command === "serve" && environment) {
+                const module = environment.moduleGraph.getModuleById(documentPath);
+                // Vite can reuse the cached transform or run the SSR hooks again after invalidation.
+                if (module) await environment.transformRequest(module.url);
+              }
             }
+            const current = importedDocuments.get(documentPath);
+            if (current) found.set(documentPath, { documentPath, source: current.source });
           }
         }
         const visited = new Set<string>();
