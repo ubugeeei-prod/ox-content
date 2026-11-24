@@ -18,6 +18,7 @@ describe("publish workflow targets", () => {
         "npm/oxct",
         "npm/unplugin-ox-content",
         "npm/vite-plugin-ox-content",
+        "npm/vite-plugin-ox-content-hono",
         "npm/vite-plugin-ox-content-react",
         "npm/vite-plugin-ox-content-solid",
         "npm/vite-plugin-ox-content-svelte",

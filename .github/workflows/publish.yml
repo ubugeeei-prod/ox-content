@@ -180,6 +180,7 @@ jobs:
           node tools/scripts/npm-registry-check.ts \
             npm/oxct npm/ox-content-islands npm/ox-content-code-play \
             npm/unplugin-ox-content npm/vite-plugin-ox-content \
+            npm/vite-plugin-ox-content-hono \
             npm/vite-plugin-ox-content-react npm/vite-plugin-ox-content-solid \
             npm/vite-plugin-ox-content-svelte npm/vite-plugin-ox-content-vue \
             npm/theme/* npm/theme-color/*
@@ -337,6 +338,18 @@ jobs:
 
       - name: Publish @ox-content/vite-plugin-svelte
         working-directory: npm/vite-plugin-ox-content-svelte
+        run: |
+          PKG_NAME=$(node -p "require('./package.json').name")
+          PKG_VERSION=$(node -p "require('./package.json').version")
+          if npm view "${PKG_NAME}@${PKG_VERSION}" version >/dev/null 2>&1; then
+            echo "Skipping ${PKG_NAME}@${PKG_VERSION} (already published)"
+            exit 0
+          fi
+          TARBALL=$(vp exec -- pnpm pack --pack-destination /tmp | tail -1)
+          npm publish "$TARBALL" --provenance --access public --tag "$NPM_TAG"
+
+      - name: Publish @ox-content/vite-plugin-hono
+        working-directory: npm/vite-plugin-ox-content-hono
         run: |
           PKG_NAME=$(node -p "require('./package.json').name")
           PKG_VERSION=$(node -p "require('./package.json').version")
