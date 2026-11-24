@@ -14,7 +14,7 @@ import {
 } from "./html-host-components";
 import type { HtmlHostClientModule, HtmlHostModule } from "./html-host";
 import {
-  isBareHtmlHostSpecifier,
+  resolveHtmlHostComponentPath,
   resolveHtmlHostDocumentPath,
   resolveHtmlHostWatchFile,
   shouldInvalidateHtmlHostRegistry,
@@ -253,7 +253,7 @@ export async function resolveHtmlHostIslandRegistry(
       const local = discovered.localBindings.get(name);
       const serverModuleId = local
         ? local.resolvedPath
-        : resolveComponentPath(documentComponents, name, context.root);
+        : resolveHtmlHostComponentPath(documentComponents, name, context.root);
       if (!serverModuleId) continue;
       addModule(modules, {
         name,
@@ -340,18 +340,6 @@ function resolveMaybe<T>(
   context: HtmlHostIslandRegistryContext,
 ): MaybePromise<readonly T[] | undefined> {
   return typeof value === "function" ? value(context) : value;
-}
-
-function resolveComponentPath(
-  components: HtmlHostComponentsMap,
-  name: string,
-  root: string,
-): string | undefined {
-  const specifier = components[name];
-  if (!specifier) return undefined;
-  if (isBareHtmlHostSpecifier(specifier) || specifier.startsWith("/@fs/")) return specifier;
-  if (specifier.startsWith("/") && !path.isAbsolute(specifier)) return specifier;
-  return path.isAbsolute(specifier) ? specifier : path.resolve(root, specifier);
 }
 
 function invalidateVirtualModule(server: ViteDevServer, resolvedVirtualModuleId: string): void {
