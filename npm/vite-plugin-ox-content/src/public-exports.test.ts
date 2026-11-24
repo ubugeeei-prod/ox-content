@@ -41,6 +41,7 @@ describe("public export surface", () => {
       "generateMarkdown",
       "enhanceMarkdownTables",
       "isMarkdownFilePath",
+      "isMarkdownModuleId",
       "loadBlogFeedEntries",
       "markdownTableScrollLabel",
       "mergeResolveConditions",

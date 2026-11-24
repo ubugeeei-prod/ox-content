@@ -7,6 +7,10 @@ export function isConfiguredSourceFile(id: string, extensions: readonly string[]
   return extensions.some((extension) => pathname.endsWith(extension.toLowerCase()));
 }
 
+export function isConfiguredSourceModule(id: string, extensions: readonly string[]): boolean {
+  return !id.includes("?") && isConfiguredSourceFile(id, extensions);
+}
+
 export function isMdxSourceFile(id: string): boolean {
   return sourcePathname(id).toLowerCase().endsWith(".mdx");
 }

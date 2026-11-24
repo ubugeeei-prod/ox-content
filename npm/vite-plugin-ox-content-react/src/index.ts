@@ -7,7 +7,7 @@
 import * as fs from "fs";
 import * as path from "path";
 import type { Plugin, PluginOption, ResolvedConfig } from "vite";
-import { oxContent } from "@ox-content/vite-plugin";
+import { isMarkdownModuleId, oxContent } from "@ox-content/vite-plugin";
 import { transformMarkdownWithReact } from "./transform";
 import { createReactMarkdownEnvironment } from "./environment";
 import type {
@@ -113,7 +113,7 @@ export function oxContentReact(options: ReactIntegrationOptions = {}): PluginOpt
     },
 
     async transform(code, id) {
-      if (!isMarkdownFilePath(id, resolved.extensions)) {
+      if (!isMarkdownModuleId(id, resolved.extensions)) {
         return null;
       }
 
