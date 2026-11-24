@@ -27,6 +27,18 @@ export function isMarkdownFilePath(
   return extensions.some((extension) => pathname.endsWith(extension.toLowerCase()));
 }
 
+/**
+ * Returns true when a module id is a Markdown source that ox-content should compile.
+ * An id with a query (`?raw`, `?url`, `?inline`, ...) is a different module owned by
+ * whichever plugin added the query, so it is left alone.
+ */
+export function isMarkdownModuleId(
+  id: string,
+  extensions: readonly string[] = DEFAULT_MARKDOWN_EXTENSIONS,
+): boolean {
+  return !id.includes("?") && isMarkdownFilePath(id, extensions);
+}
+
 /** Returns true when a resource id points at an MDX source file. */
 export function isMdxFilePath(filePath: string): boolean {
   const pathname = filePath.split("?")[0].split("#")[0];
