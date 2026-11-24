@@ -11,26 +11,26 @@ packages:
   - tools/benchmarks/bundle-size/apps/*
 
 catalog:
-  "@solidjs/vite-plugin": ^3.0.0-next.43
-  "@solidjs/web": ^2.0.0-rc.8
-  "@sveltejs/vite-plugin-svelte": ^7.2.0
-  "@types/node": ^26.6.1
+  "@solidjs/vite-plugin": ^3.0.1
+  "@solidjs/web": ^2.0.3
+  "@sveltejs/vite-plugin-svelte": ^7.3.1
+  "@types/node": ^26.6.6
   "@types/react": ^19.3.0
   "@types/react-dom": ^19.3.0
-  "@vitejs/plugin-react": ^6.1.1
+  "@vitejs/plugin-react": ^6.3.0
   "@vitejs/plugin-vue": ^6.0.9
   "@typescript/native-preview": ^7.0.0-dev.20260707.2
   esbuild: ^0.28.1
   hono: ^4.13.16
-  react: ^19.3.0
-  react-dom: ^19.3.0
-  solid-js: ^2.0.0-rc.8
-  svelte: ^5.57.0
+  react: ^19.3.1
+  react-dom: ^19.3.1
+  solid-js: ^2.0.3
+  svelte: ^5.58.0
   typescript: ^7.0.2
-  vite: npm:@voidzero-dev/vite-plus-core@0.3.2
-  vitest: 4.1.11
-  vue: ^3.5.43
-  vite-plus: 0.3.2
+  vite: npm:@voidzero-dev/vite-plus-core@8.3.8000
+  vitest: 5.1.0
+  vue: ^3.5.45
+  vite-plus: 1.7.0
 
 allowBuilds:
   esbuild: true
@@ -68,7 +68,7 @@ overrides:
   dompurify: "3.4.17"
   launch-editor: "2.14.2"
   markdown-it: "15.0.3"
-  seroval: "1.6.8"
+  seroval: "1.8.2"
   zod@4: "4.6.6"
   # GHSA-r28c-9q8g-f849, GHSA-fxqj-8p7j-g6m6: postcss, patched in 8.5.23.
   postcss@8: "8.5.26"

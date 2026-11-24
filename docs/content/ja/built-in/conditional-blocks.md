@@ -35,8 +35,10 @@ export default {
 ```md
 ::: if runtime == "node"
 Node-only setup.
+
 ::: else if runtime in ["deno", "bun"]
 Alternative runtime setup.
+
 ::: else
 Browser setup.
 :::
@@ -46,6 +48,7 @@ Browser setup.
 
 ::: if runtime == "node"
 Node-only setup.
+
 ::: else
 Browser setup.
 :::
@@ -74,6 +77,7 @@ runtime: browser
 
 ::: if runtime == "browser"
 The page frontmatter branch wins.
+
 ::: else if config.runtime == "node"
 The shared config branch is skipped.
 :::

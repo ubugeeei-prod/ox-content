@@ -149,7 +149,7 @@ oxContent({
 JavaScript/Viteの処理経路では、選択時だけ`@pierre/highlights`とWasm字句解析器を読み込みます。
 既存のテーマ用CSS変数、インラインコード、行番号、注釈、行アンカーに対応します。
 `highlight: true`は引き続きTree-sitterを選び、`highlight: false`は無効化します。
-Highlights が対応していない `fish` などの言語は Tree-sitter で処理します。
+Highlights が対応していない `nu` などの言語は Tree-sitter で処理します。
 プレーンテキストには Tree-sitter と同じテーマを適用します。両方のエンジンで未対応の言語はそのまま表示します。
 字句の区切りと分類が異なるため、完全な配色一致やサイト全体の高速化を保証するものではありません。
 

@@ -161,7 +161,7 @@ lexers only when selected. Both engines use the existing theme-color variables,
 inline highlighting, line numbers, annotations and anchors. `highlight: true`
 continues to select Tree-sitter; `highlight: false` disables highlighting.
 Highlights uses its bundled lexers first and falls back to Tree-sitter for additional
-languages such as `fish`. Plain-text fences use the same themed wrapper as Tree-sitter.
+languages such as `nu`. Plain-text fences use the same themed wrapper as Tree-sitter.
 A tag unknown to both engines stays plain. Token boundaries and syntax categories can differ between engines;
 this option does not promise identical colors or faster full-site builds.
 
