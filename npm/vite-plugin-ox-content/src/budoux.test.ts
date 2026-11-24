@@ -46,7 +46,7 @@ describe("BudouX segmentation", () => {
     });
 
     expect(result).toContain('<h1 title="日本語">日本語の|本文です。</h1>');
-    expect(result).toContain("<p>Viteで|SSGします &amp; エンティティです。</p>");
+    expect(result).toContain("<p>Viteで|SSGします| &amp; エンティティです。</p>");
     expect(result).toContain("<p><em>強調の|本文です。</em></p>");
     expect(result).toContain("<ul><li>項目の|説明です。</li></ul>");
     expect(result).toContain("<blockquote>引用の|本文です。</blockquote>");
