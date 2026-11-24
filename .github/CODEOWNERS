@@ -14,3 +14,10 @@
 /npm/vite-plugin-ox-content/src/docs* @ubugeeei @kazupon
 /npm/vite-plugin-ox-content/src/nav-generator* @ubugeeei @kazupon
 /docs/content/examples/gen-source-docs.md @ubugeeei @kazupon
+
+# Hono JSX integration.
+/npm/vite-plugin-ox-content-hono/ @ubugeeei @ts-76
+/examples/integ-hono/ @ubugeeei @ts-76
+/examples/integ-hono-custom-host/ @ubugeeei @ts-76
+/docs/content/packages/vite-plugin-ox-content-hono.md @ubugeeei @ts-76
+/docs/content/examples/integ-hono.md @ubugeeei @ts-76
