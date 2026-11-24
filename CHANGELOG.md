@@ -1,5 +1,16 @@
 # Changelog
 
+## [3.10.0] - 2026-11-24
+
+### Features
+
+- add Hono JSX integration (#1591) _(affects: npm: @ox-content/vite-plugin, @ox-content/vite-plugin-hono; ci, docs, tooling, workspace metadata)_
+
+### Bug Fixes
+
+- install pinned Rust components before parallel test tasks (#1594) _(affects: ci)_
+- leave query-bearing Markdown imports such as ?raw to Vite (#1593) _(affects: npm: @ox-content/unplugin, @ox-content/vite-plugin, @ox-content/vite-plugin-react, @ox-content/vite-plugin-solid, @ox-content/vite-plugin-svelte, @ox-content/vite-plugin-vue)_
+
 ## [3.9.0] - 2026-11-22
 
 ### Bug Fixes
