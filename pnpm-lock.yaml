@@ -175,7 +175,7 @@ overrides:
   dompurify: 3.4.17
   launch-editor: 2.14.2
   markdown-it: 15.0.3
-  seroval: 1.6.8
+  seroval: 1.8.2
   zod@4: 4.6.6
   postcss@8: 8.5.26
   fast-uri: 3.1.8
@@ -9008,11 +9008,11 @@ packages:
     resolution: {integrity: sha512-96vBb12rDvPPwdKUgWw1op3fGq8AVBFOr0IllbnM72yR5J9WWXF18cQ4g1XfDO7HCyh2dt70P3XdtyRayP8FWg==}
     engines: {node: '>=20'}
     peerDependencies:
-      seroval: 1.6.8
+      seroval: 1.8.2
 
-  seroval@1.6.8:
-    resolution: {integrity: sha512-HlSgSAkTk4EqHcje1ptJjfZi1YDv5KbhVJ/d3P7T/nAXua2VmDu+AKDX5VTdFfZf48nDkWB2TKYt0DrCSa+3wg==}
-    engines: {node: '>=10'}
+  seroval@1.8.2:
+    resolution: {integrity: sha512-zmMxi/9MdLK1MKazLmIP6Rk39RuK0Xydd+QHeOYntS37olJeTjB3+nwVj4ce/ZWiZJeRhcO5htfxt0mUzQBscQ==}
+    engines: {node: '>=20'}
 
   setimmediate@1.0.5:
     resolution: {integrity: sha512-MATJdZp8sLqDl/68LfQmbP8zKPLQNV6BIZoIgrscFDQ+RsvK/BxeDQOgyxKKoh0y/8h3BqVFnCqQ/gd+reiIXA==}
@@ -12237,8 +12237,8 @@ snapshots:
   '@solidjs/web@2.0.3(solid-js@2.0.3)':
     dependencies:
       csstype: 3.2.3
-      seroval: 1.6.8
-      seroval-plugins: 1.8.0(seroval@1.6.8)
+      seroval: 1.8.2
+      seroval-plugins: 1.8.0(seroval@1.8.2)
       solid-js: 2.0.3
 
   '@speed-highlight/core@1.2.24': {}
@@ -16952,11 +16952,11 @@ snapshots:
 
   serialize-javascript@7.0.5: {}
 
-  seroval-plugins@1.8.0(seroval@1.6.8):
+  seroval-plugins@1.8.0(seroval@1.8.2):
     dependencies:
-      seroval: 1.6.8
+      seroval: 1.8.2
 
-  seroval@1.6.8: {}
+  seroval@1.8.2: {}
 
   setimmediate@1.0.5: {}
 
@@ -17091,8 +17091,8 @@ snapshots:
   solid-js@2.0.3:
     dependencies:
       '@solidjs/signals': 2.0.3
-      seroval: 1.6.8
-      seroval-plugins: 1.8.0(seroval@1.6.8)
+      seroval: 1.8.2
+      seroval-plugins: 1.8.0(seroval@1.8.2)
 
   source-map-js@1.2.2: {}
 

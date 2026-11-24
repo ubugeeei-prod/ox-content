@@ -67,7 +67,7 @@ overrides:
   dompurify: "3.4.17"
   launch-editor: "2.14.2"
   markdown-it: "15.0.3"
-  seroval: "1.6.8"
+  seroval: "1.8.2"
   zod@4: "4.6.6"
   # GHSA-r28c-9q8g-f849, GHSA-fxqj-8p7j-g6m6: postcss, patched in 8.5.23.
   postcss@8: "8.5.26"
