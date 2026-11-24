@@ -5,7 +5,7 @@
  */
 
 import type { Plugin, PluginOption, ResolvedConfig, ViteDevServer } from "vite";
-import { oxContent } from "@ox-content/vite-plugin";
+import { isMarkdownModuleId, oxContent } from "@ox-content/vite-plugin";
 import { resolveComponentsGlob } from "./components";
 import {
   createSolidMarkdownEnvironment,
@@ -148,7 +148,7 @@ export function oxContentSolid(options: SolidIntegrationOptions = {}): PluginOpt
     },
 
     async transform(code, id) {
-      if (!isMarkdownFilePath(id, resolved.extensions)) {
+      if (!isMarkdownModuleId(id, resolved.extensions)) {
         return null;
       }
 
@@ -174,7 +174,7 @@ export function oxContentSolid(options: SolidIntegrationOptions = {}): PluginOpt
 
     transform(code, id) {
       if (!resolved.verifySolidPlugin) return null;
-      if (!isMarkdownFilePath(id, resolved.extensions)) return null;
+      if (!isMarkdownModuleId(id, resolved.extensions)) return null;
       if (!code.includes(UNCOMPILED_JSX_MARKER)) return null;
 
       this.error(formatSolidPluginError("extensions"));
