@@ -236,7 +236,7 @@
     "yaml": "^2.9.1"
   },
   "devDependencies": {
-    "@playwright/test": "^1.63.0",
+    "@playwright/test": "^1.65.1",
     "@solidjs/compiler": "^2.0.0-rc.9",
     "@solidjs/web": "catalog:",
     "@types/node": "catalog:",
