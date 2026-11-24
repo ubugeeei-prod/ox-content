@@ -2108,8 +2108,8 @@ importers:
         specifier: ^7.3.0
         version: 7.3.0
       playwright:
-        specifier: ^1.63.0
-        version: 1.63.0
+        specifier: ^1.65.1
+        version: 1.65.1
       puppeteer:
         specifier: ^25.16.0
         version: 25.16.0
@@ -2298,8 +2298,8 @@ importers:
         specifier: 'catalog:'
         version: 7.0.0-dev.20260707.2
       playwright:
-        specifier: ^1.63.0
-        version: 1.63.0
+        specifier: ^1.65.1
+        version: 1.65.1
       svelte:
         specifier: 'catalog:'
         version: 5.57.1
@@ -2353,8 +2353,8 @@ importers:
         specifier: 'catalog:'
         version: 26.6.2
       '@types/vscode':
-        specifier: ^1.146.0
-        version: 1.146.0
+        specifier: ^1.125.0
+        version: 1.134.0
       '@vscode/test-cli':
         specifier: ^0.0.15
         version: 0.0.15
@@ -2565,8 +2565,8 @@ importers:
   tools/deploy:
     devDependencies:
       '@cloudflare/build-output-utils':
-        specifier: 0.9.14
-        version: 0.9.14
+        specifier: 1.0.0-rc.1
+        version: 1.0.0-rc.1
       '@types/node':
         specifier: 'catalog:'
         version: 26.6.2
@@ -2983,14 +2983,8 @@ packages:
     resolution: {integrity: sha512-y7/yvZ2TPAnR9+jnc00klvNNLkJiXFFrQA/hlLCcxA9a2A4zQIOimyFQ9XfwYKiGD1fb5GY8vbKIIgO8d5Tb2A==}
     engines: {node: '>= 20.12.0'}
 
-  '@cloudflare/build-output-utils@0.9.14':
-    resolution: {integrity: sha512-rr28N/PxViQ/g3lKmmh4hFbSCD+e+gu5fDzo8Mve9/mO8+JCB9z2TFggTtpWn52qPRxBvyplT0rsXNdkNXPAGQ==}
-
   '@cloudflare/build-output-utils@1.0.0-rc.1':
     resolution: {integrity: sha512-IrzZL1UEdVMZPRarrKu2VpnL3MIeNVhCItTebB88SwQ1YJ4mLAe1kQtXmIH7MpdgDYnxAsTZXMtuw9q5jRWCcw==}
-
-  '@cloudflare/config@0.32.1':
-    resolution: {integrity: sha512-ksIV3OtDJi6CbCWzQjmutFpMGKeALkueX21TyyQOs8NxS2v+DlBYoiYEKVeZOJ4eTDsTLoWyXcyJzOySgImTtg==}
 
   '@cloudflare/config@1.0.0-rc.1':
     resolution: {integrity: sha512-NQgB+fQbk8IU0iJ6/G9LCSQjJ7JuyRn5CALrPKnQ8vxqayOJlX+av9adhLCMYBeC80ocncW1Gy7quv00uLV3LQ==}
@@ -5508,8 +5502,8 @@ packages:
   '@types/unist@3.0.3':
     resolution: {integrity: sha512-ko/gIFJRv177XgZsZcBwnqJN5x/Gien8qNOn0D5bQU/zAzVf9Zt3BlcUiLqhV9y4ARk0GbT3tnUiPNgnTXzc/Q==}
 
-  '@types/vscode@1.146.0':
-    resolution: {integrity: sha512-OtU25faeM997QQsW+D07FN9cX06j+EEI4aQaPw/UO3HWlCM39N1W7fG8ewhdZKluut31KffyMsmDzJzgMu6t8Q==}
+  '@types/vscode@1.134.0':
+    resolution: {integrity: sha512-NDEu0hg4sF7+vvFsADsktqUJ6f80LHSZvVK2Ovo1XiQ0/VHck1O3zst+ZZyVA/uvz6vo6LcuoqU2q48YMqOwWw==}
 
   '@types/web-bluetooth@0.0.21':
     resolution: {integrity: sha512-oIQLCGWtcFZy2JW77j9k8nHzAOpqMHLQejDA48XXMWH6tjCQHz5RCFz1bzsmROyL6PUm+LLnUiI4BCn221inxA==}
@@ -8478,18 +8472,8 @@ packages:
     resolution: {integrity: sha512-qcJu88Q2IWqJsDD529JKMdwGm/dvInW4HvQnRwiH9JtihJvzGOscDtHE3x1pBKeUOTysQ8kVmLnJ2kJu7yhcGA==}
     engines: {node: '>=12'}
 
-  playwright-core@1.63.0:
-    resolution: {integrity: sha512-rYCsBF/M5HjUch52bbtVONEFjv6Xu8sm8h72dNlR5bzIE1fvC/bxgspzkjSfU+MweEMmPM8KJebG6nnyxo5mCg==}
-    engines: {node: '>=20'}
-    hasBin: true
-
   playwright-core@1.65.1:
     resolution: {integrity: sha512-hqPpz7blSMPxWVdoeE1yiBSzXsKiVOd2k+kjCvmUywD2GPO2Dd9HfcWnq9NN0GHbNZDFgZ9JfBFr+X5/BLo0qw==}
-    engines: {node: '>=20'}
-    hasBin: true
-
-  playwright@1.63.0:
-    resolution: {integrity: sha512-+7ziBLidS4NaNCdt57SUDT+wYmmd5fmiQejUic/kb+YsYSCPyOOE9sebzMjNmQrsnNpDJqd4WHvV/8lfKfUDUg==}
     engines: {node: '>=20'}
     hasBin: true
 
@@ -10177,17 +10161,9 @@ snapshots:
       fast-wrap-ansi: 0.2.2
       sisteransi: 1.0.5
 
-  '@cloudflare/build-output-utils@0.9.14':
-    dependencies:
-      '@cloudflare/config': 0.32.1
-
   '@cloudflare/build-output-utils@1.0.0-rc.1':
     dependencies:
       '@cloudflare/config': 1.0.0-rc.1
-
-  '@cloudflare/config@0.32.1':
-    dependencies:
-      zod: 4.6.6
 
   '@cloudflare/config@1.0.0-rc.1':
     dependencies:
@@ -12177,7 +12153,7 @@ snapshots:
 
   '@types/unist@3.0.3': {}
 
-  '@types/vscode@1.146.0': {}
+  '@types/vscode@1.134.0': {}
 
   '@types/web-bluetooth@0.0.21': {}
 
@@ -15433,13 +15409,7 @@ snapshots:
 
   picomatch@4.0.7: {}
 
-  playwright-core@1.63.0: {}
-
   playwright-core@1.65.1: {}
-
-  playwright@1.63.0:
-    dependencies:
-      playwright-core: 1.63.0
 
   playwright@1.65.1:
     dependencies:
