@@ -5,7 +5,7 @@
  */
 
 import type { Plugin, PluginOption, ResolvedConfig } from "vite";
-import { oxContent } from "@ox-content/vite-plugin";
+import { isMarkdownModuleId, oxContent } from "@ox-content/vite-plugin";
 import { transformMarkdownWithSvelte } from "./transform";
 import { createSvelteMarkdownEnvironment } from "./environment";
 import { resolveComponentsGlob } from "./components";
@@ -193,7 +193,7 @@ export function oxContentSvelte(options: SvelteIntegrationOptions = {}): PluginO
     },
 
     async transform(code, id, transformOptions) {
-      if (!isMarkdownFilePath(id, resolved.extensions)) {
+      if (!isMarkdownModuleId(id, resolved.extensions)) {
         return null;
       }
 

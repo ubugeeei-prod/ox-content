@@ -26,7 +26,7 @@ import { createDevServerMiddleware, createDevServerCache, invalidateNavCache } f
 import { createOgViewerPlugin } from "./og-viewer";
 import { createI18nPlugin } from "./i18n";
 import { createAssetsPlugin } from "./assets";
-import { isMarkdownFilePath } from "./markdown";
+import { isMarkdownFilePath, isMarkdownModuleId } from "./markdown";
 import { generateCollectionsVirtualModule } from "./collections";
 import type { OxContentOptions, ResolvedOptions } from "./types";
 import { resolveOptions } from "./resolve-options";
@@ -339,7 +339,7 @@ function createMainPlugin(
         return "\0" + id;
       }
 
-      if (isMarkdownFilePath(id, resolvedOptions.extensions)) {
+      if (isMarkdownModuleId(id, resolvedOptions.extensions)) {
         return id;
       }
 
@@ -356,7 +356,7 @@ function createMainPlugin(
     },
 
     async transform(code, id) {
-      if (!isMarkdownFilePath(id, resolvedOptions.extensions)) {
+      if (!isMarkdownModuleId(id, resolvedOptions.extensions)) {
         return null;
       }
 
@@ -1259,6 +1259,7 @@ export {
   DEFAULT_MARKDOWN_EXTENSIONS,
   normalizeMarkdownExtensions,
   isMarkdownFilePath,
+  isMarkdownModuleId,
   stripMarkdownExtension,
 } from "./markdown";
 export { defineTheme, defaultTheme, mergeThemes, resolveTheme } from "./theme";

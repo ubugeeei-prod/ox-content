@@ -8,7 +8,7 @@
 import * as fs from "fs";
 import * as path from "path";
 import type { Plugin, PluginOption, ResolvedConfig } from "vite";
-import { oxContent } from "@ox-content/vite-plugin";
+import { isMarkdownModuleId, oxContent } from "@ox-content/vite-plugin";
 import { transformMarkdownWithVue } from "./transform";
 import { createVueMarkdownEnvironment } from "./environment";
 import type {
@@ -119,7 +119,7 @@ export function oxContentVue(options: VueIntegrationOptions = {}): PluginOption[
     },
 
     async transform(code, id) {
-      if (!isMarkdownFilePath(id, resolved.extensions)) {
+      if (!isMarkdownModuleId(id, resolved.extensions)) {
         return null;
       }
 
