@@ -1,6 +1,6 @@
 {
   "name": "@ox-content/vite-plugin-hono",
-  "version": "3.9.0",
+  "version": "3.10.0",
   "description": "Hono JSX integration for Ox Content: Markdown components, SSR and islands",
   "keywords": [
     "hono",
