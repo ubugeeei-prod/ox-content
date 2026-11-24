@@ -102,6 +102,12 @@ jobs:
       - name: Setup Rust
         uses: dtolnay/rust-toolchain@29eef336d9b2848a0b548edc03f92a220660cdb8 # stable
 
+      # `vp run test` starts several cargo commands at once. Each one would
+      # install the rust-toolchain.toml components on first use, and parallel
+      # installs collide ("detected conflict: 'bin/rust-analyzer'").
+      - name: Install rust-toolchain.toml components
+        run: rustup toolchain install
+
       - name: Mount sticky cache
         uses: ./.github/actions/mount-sticky-cache
         with:
