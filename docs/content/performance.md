@@ -192,7 +192,7 @@ the vendored [CommonMark 0.31.2](https://spec.commonmark.org/0.31.2/)
 specification on every CI run, not only when the benchmark tables are refreshed:
 
 - **Core profile: 652 / 652 examples.** `cargo test -p ox_content_renderer
---test spec_commonmark` fails both when a passing example regresses and when a
+  --test spec_commonmark` fails both when a passing example regresses and when a
   recorded failure starts passing, so the baseline cannot quietly drift.
 - **GFM profile: 649 / 652 examples.** The three differences are spec examples
   608, 611, and 612, where the GFM autolink extension deliberately linkifies

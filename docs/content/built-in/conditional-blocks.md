@@ -38,8 +38,10 @@ are removed before HTML, TOC, module code, and search extraction are built.
 ```md
 ::: if runtime == "node"
 Node-only setup.
+
 ::: else if runtime in ["deno", "bun"]
 Alternative runtime setup.
+
 ::: else
 Browser setup.
 :::
@@ -50,6 +52,7 @@ so only the selected branch below is rendered:
 
 ::: if runtime == "node"
 Node-only setup.
+
 ::: else
 Browser setup.
 :::
@@ -81,6 +84,7 @@ runtime: browser
 
 ::: if runtime == "browser"
 The page frontmatter branch wins.
+
 ::: else if config.runtime == "node"
 The shared config branch is skipped.
 :::
