@@ -164,6 +164,7 @@ export default defineConfig({
         "test:publish-targets",
         "test:benchmark-scripts",
         "test:editor-publish-scripts",
+        "test:build-scripts",
         "test:cli-scaffold",
       ]),
       "test:vite-plugin": task("vp exec --filter @ox-content/vite-plugin -- vp test src", {
@@ -188,6 +189,7 @@ export default defineConfig({
       "test:editor-publish-scripts": task(
         `vp test ${scriptPath("publish-editor-extensions.test.ts")}`,
       ),
+      "test:build-scripts": task(`vp test ${scriptPath("rustc-wrapper.test.ts")}`),
       "build:vite-plugin": task("vp run --filter @ox-content/vite-plugin build", {
         dependsOn: ["build:napi"],
       }),

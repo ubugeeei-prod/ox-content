@@ -13,6 +13,30 @@ vp install
 
 `nix develop` provides the Rust toolchain, Node.js, pnpm, Vite+, and build tools declared in `flake.nix`. `vp install` installs JavaScript dependencies through the workspace Vite+ wrapper. The canonical task graph lives in `vite.config.ts`.
 
+### Rust build accelerators
+
+The dev shell routes every `rustc` call through
+[`tools/scripts/rustc-wrapper.sh`](./tools/scripts/rustc-wrapper.sh) (`RUSTC_WRAPPER`):
+
+- **Parallel frontend.** Workspace crates compile with
+  `-Zunstable-options --jobs-frontend=8` on the stable compiler that
+  `rust-toolchain.toml` selects (1.99 or newer). Unstable options are enabled for
+  that one crate only (`RUSTC_BOOTSTRAP=<crate name>`), so dependencies and their
+  build-script probes compile exactly as without the wrapper. The flag is added by
+  the wrapper rather than `RUSTFLAGS`, so Cargo's fingerprints and existing target
+  directories stay valid.
+- **kache.** [kache](https://github.com/kunobi-ninja/kache) (pinned in
+  [`tools/nix/kache.nix`](./tools/nix/kache.nix)) caches compiled crates in one
+  content-addressed store shared by every worktree and target directory on the
+  machine.
+
+Enter the shell with `OX_CONTENT_RUSTC_FRONTEND_JOBS=1` or `OX_CONTENT_KACHE=`
+(empty) to turn either off. CI uses the parallel frontend in the Clippy and Test
+jobs ([`rust-parallel-frontend`](./.github/actions/rust-parallel-frontend/action.yml))
+but never kache: kache rewrites the paths it hashes, so its outputs are not
+byte-identical to an uncached build. Release, benchmark and other measurement
+builds use neither.
+
 ## Common Commands
 
 Run commands from the repository root:
