@@ -122,6 +122,24 @@ describe("rustc wrapper", { timeout: 30_000 }, () => {
     }
   });
 
+  it("keeps Cargo's hyphenated CARGO_BIN_EXE_* variables", () => {
+    // dash drops variables whose names are not shell identifiers on exec.
+    const workspace = scratchWorkspace();
+    const rustc = join(workspace.root, "env-rustc");
+    writeFileSync(rustc, "#!/usr/bin/env bash\nenv | grep '^CARGO_BIN_EXE_' || true\n");
+    chmodSync(rustc, 0o755);
+    const output = execFileSync(workspace.wrapper, [rustc, ...crate], {
+      env: {
+        PATH: process.env.PATH,
+        ...frontend,
+        ...memberEnv(workspace),
+        "CARGO_BIN_EXE_ox-content-lsp": "/target/debug/ox-content-lsp",
+      },
+      encoding: "utf8",
+    });
+    expect(output.trim()).toBe("CARGO_BIN_EXE_ox-content-lsp=/target/debug/ox-content-lsp");
+  });
+
   it("hands every call to kache when the shell provides it", () => {
     const workspace = scratchWorkspace();
     expect(

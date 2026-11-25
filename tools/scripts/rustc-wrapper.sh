@@ -1,4 +1,7 @@
-#!/bin/sh
+#!/usr/bin/env bash
+# bash, not sh: dash (Ubuntu's /bin/sh) drops environment variables whose
+# names are not shell identifiers when it execs, and Cargo passes
+# CARGO_BIN_EXE_<bin-name> (e.g. CARGO_BIN_EXE_ox-content-lsp) to tests.
 # Cargo's RUSTC_WRAPPER for the Nix dev shell and the Rust CI jobs.
 # Cargo runs: rustc-wrapper.sh <rustc or clippy-driver> [rustc] <arguments>
 #
