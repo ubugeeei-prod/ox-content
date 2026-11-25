@@ -58,6 +58,9 @@ jobs:
         with:
           components: clippy
 
+      - name: Use the parallel frontend
+        uses: ./.github/actions/rust-parallel-frontend
+
       - name: Mount sticky cache
         uses: ./.github/actions/mount-sticky-cache
         with:
@@ -107,6 +110,9 @@ jobs:
       # installs collide ("detected conflict: 'bin/rust-analyzer'").
       - name: Install rust-toolchain.toml components
         run: rustup toolchain install
+
+      - name: Use the parallel frontend
+        uses: ./.github/actions/rust-parallel-frontend
 
       - name: Mount sticky cache
         uses: ./.github/actions/mount-sticky-cache

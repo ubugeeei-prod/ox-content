@@ -1,0 +1,36 @@
+name: Rust parallel frontend
+description: >-
+  Route rustc through tools/scripts/rustc-wrapper.sh so workspace crates
+  compile with the parallel frontend on the stable compiler. Release and
+  measurement jobs must not use this.
+
+inputs:
+  jobs:
+    description: rustc frontend threads for workspace crates (1 turns it off).
+    required: false
+    default: "8"
+
+runs:
+  using: composite
+  steps:
+    - name: Compile workspace crates with the parallel frontend
+      if: runner.os != 'Windows' && inputs.jobs != '1'
+      shell: bash
+      env:
+        FRONTEND_JOBS: ${{ inputs.jobs }}
+      run: |
+        set -euo pipefail
+        if [[ ! "$FRONTEND_JOBS" =~ ^[1-9][0-9]*$ ]]; then
+          echo "::error::jobs must be a positive integer, got '$FRONTEND_JOBS'."
+          exit 1
+        fi
+        wrapper="$GITHUB_WORKSPACE/tools/scripts/rustc-wrapper.sh"
+        # A job that set its own wrapper, or checked out a tree without this
+        # one, keeps its compiler invocation unchanged.
+        if [[ -z "${RUSTC_WRAPPER:-}" && -x "$wrapper" ]]; then
+          {
+            printf 'RUSTC_WRAPPER=%s\n' "$wrapper"
+            printf 'OX_CONTENT_RUSTC_FRONTEND_JOBS=%s\n' "$FRONTEND_JOBS"
+          } >> "$GITHUB_ENV"
+          echo "rustc frontend jobs for workspace crates: $FRONTEND_JOBS"
+        fi
