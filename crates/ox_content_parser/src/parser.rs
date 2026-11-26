@@ -131,6 +131,11 @@ pub struct Parser<'a> {
     /// shares the same stop, so the previous walk answers for any start
     /// inside it.
     definition_term_run: std::cell::Cell<Option<definition_list::TermRun>>,
+
+    /// What MDX tag and brace scans of this source have already found, so
+    /// a run of unclosed openers costs one walk instead of one each. Built
+    /// on first use; see `mdx_jsx/cache.rs`.
+    mdx_scan: mdx_jsx::ScanScope<'a>,
 }
 
 impl<'a> Parser<'a> {
@@ -160,6 +165,7 @@ impl<'a> Parser<'a> {
             last_closer: std::cell::RefCell::default(),
             definition_region: None,
             definition_term_run: std::cell::Cell::new(None),
+            mdx_scan: mdx_jsx::ScanScope::new(source),
         };
         // A single fused pre-pass collects both the reference definitions
         // and the footnote labels (see `prepass.rs`).
@@ -204,6 +210,7 @@ impl<'a> Parser<'a> {
             last_closer: std::cell::RefCell::default(),
             definition_region: None,
             definition_term_run: std::cell::Cell::new(None),
+            mdx_scan: mdx_jsx::ScanScope::new(source),
         }
     }
 
