@@ -1,5 +1,11 @@
 # Changelog
 
+## [3.10.1] - 2026-11-26
+
+### Performance
+
+- keep nested and unclosed markup linear (#1598) _(affects: crates: ox_content_parser)_
+
 ## [3.10.0] - 2026-11-24
 
 ### Features
