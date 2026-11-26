@@ -93,7 +93,7 @@ async function processResourceRef(
     return { files: [], errors: [], fatal: [] };
   }
 
-  const resolved = resolveBundlePath(parsed.pathname, ctx.bundleRoot, input.srcDir);
+  const resolved = await resolveBundlePath(parsed.pathname, ctx.bundleRoot, input.srcDir);
   if (!resolved.ok) {
     if (ctx.ref === "href") {
       return { files: [], errors: [], fatal: [] };
@@ -210,11 +210,11 @@ async function emitDedupedResource(input: {
   };
 }
 
-function resolveBundlePath(
+async function resolveBundlePath(
   pathname: string,
   bundleRoot: string,
   contentRoot: string,
-): { ok: true; absolute: string } | { ok: false } {
+): Promise<{ ok: true; absolute: string } | { ok: false }> {
   let decoded: string;
   try {
     decoded = decodeURIComponent(pathname);
@@ -227,6 +227,18 @@ function resolveBundlePath(
   const absolute = path.resolve(bundleRoot, decoded);
   if (!isInsideRoot(bundleRoot, absolute) || !isInsideRoot(contentRoot, absolute)) {
     return { ok: false };
+  }
+  // A symlinked resource must also land inside both roots once resolved.
+  // Missing files fall through so the caller reports them as missing.
+  const real = await fs.realpath(absolute).catch(() => undefined);
+  if (real) {
+    const [realBundle, realContent] = await Promise.all([
+      fs.realpath(bundleRoot).catch(() => path.resolve(bundleRoot)),
+      fs.realpath(contentRoot).catch(() => path.resolve(contentRoot)),
+    ]);
+    if (!isInsideRoot(realBundle, real) || !isInsideRoot(realContent, real)) {
+      return { ok: false };
+    }
   }
   return { ok: true, absolute };
 }
