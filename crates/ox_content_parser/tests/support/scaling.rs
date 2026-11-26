@@ -25,6 +25,10 @@ const MIN_ROUNDS: usize = 3;
 /// it fails the build: noise washes out of the best times, a quadratic path
 /// never does.
 const MAX_ROUNDS: usize = 20;
+/// A large parse this fast leaves no room for a quadratic path — the ones
+/// these tests replaced took seconds at 128 KiB — and a ratio between such
+/// small times is mostly scheduler noise on a busy runner.
+const NOISE_FLOOR: Duration = Duration::from_millis(500);
 
 /// One shape is timed at a time. The tests of a binary run on parallel
 /// threads, and two of them timing at once would each see the other as load.
@@ -109,7 +113,7 @@ pub fn assert_linear(options: &ParserOptions, shapes: &[&[Part]]) {
             small = small.min(small_round / FACTOR as u32);
             large = large.min(large_round);
             ratio = large.as_secs_f64() / small.as_secs_f64().max(1e-9);
-            if round + 1 >= MIN_ROUNDS && ratio < 8.0 {
+            if round + 1 >= MIN_ROUNDS && (ratio < 8.0 || large < NOISE_FLOOR) {
                 break;
             }
         }
@@ -117,7 +121,7 @@ pub fn assert_linear(options: &ParserOptions, shapes: &[&[Part]]) {
         // 4x the input. Linear costs about 4x the time; quadratic costs 16x.
         let sample = build(shape, 40);
         assert!(
-            ratio < 8.0,
+            ratio < 8.0 || large < NOISE_FLOOR,
             "{sample:?}...: 128 KiB took {large:?} against {small:?} for 32 KiB (x{ratio:.1}); \
              linear is about x4, quadratic about x16"
         );
