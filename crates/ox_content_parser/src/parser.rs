@@ -118,6 +118,19 @@ pub struct Parser<'a> {
     /// block parsing walks forward, so the previous answer stays valid for
     /// any start inside the window.
     definition_region: Option<(usize, usize)>,
+
+    /// The last run of definition-list term lines a probe walked, so a run
+    /// costs one walk in total.
+    ///
+    /// A definition item is a run of term lines followed by a `: body` line,
+    /// so whether one starts on a line is decided by where its run stops.
+    /// Walking there from every block start, and collecting the lines into
+    /// the arena on the way, made a document of term-like lines with no body
+    /// quadratic in time and in memory: 16,000 `=` lines (31 KB) took 2.4 s
+    /// and 1.8 GB, against 0.9 ms and 3.5 MB now. Every line of one run
+    /// shares the same stop, so the previous walk answers for any start
+    /// inside it.
+    definition_term_run: std::cell::Cell<Option<definition_list::TermRun>>,
 }
 
 impl<'a> Parser<'a> {
@@ -146,6 +159,7 @@ impl<'a> Parser<'a> {
             inline_height: std::cell::Cell::new(0),
             last_closer: std::cell::RefCell::default(),
             definition_region: None,
+            definition_term_run: std::cell::Cell::new(None),
         };
         // A single fused pre-pass collects both the reference definitions
         // and the footnote labels (see `prepass.rs`).
@@ -189,6 +203,7 @@ impl<'a> Parser<'a> {
             inline_height: std::cell::Cell::new(0),
             last_closer: std::cell::RefCell::default(),
             definition_region: None,
+            definition_term_run: std::cell::Cell::new(None),
         }
     }
 
