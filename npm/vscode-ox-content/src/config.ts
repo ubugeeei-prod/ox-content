@@ -41,7 +41,8 @@ export function resolveServerOptions(
     projectCli,
     workspaceTrusted: vscode.workspace.isTrusted,
     localCandidates: localServerBinaryCandidates({
-      workspaceRoot,
+      // Workspace `target/` builds are repository content; use them only once trusted.
+      workspaceRoot: vscode.workspace.isTrusted ? workspaceRoot : undefined,
       extensionPath: context.extensionPath,
       platform: process.platform,
     }),
@@ -74,6 +75,7 @@ export function resolveInitializationOptions(
       "forbid",
     ),
     spacingAutoFixOnSave: getConfig().get<boolean>("spacing.autoFixOnSave", false),
+    workspaceTrusted: vscode.workspace.isTrusted,
     resolvePath: (value) => resolveFilePath(value, workspaceRoot),
   });
 }

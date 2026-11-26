@@ -94,6 +94,15 @@ describe("selectServerCommand", () => {
     expect(result).toEqual(CARGO_FALLBACK);
   });
 
+  it("does not fall back to cargo run in an untrusted workspace", () => {
+    const result = selectServerCommand({
+      workspaceTrusted: false,
+      localCandidates: ["/bundled/bin/ox-content-lsp"],
+      exists: () => false,
+    });
+    expect(result).toEqual({ command: "/bundled/bin/ox-content-lsp", args: [] });
+  });
+
   it("ignores an empty configured path and env binary", () => {
     const result = selectServerCommand({
       configuredPath: undefined,
@@ -175,6 +184,14 @@ describe("buildInitializationOptions", () => {
         }).markdownLintEnabled,
       ).toBe(enabled);
     }
+  });
+
+  it("forwards workspace trust only when granted", () => {
+    const base = { textlintEnabled: false, spacingAutoFixOnSave: false, resolvePath };
+    expect(buildInitializationOptions({ ...base, workspaceTrusted: true })).toEqual({
+      workspaceTrusted: true,
+    });
+    expect(buildInitializationOptions({ ...base, workspaceTrusted: false })).toEqual({});
   });
 
   it("forwards spacing options", () => {
