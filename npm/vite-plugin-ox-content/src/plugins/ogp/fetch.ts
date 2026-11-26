@@ -3,6 +3,7 @@ import { readDiskOgp, readMemoryOgp, writeDiskOgp, writeMemoryOgp } from "./cach
 import type { OgpData, OgpOptions, ResolvedOgpOptions } from "./types";
 import { resolveOgpOptions } from "./types";
 import { parseOgpFromHtml } from "./parse";
+import { requestOgpPage } from "./request";
 import { isSafeOgpUrl, normalizeOgpUrl, ogpCacheKey } from "./url";
 
 const inflight = new Map<string, Promise<OgpData | null>>();
@@ -52,23 +53,22 @@ async function loadOgpData(
 
 async function requestOgpData(url: string, options: ResolvedOgpOptions): Promise<OgpData | null> {
   try {
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), options.timeout);
-    const response = await fetch(url, {
+    const result = await requestOgpPage(url, {
+      timeout: options.timeout,
       headers: {
         "User-Agent": options.userAgent,
         Accept: "text/html,application/xhtml+xml",
       },
-      signal: controller.signal,
     });
-    clearTimeout(timeoutId);
-
-    if (!response.ok) {
-      warnEmbedFailure("ogp", url, classifyStatus(response.status), "a link-only card");
+    if (result.kind === "blocked") {
+      return null;
+    }
+    if (result.kind === "status") {
+      warnEmbedFailure("ogp", url, classifyStatus(result.status), "a link-only card");
       return null;
     }
 
-    return parseOgpFromHtml(await response.text(), url);
+    return parseOgpFromHtml(result.html, url);
   } catch (error) {
     warnEmbedFailure("ogp", url, classifyError(error), "a link-only card");
     return null;

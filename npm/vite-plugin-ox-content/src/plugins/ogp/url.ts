@@ -1,37 +1,13 @@
 import { createHash } from "node:crypto";
-
-function isPrivateIPv4(hostname: string): boolean {
-  const parts = hostname.split(".").map(Number);
-  if (
-    parts.length !== 4 ||
-    parts.some((part) => !Number.isInteger(part) || part < 0 || part > 255)
-  ) {
-    return false;
-  }
-  const [a, b] = parts;
-  return (
-    a === 10 ||
-    a === 127 ||
-    a === 0 ||
-    (a === 172 && b >= 16 && b <= 31) ||
-    (a === 192 && b === 168) ||
-    (a === 169 && b === 254)
-  );
-}
+import { isBlockedFeedHost } from "../../blog-feed-url";
 
 export function isSafeOgpUrl(value: string): boolean {
   try {
     const url = new URL(value);
-    const host = url.hostname.toLowerCase();
-    const ipv6 = host.replace(/^\[|\]$/g, "");
     if (url.protocol !== "http:" && url.protocol !== "https:") return false;
-    if (host === "localhost" || host.endsWith(".localhost")) return false;
-    if (
-      ipv6.includes(":") &&
-      (ipv6 === "::1" || ipv6.startsWith("fc") || ipv6.startsWith("fd") || ipv6.startsWith("fe80"))
-    )
-      return false;
-    return !isPrivateIPv4(host);
+    if (url.username || url.password) return false;
+    // `localhost.` names the same host as `localhost`.
+    return !isBlockedFeedHost(url.hostname.replace(/\.$/, ""));
   } catch {
     return false;
   }

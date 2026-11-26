@@ -36,6 +36,8 @@ describe("isBlockedFeedAddress", () => {
     expect(isBlockedFeedAddress("::ffff:127.0.0.1")).toBe(true);
     expect(isBlockedFeedAddress("fd12::1")).toBe(true);
     expect(isBlockedFeedAddress("fe80::1")).toBe(true);
+    expect(isBlockedFeedAddress("100.100.100.200")).toBe(true);
+    expect(isBlockedFeedAddress("100.128.0.1")).toBe(false);
     expect(isBlockedFeedAddress("1.1.1.1")).toBe(false);
   });
 });

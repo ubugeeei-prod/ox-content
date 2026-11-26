@@ -1,15 +1,21 @@
 import { mkdir, mkdtemp, readFile, readdir, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
-import { afterEach, describe, expect, it } from "vite-plus/test";
+import { afterEach, beforeEach, describe, expect, it } from "vite-plus/test";
 import { clearOgpCache, fetchOgpData, transformOgp } from "./ogp";
 import { ogpCacheFilePath, parseOgpCacheEntry } from "./ogp/cache";
+import { installOgpLookup } from "./ogp/request";
 import { normalizeOgpUrl, ogpCacheKey } from "./ogp/url";
 
 const originalFetch = globalThis.fetch;
 
+beforeEach(() => {
+  installOgpLookup(async () => ["93.184.215.14"]);
+});
+
 afterEach(() => {
   globalThis.fetch = originalFetch;
+  installOgpLookup(undefined);
   clearOgpCache();
 });
 
