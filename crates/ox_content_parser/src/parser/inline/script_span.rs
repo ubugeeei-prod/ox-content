@@ -42,7 +42,7 @@ impl<'a> Parser<'a> {
         while let Some(relative) = memchr2(marker, b'`', &bytes[scan_from..]) {
             let inner_end = scan_from + relative;
             if bytes[inner_end] == b'`' {
-                if let Some(end) = Self::closed_code_span_end(bytes, inner_end) {
+                if let Some(end) = self.closed_code_span_end(bytes, inner_end) {
                     scan_from = end;
                 } else {
                     scan_from = inner_end + Self::marker_run_len(bytes, inner_end, b'`');

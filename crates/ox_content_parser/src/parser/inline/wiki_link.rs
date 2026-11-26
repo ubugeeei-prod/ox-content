@@ -93,14 +93,20 @@ impl WikiScan {
     }
 
     /// The first `]]` in `bytes[from..limit]`.
-    fn close(&mut self, bytes: &[u8], from: usize, limit: usize) -> Option<usize> {
+    fn close<'a>(
+        &mut self,
+        parser: &Parser<'a>,
+        bytes: &'a [u8],
+        from: usize,
+        limit: usize,
+    ) -> Option<usize> {
         match self.close.as_ref().map_or(Known::Unsettled, |scan| scan.answer(from, limit)) {
             Known::Close(close) => return Some(close),
             Known::NoClose => return None,
             Known::Unsettled => {}
         }
         let mut code_spans = SmallVec::new();
-        let found = scan_wiki_link_close(&bytes[..limit], from, &mut code_spans);
+        let found = scan_wiki_link_close(parser, &bytes[..limit], from, &mut code_spans);
         self.close = Some(CloseScan { from, limit, found, code_spans });
         found
     }
@@ -150,7 +156,7 @@ impl<'a> Parser<'a> {
         let (_, limit) = run.window(content.len());
         let bytes = content.as_bytes();
         let open = *pos;
-        let Some(close) = run.wiki.close(bytes, open + 2, limit) else {
+        let Some(close) = run.wiki.close(self, bytes, open + 2, limit) else {
             return Ok(false);
         };
         let pipe = run.wiki.pipe(bytes, open + 2, close);
@@ -229,8 +235,9 @@ impl<'a> Parser<'a> {
     }
 }
 
-fn scan_wiki_link_close(
-    bytes: &[u8],
+fn scan_wiki_link_close<'a>(
+    parser: &Parser<'a>,
+    bytes: &'a [u8],
     mut cursor: usize,
     code_spans: &mut SmallVec<[(usize, usize); 4]>,
 ) -> Option<usize> {
@@ -240,7 +247,7 @@ fn scan_wiki_link_close(
                 cursor += 2;
             }
             b'`' => {
-                if let Some(end) = Parser::closed_code_span_end(bytes, cursor) {
+                if let Some(end) = parser.closed_code_span_end(bytes, cursor) {
                     code_spans.push((cursor, end));
                     cursor = end;
                 } else {

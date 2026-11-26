@@ -32,7 +32,7 @@ impl<'a> Parser<'a> {
         } else if let Some((node, end)) = self.try_parse_mdx_jsx_text(content, *pos, offset)? {
             children.push(node);
             *pos = end;
-        } else if let Some((html, end)) = Self::parse_inline_html(content, *pos, offset) {
+        } else if let Some((html, end)) = self.parse_inline_html(content, *pos, offset) {
             children.push(Node::Html(html));
             *pos = end;
         } else {
