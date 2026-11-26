@@ -31,7 +31,7 @@ vp run deploy#docs
 このタスクは `vp run build` で Rust、Code Play を含むローカル npm パッケージ、
 ドキュメント、Playground、Rust API ドキュメントをビルドします。
 出力を `dist/` にまとめ、Cloudflare の `@cloudflare/build-output-utils` で
-`tools/deploy/.cloudflare/output/v0/` にネイティブの Build Output を生成します。
+`tools/deploy/.cloudflare/output/v1/` にネイティブの Build Output を生成します。
 その成果物を `cf deploy --prebuilt --mode production` でデプロイします。
 deploy ワークスペースの `cf` パッケージは `1.0.0-beta.9` に固定しています。
 デプロイ用スクリプトは TypeScript で、Node 26 の stable type stripping により直接実行します。
