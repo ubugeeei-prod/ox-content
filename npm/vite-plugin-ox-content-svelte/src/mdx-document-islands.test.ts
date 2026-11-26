@@ -138,6 +138,22 @@ describe("MDX document-props island load strategies", () => {
     });
   });
 
+  it("keeps braces and quotes in the media query as literal text", async () => {
+    const media = '{globalThis.__oxMediaQuery = 1} x" title={1} y="';
+    const result = await transform(
+      `import Counter from './Counter.svelte'\n\n<Counter oxIsland="media" oxIslandMedia='${media}' />\n`,
+    );
+    const code = stubCounter(result.code, "  $$renderer.push('<span></span>');");
+
+    await withGeneratedModule(code, (Page) => {
+      const html = render(Page, { props: {} }).body;
+      expect(html).toContain(
+        'data-ox-media="{globalThis.__oxMediaQuery = 1} x&quot; title={1} y=&quot;"',
+      );
+      expect((globalThis as Record<string, unknown>).__oxMediaQuery).toBeUndefined();
+    });
+  });
+
   it("rejects the media strategy with no query to wait for", async () => {
     await expect(
       transform("import Counter from './Counter.svelte'\n\n<Counter oxIsland=\"media\" />\n"),

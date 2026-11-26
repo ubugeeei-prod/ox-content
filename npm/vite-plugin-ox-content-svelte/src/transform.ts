@@ -732,7 +732,7 @@ function generateMdxDocumentPropsSvelteModule(
 <script>
   ${hydratedIslands.length > 0 ? "" : imports}
 
-  const frontmatter = ${JSON.stringify(frontmatter)};
+  const frontmatter = ${renderSvelteLiteral(frontmatter)};
   export { frontmatter };
 
   let __ox_mdx_props = $props();
@@ -970,7 +970,11 @@ function renderMdxIslandTemplate(context: MdxTemplateContext, island: MdxIslandR
     'data-ox-ssr="true"',
     `data-ox-load="${hydration.load}"`,
   ];
-  if (hydration.media) wrapperAttrs.push(`data-ox-media=${JSON.stringify(hydration.media)}`);
+  // A quoted Svelte attribute value still interpolates `{...}`, so the query
+  // is passed as a string-literal expression instead.
+  if (hydration.media) {
+    wrapperAttrs.push(`data-ox-media={${renderSvelteLiteral(hydration.media)}}`);
+  }
   wrapperAttrs.push(
     `data-ox-props={${mdxIslandPropsExpression(payload, island.name, context.filePath)}}`,
   );
@@ -1295,7 +1299,7 @@ function generateSvelteModule(
   if (usedComponents.length === 0) {
     return `
 <script>
-  const frontmatter = ${JSON.stringify(frontmatter)};
+  const frontmatter = ${renderSvelteLiteral(frontmatter)};
   const rawHtml = ${rawHtmlLiteral};
 
   export { frontmatter };
@@ -1321,7 +1325,7 @@ function generateSvelteModule(
   import { initIslands, readIslandSlotHtml } from '@ox-content/islands';
   ${imports}
 
-  const frontmatter = ${JSON.stringify(frontmatter)};
+  const frontmatter = ${renderSvelteLiteral(frontmatter)};
   const rawHtml = ${rawHtmlLiteral};
   const components = {
 ${componentMap}

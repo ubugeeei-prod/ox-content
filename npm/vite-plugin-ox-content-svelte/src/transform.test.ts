@@ -79,6 +79,22 @@ describe("transformMarkdownWithSvelte", () => {
     expect(fragment.code).toMatchSnapshot();
   });
 
+  it("keeps a closing script tag in frontmatter inside the component script", async () => {
+    const title = "</script>{globalThis.__oxFrontmatterRan = 1}<script>";
+    const result = await transformMarkdownWithSvelte(
+      ["---", `title: ${title}`, "---", "# Page"].join("\n"),
+      "/repo/docs/frontmatter.md",
+      createOptions({ ssr: true }),
+    );
+
+    expect(result.frontmatter).toEqual({ title });
+    await withGeneratedModule(result.code, (Page, mod) => {
+      expect(render(Page, { props: {} }).body).not.toContain("__oxFrontmatterRan");
+      expect((mod as { frontmatter?: unknown }).frontmatter).toEqual({ title });
+      expect((globalThis as Record<string, unknown>).__oxFrontmatterRan).toBeUndefined();
+    });
+  });
+
   it("keeps fenced JSX literal and skips unregistered MDX components", async () => {
     const fenced = await transformMarkdownWithSvelte(
       [
