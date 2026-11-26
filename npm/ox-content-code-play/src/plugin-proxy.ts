@@ -48,18 +48,43 @@ export async function readLimitedBody(
   return Buffer.concat(chunks);
 }
 
-export async function typecheckProxy(req: IncomingMessage, res: ServerResponse): Promise<void> {
+export interface TypecheckProxyOptions {
+  /** Server-side `languages.typescript.config.tsgoCommand`. Requests cannot change it. */
+  tsgoCommand?: unknown;
+}
+
+export async function typecheckProxy(
+  req: IncomingMessage,
+  res: ServerResponse,
+  options: TypecheckProxyOptions = {},
+): Promise<void> {
   try {
+    // A JSON body cannot be sent cross-origin without a CORS preflight.
+    if (!isJsonContentType(req.headers["content-type"])) {
+      throw new ProxyRequestError(415, "Code Play typecheck expects application/json.");
+    }
     const body = JSON.parse((await readLimitedBody(req)).toString("utf8")) as {
       language?: string;
       code?: string;
       config?: Record<string, unknown>;
     };
-    const { createCodePlay } = await import("./client");
     const language = body.language ?? "typescript";
-    const play = createCodePlay({ languages: { [language]: true } });
+    if (language !== "typescript") {
+      throw new ProxyRequestError(400, "Code Play typecheck only supports TypeScript.");
+    }
+    const config = { ...body.config };
+    delete config.tsgoCommand;
+    const { createCodePlay } = await import("./client");
+    const play = createCodePlay({
+      languages: {
+        typescript:
+          typeof options.tsgoCommand === "string"
+            ? { config: { tsgoCommand: options.tsgoCommand } }
+            : true,
+      },
+    });
     const result = await play
-      .createSession({ language, code: body.code ?? "", config: body.config })
+      .createSession({ language, code: typeof body.code === "string" ? body.code : "", config })
       .typecheck();
     writeJson(res, 200, result);
   } catch (error) {
@@ -100,6 +125,10 @@ export function writeProxyError(
     return;
   }
   writeJson(res, fallbackStatus, { error: fallbackMessage });
+}
+
+function isJsonContentType(value: string | undefined): boolean {
+  return value?.split(";")[0]?.trim().toLowerCase() === "application/json";
 }
 
 function writeJson(res: ServerResponse, status: number, body: unknown): void {

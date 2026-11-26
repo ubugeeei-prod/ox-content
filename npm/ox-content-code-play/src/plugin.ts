@@ -31,7 +31,7 @@ import {
   resolveHydrateSpecifier,
 } from "./plugin-client";
 import { writeClientAsset } from "./plugin-assets";
-import { proxy, typecheckProxy } from "./plugin-proxy";
+import { proxy, typecheckProxy, type TypecheckProxyOptions } from "./plugin-proxy";
 
 export type CodePlayPluginOptions = RawCodePlayOptions;
 
@@ -123,7 +123,9 @@ export function codePlay(options: CodePlayPluginOptions = {}): Plugin {
 
     configureServer(server) {
       if (resolved.proxy) {
-        mountProxies(server, proxyTargets.rust, proxyTargets.go);
+        mountProxies(server, proxyTargets.rust, proxyTargets.go, {
+          tsgoCommand: resolved.languages.get("typescript")?.config.tsgoCommand,
+        });
       }
       server.middlewares.use(async (req, res, next) => {
         const urlPath = req.url?.split("?")[0] ?? "";
@@ -257,7 +259,12 @@ function enhanceHtmlForUrl(
   );
 }
 
-function mountProxies(server: ViteDevServer, rustUrl: string, goUrl: string): void {
+function mountProxies(
+  server: ViteDevServer,
+  rustUrl: string,
+  goUrl: string,
+  typecheck: TypecheckProxyOptions,
+): void {
   server.middlewares.use("/__ox-code-play/rust", (req, res) => {
     void proxy(req, res, rustUrl, "application/json");
   });
@@ -265,7 +272,7 @@ function mountProxies(server: ViteDevServer, rustUrl: string, goUrl: string): vo
     void proxy(req, res, goUrl, "application/x-www-form-urlencoded");
   });
   server.middlewares.use(DEV_TYPECHECK_PATH, (req, res) => {
-    void typecheckProxy(req, res);
+    void typecheckProxy(req, res, typecheck);
   });
 }
 

@@ -1,3 +1,6 @@
+import { access, chmod, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 import { Readable } from "node:stream";
 import type { IncomingMessage, ServerResponse } from "node:http";
 import { afterEach, describe, expect, it } from "vite-plus/test";
@@ -159,6 +162,44 @@ describe("typecheckProxy", () => {
     expect(get.statusCode).toBe(405);
     expect(JSON.parse(get.state.body).error).toMatch(/POST/);
   });
+
+  it("requires a JSON body and the TypeScript language", async () => {
+    const plain = response();
+    await typecheckProxy(request('{"code":"x"}', "POST", "text/plain"), plain);
+    expect(plain.statusCode).toBe(415);
+
+    const rust = response();
+    await typecheckProxy(request(JSON.stringify({ language: "rust", code: "fn main() {}" })), rust);
+    expect(rust.statusCode).toBe(400);
+  });
+
+  it.skipIf(process.platform === "win32")(
+    "runs the server-configured tsgo command, never one from the request",
+    async () => {
+      const dir = await mkdtemp(join(tmpdir(), "ox-code-play-proxy-"));
+      try {
+        const script = async (name: string) => {
+          const file = join(dir, `${name}.sh`);
+          await writeFile(file, `#!/bin/sh\necho "$@" > "${join(dir, `${name}.log`)}"\n`);
+          await chmod(file, 0o755);
+          return file;
+        };
+        const fromRequest = await script("request");
+        const fromServer = await script("server");
+        const res = response();
+        await typecheckProxy(
+          request(JSON.stringify({ code: "export {};", config: { tsgoCommand: fromRequest } })),
+          res,
+          { tsgoCommand: fromServer },
+        );
+        expect(res.statusCode).toBe(200);
+        await expect(access(join(dir, "request.log"))).rejects.toThrow();
+        expect(await readFile(join(dir, "server.log"), "utf8")).toContain("--noEmit");
+      } finally {
+        await rm(dir, { recursive: true, force: true });
+      }
+    },
+  );
 });
 
 describe("writeProxyError", () => {
@@ -198,9 +239,10 @@ function decodeBody(body: unknown): string {
   return "";
 }
 
-function request(body: string, method = "POST"): IncomingMessage {
+function request(body: string, method = "POST", contentType = "application/json"): IncomingMessage {
   const req = Readable.from([Buffer.from(body)]) as IncomingMessage;
   req.method = method;
+  req.headers = { "content-type": contentType };
   return req;
 }
 
