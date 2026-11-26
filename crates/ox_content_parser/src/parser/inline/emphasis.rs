@@ -10,9 +10,14 @@
 use ox_content_allocator::Vec;
 use ox_content_ast::{Node, Span, Text};
 
+use crate::error::ParseResult;
 use crate::parser::Parser;
 #[allow(unused_imports)]
 use crate::{profile_span, profile_span_detail};
+
+mod flanking;
+
+use self::flanking::classify_flanking;
 
 pub(in crate::parser) struct Delimiter {
     /// Index of the run's text node in the children vec.
@@ -24,6 +29,17 @@ pub(in crate::parser) struct Delimiter {
     remaining: usize,
     can_open: bool,
     can_close: bool,
+    /// How many emphasis nodes are nested in the node this run opened,
+    /// that node included. Zero until it opens one.
+    opened_depth: u32,
+}
+
+impl Delimiter {
+    /// Moves the run into a child list that starts at `first` of the list
+    /// it was recorded against.
+    pub(in crate::parser) fn rebase(&mut self, first: usize) {
+        self.node_index -= first;
+    }
 }
 
 impl<'a> Parser<'a> {
@@ -60,6 +76,7 @@ impl<'a> Parser<'a> {
             remaining: run_len,
             can_open,
             can_close,
+            opened_depth: 0,
         });
         *pos += run_len;
     }
@@ -73,12 +90,22 @@ impl<'a> Parser<'a> {
     /// walk the vector fixing indices up. And a failed opener search
     /// records how far down it looked (`openers_bottom`), so the next
     /// closer of the same class does not repeat it.
+    ///
+    /// Returns how deep the emphasis it built nests, and fails once that
+    /// passes [`ParserOptions::max_nesting_depth`]: the lift below walks
+    /// everything between a pair, so a run that pairs level after level
+    /// around the same content is quadratic without a bound, and every
+    /// later pass over the tree recurses once per level.
+    ///
+    /// [`ParserOptions::max_nesting_depth`]: crate::ParserOptions::max_nesting_depth
     pub(in crate::parser) fn process_emphasis(
         &self,
         children: &mut Vec<'a, Node<'a>>,
-        delimiters: &mut Vec<'a, Delimiter>,
-    ) {
+        delimiters: &mut [Delimiter],
+    ) -> ParseResult<u32> {
         profile_span!("parser::process_emphasis");
+        let cap = self.inline_nesting_cap();
+        let mut deepest = 0;
         let mut openers_bottom = OpenersBottom::default();
         let mut closer_idx = 0;
         while closer_idx < delimiters.len() {
@@ -143,9 +170,21 @@ impl<'a> Parser<'a> {
             // `find_opener` already skip those, and erasing it from the
             // vector instead would shift every later entry down — which is
             // what made a paragraph full of emphasis quadratic.
+            let mut depth = delimiters[opener_idx].opened_depth;
             for delimiter in &mut delimiters[opener_idx + 1..closer_idx] {
                 delimiter.remaining = 0;
+                depth = depth.max(delimiter.opened_depth);
             }
+            depth += 1;
+            if depth > cap {
+                let span = Span::new(
+                    node_span(&children[opener_node]).start,
+                    node_span(&children[closer_node]).end,
+                );
+                return Err(self.nesting_too_deep(span));
+            }
+            delimiters[opener_idx].opened_depth = depth;
+            deepest = deepest.max(depth);
             delimiters[opener_idx].remaining -= use_delims as usize;
             delimiters[closer_idx].remaining -= use_delims as usize;
             // Stay on the closer: with characters left it retries against an
@@ -155,6 +194,7 @@ impl<'a> Parser<'a> {
         // Emptied delimiter text nodes at this level render as nothing;
         // drop them so consumers see a clean tree.
         children.retain(|node| !matches!(node, Node::Text(text) if text.value.is_empty()));
+        Ok(deepest)
     }
 }
 
@@ -257,75 +297,4 @@ fn trim_text_head(node: &mut Node<'_>, count: u32) {
         text.value = &text.value[(count as usize).min(text.value.len())..];
         text.span = Span::new(text.span.start + count, text.span.end);
     }
-}
-
-/// Flanking classification (CommonMark "Emphasis and strong emphasis").
-/// Sequence boundaries count as whitespace.
-///
-/// `cjk_emphasis` reclassifies East Asian punctuation as an ordinary character
-/// here and nowhere else; see [`ParserOptions::cjk_emphasis`].
-///
-/// [`ParserOptions::cjk_emphasis`]: crate::ParserOptions::cjk_emphasis
-fn classify_flanking(
-    marker: u8,
-    prev: Option<char>,
-    next: Option<char>,
-    cjk_emphasis: bool,
-) -> (bool, bool) {
-    let is_punct =
-        |ch: char| is_punctuation_like(ch) && !(cjk_emphasis && is_east_asian_punctuation(ch));
-
-    let prev_ws = prev.is_none_or(char::is_whitespace);
-    let next_ws = next.is_none_or(char::is_whitespace);
-    let prev_punct = prev.is_some_and(is_punct);
-    let next_punct = next.is_some_and(is_punct);
-
-    let left_flanking = !next_ws && (!next_punct || prev_ws || prev_punct);
-    let right_flanking = !prev_ws && (!prev_punct || next_ws || next_punct);
-
-    if marker == b'*' {
-        (left_flanking, right_flanking)
-    } else {
-        (
-            left_flanking && (!right_flanking || prev_punct),
-            right_flanking && (!left_flanking || next_punct),
-        )
-    }
-}
-
-/// Approximates the spec's Unicode punctuation class (general categories
-/// P and S): anything printable that is neither alphanumeric nor
-/// whitespace.
-fn is_punctuation_like(ch: char) -> bool {
-    ch.is_ascii_punctuation()
-        || (!ch.is_ascii() && !ch.is_alphanumeric() && !ch.is_whitespace() && !ch.is_control())
-}
-
-/// Punctuation that East Asian scripts set directly against the text, with no
-/// separating space — the reason CommonMark's flanking rules reject emphasis
-/// that Latin text would accept.
-///
-/// The ranges are the fullwidth and CJK-specific blocks only. Halfwidth ASCII
-/// punctuation is deliberately excluded even in CJK text: it is written the
-/// same way in every script, so reclassifying it would change how ordinary
-/// Latin documents parse.
-///
-/// U+3000 IDEOGRAPHIC SPACE falls inside the first range but is whitespace, and
-/// the flanking rules test whitespace before punctuation, so it is unaffected.
-fn is_east_asian_punctuation(ch: char) -> bool {
-    matches!(ch,
-        // CJK Symbols and Punctuation: 、。〈〉《》「」『』【】〜 and friends.
-        '\u{3000}'..='\u{303F}'
-        // Vertical forms and CJK Compatibility Forms: vertical/rotated variants.
-        | '\u{FE10}'..='\u{FE19}'
-        | '\u{FE30}'..='\u{FE4F}'
-        // Small Form Variants: small comma, small full stop, small brackets.
-        | '\u{FE50}'..='\u{FE6F}'
-        // Fullwidth ASCII punctuation, split around the fullwidth digits and
-        // letters, which stay alphanumeric.
-        | '\u{FF01}'..='\u{FF0F}'
-        | '\u{FF1A}'..='\u{FF20}'
-        | '\u{FF3B}'..='\u{FF40}'
-        | '\u{FF5B}'..='\u{FF65}'
-    )
 }

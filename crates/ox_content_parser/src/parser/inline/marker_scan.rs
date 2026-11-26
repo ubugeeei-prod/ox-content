@@ -14,7 +14,7 @@ use super::scan::next_inline_special;
 /// `origin..=hit`. Recomputing only when the cursor leaves that window is
 /// what keeps the walk linear.
 #[derive(Clone, Copy)]
-pub(super) struct ForwardScan {
+pub(in crate::parser) struct ForwardScan {
     origin: usize,
     hit: usize,
 }

@@ -20,7 +20,7 @@ use crate::{profile_span, profile_span_detail};
 
 mod scan;
 
-use scan::{line_end_if_blank_after, next_blank_line, skip_ws_one_newline};
+use scan::{is_possible_label, line_end_if_blank_after, next_blank_line, skip_ws_one_newline};
 // The block quote collector and the fused pre-pass share the fence,
 // paragraph-context, and quote-strip helpers.
 pub(super) use scan::{closes_paragraph_context, fence_open, is_fence_close, strip_quote_markers};
@@ -71,7 +71,7 @@ impl<'a> Parser<'a> {
 
     pub(super) fn lookup_reference(&self, raw_label: &str) -> Option<&ReferenceDef<'a>> {
         let definitions = self.definitions.as_ref()?;
-        if definitions.is_empty() {
+        if definitions.is_empty() || !is_possible_label(raw_label) {
             return None;
         }
         definitions.get(&Self::normalize_reference_label(raw_label))

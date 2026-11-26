@@ -104,3 +104,24 @@ pub(in crate::parser) fn is_fence_close(trimmed: &str, fence_byte: u8, fence_len
     let len = bytes.iter().take_while(|&&byte| byte == fence_byte).count();
     len >= fence_len && trimmed[len..].trim().is_empty()
 }
+
+/// Whether `raw` can name a definition at all.
+///
+/// A label holds no unescaped `[` or `]`, and definitions are collected
+/// under that rule, so text with one in it matches none of them. Checking
+/// first matters because the lookup normalizes its whole argument: the text
+/// of every bracket around a nested run is offered as a shortcut label, and
+/// each of those spans all the brackets inside it.
+pub(super) fn is_possible_label(raw: &str) -> bool {
+    let bytes = raw.as_bytes();
+    let mut from = 0;
+    while let Some(found) = memchr::memchr2(b'[', b']', &bytes[from..]) {
+        let at = from + found;
+        let backslashes = bytes[..at].iter().rev().take_while(|&&byte| byte == b'\\').count();
+        if backslashes % 2 == 0 {
+            return false;
+        }
+        from = at + 1;
+    }
+    true
+}

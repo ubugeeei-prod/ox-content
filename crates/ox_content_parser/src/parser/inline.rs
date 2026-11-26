@@ -1,4 +1,3 @@
-use memchr::memchr;
 use ox_content_allocator::Vec;
 use ox_content_ast::{Node, Span};
 
@@ -7,7 +6,10 @@ use crate::error::ParseResult;
 #[allow(unused_imports)]
 use crate::{profile_span, profile_span_detail};
 
+mod angle;
 mod autolink;
+mod bracket_match;
+mod brackets;
 mod code_span;
 mod emphasis;
 mod entity;
@@ -15,10 +17,15 @@ mod gfm_autolink;
 mod line_break;
 mod link_target;
 mod marker_scan;
+mod nesting;
 mod scan;
 mod script_span;
 mod smart_punctuation;
+mod strikethrough;
+mod wiki_link;
 
+pub(in crate::parser) use self::bracket_match::BracketMatches;
+pub(in crate::parser) use self::brackets::{BracketKind, InlineRun, LinkText, OpenBracket};
 use self::marker_scan::InlineMarkerScan;
 use self::script_span::same_marker_neighbor;
 use super::line_scan::{is_line_ending_byte, line_terminator_end};
@@ -90,20 +97,51 @@ impl<'a> Parser<'a> {
             return Ok(children);
         }
 
-        let mut children =
-            self.allocator.new_vec_with_capacity(Self::inline_children_capacity(content.len()));
-        let mut delimiters = self.allocator.new_vec();
+        // Only content that can nest is counted, so prose never pays for it.
+        let span = Span::new(offset as u32, (offset + content.len()) as u32);
+        let collected = self.enter_inline(span)?;
+        let mut run = InlineRun::new(self, content.len());
+        let height = self.parse_inline_run(&mut run, content, offset, markers, first_special);
+        self.leave_inline(collected, height, span)?;
+        Ok(run.children)
+    }
+
+    /// Walks `content`, returning the height of the tree left in `run`.
+    fn parse_inline_run(
+        &self,
+        run: &mut InlineRun<'a>,
+        content: &'a str,
+        offset: usize,
+        mut markers: InlineMarkerScan,
+        first_special: usize,
+    ) -> ParseResult<u32> {
+        let bytes = content.as_bytes();
         let mut pos = 0;
         let mut first_scan = Some(first_special);
 
-        while pos < content.len() {
+        loop {
+            // Inside an open bracket the walk reads its text as a slice of
+            // its own, so nothing in it can see past either end.
+            let (base, limit) = run.window(content.len());
+            if pos >= limit {
+                if run.open.is_empty() {
+                    break;
+                }
+                let link_start = run.open.last().map_or(pos, |bracket| bracket.open);
+                self.close_bracket(run, offset, &mut pos)?;
+                if !run.open.is_empty() {
+                    self.settle_open_bracket(run, content, link_start, &mut pos);
+                }
+                continue;
+            }
+
             let start = pos;
             // Plain text is the common inline case. Jump over bytes that
             // cannot start any inline construct, then push that entire run as
             // one Text node. This keeps the parser on bulk byte scans for
             // prose and only enters the slower match when a real marker byte
             // has been reached.
-            pos = first_scan.take().unwrap_or_else(|| markers.next(bytes, pos));
+            pos = first_scan.take().unwrap_or_else(|| markers.next(bytes, pos)).min(limit);
 
             // Fold soft line breaks into the running text node. A newline
             // with non-whitespace on both sides is a soft break with nothing
@@ -116,28 +154,56 @@ impl<'a> Parser<'a> {
             // `parse_line_break` below for hard-break detection and
             // whitespace stripping.
             while pos > start
-                && pos + 1 < content.len()
+                && pos + 1 < limit
                 && bytes[pos] == b'\n'
                 && !matches!(bytes[pos - 1], b' ' | b'\t')
                 && !matches!(bytes[pos + 1], b' ' | b'\t' | b'\n')
             {
-                pos = markers.next(bytes, pos + 1);
+                pos = markers.next(bytes, pos + 1).min(limit);
             }
 
             if pos > start {
-                Self::push_text(&mut children, &content[start..pos], offset + start, offset + pos);
+                Self::push_text(
+                    &mut run.children,
+                    &content[start..pos],
+                    offset + start,
+                    offset + pos,
+                );
             }
-            if pos >= content.len() {
-                break;
+            if pos >= limit {
+                continue;
             }
 
-            self.parse_inline_special(content, offset, &mut children, &mut delimiters, &mut pos)?;
+            let special = pos;
+            let pushed = run.children.len();
+            if bytes[pos] == b'[' {
+                self.parse_link(run, content, offset, &mut pos)?;
+            } else {
+                let mut relative = pos - base;
+                self.parse_inline_special(
+                    &content[base..limit],
+                    offset + base,
+                    &mut run.children,
+                    &mut run.delimiters,
+                    &mut relative,
+                )?;
+                pos = base + relative;
+            }
+            run.height = run.height.max(self.take_inline_height());
+
+            if !run.open.is_empty()
+                && run.children.get(pushed..).is_some_and(brackets::contains_link)
+            {
+                self.settle_open_bracket(run, content, special, &mut pos);
+            }
         }
 
-        if !delimiters.is_empty() {
-            self.process_emphasis(&mut children, &mut delimiters);
-        }
-        Ok(children)
+        let emphasis = if run.delimiters.is_empty() {
+            0
+        } else {
+            self.process_emphasis(&mut run.children, &mut run.delimiters)?
+        };
+        Ok(run.height.saturating_add(emphasis))
     }
 
     fn parse_inline_special(
@@ -229,7 +295,6 @@ impl<'a> Parser<'a> {
                 self.push_delimiter_run(content, offset, children, delimiters, pos);
             }
             b'`' => self.parse_inline_code(content, offset, children, pos),
-            b'[' => self.parse_link(content, offset, children, pos)?,
             b'!' => self.parse_image(content, offset, children, pos)?,
             _ => {
                 Self::push_text(
@@ -241,78 +306,6 @@ impl<'a> Parser<'a> {
                 *pos += 1;
             }
         }
-        Ok(())
-    }
-
-    fn parse_inline_html_or_text(
-        &self,
-        content: &'a str,
-        offset: usize,
-        children: &mut Vec<'a, Node<'a>>,
-        pos: &mut usize,
-    ) -> ParseResult<()> {
-        // An autolink, a JSX tag and an inline HTML tag all have to close
-        // with `>`. Each of the three parsers below only reports that there
-        // is none by scanning to the end of the content, so a line holding
-        // `<` with no `>` after it paid three walks per `<` — quadratic over
-        // a run of them, and `a < b` is ordinary prose.
-        if !self.has_closer_from(content, *pos + 1, b'>') {
-            Self::push_text(children, "<", offset + *pos, offset + *pos + 1);
-            *pos += 1;
-            return Ok(());
-        }
-
-        if let Some((link, end)) = self.parse_autolink(content, *pos, offset) {
-            children.push(link);
-            *pos = end;
-        } else if let Some((node, end)) = self.try_parse_mdx_jsx_text(content, *pos, offset)? {
-            children.push(node);
-            *pos = end;
-        } else if let Some((html, end)) = Self::parse_inline_html(content, *pos, offset) {
-            children.push(Node::Html(html));
-            *pos = end;
-        } else {
-            Self::push_text(children, "<", offset + *pos, offset + *pos + 1);
-            *pos += 1;
-        }
-        Ok(())
-    }
-
-    fn parse_strikethrough(
-        &self,
-        content: &'a str,
-        offset: usize,
-        children: &mut Vec<'a, Node<'a>>,
-        pos: &mut usize,
-    ) -> ParseResult<()> {
-        profile_span_detail!("parser::inline_strikethrough");
-        let bytes = content.as_bytes();
-        let inner_start = *pos + 2;
-        let mut inner_end = inner_start;
-
-        while inner_end + 1 < content.len() {
-            // Restrict the scan to `..content.len() - 1` so any `~` memchr finds
-            // has a valid `inner_end + 1` byte to test — preserving the original
-            // `inner_end + 1 < content.len()` guard exactly.
-            match memchr(b'~', &bytes[inner_end..content.len() - 1]) {
-                Some(off) => inner_end += off,
-                None => break,
-            }
-            if bytes[inner_end + 1] == b'~' {
-                let inner_children =
-                    self.parse_inline(&content[inner_start..inner_end], offset + inner_start)?;
-                let span = Span::new((offset + *pos) as u32, (offset + inner_end + 2) as u32);
-                children.push(Node::Delete(
-                    self.allocator.boxed(ox_content_ast::Delete { children: inner_children, span }),
-                ));
-                *pos = inner_end + 2;
-                return Ok(());
-            }
-            inner_end += 1;
-        }
-
-        Self::push_text(children, &content[*pos..*pos + 2], offset + *pos, offset + *pos + 2);
-        *pos += 2;
         Ok(())
     }
 }

@@ -27,6 +27,11 @@ impl<'a> Parser<'a> {
     ) -> Option<LinkTarget<'a>> {
         profile_span_detail!("parser::link_target");
         let bytes = content.as_bytes();
+        // The target ends in a `)`. Without one after the `(`, the scans
+        // below would each read to the end of the content to find that out.
+        if !self.has_closer_from(content, open + 1, b')') {
+            return None;
+        }
         let mut i = skip_ws(bytes, open + 1);
 
         let (raw_url, after_dest, url_needs_unescape) = parse_destination(content, i)?;
@@ -99,9 +104,18 @@ impl<'a> Parser<'a> {
     }
 }
 
+/// How deep unescaped parentheses may nest in a bare destination.
+///
+/// The spec asks only that they balance, which takes reading to the end of
+/// the destination to decide — and a `(` that never closes is read again
+/// from every `](` in front of it. cmark, markdown-it and pulldown-cmark
+/// all stop at this depth for the same reason.
+const MAX_DESTINATION_PARENS: usize = 32;
+
 /// Parses a destination at `i`: either `<...>` (may contain spaces, no
 /// newlines or unescaped angle brackets) or a bare run without whitespace
-/// or control characters and with balanced unescaped parentheses. The third
+/// or control characters and with balanced unescaped parentheses, nested at
+/// most [`MAX_DESTINATION_PARENS`] deep. The third
 /// return value reports whether the destination contains a byte that can
 /// require unescaping.
 pub(in crate::parser) fn parse_destination(content: &str, i: usize) -> Option<(&str, usize, bool)> {
@@ -135,6 +149,9 @@ pub(in crate::parser) fn parse_destination(content: &str, i: usize) -> Option<(&
             }
             b'(' => {
                 depth += 1;
+                if depth > MAX_DESTINATION_PARENS {
+                    return None;
+                }
                 j += 1;
             }
             b')' if depth == 0 => break,

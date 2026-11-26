@@ -82,24 +82,21 @@ pub struct Parser<'a> {
     /// during the re-parse.
     lazy_lines: Option<std::rc::Rc<rustc_hash::FxHashSet<u32>>>,
 
-    /// Memoized "this bracket text already contains a link" verdicts,
-    /// keyed by the address and length of the bracketed slice.
-    ///
-    /// CommonMark forbids a link inside a link, so `parse_link` has to
-    /// parse the bracket text before it can decide whether the outer
-    /// bracket is a link at all. When it is not, the bracket stays literal
-    /// and the caller re-scans the same bytes, parsing that inner text a
-    /// second time. Without memoization every nesting level doubles the
-    /// work, so `[[[[a](u)](u)](u)]...` costs 2^depth — a 200-byte
-    /// document already runs for minutes.
-    ///
-    /// Every slice lives in the source or the arena, both of which outlive
-    /// the parser, so an address plus a length names one byte range for as
-    /// long as the cache exists.
-    link_probe_cache: std::cell::RefCell<rustc_hash::FxHashMap<(usize, usize), bool>>,
+    /// Where each `[` that needed a long scan closes, keyed by the address of
+    /// the bracket. See `inline/bracket_match.rs`.
+    bracket_matches: std::cell::RefCell<inline::BracketMatches>,
+
+    /// Bracketed text that turned out to parse to a link. See
+    /// `inline/brackets.rs`.
+    link_text: std::cell::RefCell<inline::LinkText>,
+
+    /// How many `parse_inline` calls are on the stack, and the height of the
+    /// tree the innermost finished one built. See `inline/nesting.rs`.
+    inline_depth: std::cell::Cell<u32>,
+    inline_height: std::cell::Cell<u32>,
 
     /// Memoized position of the final `]` or `}` in a content slice, keyed
-    /// the same way as `link_probe_cache` plus the byte being looked for.
+    /// by the address and length of the slice plus the byte being looked for.
     ///
     /// An opener can only open something when its closer follows it, and
     /// the balanced scans answer that by walking to the end of the content.
@@ -143,7 +140,10 @@ impl<'a> Parser<'a> {
             definitions: None,
             footnote_labels: None,
             lazy_lines: None,
-            link_probe_cache: std::cell::RefCell::default(),
+            bracket_matches: std::cell::RefCell::default(),
+            link_text: std::cell::RefCell::default(),
+            inline_depth: std::cell::Cell::new(0),
+            inline_height: std::cell::Cell::new(0),
             last_closer: std::cell::RefCell::default(),
             definition_region: None,
         };
@@ -183,7 +183,10 @@ impl<'a> Parser<'a> {
             // Most sub-sources are entered without any lazy continuation
             // line, and every block quote and list item builds one of these.
             lazy_lines: (!lazy_lines.is_empty()).then(|| std::rc::Rc::new(lazy_lines)),
-            link_probe_cache: std::cell::RefCell::default(),
+            bracket_matches: std::cell::RefCell::default(),
+            link_text: std::cell::RefCell::default(),
+            inline_depth: std::cell::Cell::new(0),
+            inline_height: std::cell::Cell::new(0),
             last_closer: std::cell::RefCell::default(),
             definition_region: None,
         }
