@@ -69,9 +69,9 @@ describe("Open Graph request targets", () => {
       String(input) === "https://example.com/old"
         ? new Response(null, { status: 301, headers: { location: "/new" } })
         : new Response(card("Moved"))) as typeof fetch;
-    await expect(
-      fetchOgpData("https://example.com/old", { cache: false }),
-    ).resolves.toMatchObject({ title: "Moved" });
+    await expect(fetchOgpData("https://example.com/old", { cache: false })).resolves.toMatchObject({
+      title: "Moved",
+    });
   });
 
   it("stops reading an endless body at the size limit", async () => {
