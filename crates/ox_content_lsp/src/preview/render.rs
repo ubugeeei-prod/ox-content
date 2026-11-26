@@ -1,3 +1,5 @@
+use std::borrow::Cow;
+
 use ox_content_allocator::Allocator;
 use ox_content_parser::{ParseError, Parser, ParserOptions};
 use ox_content_renderer::HtmlRenderer;
@@ -35,7 +37,26 @@ pub fn render_preview(source: &str, mdx: bool) -> Result<PreviewPayload, ParseEr
     let title = preview_title(block.as_ref(), &ast.children)
         .unwrap_or_else(|| "Ox Content Preview".to_string());
 
-    Ok(PreviewPayload { title: title.clone(), html: wrap_preview_html(&title, &body) })
+    // The title is plain text (decoded frontmatter or heading text), while the
+    // wrapper interpolates it into `<title>` verbatim.
+    let html = wrap_preview_html(&escape_title_text(&title), &body);
+    Ok(PreviewPayload { html, title })
+}
+
+fn escape_title_text(title: &str) -> Cow<'_, str> {
+    if !title.contains(['&', '<', '>']) {
+        return Cow::Borrowed(title);
+    }
+    let mut escaped = String::with_capacity(title.len() + 8);
+    for ch in title.chars() {
+        match ch {
+            '&' => escaped.push_str("&amp;"),
+            '<' => escaped.push_str("&lt;"),
+            '>' => escaped.push_str("&gt;"),
+            _ => escaped.push(ch),
+        }
+    }
+    Cow::Owned(escaped)
 }
 
 #[cfg(test)]
@@ -97,6 +118,24 @@ mod tests {
         );
         let payload = render_preview(source, false).unwrap();
         snap("render_gfm_features_round_trip", &payload);
+    }
+
+    #[test]
+    fn render_keeps_heading_and_frontmatter_titles_as_text_in_title_element() {
+        let payload = render_preview("# `</title><img src=x>` & co\n", false).unwrap();
+        assert_eq!(payload.title, "</title><img src=x> & co");
+        assert!(
+            payload.html.contains("<title>&lt;/title&gt;&lt;img src=x&gt; &amp; co</title>"),
+            "{}",
+            payload.html
+        );
+
+        let payload = render_preview("---\ntitle: \"a</title><b>\"\n---\n\nbody\n", false).unwrap();
+        assert!(
+            payload.html.contains("<title>a&lt;/title&gt;&lt;b&gt;</title>"),
+            "{}",
+            payload.html
+        );
     }
 
     #[test]
