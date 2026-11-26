@@ -191,7 +191,17 @@ async function collectPages(options: ResolvedOptions, root: string): Promise<Pag
 // HTML Rendering
 // =============================================================================
 
-function renderViewerHtml(pages: PageOgData[], options: ResolvedOptions): string {
+/** JSON for an inline `<script>`: `</script>` and line separators stay inert. */
+function inlineScriptJson(value: unknown): string {
+  return JSON.stringify(value)
+    .replace(/</g, "\\u003c")
+    .replace(/>/g, "\\u003e")
+    .replace(/&/g, "\\u0026")
+    .replace(/\u2028/g, "\\u2028")
+    .replace(/\u2029/g, "\\u2029");
+}
+
+export function renderViewerHtml(pages: PageOgData[], options: ResolvedOptions): string {
   const generateOgImage = options.ogImage || options.ssg.generateOgImage;
   const totalWarnings = pages.reduce(
     (sum, p) => sum + p.warnings.filter((w) => w.level === "warning").length,
@@ -316,7 +326,7 @@ function renderViewerHtml(pages: PageOgData[], options: ResolvedOptions): string
   <div class="container" id="container"></div>
 
   <script>
-    let pages = ${JSON.stringify(pages)};
+    let pages = ${inlineScriptJson(pages)};
     let currentFilter = 'all';
 
     function setFilter(f) {
@@ -337,9 +347,8 @@ function renderViewerHtml(pages: PageOgData[], options: ResolvedOptions): string
     }
 
     function esc(s) {
-      const d = document.createElement('div');
-      d.textContent = s;
-      return d.innerHTML;
+      return String(s ?? '').replace(/[&<>"']/g, (ch) =>
+        ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[ch]);
     }
 
     function renderCards(list) {
@@ -357,7 +366,7 @@ function renderViewerHtml(pages: PageOgData[], options: ResolvedOptions): string
         const imgHtml = p.ogImageUrl
           ? '<img src="' + esc(p.ogImageUrl) + '" onerror="this.parentNode.innerHTML=\\'No OG image\\'">'
           : 'No OG image';
-        const siteHost = ${JSON.stringify(options.ssg.siteUrl || "example.com")};
+        const siteHost = ${inlineScriptJson(options.ssg.siteUrl || "example.com")};
         return '<div class="card">'
           + '<div class="card-header">'
           + '<div class="card-path">' + esc(p.path) + ' &rarr; ' + esc(p.urlPath) + '</div>'
