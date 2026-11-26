@@ -14,6 +14,7 @@ mod cards;
 pub mod code_blocks;
 mod code_groups;
 mod code_imports;
+mod colon_blocks;
 mod conditional_blocks;
 mod containers;
 mod data_tables;
@@ -28,6 +29,7 @@ mod image_galleries;
 mod images;
 mod includes;
 mod keyboard_keys;
+mod lookahead;
 mod magic;
 #[allow(dead_code)]
 mod math;

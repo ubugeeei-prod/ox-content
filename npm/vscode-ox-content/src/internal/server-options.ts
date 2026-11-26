@@ -50,6 +50,11 @@ export function selectServerCommand(inputs: ServerCommandInputs): ServerCommand 
   if (localBinary) {
     return { command: localBinary, args: [] };
   }
+  if (inputs.workspaceTrusted === false) {
+    // `cargo run` builds and runs code from the workspace. Point at the
+    // bundled binary instead so a missing install fails to start.
+    return { command: localCandidates.at(-1) ?? "ox-content-lsp", args: [] };
+  }
   return { command: "cargo", args: ["run", "-p", "ox_content_lsp", "--bin", "ox-content-lsp"] };
 }
 
@@ -67,6 +72,11 @@ export interface InitializationInputs {
   spaceBetweenHalfAndFullWidth?: string;
   /** `oxContent.spacing.autoFixOnSave`. */
   spacingAutoFixOnSave: boolean;
+  /**
+   * `vscode.workspace.isTrusted`. The server reads workspace-file settings
+   * that start processes only when this is forwarded as `true`.
+   */
+  workspaceTrusted?: boolean;
   /** Resolves a possibly-relative path against the workspace root. */
   resolvePath: (value: string) => string;
 }
@@ -102,6 +112,9 @@ export function buildInitializationOptions(
   }
   if (inputs.spacingAutoFixOnSave) {
     options.spacingAutoFixOnSave = true;
+  }
+  if (inputs.workspaceTrusted) {
+    options.workspaceTrusted = true;
   }
 
   return options;

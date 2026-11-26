@@ -1,4 +1,5 @@
 use super::{ReportMode, ResolvedTimelineOptions};
+use crate::features::escape::has_blocked_url_scheme;
 
 #[derive(Default)]
 pub(super) struct ItemMeta {
@@ -108,6 +109,7 @@ fn is_safe_token(value: &str) -> bool {
 fn is_safe_href(value: &str) -> bool {
     let lower = value.trim().to_ascii_lowercase();
     !lower.is_empty()
+        && !has_blocked_url_scheme(&lower)
         && !lower.starts_with("javascript:")
         && !lower.starts_with("data:")
         && !lower.starts_with("vbscript:")

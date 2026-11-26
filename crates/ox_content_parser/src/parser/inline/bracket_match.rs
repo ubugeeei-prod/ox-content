@@ -10,7 +10,6 @@
 //! One walk already balances every bracket it passes, so the long ones are
 //! recorded here and answered from the table afterwards.
 
-use memchr::memchr;
 use rustc_hash::FxHashMap;
 use smallvec::SmallVec;
 
@@ -94,7 +93,7 @@ enum Step {
     Jump(usize),
 }
 
-impl Parser<'_> {
+impl<'a> Parser<'a> {
     /// Index of the `]` matching the bracket opened just before `start`, or
     /// `content.len()` when nothing closes it.
     ///
@@ -102,7 +101,7 @@ impl Parser<'_> {
     /// backslash escapes, code spans (an unmatched opener stays literal),
     /// autolinks, and inline raw HTML. This is what makes
     /// `[not a `link](/foo`)` a code span instead of a link.
-    pub(in crate::parser) fn matching_bracket(&self, content: &str, start: usize) -> usize {
+    pub(in crate::parser) fn matching_bracket(&self, content: &'a str, start: usize) -> usize {
         debug_assert!(start > 0, "`start` follows the opening bracket");
         let base = content.as_ptr().addr();
         let content_end = base + content.len();
@@ -122,14 +121,14 @@ impl Parser<'_> {
             Recorded::Unknown => {}
         }
 
-        if let Some(close) = Self::scan_bracket_directly(content, start) {
+        if let Some(close) = self.scan_bracket_directly(content, start) {
             return close;
         }
         self.scan_and_record_brackets(content, start)
     }
 
     /// The plain scan, abandoned once it has read [`DIRECT_SCAN_BYTES`].
-    fn scan_bracket_directly(content: &str, start: usize) -> Option<usize> {
+    fn scan_bracket_directly(&self, content: &'a str, start: usize) -> Option<usize> {
         let bytes = content.as_bytes();
         let give_up = start.saturating_add(DIRECT_SCAN_BYTES);
         let mut depth = 1usize;
@@ -138,7 +137,7 @@ impl Parser<'_> {
             if cursor >= give_up {
                 return None;
             }
-            match Self::bracket_step(content, cursor) {
+            match self.bracket_step(content, cursor) {
                 Step::Open => {
                     depth += 1;
                     cursor += 1;
@@ -157,7 +156,7 @@ impl Parser<'_> {
     }
 
     /// The same scan, recording every bracket it balances on the way.
-    fn scan_and_record_brackets(&self, content: &str, start: usize) -> usize {
+    fn scan_and_record_brackets(&self, content: &'a str, start: usize) -> usize {
         let bytes = content.as_bytes();
         let base = content.as_ptr().addr();
         let content_end = base + content.len();
@@ -170,7 +169,7 @@ impl Parser<'_> {
         let mut cursor = start;
         let mut found = None;
         while cursor < bytes.len() {
-            match Self::bracket_step(content, cursor) {
+            match self.bracket_step(content, cursor) {
                 Step::Open => {
                     open.push(cursor);
                     cursor += 1;
@@ -207,7 +206,7 @@ impl Parser<'_> {
     }
 
     /// Classifies the byte at `cursor` for bracket balancing.
-    fn bracket_step(content: &str, cursor: usize) -> Step {
+    fn bracket_step(&self, content: &'a str, cursor: usize) -> Step {
         let bytes = content.as_bytes();
         match bytes[cursor] {
             b'\\' => {
@@ -217,27 +216,14 @@ impl Parser<'_> {
                     cursor + 1 < bytes.len() && bytes[cursor + 1].is_ascii_punctuation();
                 Step::Jump(cursor + if escapes_next { 2 } else { 1 })
             }
-            b'`' => {
-                let run = Self::marker_run_len(bytes, cursor, b'`');
-                let after_opener = cursor + run;
-                let mut scan = after_opener;
-                while scan < bytes.len() {
-                    let Some(off) = memchr(b'`', &bytes[scan..]) else {
-                        break;
-                    };
-                    scan += off;
-                    let closer = Self::marker_run_len(bytes, scan, b'`');
-                    if closer == run {
-                        return Step::Jump(scan + closer);
-                    }
-                    scan += closer;
-                }
-                Step::Jump(after_opener)
-            }
+            b'`' => Step::Jump(
+                self.closed_code_span_end(bytes, cursor)
+                    .unwrap_or_else(|| cursor + Self::marker_run_len(bytes, cursor, b'`')),
+            ),
             b'<' => {
                 if let Some(end) = super::autolink_end(content, cursor) {
                     Step::Jump(end)
-                } else if let Some((_, end)) = Parser::parse_inline_html(content, cursor, 0) {
+                } else if let Some((_, end)) = self.parse_inline_html(content, cursor, 0) {
                     Step::Jump(end)
                 } else {
                     Step::Jump(cursor + 1)

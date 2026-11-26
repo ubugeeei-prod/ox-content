@@ -8,6 +8,7 @@
 
 use crate::CodeGroupOptions;
 
+use super::colon_blocks::ColonBlocks;
 use super::escape::escape_html_attr;
 use super::segments::{is_closing_fence, parse_opening_fence};
 
@@ -36,6 +37,7 @@ pub(super) fn resolve(options: Option<&CodeGroupOptions>) -> Option<ResolvedCode
 
 pub(super) fn transform(source: &str, errors: &mut Vec<String>) -> String {
     let lines: Vec<(&str, &str)> = source.split_inclusive('\n').map(split_ending).collect();
+    let mut blocks = ColonBlocks::new(&lines, parse_any_opener, parse_closer);
     let mut out = String::with_capacity(source.len() + 64);
     let mut index = 0usize;
     let mut in_fence = false;
@@ -66,8 +68,8 @@ pub(super) fn transform(source: &str, errors: &mut Vec<String>) -> String {
         }
 
         let trimmed = trim_container_indent(line);
-        if let Some(colon_count) = parse_opener(trimmed)
-            && let Some(end) = find_closer(&lines, index, colon_count)
+        if parse_opener(trimmed).is_some()
+            && let Some(end) = blocks.closer(index, lines.len())
         {
             let inner = collect_inner(&lines, index + 1, end);
             emit_group(&mut out, &inner, errors);
@@ -81,46 +83,6 @@ pub(super) fn transform(source: &str, errors: &mut Vec<String>) -> String {
     }
 
     out
-}
-
-fn find_closer(lines: &[(&str, &str)], start: usize, colon_count: usize) -> Option<usize> {
-    let mut in_fence = false;
-    let mut fence_char = b'\0';
-    let mut fence_len = 0usize;
-    let mut stack = vec![colon_count];
-
-    for (offset, (line, _)) in lines.iter().enumerate().skip(start + 1) {
-        if in_fence {
-            if is_closing_fence(line, fence_char, fence_len) {
-                in_fence = false;
-            }
-            continue;
-        }
-
-        if let Some(open) = parse_opening_fence(line) {
-            in_fence = true;
-            fence_char = open.fence_char;
-            fence_len = open.fence_len;
-            continue;
-        }
-
-        let trimmed = trim_container_indent(line);
-        if let Some(opener) = parse_any_opener(trimmed) {
-            stack.push(opener);
-            continue;
-        }
-
-        if let Some(close) = parse_closer(trimmed)
-            && let Some(index) = stack.iter().rposition(|open| *open <= close)
-        {
-            stack.truncate(index);
-            if stack.is_empty() {
-                return Some(offset);
-            }
-        }
-    }
-
-    None
 }
 
 fn collect_inner(lines: &[(&str, &str)], start: usize, end: usize) -> String {

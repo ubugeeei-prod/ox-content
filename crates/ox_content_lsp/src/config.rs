@@ -37,6 +37,11 @@ pub struct InitializationOptions {
     /// Whether `willSaveWaitUntil` should return built-in spacing fixes.
     #[serde(rename = "spacingAutoFixOnSave", default)]
     pub spacing_auto_fix_on_save: bool,
+    /// Set by clients that track workspace trust. The workspace file's
+    /// `textlint` section starts a process, so it is read only when this is
+    /// `true`; init options and environment variables still apply.
+    #[serde(rename = "workspaceTrusted", default)]
+    pub workspace_trusted: bool,
 }
 
 #[derive(Clone, Debug, Default, Deserialize)]
@@ -115,11 +120,17 @@ impl ResolvedConfig {
         // textlint flows through the same init -> workspace file ->
         // env var pipeline so users have one consistent override
         // model. The init option wins so editors can flip it
-        // dynamically without rewriting the workspace config.
+        // dynamically without rewriting the workspace config. A cloned
+        // repository can ship the workspace file, so its textlint section
+        // only counts once the client reports the workspace as trusted.
+        let workspace_textlint = workspace_file
+            .as_ref()
+            .filter(|_| init.workspace_trusted)
+            .map(|(_, config)| &config.textlint);
         let textlint_enabled = if init.textlint_enabled {
             true
-        } else if let Some((_, config)) = workspace_file.as_ref() {
-            config.textlint.enabled.unwrap_or(false)
+        } else if let Some(textlint) = workspace_textlint {
+            textlint.enabled.unwrap_or(false)
         } else {
             env::var("OX_CONTENT_TEXTLINT_ENABLED")
                 .is_ok_and(|value| matches!(value.as_str(), "1" | "true" | "yes"))
@@ -127,9 +138,7 @@ impl ResolvedConfig {
         let textlint_command = init
             .textlint_command
             .clone()
-            .or_else(|| {
-                workspace_file.as_ref().and_then(|(_, config)| config.textlint.command.clone())
-            })
+            .or_else(|| workspace_textlint.and_then(|textlint| textlint.command.clone()))
             .or_else(|| env::var("OX_CONTENT_TEXTLINT_COMMAND").ok());
 
         let mdc_components = init
@@ -222,3 +231,6 @@ fn resolve_path(base: Option<&Path>, value: &str) -> PathBuf {
         candidate
     }
 }
+
+#[cfg(test)]
+mod tests;

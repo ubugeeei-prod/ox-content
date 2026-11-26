@@ -1,3 +1,4 @@
+use crate::features::lookahead::HtmlAhead;
 use crate::html_scan::find_ci;
 
 pub(super) struct ProtectedSpan {
@@ -5,12 +6,19 @@ pub(super) struct ProtectedSpan {
     pub end: usize,
 }
 
-pub(super) fn next_protected(segment: &str, from: usize) -> Option<ProtectedSpan> {
+/// The first protected span that starts at or after `from`. With `ahead`,
+/// the tag and comment scans are answered from what earlier ones found;
+/// without it, each scans afresh.
+pub(super) fn next_protected(
+    segment: &str,
+    from: usize,
+    mut ahead: Option<&mut HtmlAhead>,
+) -> Option<ProtectedSpan> {
     let bytes = segment.as_bytes();
     let mut cursor = from;
     while let Some(rel) = memchr::memchr(b'<', &bytes[cursor..]) {
         let start = cursor + rel;
-        if let Some(end) = take_protected(segment, start) {
+        if let Some(end) = take_protected(segment, start, ahead.as_deref_mut()) {
             return Some(ProtectedSpan { start, end });
         }
         cursor = start + 1;
@@ -18,12 +26,18 @@ pub(super) fn next_protected(segment: &str, from: usize) -> Option<ProtectedSpan
     None
 }
 
-fn take_protected(source: &str, pos: usize) -> Option<usize> {
+fn take_protected(source: &str, pos: usize, ahead: Option<&mut HtmlAhead>) -> Option<usize> {
     let after = pos + 1;
     if source.get(after..).is_some_and(|rest| rest.starts_with("!--")) {
-        return source[after + 3..].find("-->").map(|rel| after + 3 + rel + 3);
+        return match ahead {
+            Some(ahead) => ahead.comment_end(source, after + 3),
+            None => source[after + 3..].find("-->").map(|rel| after + 3 + rel + 3),
+        };
     }
-    let tag_end = scan_tag_end(source, pos)?;
+    let tag_end = match ahead {
+        Some(ahead) => ahead.tag_end(source, pos),
+        None => scan_tag_end(source, pos),
+    }?;
     if source.as_bytes().get(after) == Some(&b'/') {
         return None;
     }

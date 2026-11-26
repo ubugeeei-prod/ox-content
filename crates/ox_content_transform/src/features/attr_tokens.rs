@@ -1,4 +1,5 @@
 use super::escape_html_attr;
+use crate::features::escape::has_blocked_url_scheme;
 
 #[derive(Clone, Debug, Default, PartialEq, Eq)]
 pub(super) struct ParsedAttrs {
@@ -179,7 +180,8 @@ fn is_dangerous_url(value: &str) -> bool {
         .filter(|ch| !ch.is_ascii_whitespace())
         .map(|ch| ch.to_ascii_lowercase())
         .collect();
-    compact.starts_with("//")
+    has_blocked_url_scheme(value)
+        || compact.starts_with("//")
         || compact.starts_with("javascript:")
         || compact.starts_with("data:")
         || compact.starts_with("vbscript:")

@@ -5,12 +5,10 @@
 //! few inline constructs that can be skipped over in bulk rather than
 //! walked byte by byte.
 
-use memchr::memchr3;
 use ox_content_allocator::Vec;
 use ox_content_ast::{Node, Span};
 
 use super::super::Parser;
-use super::super::line_scan::{is_line_ending_byte, line_terminator_end};
 #[allow(unused_imports)]
 use crate::profile_span_detail;
 
@@ -28,32 +26,19 @@ impl<'a> Parser<'a> {
         let code_start = *pos + open_len;
 
         // The closer is the next backtick run of exactly the opener's
-        // length (CommonMark "Code spans"). memchr jumps between runs, and
-        // searching for the line ending in the same pass answers the question
-        // `normalize_code_span` would otherwise re-scan the whole span for.
-        let mut cursor = code_start;
-        let mut has_newline = false;
-        while cursor < bytes.len() {
-            let Some(off) = memchr3(b'`', b'\n', b'\r', &bytes[cursor..]) else {
-                break;
-            };
-            cursor += off;
-            if is_line_ending_byte(bytes[cursor]) {
-                has_newline = true;
-                cursor = line_terminator_end(bytes, cursor);
-                continue;
-            }
-            let run = Self::marker_run_len(bytes, cursor, b'`');
-            if run == open_len {
-                let span = Span::new((offset + *pos) as u32, (offset + cursor + run) as u32);
-                children.push(Node::InlineCode(ox_content_ast::InlineCode {
-                    value: self.normalize_code_span(&content[code_start..cursor], has_newline),
-                    span,
-                }));
-                *pos = cursor + run;
-                return;
-            }
-            cursor += run;
+        // length (CommonMark "Code spans"). The search also reports whether a
+        // line ending comes first, which `normalize_code_span` would
+        // otherwise re-scan the whole span for.
+        if let Some(closer) = self.code_span_closer(bytes, code_start, open_len) {
+            let end = closer.start + open_len;
+            let span = Span::new((offset + *pos) as u32, (offset + end) as u32);
+            children.push(Node::InlineCode(ox_content_ast::InlineCode {
+                value: self
+                    .normalize_code_span(&content[code_start..closer.start], closer.has_newline),
+                span,
+            }));
+            *pos = end;
+            return;
         }
 
         // No closer: the opening run is literal text.

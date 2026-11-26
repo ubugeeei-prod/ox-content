@@ -7,12 +7,18 @@ mod tests;
 
 use self::targets::{
     find_previous_void_element, find_previous_wrapped_element, is_adjacent_inline_attr_target_tag,
-    is_attr_target_tag, scan_tag_end,
+    is_attr_target_tag,
 };
+
+pub(super) use self::targets::TagFinder;
 
 const HEADER_ANCHOR_OPEN: &str = "<a class=\"header-anchor\"";
 
 pub(super) fn transform_attribute_syntax(html: &str) -> Option<String> {
+    transform_with(html, &mut TagFinder::new(true))
+}
+
+pub(super) fn transform_with(html: &str, finder: &mut TagFinder) -> Option<String> {
     let bytes = html.as_bytes();
     let mut out = String::with_capacity(html.len());
     // `out` holds exactly `html[..flushed]`, rewritten where an attribute
@@ -50,16 +56,21 @@ pub(super) fn transform_attribute_syntax(html: &str) -> Option<String> {
             continue;
         };
 
-        if let Some(next) =
-            try_apply_attrs_inside_element(html, &mut out, flushed, attr_start, attr_end, &parsed)
-        {
+        if let Some(next) = try_apply_attrs_inside_element(
+            html,
+            &mut out,
+            finder,
+            flushed,
+            (attr_start, attr_end),
+            &parsed,
+        ) {
             changed = true;
             flushed = next;
             scan = next;
             continue;
         }
 
-        if try_apply_attrs_to_previous_element(html, &mut out, flushed, attr_start, &parsed)
+        if try_apply_attrs_to_previous_element(html, &mut out, finder, flushed, attr_start, &parsed)
             .is_some()
         {
             changed = true;
@@ -80,16 +91,16 @@ pub(super) fn transform_attribute_syntax(html: &str) -> Option<String> {
 fn try_apply_attrs_inside_element(
     html: &str,
     out: &mut String,
+    finder: &mut TagFinder,
     cursor: usize,
-    attr_start: usize,
-    attr_end: usize,
+    (attr_start, attr_end): (usize, usize),
     attrs: &ParsedAttrs,
 ) -> Option<usize> {
     let close_start = skip_trailing_heading_permalink(html, attr_end + 1);
     if !html[close_start..].starts_with("</") {
         return None;
     }
-    let close_name_end = html[close_start + 2..].find('>')?;
+    let close_name_end = finder.next_close(html, close_start + 2)? - (close_start + 2);
     let tag_name =
         html[close_start + 2..close_start + 2 + close_name_end].trim().to_ascii_lowercase();
     if !is_attr_target_tag(&tag_name) {
@@ -100,15 +111,22 @@ fn try_apply_attrs_inside_element(
     // it has already been written to `out`. Searching the whole prefix found
     // enclosing tags that were long since emitted — a second `{...}` in one
     // paragraph re-found that paragraph's own `<p>`.
-    let open_start = cursor + html[cursor..attr_start].rfind(&open_marker)?;
-    let open_end = scan_tag_end(html, open_start)?;
+    let open_start =
+        finder.last_before(html, &open_marker, attr_start).filter(|at| *at >= cursor)?;
+    let open_end = finder.tag_end(html, open_start)?;
     if open_end > attr_start {
         return None;
     }
 
     if !is_heading_tag(&tag_name)
         && let Some(next) = try_apply_attrs_to_adjacent_inline_child(
-            html, out, cursor, open_end, attr_start, attr_end, attrs,
+            html,
+            out,
+            finder,
+            cursor,
+            open_end,
+            (attr_start, attr_end),
+            attrs,
         )
     {
         return Some(next);
@@ -137,10 +155,10 @@ fn try_apply_attrs_inside_element(
 fn try_apply_attrs_to_adjacent_inline_child(
     html: &str,
     out: &mut String,
+    finder: &mut TagFinder,
     cursor: usize,
     container_open_end: usize,
-    attr_start: usize,
-    attr_end: usize,
+    (attr_start, attr_end): (usize, usize),
     attrs: &ParsedAttrs,
 ) -> Option<usize> {
     let before = &html[..attr_start];
@@ -151,7 +169,7 @@ fn try_apply_attrs_to_adjacent_inline_child(
     let whitespace = &html[trimmed_end..attr_start];
 
     if let Some((tag_start, tag_end, _close_end, tag_name)) =
-        find_previous_wrapped_element(html, trimmed_end)
+        find_previous_wrapped_element(html, trimmed_end, cursor, finder)
         && tag_start >= cursor
         && tag_start >= container_open_end
         && is_adjacent_inline_attr_target_tag(&tag_name)
@@ -163,7 +181,8 @@ fn try_apply_attrs_to_adjacent_inline_child(
         return Some(attr_end + 1);
     }
 
-    if let Some((tag_start, tag_end, tag_name)) = find_previous_void_element(html, trimmed_end)
+    if let Some((tag_start, tag_end, tag_name)) =
+        find_previous_void_element(html, trimmed_end, cursor, finder)
         && tag_start >= cursor
         && tag_start >= container_open_end
         && is_adjacent_inline_attr_target_tag(&tag_name)
@@ -181,6 +200,7 @@ fn try_apply_attrs_to_adjacent_inline_child(
 fn try_apply_attrs_to_previous_element(
     html: &str,
     out: &mut String,
+    finder: &mut TagFinder,
     cursor: usize,
     attr_start: usize,
     attrs: &ParsedAttrs,
@@ -195,7 +215,7 @@ fn try_apply_attrs_to_previous_element(
     // As in `try_apply_attrs_inside_element`, an element that starts before
     // `cursor` has already been written out and can no longer be rewritten.
     if let Some((tag_start, tag_end, close_end, _tag_name)) =
-        find_previous_wrapped_element(html, trimmed_end)
+        find_previous_wrapped_element(html, trimmed_end, cursor, finder)
         && tag_start >= cursor
     {
         out.push_str(&html[cursor..tag_start]);
@@ -212,7 +232,8 @@ fn try_apply_attrs_to_previous_element(
         return Some(close_end);
     }
 
-    if let Some((tag_start, tag_end, _tag_name)) = find_previous_void_element(html, trimmed_end)
+    if let Some((tag_start, tag_end, _tag_name)) =
+        find_previous_void_element(html, trimmed_end, cursor, finder)
         && tag_start >= cursor
     {
         out.push_str(&html[cursor..tag_start]);

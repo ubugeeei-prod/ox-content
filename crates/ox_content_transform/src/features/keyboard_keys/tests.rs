@@ -216,3 +216,59 @@ fn snapshot_accessible_combo_markup() {
     assert!(html.contains("<kbd class=\"ox-kbd ox-kbd--combo\">"), "{html}");
     assert!(html.contains("<kbd class=\"ox-kbd__key\">Ctrl</kbd>"), "{html}");
 }
+
+fn enabled() -> super::ResolvedKeyboardKeys {
+    resolve(Some(&KeyboardKeysOptions { enabled: Some(true), ..Default::default() }))
+        .expect("enabled")
+}
+
+#[test]
+fn remembered_scans_agree_with_scanning_afresh() {
+    const PIECES: [&str; 18] = [
+        "{kbd:a}", "{kbd:", "}", "\\", "<code>", "</code>", "<pre>", "</pre>", "<", ">", "\"", "'",
+        "<!--", "-->", "<a>", "a", " ", "\n",
+    ];
+    let options = enabled();
+    let mut state: u64 = 0x9E37_79B9_7F4A_7C15;
+    for round in 0..6000 {
+        let pieces = if round < 5000 { 1 + round % 30 } else { 100 + round % 300 };
+        let mut segment = String::new();
+        for _ in 0..pieces {
+            state ^= state << 13;
+            state ^= state >> 7;
+            state ^= state << 17;
+            segment.push_str(PIECES[(state % PIECES.len() as u64) as usize]);
+        }
+        let (mut remembered, mut afresh) = (String::new(), String::new());
+        super::replace_with(&segment, &options, &mut remembered, true);
+        super::replace_with(&segment, &options, &mut afresh, false);
+        assert_eq!(remembered, afresh, "for {segment:?}");
+    }
+}
+
+#[test]
+fn keys_and_unclosed_tags_cost_linear_time() {
+    let options = enabled();
+    let time = |segment: &str| {
+        (0..3)
+            .map(|_| {
+                let started = std::time::Instant::now();
+                let mut out = String::new();
+                super::replace(segment, &options, &mut out);
+                std::hint::black_box(out.len());
+                started.elapsed()
+            })
+            .min()
+            .unwrap_or(std::time::Duration::MAX)
+    };
+    for unit in ["{kbd:a} ", "{kbd:a} < ", "{kbd:a} <!-- ", "{kbd:a} < \"\""] {
+        let (small, large) =
+            (unit.repeat(16 * 1024 / unit.len()), unit.repeat(64 * 1024 / unit.len()));
+        let (small_time, large_time) = (time(&small), time(&large));
+        // 4x the input: linear is about x4, quadratic about x16.
+        assert!(
+            large_time < small_time * 8 + std::time::Duration::from_millis(20),
+            "{unit:?}: 64 KiB took {large_time:?} against {small_time:?} for 16 KiB"
+        );
+    }
+}

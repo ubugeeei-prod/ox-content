@@ -13,11 +13,60 @@ use super::Parser;
 #[allow(unused_imports)]
 use crate::profile_span_detail;
 
+/// The bodies that end at a fixed terminator rather than at the first `>`:
+/// opener, terminator, and the key the terminator's last position is kept
+/// under in the parser's closer memo (`has_closer_from`). The keys are UTF-8
+/// continuation bytes, which no markup rule asks about, and stay clear of
+/// the ones `math/closer.rs` uses.
+const TERMINATED: [(&str, &str, u8); 3] =
+    [("<!--", "-->", 0x90), ("<?", "?>", 0x91), ("<![CDATA[", "]]>", 0x92)];
+
+/// Content this short is searched directly. Same threshold as
+/// `has_closer_from`.
+const SHORT: usize = 256;
+
 impl<'a> Parser<'a> {
+    /// Raw HTML starting at the `<` at `pos`, and the index just past it.
+    ///
+    /// A comment, processing instruction or CDATA section with nothing to
+    /// end it stays literal, and finding that out means searching to the end
+    /// of the content. A run of them paid that search each — O(n²): 256 KiB
+    /// of `<!-- ` took 3.8 s and of `<? ` 6.4 s. Where each terminator last
+    /// occurs settles it for every opener in the content at once.
     pub(super) fn parse_inline_html(
+        &self,
         content: &'a str,
         pos: usize,
         offset: usize,
+    ) -> Option<(Html<'a>, usize)> {
+        Self::scan_inline_html(content, pos, offset, |close, key, from| {
+            if content.len() <= SHORT {
+                return true;
+            }
+            let memo_key = (content.as_ptr() as usize, content.len(), key);
+            let cached = self.last_closer.borrow().get(&memo_key).copied();
+            let last = cached.unwrap_or_else(|| {
+                let last = memchr::memmem::rfind(content.as_bytes(), close.as_bytes());
+                self.last_closer.borrow_mut().insert(memo_key, last);
+                last
+            });
+            last.is_some_and(|last| last >= from)
+        })
+    }
+
+    /// [`Self::parse_inline_html`] for a single line, which is short enough
+    /// to search directly.
+    pub(super) fn parse_inline_html_line(content: &'a str) -> Option<(Html<'a>, usize)> {
+        Self::scan_inline_html(content, 0, 0, |_, _, _| true)
+    }
+
+    /// `may_close(terminator, key, from)` reports whether `terminator` can
+    /// occur at or after `from`; a `false` saves the search.
+    fn scan_inline_html(
+        content: &'a str,
+        pos: usize,
+        offset: usize,
+        may_close: impl Fn(&str, u8, usize) -> bool,
     ) -> Option<(Html<'a>, usize)> {
         profile_span_detail!("parser::inline_html");
         let rest = &content[pos..];
@@ -30,14 +79,14 @@ impl<'a> Parser<'a> {
                 return Some((Self::inline_html_node(content, pos, end, offset), end));
             }
         }
-        if let Some(comment_body) = rest.strip_prefix("<!--") {
-            let end = comment_body.find("-->").map(|found| pos + 4 + found + 3)?;
-            return Some((Self::inline_html_node(content, pos, end, offset), end));
-        }
-        // Processing instructions, CDATA, then other declarations.
-        for (open, close) in [("<?", "?>"), ("<![CDATA[", "]]>")] {
+        // Comments, processing instructions, CDATA, then other declarations.
+        for (open, close, key) in TERMINATED {
             if let Some(body) = rest.strip_prefix(open) {
-                let end = body.find(close).map(|found| pos + open.len() + found + close.len())?;
+                let body_start = pos + open.len();
+                if !may_close(close, key, body_start) {
+                    return None;
+                }
+                let end = body.find(close).map(|found| body_start + found + close.len())?;
                 return Some((Self::inline_html_node(content, pos, end, offset), end));
             }
         }

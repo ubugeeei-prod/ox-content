@@ -155,3 +155,63 @@ fn reserves_code_group_from_generic_containers() {
     assert!(html.contains("ox-container--tip"), "{html}");
     assert!(!html.contains("ox-container--code-group"), "{html}");
 }
+
+/// The pass as it was, with every opener searching for its own closer.
+fn reference_transform(source: &str, errors: &mut Vec<String>) -> String {
+    use super::parse::{
+        parse_any_opener, parse_closer, parse_opener, split_ending, trim_container_indent,
+    };
+    use super::{collect_inner, emit_group};
+    use crate::features::colon_blocks::tests::reference_closer;
+    use crate::features::segments::{is_closing_fence, parse_opening_fence};
+
+    let lines: Vec<(&str, &str)> = source.split_inclusive('\n').map(split_ending).collect();
+    let mut out = String::new();
+    let mut index = 0usize;
+    let mut fence: Option<(u8, usize)> = None;
+    while index < lines.len() {
+        let (line, ending) = lines[index];
+        if let Some((fence_char, fence_len)) = fence {
+            out.push_str(line);
+            out.push_str(ending);
+            if is_closing_fence(line, fence_char, fence_len) {
+                fence = None;
+            }
+            index += 1;
+            continue;
+        }
+        if let Some(open) = parse_opening_fence(line) {
+            fence = Some((open.fence_char, open.fence_len));
+            out.push_str(line);
+            out.push_str(ending);
+            index += 1;
+            continue;
+        }
+        let trimmed = trim_container_indent(line);
+        if let Some(colon_count) = parse_opener(trimmed)
+            && let Some(end) =
+                reference_closer(&lines, index, colon_count, parse_any_opener, parse_closer)
+        {
+            emit_group(&mut out, &collect_inner(&lines, index + 1, end), errors);
+            index = end + 1;
+            continue;
+        }
+        out.push_str(line);
+        out.push_str(ending);
+        index += 1;
+    }
+    out
+}
+
+#[test]
+fn rewrites_as_the_per_opener_search_did() {
+    let mut random = crate::features::colon_blocks::tests::Random(0x2545_F491_4F6C_DD1D);
+    for _ in 0..4000 {
+        let source = random.document();
+        let (mut errors, mut expected_errors) = (Vec::new(), Vec::new());
+        let actual = super::transform(&source, &mut errors);
+        let expected = reference_transform(&source, &mut expected_errors);
+        assert_eq!(actual, expected, "for {source:?}");
+        assert_eq!(errors, expected_errors, "for {source:?}");
+    }
+}

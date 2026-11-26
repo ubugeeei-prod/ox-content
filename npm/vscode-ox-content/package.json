@@ -161,7 +161,12 @@
   "capabilities": {
     "untrustedWorkspaces": {
       "supported": "limited",
-      "description": "Project Standard Schema validators run only after workspace trust is granted."
+      "description": "Project Standard Schema validators, workspace server binaries, and textlint settings from the workspace apply only after workspace trust is granted.",
+      "restrictedConfigurations": [
+        "oxContent.server.path",
+        "oxContent.textlint.enabled",
+        "oxContent.textlint.command"
+      ]
     }
   }
 }

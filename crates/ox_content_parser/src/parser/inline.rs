@@ -10,6 +10,7 @@ mod angle;
 mod autolink;
 mod bracket_match;
 mod brackets;
+mod code_runs;
 mod code_span;
 mod emphasis;
 mod entity;
@@ -26,6 +27,7 @@ mod wiki_link;
 
 pub(in crate::parser) use self::bracket_match::BracketMatches;
 pub(in crate::parser) use self::brackets::{BracketKind, InlineRun, LinkText, OpenBracket};
+pub(in crate::parser) use self::code_runs::CodeRunMemo;
 use self::marker_scan::InlineMarkerScan;
 use self::script_span::same_marker_neighbor;
 use super::line_scan::{is_line_ending_byte, line_terminator_end};

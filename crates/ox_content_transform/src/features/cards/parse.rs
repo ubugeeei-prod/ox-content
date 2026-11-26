@@ -1,3 +1,5 @@
+use crate::features::escape::has_blocked_url_scheme;
+
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub(super) enum CardKind {
     Card,
@@ -99,7 +101,7 @@ pub(super) fn parse_closer(line: &str) -> Option<usize> {
 
 pub(super) fn is_safe_href(href: &str) -> bool {
     let trimmed = href.trim();
-    if trimmed.is_empty() || trimmed.starts_with("//") {
+    if trimmed.is_empty() || has_blocked_url_scheme(trimmed) {
         return false;
     }
     let lower = trimmed.to_ascii_lowercase();

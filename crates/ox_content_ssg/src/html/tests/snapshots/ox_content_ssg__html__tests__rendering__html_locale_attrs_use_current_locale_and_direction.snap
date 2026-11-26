@@ -3080,6 +3080,19 @@ const tokenizeOxContentSearchText = (text) => {
   return tokens;
 };
 
+// Index titles, bodies, and scopes are plain text taken from the Markdown
+// source, so they are encoded before being joined into result markup.
+const OX_CONTENT_SEARCH_HTML_ENTITIES = {
+  "&": "&amp;",
+  "<": "&lt;",
+  ">": "&gt;",
+  '"': "&quot;",
+  "'": "&#39;",
+};
+
+const escapeOxContentSearchHtml = (value) =>
+  String(value ?? "").replace(/[&<>"']/g, (ch) => OX_CONTENT_SEARCH_HTML_ENTITIES[ch]);
+
 const renderOxContentSearchResults = (elements, state) => {
   if (!state.results.length) {
     elements.searchResults.innerHTML = '<div class="search-empty">No results</div>';
@@ -3090,16 +3103,22 @@ const renderOxContentSearchResults = (elements, state) => {
     .map(
       (result, index) =>
         '<a href="' +
-        result.url +
+        escapeOxContentSearchHtml(result.url) +
         '" class="search-result' +
         (index === state.selectedIdx ? " selected" : "") +
         '"><div class="search-result-title">' +
-        result.title +
+        escapeOxContentSearchHtml(result.title) +
         (result.scopes?.length
-          ? '<span class="search-result-scope">@' + result.scopes[0] + "</span>"
+          ? '<span class="search-result-scope">@' +
+            escapeOxContentSearchHtml(result.scopes[0]) +
+            "</span>"
           : "") +
         "</div>" +
-        (result.snippet ? '<div class="search-result-snippet">' + result.snippet + "</div>" : "") +
+        (result.snippet
+          ? '<div class="search-result-snippet">' +
+            escapeOxContentSearchHtml(result.snippet) +
+            "</div>"
+          : "") +
         "</a>",
     )
     .join("");

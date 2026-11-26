@@ -1,14 +1,63 @@
 use super::{OPEN, ResolvedMagicLinks, emit};
+use crate::features::lookahead::{Ahead, TagEnds};
 use crate::features::segments::{is_closing_fence, is_indented_code_line, parse_opening_fence};
 use crate::html_scan::find_ci;
 
+#[cfg(test)]
+mod tests;
+
 pub(super) fn transform(source: &str, options: &ResolvedMagicLinks) -> Option<String> {
+    transform_with(source, options, true)
+}
+
+/// Searches the walk has made, kept for the stops after them; see `memo.rs`.
+/// With `remember` off, every stop searches afresh, as the walk used to.
+struct Memo {
+    remember: bool,
+    brace_or_tick: Ahead,
+    bracket_or_angle: Ahead,
+    brace_or_break: Ahead,
+    close_bracket: Ahead,
+    close_paren: Ahead,
+    comment_close: Ahead,
+    tag_ends: Option<TagEnds>,
+}
+
+impl Memo {
+    fn new(remember: bool) -> Self {
+        let ahead = || Ahead::new(remember);
+        Self {
+            remember,
+            brace_or_tick: ahead(),
+            bracket_or_angle: ahead(),
+            brace_or_break: ahead(),
+            close_bracket: ahead(),
+            close_paren: ahead(),
+            comment_close: ahead(),
+            tag_ends: None,
+        }
+    }
+
+    fn tag_end(&mut self, source: &str, start: usize) -> Option<usize> {
+        if !self.remember {
+            return scan_tag_end(source, start);
+        }
+        self.tag_ends.get_or_insert_with(|| TagEnds::new(source.as_bytes())).end(start)
+    }
+}
+
+pub(super) fn transform_with(
+    source: &str,
+    options: &ResolvedMagicLinks,
+    remember: bool,
+) -> Option<String> {
     let bytes = source.as_bytes();
     let mut out = String::with_capacity(source.len());
     let mut changed = false;
     let mut cursor = 0usize;
     let mut fence: Option<(u8, usize)> = None;
     let mut html_close: Option<&'static str> = None;
+    let mut memo = Memo::new(remember);
 
     while cursor < bytes.len() {
         if let Some(close) = html_close {
@@ -50,11 +99,10 @@ pub(super) fn transform(source: &str, options: &ResolvedMagicLinks) -> Option<St
             }
         }
 
-        let Some(rel) = next_marker(&bytes[cursor..]) else {
+        let Some(pos) = next_marker(bytes, cursor, &mut memo) else {
             out.push_str(&source[cursor..]);
             break;
         };
-        let pos = cursor + rel;
         out.push_str(&source[cursor..pos]);
         if pos > 0 && bytes[pos - 1] == b'\\' {
             out.push(source[pos..].chars().next().unwrap_or('\\'));
@@ -64,18 +112,19 @@ pub(super) fn transform(source: &str, options: &ResolvedMagicLinks) -> Option<St
 
         match bytes[pos] {
             b'{' => {
-                if try_rewrite_magic(source, pos, options, &mut out) {
+                if try_rewrite_magic(source, pos, options, &mut memo, &mut out) {
                     changed = true;
-                    cursor = matching_close(source, pos).map_or(pos + 1, |close| close + 1);
+                    cursor =
+                        matching_close(source, pos, &mut memo).map_or(pos + 1, |close| close + 1);
                 } else {
                     out.push('{');
                     cursor = pos + 1;
                 }
             }
             b'`' => cursor = copy_inline_code(source, pos, &mut out),
-            b'[' => cursor = copy_markdown_link_or_bracket(source, pos, &mut out),
+            b'[' => cursor = copy_markdown_link_or_bracket(source, pos, &mut memo, &mut out),
             b'<' => {
-                if let Some((end, close)) = take_html(source, pos) {
+                if let Some((end, close)) = take_html(source, pos, &mut memo) {
                     out.push_str(&source[pos..end]);
                     cursor = end;
                     html_close = close;
@@ -95,12 +144,13 @@ fn try_rewrite_magic(
     source: &str,
     pos: usize,
     options: &ResolvedMagicLinks,
+    memo: &mut Memo,
     out: &mut String,
 ) -> bool {
     if !source[pos..].starts_with(OPEN) {
         return false;
     }
-    let Some(close) = matching_close(source, pos) else {
+    let Some(close) = matching_close(source, pos, memo) else {
         return false;
     };
     let Some(html) = emit::render_body(&source[pos + OPEN.len()..close], options) else {
@@ -110,14 +160,13 @@ fn try_rewrite_magic(
     true
 }
 
-fn matching_close(source: &str, pos: usize) -> Option<usize> {
-    let inner_start = pos + OPEN.len();
-    let relative = source[inner_start..].find('}')?;
-    let close = inner_start + relative;
-    if source[inner_start..close].bytes().any(|byte| byte == b'\n' || byte == b'\r') {
-        return None;
-    }
-    Some(close)
+/// The `}` that closes the magic link opened at `pos`, on the same line.
+fn matching_close(source: &str, pos: usize, memo: &mut Memo) -> Option<usize> {
+    let bytes = source.as_bytes();
+    let stop = memo.brace_or_break.find(pos + OPEN.len(), |from| {
+        memchr::memchr3(b'}', b'\n', b'\r', &bytes[from..]).map(|at| from + at)
+    })?;
+    (bytes[stop] == b'}').then_some(stop)
 }
 
 fn copy_inline_code(source: &str, pos: usize, out: &mut String) -> usize {
@@ -129,16 +178,26 @@ fn copy_inline_code(source: &str, pos: usize, out: &mut String) -> usize {
     end
 }
 
-fn copy_markdown_link_or_bracket(source: &str, pos: usize, out: &mut String) -> usize {
+fn copy_markdown_link_or_bracket(
+    source: &str,
+    pos: usize,
+    memo: &mut Memo,
+    out: &mut String,
+) -> usize {
     let bytes = source.as_bytes();
-    let Some(text_end) = find_unescaped(bytes, pos + 1, b']') else {
+    let mut close_bracket =
+        |from| memo.close_bracket.find(from, |from| find_unescaped(bytes, from, b']'));
+    let Some(text_end) = close_bracket(pos + 1) else {
         out.push('[');
         return pos + 1;
     };
     let after = text_end + 1;
     let dest_end = match bytes.get(after).copied() {
-        Some(b'(') => find_unescaped(bytes, after + 1, b')').map(|end| end + 1),
-        Some(b'[') => find_unescaped(bytes, after + 1, b']').map(|end| end + 1),
+        Some(b'[') => close_bracket(after + 1).map(|end| end + 1),
+        Some(b'(') => memo
+            .close_paren
+            .find(after + 1, |from| find_unescaped(bytes, from, b')'))
+            .map(|end| end + 1),
         _ => None,
     };
     if let Some(end) = dest_end {
@@ -150,13 +209,15 @@ fn copy_markdown_link_or_bracket(source: &str, pos: usize, out: &mut String) -> 
     }
 }
 
-fn take_html(source: &str, pos: usize) -> Option<(usize, Option<&'static str>)> {
+fn take_html(source: &str, pos: usize, memo: &mut Memo) -> Option<(usize, Option<&'static str>)> {
     let after = pos + 1;
     if source[after..].starts_with("!--") {
-        let close = source[after + 3..].find("-->").map(|rel| after + 3 + rel + 3)?;
-        return Some((close, None));
+        let close = memo.comment_close.find(after + 3, |from| {
+            memchr::memmem::find(&source.as_bytes()[from..], b"-->").map(|at| from + at)
+        })?;
+        return Some((close + 3, None));
     }
-    let end = scan_tag_end(source, pos)?;
+    let end = memo.tag_end(source, pos)?;
     if source.as_bytes().get(after) == Some(&b'/') {
         return Some((end, None));
     }
@@ -257,8 +318,14 @@ fn is_line_start(bytes: &[u8], cursor: usize) -> bool {
     cursor == 0 || bytes[cursor - 1] == b'\n'
 }
 
-fn next_marker(bytes: &[u8]) -> Option<usize> {
-    match (memchr::memchr2(b'{', b'`', bytes), memchr::memchr2(b'[', b'<', bytes)) {
+/// The next byte at or after `from` that the walk stops at.
+fn next_marker(bytes: &[u8], from: usize, memo: &mut Memo) -> Option<usize> {
+    let search = |pair: [u8; 2]| {
+        move |from: usize| memchr::memchr2(pair[0], pair[1], &bytes[from..]).map(|at| from + at)
+    };
+    let left = memo.brace_or_tick.find(from, search(*b"{`"));
+    let right = memo.bracket_or_angle.find(from, search(*b"[<"));
+    match (left, right) {
         (Some(left), Some(right)) => Some(left.min(right)),
         (Some(index), None) | (None, Some(index)) => Some(index),
         (None, None) => None,

@@ -95,7 +95,8 @@ impl<'a> Parser<'a> {
             }
 
             if bytes[run] == b'`' {
-                cursor = Self::closed_code_span_end(bytes, run)
+                cursor = self
+                    .closed_code_span_end(bytes, run)
                     .unwrap_or_else(|| run + Self::marker_run_len(bytes, run, b'`'));
             } else if closes_inline(bytes, run, open_len) {
                 break Some(run);

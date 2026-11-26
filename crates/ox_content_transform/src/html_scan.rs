@@ -48,6 +48,8 @@ pub fn find_ci(haystack: &str, from: usize, needle: &str) -> Option<usize> {
     None
 }
 
+pub mod blocks;
+
 #[cfg(test)]
 mod tests {
     use super::find_ci;

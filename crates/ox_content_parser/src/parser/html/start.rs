@@ -81,7 +81,7 @@ impl<'a> Parser<'a> {
     /// This kind never interrupts a paragraph, so only `parse_block` uses
     /// it — never `line_starts_block`.
     pub(in crate::parser) fn is_html_block_type7_line(trimmed: &'a str) -> bool {
-        let Some((_, end)) = Self::parse_inline_html(trimmed, 0, 0) else {
+        let Some((_, end)) = Self::parse_inline_html_line(trimmed) else {
             return false;
         };
         trimmed[end..].trim().is_empty()

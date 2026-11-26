@@ -63,3 +63,60 @@ fn unsafe_or_malformed_attr_blocks_stay_literal() {
     assert_eq!(html, r#"<p><a href="/slides">slides</a>{.ok onclick=alert(1)}</p>"#);
     assert_eq!(href, r#"<p><a href="/slides">slides</a>{href=javascript:alert(1)}</p>"#);
 }
+
+/// HTML pieces whose mix puts attribute blocks after, inside, and away from
+/// every kind of element they can apply to, with stray `<`, `>` and quotes.
+const PIECES: [&str; 34] = [
+    "<p>",
+    "</p>",
+    "<h2 id=\"x\">",
+    "</h2>",
+    "<a class=\"header-anchor\" href=\"#x\">#</a>",
+    "<a href=\"u\">",
+    "</a>",
+    "<img src=\"i\">",
+    "<br>",
+    "<br />",
+    "<wbr>",
+    "<span>",
+    "</span>",
+    "<code>",
+    "</code>",
+    "<em>",
+    "</em>",
+    "<div>",
+    "</div>",
+    "<li>",
+    "</li>",
+    "{.c}",
+    "{#i}",
+    "{.c #i k=v}",
+    "{",
+    "}",
+    "<",
+    ">",
+    "\"",
+    "'",
+    "text",
+    " ",
+    "\n",
+    "</",
+];
+
+#[test]
+fn remembered_searches_agree_with_reading_afresh() {
+    let mut state: u64 = 0x9E37_79B9_7F4A_7C15;
+    for round in 0..6000 {
+        let pieces = if round < 5000 { 1 + round % 24 } else { 100 + round % 200 };
+        let mut html = String::new();
+        for _ in 0..pieces {
+            state ^= state << 13;
+            state ^= state >> 7;
+            state ^= state << 17;
+            html.push_str(PIECES[(state % PIECES.len() as u64) as usize]);
+        }
+        let remembered = super::transform_with(&html, &mut super::TagFinder::new(true));
+        let afresh = super::transform_with(&html, &mut super::TagFinder::new(false));
+        assert_eq!(remembered, afresh, "for {html:?}");
+    }
+}

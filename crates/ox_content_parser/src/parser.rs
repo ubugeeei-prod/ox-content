@@ -107,6 +107,10 @@ pub struct Parser<'a> {
     /// one scan in total.
     last_closer: std::cell::RefCell<rustc_hash::FxHashMap<(usize, usize, u8), Option<usize>>>,
 
+    /// Backtick runs left behind by code span closer searches that failed.
+    /// See `inline/code_runs.rs`.
+    code_runs: std::cell::RefCell<inline::CodeRunMemo>,
+
     /// The last `[scanned_from, blank_line)` window found while bounding a
     /// link reference definition, so a run of them costs one scan in total.
     ///
@@ -163,6 +167,7 @@ impl<'a> Parser<'a> {
             inline_depth: std::cell::Cell::new(0),
             inline_height: std::cell::Cell::new(0),
             last_closer: std::cell::RefCell::default(),
+            code_runs: std::cell::RefCell::default(),
             definition_region: None,
             definition_term_run: std::cell::Cell::new(None),
             mdx_scan: mdx_jsx::ScanScope::new(source),
@@ -208,6 +213,7 @@ impl<'a> Parser<'a> {
             inline_depth: std::cell::Cell::new(0),
             inline_height: std::cell::Cell::new(0),
             last_closer: std::cell::RefCell::default(),
+            code_runs: std::cell::RefCell::default(),
             definition_region: None,
             definition_term_run: std::cell::Cell::new(None),
             mdx_scan: mdx_jsx::ScanScope::new(source),

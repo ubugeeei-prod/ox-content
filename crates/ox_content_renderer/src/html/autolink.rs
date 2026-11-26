@@ -137,38 +137,44 @@ const fn ends_url(ch: char) -> bool {
     )
 }
 
+/// Strips trailing `.,;:!?`, and a closing bracket when the rest of the URL
+/// closes at least as many of its kind as it opens.
+///
+/// The bracket counts are taken once and kept in step as bytes come off the
+/// end; recounting the URL for every closing bracket made a run of `)` cost
+/// O(n²).
 fn trim_trailing_punct(bytes: &[u8], start: usize, mut end: usize) -> usize {
+    // `[opens, closes]` of `()`, `[]` and `{}` in `bytes[start..end]`.
+    let mut counts = [[0usize; 2]; 3];
+    for &byte in &bytes[start..end] {
+        if let Some((pair, side)) = bracket(byte) {
+            counts[pair][side] += 1;
+        }
+    }
     while end > start {
         let b = bytes[end - 1];
-        match b {
-            b'.' | b',' | b';' | b':' | b'!' | b'?' => end -= 1,
-            b')' | b']' | b'}' => {
-                let (open, close) = match b {
-                    b')' => (b'(', b')'),
-                    b']' => (b'[', b']'),
-                    _ => (b'{', b'}'),
-                };
-                // Strip the closing bracket only when it has no unmatched
-                // partner inside the URL — a single pass over the slice is
-                // simpler than two `filter().count()` walks and avoids the
-                // `naive_bytecount` clippy lint.
-                let mut opens = 0usize;
-                let mut closes = 0usize;
-                for &x in &bytes[start..end - 1] {
-                    if x == open {
-                        opens += 1;
-                    } else if x == close {
-                        closes += 1;
-                    }
-                }
-                if closes >= opens {
-                    end -= 1;
-                } else {
-                    break;
-                }
+        match bracket(b) {
+            None if matches!(b, b'.' | b',' | b';' | b':' | b'!' | b'?') => end -= 1,
+            // `b` itself is one of the closes counted.
+            Some((pair, 1)) if counts[pair][1] > counts[pair][0] => {
+                counts[pair][1] -= 1;
+                end -= 1;
             }
             _ => break,
         }
     }
     end
+}
+
+/// The bracket pair `byte` belongs to, and whether it opens (0) or closes (1).
+const fn bracket(byte: u8) -> Option<(usize, usize)> {
+    match byte {
+        b'(' => Some((0, 0)),
+        b')' => Some((0, 1)),
+        b'[' => Some((1, 0)),
+        b']' => Some((1, 1)),
+        b'{' => Some((2, 0)),
+        b'}' => Some((2, 1)),
+        _ => None,
+    }
 }

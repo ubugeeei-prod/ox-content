@@ -15,6 +15,15 @@ export interface RgbaImage {
 
 const PNG_SIGNATURE = Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]);
 
+/** Largest image decoded or produced at build time: 40 Mpx, about 160 MiB of RGBA. */
+export const MAX_RESOURCE_PIXELS = 40_000_000;
+
+function assertPixelBudget(width: number, height: number): void {
+  if (width * height > MAX_RESOURCE_PIXELS) {
+    throw new Error(`image size ${width}x${height} exceeds ${MAX_RESOURCE_PIXELS} pixels`);
+  }
+}
+
 export function isPng(buffer: Buffer): boolean {
   return buffer.length >= 8 && PNG_SIGNATURE.equals(buffer.subarray(0, 8));
 }
@@ -60,9 +69,11 @@ export function decodePng(buffer: Buffer): RgbaImage {
   if (bitDepth !== 8 || (colorType !== 2 && colorType !== 6)) {
     throw new Error("unsupported PNG");
   }
+  assertPixelBudget(width, height);
   const channels = colorType === 6 ? 4 : 3;
-  const raw = inflateSync(Buffer.concat(idat));
   const stride = width * channels;
+  // One filter byte per row; anything beyond that is not image data.
+  const raw = inflateSync(Buffer.concat(idat), { maxOutputLength: height * (stride + 1) || 1 });
   const data = new Uint8Array(width * height * 4);
   let src = 0;
   const prior = new Uint8Array(stride);
@@ -175,6 +186,7 @@ export function createRgba(
 }
 
 export function resizeNearest(image: RgbaImage, width: number, height: number): RgbaImage {
+  assertPixelBudget(width, height);
   const data = new Uint8Array(width * height * 4);
   for (let y = 0; y < height; y++) {
     const sy = Math.min(image.height - 1, Math.floor((y * image.height) / height));

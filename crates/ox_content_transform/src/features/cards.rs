@@ -11,6 +11,7 @@ mod parse;
 #[cfg(test)]
 mod tests;
 
+use super::colon_blocks::{ColonBlocks, trim_container_indent};
 use super::segments::{is_closing_fence, parse_opening_fence};
 use super::{escape_html_attr, escape_html_text};
 use parse::{
@@ -36,7 +37,13 @@ pub(super) fn resolve(options: Option<&CardOptions>) -> Option<ResolvedCardOptio
 
 pub(super) fn transform(source: &str) -> String {
     let lines: Vec<(&str, &str)> = source.split_inclusive('\n').map(split_ending).collect();
+    let mut blocks = ColonBlocks::new(&lines, parse_any_opener, parse_closer);
     let mut out = String::with_capacity(source.len() + 64);
+    // The closing line of each open `card-grid`, innermost last. A grid's
+    // body is rewritten in place, as a document of its own that ends where
+    // the grid does: rewriting it as a copy cost every enclosing grid another
+    // pass over it, and a level of recursion.
+    let mut grids: Vec<usize> = Vec::new();
     let mut index = 0usize;
     let mut in_fence = false;
     let mut fence_char = b'\0';
@@ -44,6 +51,13 @@ pub(super) fn transform(source: &str) -> String {
 
     while index < lines.len() {
         let (line, ending) = lines[index];
+
+        if grids.last() == Some(&index) {
+            grids.pop();
+            out.push_str("</div>\n");
+            index += 1;
+            continue;
+        }
 
         if in_fence {
             out.push_str(line);
@@ -66,12 +80,19 @@ pub(super) fn transform(source: &str) -> String {
         }
 
         let trimmed = trim_container_indent(line);
+        let limit = grids.last().copied().unwrap_or(lines.len());
         if let Some(opener) = parse_opener(trimmed)
-            && let Some(end) = find_closer(&lines, index, opener.colon_count)
+            && let Some(end) = blocks.closer(index, limit)
         {
-            let inner = collect_inner(&lines, index + 1, end);
-            emit_block(&mut out, &opener, &inner);
-            index = end + 1;
+            if opener.kind == CardKind::CardGrid {
+                out.push_str("<div class=\"ox-card-grid\">\n\n");
+                grids.push(end);
+                index += 1;
+            } else {
+                let inner = collect_inner(&lines, index + 1, end);
+                emit_block(&mut out, &opener, &inner);
+                index = end + 1;
+            }
             continue;
         }
 
@@ -81,46 +102,6 @@ pub(super) fn transform(source: &str) -> String {
     }
 
     out
-}
-
-fn find_closer(lines: &[(&str, &str)], start: usize, colon_count: usize) -> Option<usize> {
-    let mut in_fence = false;
-    let mut fence_char = b'\0';
-    let mut fence_len = 0usize;
-    let mut stack = vec![colon_count];
-
-    for (offset, (line, _)) in lines.iter().enumerate().skip(start + 1) {
-        if in_fence {
-            if is_closing_fence(line, fence_char, fence_len) {
-                in_fence = false;
-            }
-            continue;
-        }
-
-        if let Some(open) = parse_opening_fence(line) {
-            in_fence = true;
-            fence_char = open.fence_char;
-            fence_len = open.fence_len;
-            continue;
-        }
-
-        let trimmed = trim_container_indent(line);
-        if let Some(opener) = parse_any_opener(trimmed) {
-            stack.push(opener);
-            continue;
-        }
-
-        if let Some(close) = parse_closer(trimmed)
-            && let Some(index) = stack.iter().rposition(|open| *open <= close)
-        {
-            stack.truncate(index);
-            if stack.is_empty() {
-                return Some(offset);
-            }
-        }
-    }
-
-    None
 }
 
 fn collect_inner(lines: &[(&str, &str)], start: usize, end: usize) -> String {
@@ -136,15 +117,8 @@ fn emit_block(out: &mut String, opener: &ParsedCardOpener, inner: &str) {
     match opener.kind {
         CardKind::Card => emit_card(out, opener.title.as_deref(), inner),
         CardKind::LinkCard => emit_link_card(out, opener, inner),
-        CardKind::CardGrid => {
-            let nested = transform(inner);
-            out.push_str("<div class=\"ox-card-grid\">\n\n");
-            out.push_str(&nested);
-            if !nested.ends_with('\n') && !nested.is_empty() {
-                out.push('\n');
-            }
-            out.push_str("</div>\n");
-        }
+        // Opened in place by `transform`.
+        CardKind::CardGrid => {}
     }
 }
 
@@ -207,13 +181,4 @@ fn split_ending(line_with_end: &str) -> (&str, &str) {
     } else {
         (line_with_end.strip_suffix('\r').unwrap_or(line_with_end), "")
     }
-}
-
-fn trim_container_indent(line: &str) -> &str {
-    let bytes = line.as_bytes();
-    let mut indent = 0usize;
-    while indent < bytes.len() && indent < 3 && bytes[indent] == b' ' {
-        indent += 1;
-    }
-    &line[indent..]
 }
