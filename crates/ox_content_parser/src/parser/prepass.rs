@@ -29,6 +29,8 @@ use super::reference::{
 #[allow(unused_imports)]
 use crate::{profile_span, profile_span_detail};
 
+mod chunk;
+
 /// Three-byte fence-run searchers, built once for the process.
 ///
 /// A closing fence line holds at least three of its fence byte in a row, so
@@ -133,6 +135,7 @@ impl<'a> Parser<'a> {
         let mut def_fence: Option<(u8, usize)> = None;
         let mut foot_fence: Option<(u8, usize)> = None;
         let mut paragraph_open = false;
+        let mut chunks = chunk::ChunkWindow::default();
 
         while pos < bytes.len() {
             profile_span_detail!("parser::prepass_line");
@@ -229,9 +232,8 @@ impl<'a> Parser<'a> {
             }
 
             if !paragraph_open && stripped.len() - trimmed.len() <= 3 && trimmed.starts_with('[') {
-                // Candidate: join the stripped lines of this paragraph
-                // chunk and parse as many definitions as it holds.
-                let (chunk, line_starts) = self.join_stripped_chunk(pos);
+                // Candidate: parse every definition its paragraph chunk holds.
+                let chunk = chunks.text_at(self, pos);
                 let mut offset = 0;
                 while let Some(parsed) = self.parse_reference_definition(&chunk[offset..]) {
                     definitions
@@ -242,9 +244,7 @@ impl<'a> Parser<'a> {
                 // Skip the source lines the parsed prefix covered so fence
                 // tracking stays aligned (definition text can't open
                 // fences). A leftover suffix starts a paragraph.
-                let consumed_lines = chunk[..offset].matches('\n').count();
-                if consumed_lines > 0 {
-                    let next_pos = line_starts.get(consumed_lines).copied().unwrap_or(bytes.len());
+                if let Some(next_pos) = chunks.line_after(bytes, pos, &chunk[..offset]) {
                     // The footnote collector's scan is line-independent, so
                     // it must still see the definition's continuation lines
                     // the reference side jumps over.
