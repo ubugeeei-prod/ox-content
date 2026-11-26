@@ -50,6 +50,8 @@ const SHAPES: &[(&str, &str)] = &[
     ("brace per line", "{ \n"),
     ("angle per line", "< \n"),
     ("definition list continuation", "Term\n: body\n    continuation\n"),
+    ("unclosed script", "<script> "),
+    ("unclosed style", "<style> "),
 ];
 
 /// Below this the run is too short for the clock to say anything useful, and

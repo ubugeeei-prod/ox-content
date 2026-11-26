@@ -144,12 +144,33 @@ impl SanitizeConfig {
     }
 
     pub(super) fn allows_attr(&self, attr: &str) -> bool {
-        if attr.starts_with("data-") || attr.starts_with("aria-") {
-            return self.attributes.contains("data-*")
-                || self.attributes.contains("aria-*")
-                || self.attributes.contains(attr);
-        }
-        self.attributes.contains(attr)
+        let wildcard = if attr.starts_with("data-") {
+            "data-*"
+        } else if attr.starts_with("aria-") {
+            "aria-*"
+        } else {
+            return self.attributes.contains(attr);
+        };
+        self.attributes.contains(wildcard) || self.attributes.contains(attr)
+    }
+
+    /// Whether a value of an attribute that is not known to hold a URL may
+    /// be kept: it may, unless it opens the way a URL with a disallowed
+    /// scheme does (an ASCII letter, then letters, digits, `+`, `-` or `.`,
+    /// then `:`). Anything else cannot be read as a scheme by a browser, so
+    /// `12:30`, `(min-width: 600px)` and `a b: c` stay.
+    pub(super) fn allows_scheme_shaped(&self, value: &str) -> bool {
+        let trimmed = value.trim_matches(|ch: char| ch.is_ascii_control() || ch.is_whitespace());
+        let Some(colon) = trimmed.find(':') else {
+            return true;
+        };
+        // Browsers drop tabs and newlines inside a URL; dropping every ASCII
+        // space as well only errs toward screening more.
+        let mut scheme = trimmed[..colon].bytes().filter(|byte| !byte.is_ascii_whitespace());
+        let starts_like_a_scheme = scheme.next().is_some_and(|byte| byte.is_ascii_alphabetic())
+            && scheme
+                .all(|byte| byte.is_ascii_alphanumeric() || matches!(byte, b'+' | b'-' | b'.'));
+        !starts_like_a_scheme || self.allows_url(trimmed)
     }
 
     pub(super) fn allows_url(&self, value: &str) -> bool {

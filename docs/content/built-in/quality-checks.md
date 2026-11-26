@@ -173,6 +173,13 @@ documentation HTML, including media elements (`video`, `audio`, `source`,
 `allowedUrlSchemes` **replaces** the corresponding built-in list rather than
 extending it.
 
+URL schemes are checked on every attribute that can hold a URL, including
+ones you add to `allowedAttributes` such as `xlink:href`, `formaction`, `ping`
+or an SVG animation's `values`. An added attribute the sanitizer does not
+know is kept unless its value starts with a disallowed scheme. `name` is
+dropped from `img`, `iframe`, `embed`, `form` and `object`, and `id` from
+`object`, because both would otherwise turn into properties of `document`.
+
 The pass runs at the very end of the pipeline — after
 [embeds](./embeds.md) expand — so allow lists apply to everything the page
 actually ships.

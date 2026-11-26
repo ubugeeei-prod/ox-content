@@ -12,6 +12,7 @@ pub fn sanitize_html(html: &str, options: Option<&SanitizeOptions>) -> String {
     sanitize_html_with_config(html, &SanitizeConfig::from_options(options))
 }
 
+mod attrs;
 mod config;
 mod parser;
 
@@ -29,6 +30,7 @@ fn sanitize_html_with_config(html: &str, config: &SanitizeConfig) -> String {
     let bytes = html.as_bytes();
     let mut out = String::with_capacity(html.len());
     let mut cursor = 0usize;
+    let mut raw_text_ends = RawTextEnds::default();
 
     while cursor < bytes.len() {
         let Some(relative) = memchr::memchr(b'<', &bytes[cursor..]) else {
@@ -66,16 +68,11 @@ fn sanitize_html_with_config(html: &str, config: &SanitizeConfig) -> String {
         };
 
         if !config.allows_tag(&parsed.name) {
-            if matches!(parsed.name.as_str(), "script" | "style") && !parsed.closing {
-                let close = format!("</{}>", parsed.name);
-                if let Some(end) = find_ci(html, tag_end, &close) {
-                    cursor = end + close.len();
-                } else {
-                    cursor = tag_end;
-                }
+            cursor = if parsed.closing {
+                tag_end
             } else {
-                cursor = tag_end;
-            }
+                raw_text_ends.skip(html, tag_end, &parsed.name).unwrap_or(tag_end)
+            };
             continue;
         }
 
@@ -90,7 +87,7 @@ fn sanitize_html_with_config(html: &str, config: &SanitizeConfig) -> String {
         out.push('<');
         out.push_str(&parsed.name);
         for attr in parsed.attrs {
-            write_sanitized_attr(&mut out, &attr, config);
+            write_sanitized_attr(&mut out, &parsed.name, &attr, config);
         }
         if parsed.self_closing {
             out.push_str(" />");
@@ -106,8 +103,52 @@ fn sanitize_html_with_config(html: &str, config: &SanitizeConfig) -> String {
     out
 }
 
-fn write_sanitized_attr(out: &mut String, attr: &ParsedAttr<'_>, config: &SanitizeConfig) {
-    if attr.name.starts_with("on") || !is_attr_name(&attr.name) || !config.allows_attr(&attr.name) {
+/// Where the content of a dropped `<script>` or `<style>` ends.
+///
+/// Its content is dropped with it, up to the matching closing tag. Once a
+/// search for that tag has run off the end of the input, every later one
+/// would too: the cursor only moves forward, so the answer is kept instead
+/// of searching the rest of the input again for each opener.
+#[derive(Default)]
+struct RawTextEnds {
+    /// Position from which `</script>` no longer occurs.
+    script_missing_from: Option<usize>,
+    /// Position from which `</style>` no longer occurs.
+    style_missing_from: Option<usize>,
+}
+
+impl RawTextEnds {
+    /// The position just past the closing tag of the `name` element whose
+    /// opening tag ends at `from`, or `None` when it is not a raw-text
+    /// element or nothing closes it.
+    fn skip(&mut self, html: &str, from: usize, name: &str) -> Option<usize> {
+        let (close, missing_from) = match name {
+            "script" => ("</script>", &mut self.script_missing_from),
+            "style" => ("</style>", &mut self.style_missing_from),
+            _ => return None,
+        };
+        if missing_from.is_some_and(|missing| from >= missing) {
+            return None;
+        }
+        let found = find_ci(html, from, close).map(|end| end + close.len());
+        if found.is_none() {
+            *missing_from = Some(from);
+        }
+        found
+    }
+}
+
+fn write_sanitized_attr(
+    out: &mut String,
+    tag: &str,
+    attr: &ParsedAttr<'_>,
+    config: &SanitizeConfig,
+) {
+    if attr.name.starts_with("on")
+        || !is_attr_name(&attr.name)
+        || !config.allows_attr(&attr.name)
+        || attrs::shadows_document_property(tag, &attr.name)
+    {
         return;
     }
     // The input is already-escaped HTML, so the value has to be decoded
@@ -115,12 +156,10 @@ fn write_sanitized_attr(out: &mut String, attr: &ParsedAttr<'_>, config: &Saniti
     // browser will see, and escaping an escaped value again would turn a
     // query string's `&amp;` into a literal `&amp;`.
     let decoded = attr.value.map(|value| decode_char_refs(value));
-    if let Some(value) = decoded.as_deref() {
-        match attr.name.as_str() {
-            "href" | "src" | "action" | "poster" if !config.allows_url(value) => return,
-            "srcset" if !config.allows_srcset(value) => return,
-            _ => {}
-        }
+    if let Some(value) = decoded.as_deref()
+        && !attrs::allows_value(config, &attr.name, value)
+    {
+        return;
     }
     out.push(' ');
     out.push_str(&attr.name);
