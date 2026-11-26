@@ -10,9 +10,11 @@ use ox_content_allocator::Vec;
 use ox_content_ast::{Link, Node, Span, Text};
 
 mod candidate;
+mod domain;
 mod scan;
+mod trim;
 
-use self::candidate::find_candidate;
+use self::candidate::CandidateScan;
 pub(super) use self::scan::may_contain_autolink;
 
 use crate::parser::Parser;
@@ -49,66 +51,118 @@ impl<'a> Parser<'a> {
         // prose into adjacent text nodes; autolinks must see the joined
         // run (`...?q=x&hl=en` is one URL despite the `&` split).
         self.coalesce_adjacent_text(children);
-        let mut i = 0;
-        while i < children.len() {
-            match &mut children[i] {
-                Node::Emphasis(node) => self.apply_gfm_autolinks(&mut node.children, scan),
-                Node::Strong(node) => self.apply_gfm_autolinks(&mut node.children, scan),
-                Node::Delete(node) => self.apply_gfm_autolinks(&mut node.children, scan),
-                Node::Superscript(node) => self.apply_gfm_autolinks(&mut node.children, scan),
-                Node::Subscript(node) => self.apply_gfm_autolinks(&mut node.children, scan),
-                Node::Text(text) => {
-                    let value = text.value;
-                    if let Some(candidate) = find_candidate(value, scan) {
-                        let span_start = text.span.start;
-                        let link_value = &value[candidate.start..candidate.end];
-                        let url: &'a str = if candidate.href_prefix.is_empty() {
-                            link_value
-                        } else {
-                            let mut url = self.allocator.new_string_from(candidate.href_prefix);
-                            url.push_str(link_value);
-                            url.into_bump_str()
-                        };
-
-                        let link_span = Span::new(
-                            span_start + candidate.start as u32,
-                            span_start + candidate.end as u32,
-                        );
-                        let mut link_children = self.allocator.new_vec();
-                        link_children.push(Node::Text(Text { value: link_value, span: link_span }));
-                        let link_node = Node::Link(self.allocator.boxed(Link {
-                            url,
-                            title: None,
-                            children: link_children,
-                            span: link_span,
-                        }));
-
-                        let after = &value[candidate.end..];
-                        let after_node = (!after.is_empty()).then(|| {
-                            Node::Text(Text {
-                                value: after,
-                                span: Span::new(span_start + candidate.end as u32, text.span.end),
-                            })
-                        });
-
-                        if candidate.start == 0 {
-                            children[i] = link_node;
-                        } else {
-                            text.value = &value[..candidate.start];
-                            text.span = Span::new(span_start, span_start + candidate.start as u32);
-                            i += 1;
-                            children.insert(i, link_node);
-                        }
-                        if let Some(after_node) = after_node {
-                            children.insert(i + 1, after_node);
-                        }
-                        // Continue scanning in the remainder text node.
-                    }
+        let mut index = 0;
+        while index < children.len() {
+            if let Node::Text(text) = &children[index] {
+                let mut candidates = CandidateScan::new(text.value, scan);
+                if let Some(first) = candidates.next() {
+                    // Nothing in front of the first link changes, so the
+                    // common block without one never leaves this loop.
+                    self.relink_from(children, index, (candidates, first), scan);
+                    return;
                 }
-                _ => {}
+            } else {
+                self.apply_gfm_autolinks_inside(&mut children[index], scan);
             }
-            i += 1;
+            index += 1;
         }
+    }
+
+    fn apply_gfm_autolinks_inside(&self, node: &mut Node<'a>, scan: AutolinkScan) {
+        match node {
+            Node::Emphasis(node) => self.apply_gfm_autolinks(&mut node.children, scan),
+            Node::Strong(node) => self.apply_gfm_autolinks(&mut node.children, scan),
+            Node::Delete(node) => self.apply_gfm_autolinks(&mut node.children, scan),
+            Node::Superscript(node) => self.apply_gfm_autolinks(&mut node.children, scan),
+            Node::Subscript(node) => self.apply_gfm_autolinks(&mut node.children, scan),
+            _ => {}
+        }
+    }
+
+    /// Rewrites `children[from..]`, whose first node is the text node that
+    /// `started` is already scanning.
+    ///
+    /// A link splits its text node in up to three, and each piece used to be
+    /// `insert`ed where it belongs, shifting every node after it. A
+    /// paragraph with many links *and* many nodes behind them — a link, then
+    /// an emphasis or a code span, repeated — therefore cost O(n²): 125 KB
+    /// of `www.a.b *x* ` took 0.19 s and grew x19 for every x4 of input. The
+    /// tail is moved out once instead and written back behind the nodes
+    /// already in place, so each node is touched once.
+    fn relink_from(
+        &self,
+        children: &mut Vec<'a, Node<'a>>,
+        from: usize,
+        started: (CandidateScan<'a>, Candidate),
+        scan: AutolinkScan,
+    ) {
+        let mut started = Some(started);
+        for mut node in children.split_off(from) {
+            let Node::Text(text) = node else {
+                self.apply_gfm_autolinks_inside(&mut node, scan);
+                children.push(node);
+                continue;
+            };
+            let (mut candidates, mut next) = started.take().map_or_else(
+                || {
+                    let mut candidates = CandidateScan::new(text.value, scan);
+                    let first = candidates.next();
+                    (candidates, first)
+                },
+                |(candidates, first)| (candidates, Some(first)),
+            );
+
+            // `done` bytes of the node are already written out. Each piece
+            // keeps the span it had when the pieces were split off one link
+            // at a time: offsets into the value from the node's start, and
+            // the node's own end for whatever follows the last link.
+            let mut done = 0;
+            while let Some(candidate) = next {
+                if candidate.start > done {
+                    children.push(Node::Text(Text {
+                        value: &text.value[done..candidate.start],
+                        span: Span::new(
+                            text.span.start + done as u32,
+                            text.span.start + candidate.start as u32,
+                        ),
+                    }));
+                }
+                children.push(self.autolink_node(&text, &candidate));
+                done = candidate.end;
+                next = candidates.next();
+            }
+            // A node with no link in it comes back whole, empty or not.
+            if done < text.value.len() || done == 0 {
+                children.push(Node::Text(Text {
+                    value: &text.value[done..],
+                    span: Span::new(text.span.start + done as u32, text.span.end),
+                }));
+            }
+        }
+    }
+
+    fn autolink_node(&self, text: &Text<'a>, candidate: &Candidate) -> Node<'a> {
+        let link_value = &text.value[candidate.start..candidate.end];
+        let url: &'a str = if candidate.href_prefix.is_empty() {
+            link_value
+        } else {
+            let mut url = self.allocator.new_string_from(candidate.href_prefix);
+            url.push_str(link_value);
+            url.into_bump_str()
+        };
+
+        let link_span = Span::new(
+            text.span.start + candidate.start as u32,
+            text.span.start + candidate.end as u32,
+        );
+        let mut link_children = self.allocator.new_vec();
+        link_children.push(Node::Text(Text { value: link_value, span: link_span }));
+        Node::Link(self.allocator.boxed(Link {
+            url,
+            title: None,
+            children: link_children,
+            span: link_span,
+        }))
     }
 }
 
