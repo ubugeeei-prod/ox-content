@@ -176,20 +176,26 @@ impl<'a> Parser<'a> {
             return;
         };
         let reread = pos.saturating_sub(innermost.open);
-        let keep = if run.reread_budget >= reread {
-            run.reread_budget -= reread;
-            run.open.len() - 1
-        } else {
+        let exhausted = run.reread_budget < reread;
+        let keep = if exhausted {
             run.reread_budget = 0;
             0
+        } else {
+            run.reread_budget -= reread;
+            run.open.len() - 1
         };
 
         let base = content.as_ptr().addr();
         let mut link_text = self.link_text.borrow_mut();
         for bracket in &run.open[keep..] {
             link_text.insert((base + bracket.text_start, base + bracket.text_end));
+            // Past the budget, the link also counts against every later
+            // candidate in front of the same `]]` (see `wiki_link.rs`).
+            // That is an approximation — a candidate starting further in
+            // may read its label differently — so it is kept to inputs
+            // that would otherwise go quadratic.
             if let BracketKind::Wiki { close } = bracket.kind
-                && keep == 0
+                && exhausted
             {
                 run.wiki.reject(close, link_start);
             }

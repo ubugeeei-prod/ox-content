@@ -64,6 +64,19 @@ fn parse_timed(source: &str, options: ParserOptions) -> (Result<(), String>, Dur
     best
 }
 
+/// Below this the larger parse is fast enough that no quadratic path is
+/// left — the old paths took seconds to minutes at these sizes — and a
+/// ratio between such small times is mostly scheduler noise.
+const NOISE_FLOOR: Duration = Duration::from_millis(250);
+
+fn assert_linear(label: &str, small: Duration, large: Duration) {
+    let ratio = large.as_secs_f64() / small.as_secs_f64().max(1e-4);
+    assert!(
+        ratio < 10.0 || large < NOISE_FLOOR,
+        "{label}: 4x input took x{ratio:.1} ({small:?} -> {large:?})"
+    );
+}
+
 fn nested(open: &str, middle: &str, close: &str, depth: usize) -> String {
     open.repeat(depth) + middle + &close.repeat(depth)
 }
@@ -151,8 +164,7 @@ fn nested_bracket_cost_grows_linearly() {
         let (large_result, large) = parse_timed(&build(8_000), options);
         assert_eq!(small_result, Ok(()), "{label}");
         assert_eq!(large_result, Ok(()), "{label}");
-        let ratio = large.as_secs_f64() / small.as_secs_f64().max(1e-4);
-        assert!(ratio < 10.0, "{label}: 4x input took x{ratio:.1} ({small:?} -> {large:?})");
+        assert_linear(label, small, large);
     }
 }
 
@@ -165,8 +177,7 @@ fn unclosed_link_tails_cost_linear_time() {
             parse_timed(&unit.repeat(32 * 1024 / unit.len()), ParserOptions::default());
         let (_, large) =
             parse_timed(&unit.repeat(128 * 1024 / unit.len()), ParserOptions::default());
-        let ratio = large.as_secs_f64() / small.as_secs_f64().max(1e-4);
-        assert!(ratio < 10.0, "{unit:?}: 4x input took x{ratio:.1} ({small:?} -> {large:?})");
+        assert_linear(unit, small, large);
     }
 }
 

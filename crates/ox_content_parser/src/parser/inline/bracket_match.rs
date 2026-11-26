@@ -21,21 +21,66 @@ use crate::parser::Parser;
 /// Every slice the inline parser sees lives in the source or the arena,
 /// both of which outlive the parser, so an address names one byte for as
 /// long as the table exists.
-pub(in crate::parser) type BracketMatches = FxHashMap<usize, BracketMatch>;
+#[derive(Default)]
+pub(in crate::parser) struct BracketMatches {
+    matches: FxHashMap<usize, BracketMatch>,
+    /// For each recording scan, the `(start, end)` addresses of the
+    /// constructs it stepped over whole, in order.
+    jumps: SmallVec<[Jumps; 1]>,
+}
+
+/// `(start, end)` addresses of the constructs one scan stepped over whole.
+type Jumps = SmallVec<[(usize, usize); 2]>;
 
 #[derive(Clone, Copy)]
-pub(in crate::parser) struct BracketMatch {
+struct BracketMatch {
     /// Address of the matching `]`, or `None` when the scan ran out first.
     close: Option<usize>,
     /// Address one past the content the scan was allowed to read.
+    content_end: usize,
+    /// Index of the recording scan in [`BracketMatches::jumps`].
+    scan: usize,
+}
+
+impl BracketMatches {
+    /// What a scan of the same `[` in content ending at `content_end`
+    /// finds, when the recorded one already settles it.
     ///
     /// The same `[` is looked at through slices that end in different
-    /// places: link text is scanned as its own slice. A match found before
-    /// that end holds for any slice ending between the match and it — every
-    /// decision on the way was made on bytes both slices share. "Ran out"
-    /// only holds for that exact end, since a longer slice may close a code
-    /// span the shorter one left open.
-    content_end: usize,
+    /// places: link text is scanned as its own slice. Up to the end of the
+    /// shorter slice, both scans make the same decisions — except where the
+    /// longer one stepped over a code span, autolink or raw HTML that runs
+    /// past that end, which the shorter one cannot see the end of. Without
+    /// such a crossing, a match inside the shorter slice holds as it is,
+    /// and a match beyond it (or none at all) means none inside it.
+    fn answer(&self, key: usize, content_end: usize) -> Recorded {
+        let Some(recorded) = self.matches.get(&key) else {
+            return Recorded::Unknown;
+        };
+        if content_end > recorded.content_end {
+            return Recorded::Unknown;
+        }
+        if let Some(close) = recorded.close
+            && close < content_end
+        {
+            return Recorded::Close(close);
+        }
+        if content_end == recorded.content_end {
+            return Recorded::Unclosed;
+        }
+        let Some(jumps) = self.jumps.get(recorded.scan) else {
+            return Recorded::Unknown;
+        };
+        let after = jumps.partition_point(|&(start, _)| start < content_end);
+        let crossed = after.checked_sub(1).is_some_and(|index| jumps[index].1 > content_end);
+        if crossed { Recorded::Unknown } else { Recorded::Unclosed }
+    }
+}
+
+enum Recorded {
+    Close(usize),
+    Unclosed,
+    Unknown,
 }
 
 /// Brackets this short are scanned directly: the common `[text](url)` then
@@ -63,18 +108,18 @@ impl Parser<'_> {
         let content_end = base + content.len();
         let key = base + start - 1;
 
-        let recorded = {
+        let known = {
             let matches = self.bracket_matches.borrow();
-            if matches.is_empty() { None } else { matches.get(&key).copied() }
-        };
-        if let Some(recorded) = recorded {
-            match recorded.close {
-                Some(close) if close < content_end && content_end <= recorded.content_end => {
-                    return close - base;
-                }
-                None if recorded.content_end == content_end => return content.len(),
-                _ => {}
+            if matches.matches.is_empty() {
+                Recorded::Unknown
+            } else {
+                matches.answer(key, content_end)
             }
+        };
+        match known {
+            Recorded::Close(close) => return close - base,
+            Recorded::Unclosed => return content.len(),
+            Recorded::Unknown => {}
         }
 
         if let Some(close) = Self::scan_bracket_directly(content, start) {
@@ -116,11 +161,14 @@ impl Parser<'_> {
         let bytes = content.as_bytes();
         let base = content.as_ptr().addr();
         let content_end = base + content.len();
-        let mut matches = self.bracket_matches.borrow_mut();
+        let mut table = self.bracket_matches.borrow_mut();
+        let scan = table.jumps.len();
+        let mut jumps = Jumps::new();
         let mut open: SmallVec<[usize; 16]> = SmallVec::new();
         open.push(start - 1);
 
         let mut cursor = start;
+        let mut found = None;
         while cursor < bytes.len() {
             match Self::bracket_step(content, cursor) {
                 Step::Open => {
@@ -129,26 +177,33 @@ impl Parser<'_> {
                 }
                 Step::Close => {
                     if let Some(opener) = open.pop() {
-                        matches.insert(
+                        table.matches.insert(
                             base + opener,
-                            BracketMatch { close: Some(base + cursor), content_end },
+                            BracketMatch { close: Some(base + cursor), content_end, scan },
                         );
                     }
                     if open.is_empty() {
-                        return cursor;
+                        found = Some(cursor);
+                        break;
                     }
                     cursor += 1;
                 }
-                Step::Jump(to) => cursor = to,
+                Step::Jump(to) => {
+                    if to > cursor + 1 {
+                        jumps.push((base + cursor, base + to));
+                    }
+                    cursor = to;
+                }
             }
         }
 
         // Whatever is still open ran to the end of the content, and would
         // again from its own start.
         for opener in open {
-            matches.insert(base + opener, BracketMatch { close: None, content_end });
+            table.matches.insert(base + opener, BracketMatch { close: None, content_end, scan });
         }
-        bytes.len()
+        table.jumps.push(jumps);
+        found.unwrap_or(bytes.len())
     }
 
     /// Classifies the byte at `cursor` for bracket balancing.
