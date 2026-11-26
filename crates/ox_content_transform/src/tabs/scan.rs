@@ -1,3 +1,4 @@
+use crate::html_scan::blocks::{BlockMatches, Match, TagCloses};
 use crate::html_scan::find_ci;
 
 /// A scanned start tag.
@@ -11,9 +12,85 @@ pub(super) struct StartTag {
     pub(super) self_closing: bool,
 }
 
+/// The start tag and closer searches of one walk over `html`, settled once
+/// for the whole of it (see `html_scan/blocks.rs`). With `remember` off,
+/// every search runs afresh, as the walk used to.
+pub(super) struct Blocks {
+    remember: bool,
+    closes: TagCloses,
+    matches: BlockMatches,
+}
+
+impl Blocks {
+    pub(super) fn new(remember: bool) -> Self {
+        Self { remember, closes: TagCloses::default(), matches: BlockMatches::default() }
+    }
+
+    pub(super) fn start_tag(&mut self, html: &str, pos: usize) -> Option<StartTag> {
+        if self.remember {
+            scan_start_tag_with(html, pos, |from| self.closes.close_from(html.as_bytes(), from))
+        } else {
+            scan_start_tag(html, pos)
+        }
+    }
+
+    /// The `close` matching the `open` tag at `open_at`, whose start tag
+    /// ends at `from`.
+    pub(super) fn matching_close(
+        &mut self,
+        html: &str,
+        (open_at, from): (usize, usize),
+        open: &str,
+        close: &str,
+    ) -> Option<usize> {
+        if self.remember {
+            let closes = &mut self.closes;
+            let found = self.matches.close_of(
+                open_at,
+                close.len(),
+                |at| find_tag(html, at, open),
+                |at| find_ci(html, at, close),
+                |at| {
+                    scan_start_tag_with(html, at, |from| closes.close_from(html.as_bytes(), from))
+                        .map_or(at + 1, |tag| tag.end)
+                },
+            );
+            match found {
+                Match::Closes(close) => return Some(close),
+                Match::Unclosed => return None,
+                Match::Unknown => {}
+            }
+        }
+        find_matching_close(html, from, open, close)
+    }
+}
+
 /// Scan the start tag beginning at `pos` (which must point at `<`), respecting
 /// quoted attribute values so a `>` inside a value doesn't end the tag early.
 pub(super) fn scan_start_tag(html: &str, pos: usize) -> Option<StartTag> {
+    let bytes = html.as_bytes();
+    scan_start_tag_with(html, pos, |from| {
+        let mut quote: Option<u8> = None;
+        for (at, &byte) in bytes.iter().enumerate().skip(from) {
+            match quote {
+                Some(q) if byte == q => quote = None,
+                Some(_) => {}
+                None if byte == b'"' || byte == b'\'' => quote = Some(byte),
+                None if byte == b'>' => return Some(at),
+                None => {}
+            }
+        }
+        None
+    })
+}
+
+/// [`scan_start_tag`] with the search for the `>` that ends the tag, from
+/// the end of its name, left to `close_from`.
+fn scan_start_tag_with(
+    html: &str,
+    pos: usize,
+    close_from: impl FnOnce(usize) -> Option<usize>,
+) -> Option<StartTag> {
     let bytes = html.as_bytes();
     if bytes.get(pos) != Some(&b'<') {
         return None;
@@ -24,28 +101,7 @@ pub(super) fn scan_start_tag(html: &str, pos: usize) -> Option<StartTag> {
         i += 1;
     }
     let name_end = i;
-    let mut quote: Option<u8> = None;
-    let mut tag_end = None;
-    while i < bytes.len() {
-        let b = bytes[i];
-        match quote {
-            Some(q) => {
-                if b == q {
-                    quote = None;
-                }
-            }
-            None => {
-                if b == b'"' || b == b'\'' {
-                    quote = Some(b);
-                } else if b == b'>' {
-                    tag_end = Some(i);
-                    break;
-                }
-            }
-        }
-        i += 1;
-    }
-    let tag_end = tag_end?;
+    let tag_end = close_from(name_end)?;
     let self_closing = tag_end > pos && bytes[tag_end - 1] == b'/';
     let inner_end = if self_closing { tag_end - 1 } else { tag_end };
     Some(StartTag { name_end, inner_end, end: tag_end + 1, self_closing })

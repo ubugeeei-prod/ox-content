@@ -21,7 +21,7 @@ mod tests;
 use crate::html_scan::find_ci;
 
 use render::render_tabs;
-use scan::{attribute_value, find_matching_close, find_tag, scan_start_tag};
+use scan::{Blocks, attribute_value, find_tag};
 
 struct Tab {
     label: String,
@@ -39,6 +39,11 @@ pub struct TabsTransform {
 
 /// Expand every `<tabs>` block in `html`, numbering groups from `start_group`.
 pub fn transform_tabs(html: &str, start_group: u32) -> TabsTransform {
+    transform_tabs_with(html, start_group, true)
+}
+
+/// With `remember` off, every start tag and closer is searched for afresh.
+fn transform_tabs_with(html: &str, start_group: u32, remember: bool) -> TabsTransform {
     if find_ci(html, 0, "<tabs").is_none() {
         return TabsTransform { html: html.to_string(), group_count: 0 };
     }
@@ -46,12 +51,13 @@ pub fn transform_tabs(html: &str, start_group: u32) -> TabsTransform {
     let mut out = String::with_capacity(html.len());
     let mut cursor = 0;
     let mut next_group = start_group;
+    let mut blocks = Blocks::new(remember);
 
     while let Some(open_at) = find_tag(html, cursor, "<tabs") {
         // Emit everything up to the `<tabs>`.
         out.push_str(&html[cursor..open_at]);
 
-        let Some(tag) = scan_start_tag(html, open_at) else {
+        let Some(tag) = blocks.start_tag(html, open_at) else {
             // Malformed start tag: emit `<` and move on.
             out.push('<');
             cursor = open_at + 1;
@@ -66,7 +72,8 @@ pub fn transform_tabs(html: &str, start_group: u32) -> TabsTransform {
         }
 
         // Find the matching `</tabs>` accounting for nested `<tabs>`.
-        let Some(close_start) = find_matching_close(html, tag.end, "<tabs", "</tabs>") else {
+        let Some(close_start) = blocks.matching_close(html, (open_at, tag.end), "<tabs", "</tabs>")
+        else {
             out.push_str(&html[open_at..tag.end]);
             cursor = tag.end;
             continue;
@@ -74,7 +81,7 @@ pub fn transform_tabs(html: &str, start_group: u32) -> TabsTransform {
         let inner = &html[tag.end..close_start];
         let block_end = close_start + "</tabs>".len();
 
-        let tabs = parse_tabs(inner);
+        let tabs = parse_tabs(inner, remember);
         if tabs.is_empty() {
             // No `<tab>` children: leave the whole block untouched.
             out.push_str(&html[open_at..block_end]);
@@ -90,14 +97,15 @@ pub fn transform_tabs(html: &str, start_group: u32) -> TabsTransform {
 }
 
 /// Collect the direct `<tab>` children of a `<tabs>` block's inner HTML.
-fn parse_tabs(inner: &str) -> Vec<Tab> {
+fn parse_tabs(inner: &str, remember: bool) -> Vec<Tab> {
     // Scan the already-rendered HTML slice and copy panel contents verbatim.
     // This avoids a DOM allocation while preserving the previous rehype output
     // for arbitrary Markdown-rendered HTML inside a tab.
     let mut tabs = Vec::new();
     let mut cursor = 0;
+    let mut blocks = Blocks::new(remember);
     while let Some(open_at) = find_tag(inner, cursor, "<tab") {
-        let Some(tag) = scan_start_tag(inner, open_at) else {
+        let Some(tag) = blocks.start_tag(inner, open_at) else {
             cursor = open_at + 1;
             continue;
         };
@@ -111,7 +119,8 @@ fn parse_tabs(inner: &str) -> Vec<Tab> {
             continue;
         }
 
-        let Some(close_start) = find_matching_close(inner, tag.end, "<tab", "</tab>") else {
+        let Some(close_start) = blocks.matching_close(inner, (open_at, tag.end), "<tab", "</tab>")
+        else {
             // Unterminated `<tab>`: stop collecting.
             break;
         };

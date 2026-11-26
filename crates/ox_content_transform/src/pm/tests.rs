@@ -15,4 +15,5 @@ fn vp(command: &str) -> String {
 }
 
 mod commands;
+mod scaling;
 mod transform;

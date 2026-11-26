@@ -31,7 +31,7 @@ mod scan;
 mod tests;
 
 use render::{extract_command, render_pm};
-use scan::{find_matching_close, find_tag, scan_start_tag};
+use scan::{Blocks, find_tag};
 
 /// The natural group key used for synced package-manager tabs.
 pub const PM_GROUP_KEY: &str = "pkg-manager";
@@ -54,6 +54,16 @@ pub struct PmTransform {
 
 /// Expand every `<pm>` block in `html`, numbering groups from `start_group`.
 pub fn transform_pm(html: &str, start_group: u32, options: PmOptions) -> PmTransform {
+    transform_pm_with(html, start_group, options, true)
+}
+
+/// With `remember` off, every start tag and closer is searched for afresh.
+fn transform_pm_with(
+    html: &str,
+    start_group: u32,
+    options: PmOptions,
+    remember: bool,
+) -> PmTransform {
     if find_ci(html, 0, "<pm").is_none() {
         return PmTransform { html: html.to_string(), group_count: 0 };
     }
@@ -61,11 +71,12 @@ pub fn transform_pm(html: &str, start_group: u32, options: PmOptions) -> PmTrans
     let mut out = String::with_capacity(html.len());
     let mut cursor = 0;
     let mut next_group = start_group;
+    let mut blocks = Blocks::new(remember);
 
     while let Some(open_at) = find_tag(html, cursor, "<pm") {
         out.push_str(&html[cursor..open_at]);
 
-        let Some(tag) = scan_start_tag(html, open_at) else {
+        let Some(tag) = blocks.start_tag(html, open_at) else {
             out.push('<');
             cursor = open_at + 1;
             continue;
@@ -77,7 +88,8 @@ pub fn transform_pm(html: &str, start_group: u32, options: PmOptions) -> PmTrans
             continue;
         }
 
-        let Some(close_start) = find_matching_close(html, tag.end, "<pm", "</pm>") else {
+        let Some(close_start) = blocks.matching_close(html, (open_at, tag.end), "<pm", "</pm>")
+        else {
             out.push_str(&html[open_at..tag.end]);
             cursor = tag.end;
             continue;
