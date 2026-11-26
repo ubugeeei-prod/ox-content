@@ -193,3 +193,77 @@ fn preprocess_emits_article_so_inner_markdown_parses() {
         "{source}"
     );
 }
+
+/// The pass as it was: every opener searched for its own closer, and a grid's
+/// body was rewritten as a copy.
+fn reference_transform(source: &str) -> String {
+    use super::parse::{CardKind, parse_any_opener, parse_closer, parse_opener};
+    use super::{collect_inner, emit_block, split_ending};
+    use crate::features::colon_blocks::tests::reference_closer;
+    use crate::features::colon_blocks::trim_container_indent;
+    use crate::features::segments::{is_closing_fence, parse_opening_fence};
+
+    let lines: Vec<(&str, &str)> = source.split_inclusive('\n').map(split_ending).collect();
+    let mut out = String::new();
+    let mut index = 0usize;
+    let mut fence: Option<(u8, usize)> = None;
+    while index < lines.len() {
+        let (line, ending) = lines[index];
+        if let Some((fence_char, fence_len)) = fence {
+            out.push_str(line);
+            out.push_str(ending);
+            if is_closing_fence(line, fence_char, fence_len) {
+                fence = None;
+            }
+            index += 1;
+            continue;
+        }
+        if let Some(open) = parse_opening_fence(line) {
+            fence = Some((open.fence_char, open.fence_len));
+            out.push_str(line);
+            out.push_str(ending);
+            index += 1;
+            continue;
+        }
+        let trimmed = trim_container_indent(line);
+        if let Some(opener) = parse_opener(trimmed)
+            && let Some(end) =
+                reference_closer(&lines, index, opener.colon_count, parse_any_opener, parse_closer)
+        {
+            let inner = collect_inner(&lines, index + 1, end);
+            if opener.kind == CardKind::CardGrid {
+                let nested = reference_transform(&inner);
+                out.push_str("<div class=\"ox-card-grid\">\n\n");
+                out.push_str(&nested);
+                if !nested.ends_with('\n') && !nested.is_empty() {
+                    out.push('\n');
+                }
+                out.push_str("</div>\n");
+            } else {
+                emit_block(&mut out, &opener, &inner);
+            }
+            index = end + 1;
+            continue;
+        }
+        out.push_str(line);
+        out.push_str(ending);
+        index += 1;
+    }
+    out
+}
+
+#[test]
+fn rewrites_as_the_per_opener_search_did() {
+    let mut random = crate::features::colon_blocks::tests::Random(0x2545_F491_4F6C_DD1D);
+    for _ in 0..4000 {
+        let mut source = random.document();
+        // Sometimes without a final newline, and with CRLF line endings.
+        if random.below(4) == 0 {
+            source.pop();
+        }
+        if random.below(4) == 0 {
+            source = source.replace('\n', "\r\n");
+        }
+        assert_eq!(super::transform(&source), reference_transform(&source), "for {source:?}");
+    }
+}
