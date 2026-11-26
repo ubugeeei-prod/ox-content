@@ -1,5 +1,15 @@
 # Changelog
 
+## [3.10.2] - 2026-11-26
+
+### Bug Fixes
+
+- assorted edge cases across transforms, framework plugins and editor tooling (#1601) _(affects: crates: ox_content_lsp, ox_content_parser, ox_content_renderer, ox_content_ssg, ox_content_transform; npm: @ox-content/code-play, @ox-content/vite-plugin, @ox-content/vite-plugin-react, @ox-content/vite-plugin-solid, @ox-content/vite-plugin-svelte, @ox-content/vite-plugin-vue, vscode-ox-content)_
+
+### Refactoring
+
+- table-drive the sanitizer's attribute checks (#1600) _(affects: crates: ox_content_transform; docs)_
+
 ## [3.10.1] - 2026-11-26
 
 ### Performance
