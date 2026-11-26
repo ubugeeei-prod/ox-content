@@ -1,21 +1,25 @@
 //! MDX JSX parse: PascalCase / member names, fragments, spreads, expressions.
 
+use ox_content_allocator::Vec;
 use ox_content_ast::{MdxJsxFlowElement, MdxJsxTextElement, Node, Span};
 
 use super::Parser;
 use crate::error::ParseResult;
 
 mod braces;
+mod cache;
 mod children;
+mod close;
 mod expression;
+mod lex;
+mod lex_memo;
 mod scan;
+mod tag_path;
+
+pub(super) use cache::ScanScope;
 
 pub(super) fn looks_like_jsx_open(bytes: &[u8], at: usize) -> bool {
     scan::looks_like_jsx_open(bytes, at)
-}
-
-pub(super) fn looks_like_flow_expression(source: &str, at: usize) -> bool {
-    expression::looks_like_flow_expression(source, at)
 }
 
 impl<'a> Parser<'a> {
@@ -33,23 +37,19 @@ impl<'a> Parser<'a> {
         }
 
         let mut attributes = self.allocator.new_vec();
-        let Some(open) = scan::scan_jsx_open(self.source, trimmed_start, 0, &mut attributes) else {
+        let Some((open, close)) =
+            self.scan_jsx_element(self.source, trimmed_start, 0, &mut attributes)
+        else {
             return Ok(None);
         };
 
-        let (self_closing, children, element_end) = if open.self_closing {
+        let (children, element_end) = if let Some((close_start, close_end)) = close {
+            (self.parse_jsx_flow_children(open.end, close_start)?, close_end)
+        } else {
             if !scan::only_ws_until_eol(self.source.as_bytes(), open.end) {
                 return Ok(None);
             }
-            (true, self.allocator.new_vec(), open.end)
-        } else {
-            let Some((close_start, close_end)) =
-                scan::find_matching_close(self.source, open.end, open.name)
-            else {
-                return Ok(None);
-            };
-            let children = self.parse_jsx_flow_children(open.end, close_start)?;
-            (false, children, close_end)
+            (self.allocator.new_vec(), open.end)
         };
 
         self.position = scan::after_trailing_line_ws(self.source.as_bytes(), element_end);
@@ -57,7 +57,7 @@ impl<'a> Parser<'a> {
             name: open.name,
             attributes,
             children,
-            self_closing,
+            self_closing: open.self_closing,
             span: Span::new(start as u32, self.position as u32),
         }))))
     }
@@ -74,21 +74,16 @@ impl<'a> Parser<'a> {
         }
 
         let mut attributes = self.allocator.new_vec();
-        let Some(open) = scan::scan_jsx_open(content, pos, offset, &mut attributes) else {
+        let Some((open, close)) = self.scan_jsx_element(content, pos, offset, &mut attributes)
+        else {
             return Ok(None);
         };
 
-        let (self_closing, children, end) = if open.self_closing {
-            (true, self.allocator.new_vec(), open.end)
+        let (children, end) = if let Some((close_start, close_end)) = close {
+            let inner = &content[open.end..close_start];
+            (self.parse_jsx_phrasing(inner, offset + open.end)?, close_end)
         } else {
-            let Some((close_start, close_end)) =
-                scan::find_matching_close(content, open.end, open.name)
-            else {
-                return Ok(None);
-            };
-            let children =
-                self.parse_jsx_phrasing(&content[open.end..close_start], offset + open.end)?;
-            (false, children, close_end)
+            (self.allocator.new_vec(), open.end)
         };
 
         Ok(Some((
@@ -96,7 +91,7 @@ impl<'a> Parser<'a> {
                 name: open.name,
                 attributes,
                 children,
-                self_closing,
+                self_closing: open.self_closing,
                 span: Span::new((offset + pos) as u32, (offset + end) as u32),
             })),
             end,
@@ -107,7 +102,7 @@ impl<'a> Parser<'a> {
         &self,
         content: &'a str,
         offset: usize,
-    ) -> ParseResult<ox_content_allocator::Vec<'a, Node<'a>>> {
+    ) -> ParseResult<Vec<'a, Node<'a>>> {
         self.parse_inline(content, offset)
     }
 
@@ -115,14 +110,21 @@ impl<'a> Parser<'a> {
         &self,
         inner_start: usize,
         inner_end: usize,
-    ) -> ParseResult<ox_content_allocator::Vec<'a, Node<'a>>> {
+    ) -> ParseResult<Vec<'a, Node<'a>>> {
         if inner_start >= inner_end || self.source[inner_start..inner_end].trim().is_empty() {
             return Ok(self.allocator.new_vec());
         }
         let inner = &self.source[inner_start..inner_end];
         let child_source = children::normalize_indentation(self.allocator, inner);
-        let sub =
+        let mut sub =
             self.sub_parser_with_lazy_lines(child_source.source, rustc_hash::FxHashSet::default());
+        if child_source.offsets.is_none() {
+            // Children that kept their indentation are a slice of this
+            // source, so the walk that found their closing tag already
+            // paired the tags inside them. Without this every level of an
+            // element nest walked its own children again.
+            sub.mdx_scan = self.mdx_scan.share();
+        }
         let mut children = sub.parse()?.children;
         for child in &mut children {
             if let Some(offsets) = &child_source.offsets {

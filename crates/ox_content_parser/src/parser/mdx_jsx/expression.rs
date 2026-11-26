@@ -5,18 +5,20 @@
 use ox_content_ast::{MdxFlowExpression, MdxTextExpression, Node, Span};
 
 use super::Parser;
-use super::braces;
 use super::scan;
 use crate::error::ParseResult;
 
-pub(super) fn looks_like_flow_expression(source: &str, at: usize) -> bool {
-    let Some((_, brace_end)) = braces::scan_balanced_braces(source, at) else {
-        return false;
-    };
-    scan::only_ws_until_eol(source.as_bytes(), brace_end)
-}
-
 impl<'a> Parser<'a> {
+    /// Reports whether a flow `{expression}` starts at `at`: a balanced
+    /// brace group followed only by line whitespace.
+    ///
+    /// The paragraph loop asks this for every continuation line that starts
+    /// with `{`, so the answer has to come from the shared scan cache; a
+    /// direct scan walked the rest of the source for each such line.
+    pub(in crate::parser) fn mdx_flow_expression_starts_at(&self, at: usize) -> bool {
+        self.mdx_flow_expression_end(at).is_some()
+    }
+
     /// Parses a block `{expression}` or `{/* comment */}` at the current line.
     ///
     /// Succeeds only when the closing `}` is followed by line whitespace.
@@ -35,12 +37,9 @@ impl<'a> Parser<'a> {
         if !self.has_closer_from(source, trimmed_start + 1, b'}') {
             return Ok(None);
         }
-        let Some((value, brace_end)) = braces::scan_balanced_braces(source, trimmed_start) else {
+        let Some((value, brace_end)) = self.mdx_flow_expression_end(trimmed_start) else {
             return Ok(None);
         };
-        if !scan::only_ws_until_eol(self.source.as_bytes(), brace_end) {
-            return Ok(None);
-        }
 
         self.position = scan::after_trailing_line_ws(self.source.as_bytes(), brace_end);
         Ok(Some(Node::MdxFlowExpression(MdxFlowExpression {
@@ -67,7 +66,7 @@ impl<'a> Parser<'a> {
         if !self.has_closer_from(content, pos + 1, b'}') {
             return None;
         }
-        let (value, end) = braces::scan_balanced_braces(content, pos)?;
+        let (value, end) = self.scan_mdx_braces(content, pos)?;
         Some((
             Node::MdxTextExpression(MdxTextExpression {
                 value,
@@ -75,5 +74,12 @@ impl<'a> Parser<'a> {
             }),
             end,
         ))
+    }
+
+    /// Inner source and end of the flow expression that starts at `at`.
+    fn mdx_flow_expression_end(&self, at: usize) -> Option<(&'a str, usize)> {
+        let source = self.source;
+        self.scan_mdx_braces(source, at)
+            .filter(|(_, end)| scan::only_ws_until_eol(source.as_bytes(), *end))
     }
 }

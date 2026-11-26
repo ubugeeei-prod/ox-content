@@ -14,13 +14,13 @@ use ox_content_ast::{Definition, Node, Span};
 use rustc_hash::FxHashMap;
 
 use super::Parser;
-use super::line_scan::{is_line_ending_byte, line_end as scan_line_end, line_terminator_end};
+use super::line_scan::{is_line_ending_byte, line_terminator_end};
 #[allow(unused_imports)]
 use crate::{profile_span, profile_span_detail};
 
 mod scan;
 
-use scan::{line_end_if_blank_after, next_blank_line, skip_ws_one_newline};
+use scan::{is_possible_label, line_end_if_blank_after, next_blank_line, skip_ws_one_newline};
 // The block quote collector and the fused pre-pass share the fence,
 // paragraph-context, and quote-strip helpers.
 pub(super) use scan::{closes_paragraph_context, fence_open, is_fence_close, strip_quote_markers};
@@ -71,7 +71,7 @@ impl<'a> Parser<'a> {
 
     pub(super) fn lookup_reference(&self, raw_label: &str) -> Option<&ReferenceDef<'a>> {
         let definitions = self.definitions.as_ref()?;
-        if definitions.is_empty() {
+        if definitions.is_empty() || !is_possible_label(raw_label) {
             return None;
         }
         definitions.get(&Self::normalize_reference_label(raw_label))
@@ -214,33 +214,6 @@ impl<'a> Parser<'a> {
         let blank_line = next_blank_line(self.source.as_bytes(), start);
         self.definition_region = Some((start, blank_line));
         blank_line
-    }
-
-    /// Joins the block-quote-stripped lines of the paragraph chunk that
-    /// starts at `pos` (stopping at a blank line), returning the joined
-    /// text and each line's start offset in the original source. Used by
-    /// the fused pre-pass when it finds a definition candidate line.
-    pub(super) fn join_stripped_chunk(
-        &self,
-        mut pos: usize,
-    ) -> (&'a str, ox_content_allocator::Vec<'a, usize>) {
-        let bytes = self.source.as_bytes();
-        let mut joined = self.allocator.new_string();
-        let mut line_starts = self.allocator.new_vec();
-        while pos < bytes.len() {
-            let line_end = scan_line_end(bytes, pos);
-            let line = &self.source[pos..line_end];
-            let stripped = strip_quote_markers(line);
-            if stripped.trim().is_empty() {
-                break;
-            }
-            line_starts.push(pos);
-            joined.push_str(stripped);
-            joined.push('\n');
-            pos = line_terminator_end(bytes, line_end);
-        }
-        line_starts.push(pos.min(bytes.len()));
-        (joined.into_bump_str(), line_starts)
     }
 
     fn unescape_reference_component(&self, raw: &'a str) -> &'a str {

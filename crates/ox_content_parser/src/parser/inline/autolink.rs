@@ -3,7 +3,6 @@
 //! These are the core-spec autolinks (absolute URIs and email addresses
 //! between angle brackets), independent from the GFM bare-URL extension.
 
-use memchr::memchr;
 use ox_content_ast::{Link, Node, Span};
 
 use crate::parser::Parser;
@@ -13,18 +12,24 @@ use crate::profile_span_detail;
 /// Validation-only scan: returns the index just past `>` when an
 /// autolink starts at `pos`, without building nodes.
 pub(in crate::parser) fn autolink_end(content: &str, pos: usize) -> Option<usize> {
-    let bytes = content.as_bytes();
     let inner_start = pos + 1;
-    let close = memchr(b'>', bytes.get(inner_start..)?)? + inner_start;
+    let close = autolink_close(content.as_bytes(), inner_start)?;
     let inner = &content[inner_start..close];
-    if inner.is_empty()
-        || inner
-            .bytes()
-            .any(|byte| byte == b'<' || byte.is_ascii_whitespace() || byte.is_ascii_control())
-    {
-        return None;
-    }
     (is_absolute_uri(inner) || is_email_address(inner)).then_some(close + 1)
+}
+
+/// Index of the `>` ending the autolink body that starts at `inner_start`.
+///
+/// The body is non-empty and holds no `<`, whitespace or control byte, so
+/// the scan stops at the first of those rather than looking for the `>`
+/// first: a `<` in ordinary text is then never charged for the distance to
+/// some unrelated `>` further on.
+fn autolink_close(bytes: &[u8], inner_start: usize) -> Option<usize> {
+    let body = bytes.get(inner_start..)?;
+    let length = body.iter().position(|&byte| {
+        matches!(byte, b'<' | b'>') || byte.is_ascii_whitespace() || byte.is_ascii_control()
+    })?;
+    (length > 0 && body[length] == b'>').then_some(inner_start + length)
 }
 
 impl<'a> Parser<'a> {
@@ -37,18 +42,9 @@ impl<'a> Parser<'a> {
         offset: usize,
     ) -> Option<(Node<'a>, usize)> {
         profile_span_detail!("parser::inline_autolink");
-        let bytes = content.as_bytes();
         let inner_start = pos + 1;
-        let close = memchr(b'>', bytes.get(inner_start..)?)? + inner_start;
+        let close = autolink_close(content.as_bytes(), inner_start)?;
         let inner = &content[inner_start..close];
-
-        if inner.is_empty()
-            || inner
-                .bytes()
-                .any(|byte| byte == b'<' || byte.is_ascii_whitespace() || byte.is_ascii_control())
-        {
-            return None;
-        }
 
         let url = if is_absolute_uri(inner) {
             inner

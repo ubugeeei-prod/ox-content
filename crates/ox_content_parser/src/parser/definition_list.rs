@@ -11,8 +11,10 @@ use crate::error::ParseResult;
 use crate::profile_span_detail;
 
 mod lines;
+mod terms;
 
-use self::lines::{DefinitionBodyLine, has_unclosed_inline_code, trim_line_span};
+use self::lines::{DefinitionBodyLine, trim_line_span};
+pub(super) use self::terms::TermRun;
 
 impl<'a> Parser<'a> {
     pub(super) fn parse_definition_list(&mut self, start: usize) -> ParseResult<Option<Node<'a>>> {
@@ -59,12 +61,13 @@ impl<'a> Parser<'a> {
         &self,
         start: usize,
     ) -> ParseResult<Option<(ArenaVec<'a, Node<'a>>, usize)>> {
-        let Some((term_lines, mut cursor)) = self.collect_definition_terms(start) else {
+        let Some((terms_end, mut cursor)) = self.definition_terms_at(start) else {
             return Ok(None);
         };
 
-        let mut nodes = self.allocator.new_vec_with_capacity(term_lines.len() + 1);
-        for (line_start, line_end) in term_lines {
+        let term_count = self.definition_term_lines(start, terms_end).count();
+        let mut nodes = self.allocator.new_vec_with_capacity(term_count + 1);
+        for (line_start, line_end) in self.definition_term_lines(start, terms_end) {
             let (term_start, term_end) = trim_line_span(self.source, line_start, line_end);
             let value = &self.source[term_start..term_end];
             let term = DefinitionListTerm {
@@ -89,37 +92,6 @@ impl<'a> Parser<'a> {
         }
 
         Ok(Some((nodes, cursor)))
-    }
-
-    fn collect_definition_terms(
-        &self,
-        start: usize,
-    ) -> Option<(ArenaVec<'a, (usize, usize)>, usize)> {
-        if start >= self.source.len() || self.is_blank_line_at(start) {
-            return None;
-        }
-
-        let mut terms = self.allocator.new_vec();
-        let mut cursor = start;
-
-        while cursor < self.source.len() {
-            if self.is_blank_line_at(cursor) || self.definition_body_at(cursor).is_some() {
-                break;
-            }
-            if !self.is_definition_term_line(cursor) {
-                return None;
-            }
-            let line_end = self.line_end_at(cursor);
-            terms.push((cursor, line_end));
-            cursor = self.next_line_start(cursor);
-        }
-
-        if terms.is_empty() {
-            return None;
-        }
-
-        cursor = self.skip_blank_lines_from(cursor);
-        self.starts_definition_body_at(cursor).then_some((terms, cursor))
     }
 
     fn collect_definition_body(&self, start: usize) -> ParseResult<Option<(Node<'a>, usize)>> {
@@ -269,27 +241,7 @@ impl<'a> Parser<'a> {
     }
 
     fn can_start_definition_item_at(&self, start: usize) -> bool {
-        self.options.definition_lists && self.collect_definition_terms(start).is_some()
-    }
-
-    fn is_definition_term_line(&self, line_start: usize) -> bool {
-        let Some(trimmed_start) = self.first_non_whitespace_in_line(line_start) else {
-            return false;
-        };
-        if self.line_indent_width(line_start, trimmed_start) >= 4 {
-            return false;
-        }
-        let line = self.line_at(line_start);
-        let trimmed = &line[trimmed_start - line_start..];
-        !trimmed.starts_with(':')
-            && !trimmed.starts_with('>')
-            && !trimmed.starts_with(":::")
-            && !trimmed.starts_with('<')
-            && !Self::try_parse_thematic_break_line(line)
-            && !self.try_parse_heading_start(line_start, trimmed_start)
-            && !Self::try_parse_fenced_code_at(line, trimmed)
-            && self.parse_list_item_line_from_trimmed(line_start, line, trimmed).is_none()
-            && !has_unclosed_inline_code(line)
+        self.options.definition_lists && self.definition_terms_at(start).is_some()
     }
 
     fn definition_body_at(&self, line_start: usize) -> Option<DefinitionBodyLine> {

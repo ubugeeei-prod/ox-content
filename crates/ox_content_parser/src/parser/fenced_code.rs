@@ -127,11 +127,14 @@ impl<'a> Parser<'a> {
             // so a borrowed source slice would be wrong. Materialize only this
             // uncommon case, and write directly into a bump-allocated string
             // so the final AST can borrow it without a second arena copy.
-            let remaining_estimate = self.source.len().saturating_sub(self.position);
-            let mut value = ox_content_allocator::String::with_capacity_in(
-                remaining_estimate.min(8 * 1024),
-                self.allocator.bump(),
-            );
+            //
+            // The string is sized by a first pass that finds the closing
+            // fence and adds up the stripped lines. Reserving a guess instead
+            // — up to 8 KiB of whatever source was left — charged every
+            // indented fence that much arena however little it held:
+            // 4,800 two-byte blocks in a 67 KB document took 38 MB.
+            let mut value_len = 0;
+            let mut body_end = body_start;
 
             loop {
                 if self.is_at_end() {
@@ -174,19 +177,17 @@ impl<'a> Parser<'a> {
                     }
                 }
 
-                // Not a closing fence, reset and consume line
-                self.position = line_start;
-                let next_line = self.next_line_start(line_start);
+                // Not a closing fence: the line is body. Count what it will
+                // contribute and move on.
+                let line_end = line_start + line.len();
                 let stripped = Self::strip_indent_columns(line, opening_indent);
-                value.push_str(stripped);
-                if line_start + line.len() < bytes.len() {
-                    value.push('\n');
-                }
-                self.position = next_line;
+                value_len += stripped.len() + usize::from(line_end < bytes.len());
+                body_end = line_terminator_end(bytes, line_end);
+                self.position = body_end;
             }
 
             span = Span::new(start as u32, self.position as u32);
-            value.into_bump_str()
+            self.indented_fence_value(body_start, body_end, opening_indent, value_len)
         };
 
         Ok(Some(Node::CodeBlock(self.allocator.boxed(ox_content_ast::CodeBlock {
@@ -195,6 +196,35 @@ impl<'a> Parser<'a> {
             value,
             span,
         }))))
+    }
+
+    /// Builds the body of a fence whose opener was indented: the lines in
+    /// `body_start..body_end`, each without up to `opening_indent` columns of
+    /// leading whitespace and with its line ending written as `\n`.
+    ///
+    /// `value_len` is the length the caller measured for exactly this text,
+    /// so the string is allocated once and never grows.
+    fn indented_fence_value(
+        &self,
+        body_start: usize,
+        body_end: usize,
+        opening_indent: usize,
+        value_len: usize,
+    ) -> &'a str {
+        let bytes = self.source.as_bytes();
+        let mut value =
+            ox_content_allocator::String::with_capacity_in(value_len, self.allocator.bump());
+        let mut line_start = body_start;
+        while line_start < body_end {
+            let line = self.line_at(line_start);
+            let line_end = line_start + line.len();
+            value.push_str(Self::strip_indent_columns(line, opening_indent));
+            if line_end < bytes.len() {
+                value.push('\n');
+            }
+            line_start = line_terminator_end(bytes, line_end);
+        }
+        value.into_bump_str()
     }
 
     fn normalize_code_block_line_endings(&self, source: &str) -> &'a str {

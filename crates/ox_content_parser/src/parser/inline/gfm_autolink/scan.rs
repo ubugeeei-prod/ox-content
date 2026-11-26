@@ -2,13 +2,14 @@
 //!
 //! Everything here is a pure scan over one string: the block-level
 //! pre-flight that decides whether the post-pass runs at all, and the
-//! per-text-node search for the earliest valid candidate.
+//! pieces a candidate is validated with once its needle has been found.
 
 use std::sync::LazyLock;
 
-use memchr::memmem;
+use memchr::{memchr, memmem};
 
-use super::{AutolinkScan, Candidate};
+use super::AutolinkScan;
+use super::trim::trim_trailing_punctuation;
 
 /// Searchers for the multi-byte autolink needles, built once for the process.
 ///
@@ -28,10 +29,6 @@ pub(super) static SCHEME_FINDER: LazyLock<memmem::Finder<'static>> =
 /// Scheme names accepted in front of `://`, longest first so `https://`
 /// is not mistaken for a `ttp`-suffixed shorter name.
 const SCHEMES: [&str; 3] = ["https", "http", "ftp"];
-
-/// Length of the longest name in [`SCHEMES`], which is how far in front of
-/// a `://` a candidate can begin.
-pub(super) const LONGEST_SCHEME: usize = 5;
 
 /// Cheap pre-flight over a block's raw inline content: can the autolink
 /// pass possibly rewrite anything here, and if so does it need the `www.`
@@ -95,47 +92,38 @@ pub(super) fn scheme_prefix_len(bytes: &[u8], at: usize) -> Option<usize> {
     SCHEMES.iter().find(|name| bytes[..at].ends_with(name.as_bytes())).map(|name| name.len() + 3)
 }
 
+/// Length of the `scheme://` prefix that `bytes[at..]` begins with, or
+/// `None` when it does not begin with one.
+pub(super) fn scheme_prefix_at(bytes: &[u8], at: usize) -> Option<usize> {
+    let rest = bytes.get(at..)?;
+    SCHEMES
+        .iter()
+        .find(|name| {
+            rest.strip_prefix(name.as_bytes()).is_some_and(|after| after.starts_with(b"://"))
+        })
+        .map(|name| name.len() + 3)
+}
+
 /// Start-of-text, whitespace, or common delimiter punctuation may precede an
 /// autolink.
-fn valid_boundary(value: &str, start: usize) -> bool {
+pub(super) fn valid_boundary(value: &str, start: usize) -> bool {
     value[..start]
         .chars()
         .next_back()
         .is_none_or(|ch| ch.is_whitespace() || matches!(ch, '*' | '_' | '~' | '(' | '\'' | '"'))
 }
 
-pub(super) fn validate_url(value: &str, start: usize, prefix_len: usize) -> Option<Candidate> {
-    if !valid_boundary(value, start) {
-        return None;
-    }
-    let bytes = value.as_bytes();
-    // Validate the domain: alphanumerics, `-`, `_`, `.`; at least one
-    // dot; no underscore in the last two segments.
-    let domain_start = start + prefix_len;
-    let mut domain_end = domain_start;
-    while domain_end < bytes.len()
-        && (bytes[domain_end].is_ascii_alphanumeric()
-            || matches!(bytes[domain_end], b'-' | b'_' | b'.'))
-    {
-        domain_end += 1;
-    }
-    // Trailing dots belong to the surrounding sentence, not the domain.
-    let domain = value[domain_start..domain_end].trim_end_matches('.');
-    if domain.split('.').count() < 2
-        || domain.rsplit('.').take(2).any(|segment| segment.is_empty() || segment.contains('_'))
-    {
-        return None;
-    }
-
-    // The link runs to whitespace, `<`, or CJK sentence punctuation, then
-    // trailing punctuation is trimmed (unbalanced `)` and entity-like `&x;`
-    // suffixes included).
-    let end = trim_trailing_punctuation(value, start, scan_url_end(value, domain_end));
-    (end > domain_start).then_some(Candidate {
-        start,
-        end,
-        href_prefix: if prefix_len == 4 { "http://" } else { "" },
-    })
+/// Where the bare URL that starts at `start`, with its host at
+/// `domain_start`, ends.
+///
+/// The link runs to whitespace, `<`, or CJK sentence punctuation, then
+/// trailing punctuation is trimmed (unbalanced `)` and entity-like `&x;`
+/// suffixes included). A valid host ends in a byte none of those rules can
+/// remove and holds no `&`, so the trimmed end never falls back into it:
+/// whether a candidate is a link is settled by its boundary and its host
+/// alone, and the end is only worth computing for the candidate that wins.
+pub(super) fn url_end(value: &str, start: usize, domain_start: usize) -> usize {
+    trim_trailing_punctuation(value, start, scan_url_end(value, domain_start))
 }
 
 /// Extends a URL from `from` to the offset where it stops.
@@ -190,61 +178,27 @@ const fn ends_url(ch: char) -> bool {
     )
 }
 
-fn trim_trailing_punctuation(value: &str, start: usize, mut end: usize) -> usize {
-    let bytes = value.as_bytes();
-    loop {
-        if end <= start {
-            return end;
-        }
-        match bytes[end - 1] {
-            b'?' | b'!' | b'.' | b',' | b':' | b'*' | b'_' | b'~' | b'\'' | b'"' => end -= 1,
-            b')' => {
-                let opens = value[start..end].bytes().filter(|&b| b == b'(').count();
-                let closes = value[start..end].bytes().filter(|&b| b == b')').count();
-                if closes > opens {
-                    end -= 1;
-                } else {
-                    return end;
-                }
-            }
-            b';' => {
-                // Strip an entity-like `&name;` suffix entirely.
-                let entity_start = value[start..end - 1].rfind('&').map(|found| start + found);
-                match entity_start {
-                    Some(amp)
-                        if value[amp + 1..end - 1]
-                            .bytes()
-                            .all(|byte| byte.is_ascii_alphanumeric())
-                            && amp + 1 < end - 1 =>
-                    {
-                        end = amp;
-                    }
-                    _ => end -= 1,
-                }
-            }
-            _ => return end,
-        }
+/// First byte of the email local part that ends at the `@` at `at`:
+/// alphanumerics plus `.`, `-`, `_`, `+`, read no further back than `floor`.
+///
+/// Returns `at` itself when no local-part byte precedes the `@`.
+pub(super) fn local_part_start(bytes: &[u8], floor: usize, at: usize) -> usize {
+    let mut start = at;
+    while start > floor
+        && (bytes[start - 1].is_ascii_alphanumeric()
+            || matches!(bytes[start - 1], b'.' | b'-' | b'_' | b'+'))
+    {
+        start -= 1;
     }
+    start
 }
 
-pub(super) fn validate_email(value: &str, at: usize) -> Option<Candidate> {
-    let bytes = value.as_bytes();
-    // Local part: alphanumerics plus `.`, `-`, `_`, `+`.
-    let mut start = at;
-    while start > 0 {
-        let byte = bytes[start - 1];
-        if byte.is_ascii_alphanumeric() || matches!(byte, b'.' | b'-' | b'_' | b'+') {
-            start -= 1;
-        } else {
-            break;
-        }
-    }
-    if start == at || !valid_boundary(value, start) {
-        return None;
-    }
-
-    // Domain: alphanumerics plus `.`, `-`, `_`, with at least one dot;
-    // trailing dots are trimmed; a trailing `-` or `_` invalidates.
+/// End of the email domain that follows the `@` at `at`, or `None` when
+/// what follows is not one.
+///
+/// Domain: alphanumerics plus `.`, `-`, `_`, with at least one dot;
+/// trailing dots are trimmed; a trailing `-` or `_` invalidates.
+pub(super) fn email_domain_end(bytes: &[u8], at: usize) -> Option<usize> {
     let mut end = at + 1;
     while end < bytes.len()
         && (bytes[end].is_ascii_alphanumeric() || matches!(bytes[end], b'.' | b'-' | b'_'))
@@ -257,8 +211,5 @@ pub(super) fn validate_email(value: &str, at: usize) -> Option<Candidate> {
     if end <= at + 1 || matches!(bytes[end - 1], b'-' | b'_') {
         return None;
     }
-    if !value[at + 1..end].contains('.') {
-        return None;
-    }
-    Some(Candidate { start, end, href_prefix: "mailto:" })
+    memchr(b'.', &bytes[at + 1..end]).map(|_| end)
 }
