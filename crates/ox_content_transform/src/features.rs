@@ -29,6 +29,7 @@ mod image_galleries;
 mod images;
 mod includes;
 mod keyboard_keys;
+mod lookahead;
 mod magic;
 #[allow(dead_code)]
 mod math;

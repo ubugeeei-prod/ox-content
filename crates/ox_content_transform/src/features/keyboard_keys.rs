@@ -15,8 +15,9 @@ mod protect;
 #[cfg(test)]
 mod tests;
 
+use super::lookahead::HtmlAhead;
 use aliases::{KeyboardKeyStyle, normalize_key};
-use protect::next_protected;
+use protect::{ProtectedSpan, next_protected};
 
 #[derive(Clone)]
 pub(super) struct ResolvedKeyboardKeys {
@@ -61,10 +62,33 @@ pub(super) fn apply(current: &mut Cow<'_, str>, options: Option<&ResolvedKeyboar
 }
 
 pub(super) fn replace(segment: &str, options: &ResolvedKeyboardKeys, out: &mut String) {
+    replace_with(segment, options, out, true);
+}
+
+/// With `remember`, the next protected span is looked for once and kept
+/// until the walk passes its start, and tag and comment scans are answered
+/// from what earlier ones found. Looking again after every `{kbd:` read the
+/// rest of the segment each time: 1 MiB of `{kbd:a} ` took 3.5 s.
+fn replace_with(segment: &str, options: &ResolvedKeyboardKeys, out: &mut String, remember: bool) {
+    let mut ahead = HtmlAhead::default();
+    let mut known: Option<(usize, Option<(usize, usize)>)> = None;
     let mut cursor = 0usize;
     while cursor < segment.len() {
         let kbd = segment[cursor..].find(OPEN).map(|rel| cursor + rel);
-        let protected = next_protected(segment, cursor);
+        let protected = match known {
+            Some((from, span))
+                if remember && from <= cursor && span.is_none_or(|(start, _)| start >= cursor) =>
+            {
+                span
+            }
+            _ => {
+                let span = next_protected(segment, cursor, remember.then_some(&mut ahead))
+                    .map(|span| (span.start, span.end));
+                known = Some((cursor, span));
+                span
+            }
+        };
+        let protected = protected.map(|(start, end)| ProtectedSpan { start, end });
         match (kbd, protected) {
             (None, None) => {
                 out.push_str(&segment[cursor..]);

@@ -1,11 +1,39 @@
+use crate::features::lookahead::{Ahead, HtmlAhead};
 use crate::html_scan::find_ci;
+
+#[cfg(test)]
+mod tests;
 
 pub(super) struct ProtectedSpan {
     pub start: usize,
     pub end: usize,
 }
 
-pub(super) fn next_protected(segment: &str, from: usize) -> Option<ProtectedSpan> {
+/// What the searches below found ahead of the walk, kept for the searches
+/// after them (see `lookahead.rs`). With `remember` off, each searches afresh.
+pub(super) struct ProtectAhead {
+    remember: bool,
+    html: HtmlAhead,
+    close_bracket: Ahead,
+    close_paren: Ahead,
+}
+
+impl ProtectAhead {
+    pub(super) fn new(remember: bool) -> Self {
+        Self {
+            remember,
+            html: HtmlAhead::default(),
+            close_bracket: Ahead::new(remember),
+            close_paren: Ahead::new(remember),
+        }
+    }
+}
+
+pub(super) fn next_protected(
+    segment: &str,
+    from: usize,
+    ahead: &mut ProtectAhead,
+) -> Option<ProtectedSpan> {
     let bytes = segment.as_bytes();
 
     // A `[` with no `]` after it cannot open a link, and a `<` with no `>`
@@ -28,19 +56,19 @@ pub(super) fn next_protected(segment: &str, from: usize) -> Option<ProtectedSpan
         match (bracket, angle) {
             (None, None) => return None,
             (Some(start), Some(angle)) if angle < start => {
-                if let Some(end) = take_html(segment, angle) {
+                if let Some(end) = take_html(segment, angle, ahead) {
                     return Some(ProtectedSpan { start: angle, end });
                 }
                 cursor = angle + 1;
             }
             (Some(start), _) => {
-                if let Some(end) = take_markdown_link(bytes, start) {
+                if let Some(end) = take_markdown_link(bytes, start, ahead) {
                     return Some(ProtectedSpan { start, end });
                 }
                 cursor = start + 1;
             }
             (None, Some(angle)) => {
-                if let Some(end) = take_html(segment, angle) {
+                if let Some(end) = take_html(segment, angle, ahead) {
                     return Some(ProtectedSpan { start: angle, end });
                 }
                 cursor = angle + 1;
@@ -50,22 +78,31 @@ pub(super) fn next_protected(segment: &str, from: usize) -> Option<ProtectedSpan
     None
 }
 
-fn take_markdown_link(bytes: &[u8], pos: usize) -> Option<usize> {
-    let text_end = find_unescaped(bytes, pos + 1, b']')?;
+fn take_markdown_link(bytes: &[u8], pos: usize, ahead: &mut ProtectAhead) -> Option<usize> {
+    let mut close_bracket =
+        |from| ahead.close_bracket.find(from, |from| find_unescaped(bytes, from, b']'));
+    let text_end = close_bracket(pos + 1)?;
     let after = text_end + 1;
     match bytes.get(after).copied() {
-        Some(b'(') => find_unescaped(bytes, after + 1, b')').map(|end| end + 1),
-        Some(b'[') => find_unescaped(bytes, after + 1, b']').map(|end| end + 1),
+        Some(b'[') => close_bracket(after + 1).map(|end| end + 1),
+        Some(b'(') => ahead
+            .close_paren
+            .find(after + 1, |from| find_unescaped(bytes, from, b')'))
+            .map(|end| end + 1),
         _ => None,
     }
 }
 
-fn take_html(source: &str, pos: usize) -> Option<usize> {
+fn take_html(source: &str, pos: usize, ahead: &mut ProtectAhead) -> Option<usize> {
     let after = pos + 1;
     if source.get(after..).is_some_and(|rest| rest.starts_with("!--")) {
+        if ahead.remember {
+            return ahead.html.comment_end(source, after + 3);
+        }
         return source[after + 3..].find("-->").map(|rel| after + 3 + rel + 3);
     }
-    let tag_end = scan_tag_end(source, pos)?;
+    let tag_end =
+        if ahead.remember { ahead.html.tag_end(source, pos) } else { scan_tag_end(source, pos) }?;
     if source.as_bytes().get(after) == Some(&b'/') {
         return None;
     }

@@ -20,7 +20,7 @@ mod matching_tests;
 #[cfg(test)]
 mod tests;
 
-use protect::next_protected;
+use protect::{ProtectAhead, next_protected};
 
 #[derive(Clone)]
 pub(super) struct ResolvedAbbreviations {
@@ -122,8 +122,9 @@ fn replace<'a>(
     used: &mut FxHashSet<&'a str>,
     out: &mut String,
 ) {
+    let mut ahead = ProtectAhead::new(true);
     let mut cursor = 0usize;
-    let mut protected = next_protected(segment, cursor);
+    let mut protected = next_protected(segment, cursor, &mut ahead);
     while cursor < segment.len() {
         let found = next_term(segment, cursor, terms, protected.as_ref().map(|span| span.start));
         match (found, protected.as_ref()) {
@@ -134,12 +135,12 @@ fn replace<'a>(
             (None, Some(span)) => {
                 out.push_str(&segment[cursor..span.end]);
                 cursor = span.end;
-                protected = next_protected(segment, cursor);
+                protected = next_protected(segment, cursor, &mut ahead);
             }
             (Some(found), Some(span)) if span.start <= found.start => {
                 out.push_str(&segment[cursor..span.end]);
                 cursor = span.end;
-                protected = next_protected(segment, cursor);
+                protected = next_protected(segment, cursor, &mut ahead);
             }
             (Some(found), _) => {
                 out.push_str(&segment[cursor..found.start]);
