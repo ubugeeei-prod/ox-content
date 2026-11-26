@@ -81,3 +81,92 @@ fn a_broken_tag_still_collapses_to_something_inert() {
     assert!(!out.contains("onerror"), "{out}");
     assert!(!out.contains("<img"), "{out}");
 }
+
+fn sanitize_with(html: &str, tags: &[&str], attrs: &[&str]) -> String {
+    let options = ox_content_transform::SanitizeOptions {
+        allowed_tags: Some(tags.iter().map(ToString::to_string).collect()),
+        allowed_attributes: Some(attrs.iter().map(ToString::to_string).collect()),
+        ..Default::default()
+    };
+    sanitize_html(html, Some(&options))
+}
+
+#[test]
+fn added_attributes_that_carry_urls_are_screened_too() {
+    // Only `href`, `src`, `action`, `poster` and `srcset` used to be read as
+    // URLs, so the same value passed under any other name an allow list
+    // added.
+    assert_eq!(
+        sanitize_with(
+            "<svg><a xlink:href=\"javascript:alert(1)\">x</a></svg>",
+            &["svg", "a"],
+            &["xlink:href"]
+        ),
+        "<svg><a>x</a></svg>"
+    );
+    assert_eq!(
+        sanitize_with(
+            "<button formaction=\"javascript:alert(1)\" ping=\"/a javascript:b\">x</button>",
+            &["button"],
+            &["formaction", "ping"]
+        ),
+        "<button>x</button>"
+    );
+    assert_eq!(
+        sanitize_with(
+            "<svg><animate attributeName=\"href\" values=\"0;javascript:alert(1)\"/><set to=\"javascript:alert(1)\"/></svg>",
+            &["svg", "animate", "set"],
+            &["attributename", "values", "to"]
+        ),
+        "<svg><animate attributename=\"href\" /><set /></svg>"
+    );
+    assert_eq!(
+        sanitize_with(
+            "<q cite=\"https://a/\" x-src=\"javascript:b\">x</q>",
+            &["q"],
+            &["cite", "x-src"]
+        ),
+        "<q cite=\"https://a/\">x</q>"
+    );
+}
+
+#[test]
+fn values_that_only_look_like_schemes_stay() {
+    assert_eq!(
+        sanitize_with(
+            "<time datetime=\"2024-01-02T10:30\" x-note=\"(min-width: 1px)\">t</time>",
+            &["time"],
+            &["datetime", "x-note"]
+        ),
+        "<time datetime=\"2024-01-02T10:30\" x-note=\"(min-width: 1px)\">t</time>"
+    );
+    assert_eq!(
+        sanitize("<a title=\"Note: see below\" class=\"md:flex\">x</a>"),
+        "<a title=\"Note: see below\" class=\"md:flex\">x</a>"
+    );
+}
+
+#[test]
+fn a_data_wildcard_does_not_admit_aria_attributes() {
+    assert_eq!(
+        sanitize_with("<p data-a=\"1\" aria-hidden=\"true\">x</p>", &["p"], &["data-*"]),
+        "<p data-a=\"1\">x</p>"
+    );
+    assert_eq!(
+        sanitize_with("<p data-a=\"1\" aria-hidden=\"true\">x</p>", &["p"], &["aria-*"]),
+        "<p aria-hidden=\"true\">x</p>"
+    );
+}
+
+#[test]
+fn names_that_would_become_document_properties_are_dropped() {
+    assert_eq!(
+        sanitize("<img src=\"/a.png\" name=\"cookie\" id=\"x\"><iframe name=\"body\"></iframe>"),
+        "<img src=\"/a.png\" id=\"x\"><iframe></iframe>"
+    );
+    // Anchors, ids and the tab inputs keep theirs.
+    assert_eq!(
+        sanitize("<a name=\"top\" id=\"top\">x</a><input type=\"radio\" name=\"ox-tabs-1\">"),
+        "<a name=\"top\" id=\"top\">x</a><input type=\"radio\" name=\"ox-tabs-1\">"
+    );
+}
