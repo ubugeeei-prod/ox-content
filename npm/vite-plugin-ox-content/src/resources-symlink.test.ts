@@ -14,16 +14,16 @@ describe("page resources behind symlinks", () => {
   for (const dedupe of [false, true]) {
     it(`does not copy a symlink that leaves the content root (dedupe: ${dedupe})`, async () => {
       const root = await makeRoot();
-      await fs.writeFile(path.join(root, "secret.txt"), "outside\n");
-      await fs.symlink("../../secret.txt", path.join(root, "content", "post", "leak.png"));
+      await fs.writeFile(path.join(root, "outside.txt"), "outside\n");
+      await fs.symlink("../../outside.txt", path.join(root, "content", "post", "linked.png"));
 
-      const result = await runResources(root, '<p><img src="leak.png"></p>', dedupe);
+      const result = await runResources(root, '<p><img src="linked.png"></p>', dedupe);
 
       expect(result.files).toEqual([]);
       expect(result.fatal.some((message) => message.includes("outside the page bundle"))).toBe(
         true,
       );
-      await expect(fs.access(path.join(root, "dist", "post", "leak.png"))).rejects.toThrow();
+      await expect(fs.access(path.join(root, "dist", "post", "linked.png"))).rejects.toThrow();
     });
   }
 
@@ -42,8 +42,8 @@ describe("page resources behind symlinks", () => {
 
   it("ignores an href symlink that resolves outside the content root", async () => {
     const root = await makeRoot();
-    await fs.writeFile(path.join(root, "secret.txt"), "outside\n");
-    await fs.symlink("../../secret.txt", path.join(root, "content", "post", "notes.txt"));
+    await fs.writeFile(path.join(root, "outside.txt"), "outside\n");
+    await fs.symlink("../../outside.txt", path.join(root, "content", "post", "notes.txt"));
 
     const result = await runResources(root, '<p><a href="notes.txt">notes</a></p>', false);
 

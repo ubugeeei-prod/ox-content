@@ -17,7 +17,7 @@ function page(overrides: Record<string, unknown> = {}) {
     description: `<!--${hostile}`,
     author: hostile,
     tags: [hostile],
-    ogImageUrl: '/x" onerror="alert(1)',
+    ogImageUrl: '/x" data-x="1',
     warnings: [],
     ...overrides,
   };
@@ -39,7 +39,7 @@ describe("OG viewer page", () => {
     const source = /function esc\(s\) \{[\s\S]*?\n {4}\}/.exec(html)?.[0] ?? "";
     const esc = new Function(`${source}; return esc;`)() as (value: unknown) => string;
 
-    expect(esc('/x" onerror="alert(1)')).toBe("/x&quot; onerror=&quot;alert(1)");
+    expect(esc('/x" data-x="1')).toBe("/x&quot; data-x=&quot;1");
     expect(esc("<b>'&'</b>")).toBe("&lt;b&gt;&#39;&amp;&#39;&lt;/b&gt;");
   });
 });

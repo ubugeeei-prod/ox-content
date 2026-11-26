@@ -38,7 +38,7 @@ describe("SSG search result rendering", () => {
       results: [
         {
           url: '/guide/"x',
-          title: "Guide <img src=x onerror=alert(1)>",
+          title: "Guide <b>bold</b>",
           scopes: ["api<b>"],
           snippet: "Use `<img src=x>` & more",
         },
@@ -48,7 +48,7 @@ describe("SSG search result rendering", () => {
     const html = elements.searchResults.innerHTML;
     expect(html).toBe(
       '<a href="/guide/&quot;x" class="search-result selected">' +
-        '<div class="search-result-title">Guide &lt;img src=x onerror=alert(1)&gt;' +
+        '<div class="search-result-title">Guide &lt;b&gt;bold&lt;/b&gt;' +
         '<span class="search-result-scope">@api&lt;b&gt;</span></div>' +
         '<div class="search-result-snippet">Use `&lt;img src=x&gt;` &amp; more</div></a>',
     );
