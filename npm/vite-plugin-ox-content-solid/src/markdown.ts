@@ -84,10 +84,10 @@ export function injectIslandMarkers(html: string, islands: ComponentIsland[]): s
     const marker = createIslandMarker(island.id);
     const propsAttr =
       Object.keys(island.props).length > 0
-        ? ` data-ox-props='${JSON.stringify(island.props).replace(/'/g, "&#39;")}'`
+        ? ` data-ox-props='${escapeIslandAttr(JSON.stringify(island.props))}'`
         : "";
     const contentAttr = island.content
-      ? ` data-ox-content='${island.content.replace(/'/g, "&#39;")}'`
+      ? ` data-ox-content='${escapeIslandAttr(island.content)}'`
       : "";
     const attrs = `data-ox-island="${island.name}"${propsAttr}${contentAttr}`;
     output = output.replaceAll(`<p>${marker}</p>`, `<div ${attrs}></div>`);
@@ -213,4 +213,13 @@ function parseProps(propsString: string): Record<string, unknown> {
   }
 
   return props;
+}
+
+/** Single-quoted attribute value that decodes back to exactly `value`. */
+function escapeIslandAttr(value: string): string {
+  return value
+    .replaceAll("&", "&amp;")
+    .replaceAll("'", "&#39;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;");
 }
