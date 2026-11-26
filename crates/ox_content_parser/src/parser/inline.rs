@@ -289,7 +289,7 @@ impl<'a> Parser<'a> {
                 self.parse_superscript_span(content, offset, children, pos)?;
             }
             b'$' if self.options.math => {
-                Self::parse_inline_math(content, offset, children, pos);
+                self.parse_inline_math(content, offset, children, pos);
             }
             b'*' | b'_' => {
                 self.push_delimiter_run(content, offset, children, delimiters, pos);
