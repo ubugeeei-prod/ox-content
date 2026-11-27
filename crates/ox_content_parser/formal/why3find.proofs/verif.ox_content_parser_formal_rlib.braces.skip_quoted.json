@@ -1,0 +1,26 @@
+{
+  "profile": [],
+  "proofs": {
+    "Coma": {
+      "vc_add_Int": { "prover": "alt-ergo", "time": 0.009 },
+      "vc_branch_Option_ref_u8": { "prover": "alt-ergo", "time": 0.009 },
+      "vc_deref_Ghost_refmut_Int": { "prover": "alt-ergo", "time": 0.009 },
+      "vc_deref_mut_Ghost_refmut_Int": {
+        "prover": "alt-ergo",
+        "time": 0.009
+      },
+      "vc_elim_Break": { "prover": "alt-ergo", "time": 0.009 },
+      "vc_elim_Continue": { "prover": "alt-ergo", "time": 0.009 },
+      "vc_from_residual_Option_usize": {
+        "prover": "alt-ergo",
+        "time": 0.009
+      },
+      "vc_get_u8": { "prover": "alt-ergo", "time": 0.008 },
+      "vc_into_inner_Int": { "prover": "alt-ergo", "time": 0.009 },
+      "vc_len_u8": { "prover": "alt-ergo", "time": 0.009 },
+      "vc_new": { "prover": "alt-ergo", "time": 0.009 },
+      "vc_new_unit": { "prover": "alt-ergo", "time": 0.008 },
+      "vc_skip_quoted": { "prover": "alt-ergo", "time": 0.147 }
+    }
+  }
+}
