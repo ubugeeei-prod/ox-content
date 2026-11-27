@@ -249,3 +249,6 @@ fn backtick_run_end(bytes: &[u8], start: usize) -> usize {
     }
     end
 }
+
+#[cfg(kani)]
+mod proofs;

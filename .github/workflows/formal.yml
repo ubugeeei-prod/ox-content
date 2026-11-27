@@ -1,0 +1,104 @@
+name: Formal verification
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "crates/ox_content_parser/**"
+      - "tools/scripts/check-formal-mirrors.mjs"
+      - ".github/workflows/formal.yml"
+  pull_request:
+    branches: [main]
+    paths:
+      - "crates/ox_content_parser/**"
+      - "tools/scripts/check-formal-mirrors.mjs"
+      - ".github/workflows/formal.yml"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+env:
+  CARGO_TERM_COLOR: always
+  CREUSOT_VERSION: v0.15.0
+  KANI_VERSION: 0.68.0
+
+jobs:
+  mirrors:
+    name: Proofs match production code
+    runs-on: blacksmith-32vcpu-ubuntu-2404
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Compare proven bodies with the parser's
+        run: node tools/scripts/check-formal-mirrors.mjs
+
+  creusot:
+    name: Creusot
+    runs-on: blacksmith-32vcpu-ubuntu-2404
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      # Building Why3 and its provers through opam takes most of an hour, so
+      # the switch is kept between runs.
+      - name: Mount opam root
+        uses: ./.github/actions/stickydisk
+        with:
+          key: ${{ github.repository }}-formal-opam-${{ env.CREUSOT_VERSION }}-${{ runner.os }}-${{ runner.arch }}
+          path: ~/.opam
+
+      - name: Mount Creusot data
+        uses: ./.github/actions/stickydisk
+        with:
+          key: ${{ github.repository }}-formal-creusot-${{ env.CREUSOT_VERSION }}-${{ runner.os }}-${{ runner.arch }}
+          path: ~/.local/share/creusot
+
+      - name: Install opam
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y opam libzmq3-dev
+          if [ ! -f ~/.opam/config ]; then
+            opam init --bare --disable-sandboxing --no-setup -y
+          fi
+
+      - name: Install Creusot
+        run: |
+          git clone --depth 1 --branch "$CREUSOT_VERSION" https://github.com/creusot-rs/creusot "$RUNNER_TEMP/creusot"
+          cd "$RUNNER_TEMP/creusot"
+          ./INSTALL
+
+      - name: Prove
+        working-directory: crates/ox_content_parser/formal
+        run: cargo creusot
+
+  kani:
+    name: Kani
+    runs-on: blacksmith-32vcpu-ubuntu-2404
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@29eef336d9b2848a0b548edc03f92a220660cdb8 # stable
+
+      - name: Mount sticky cache
+        uses: ./.github/actions/mount-sticky-cache
+        with:
+          key-prefix: ${{ github.repository }}-formal-${{ github.job }}
+          cargo: "true"
+
+      - name: Install Kani
+        run: |
+          cargo install --locked kani-verifier --version "$KANI_VERSION"
+          cargo kani setup
+
+      - name: Check the harnesses
+        run: cargo kani -p ox_content_parser -Z stubbing

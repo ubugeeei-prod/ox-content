@@ -1,0 +1,18 @@
+{
+  "profile": [],
+  "proofs": {
+    "Coma": {
+      "vc_add_Int": { "prover": "alt-ergo", "time": 0.007 },
+      "vc_deref_Ghost_refmut_Int": { "prover": "alt-ergo", "time": 0.007 },
+      "vc_deref_mut_Ghost_refmut_Int": {
+        "prover": "alt-ergo",
+        "time": 0.007
+      },
+      "vc_into_inner_Int": { "prover": "alt-ergo", "time": 0.007 },
+      "vc_len_u8": { "prover": "alt-ergo", "time": 0.007 },
+      "vc_memchr": { "prover": "alt-ergo", "time": 0.018 },
+      "vc_new": { "prover": "alt-ergo", "time": 0.007 },
+      "vc_new_unit": { "prover": "alt-ergo", "time": 0.007 }
+    }
+  }
+}

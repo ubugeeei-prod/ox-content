@@ -1,0 +1,17 @@
+[package]
+name = "ox_content_parser_formal"
+version = "0.0.0"
+edition = "2024"
+publish = false
+license = "MIT"
+description = "Creusot proofs that ox-content's parser scans run in linear time"
+
+# Built only by `cargo creusot`, on Creusot's pinned nightly, so it stays out
+# of the main workspace.
+[workspace]
+
+[dependencies]
+creusot-std = "0.15.0"
+
+[lints.rust]
+unexpected_cfgs = { level = "warn", check-cfg = ['cfg(creusot)'] }
